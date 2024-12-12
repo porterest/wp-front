@@ -1,8 +1,8 @@
 import { apiClient } from "./apiClient"; // Импорт API-клиента для отправки запросов к бэкенду.
 
 interface User {
-    id: string; // Уникальный идентификатор пользователя.
-    name: string; // Имя пользователя.
+    id: string;
+    name: string;
     // ... другие поля
 }
 
