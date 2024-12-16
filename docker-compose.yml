@@ -16,6 +16,14 @@ services:
       - "8080:80"
     restart: unless-stopped
 
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    command: >
+      sh -c "python3 main.py"
+    restart: unless-stopped
+
   nginx:
     image: nginx:latest
     ports:
