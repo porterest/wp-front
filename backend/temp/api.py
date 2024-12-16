@@ -23,10 +23,10 @@ app = FastAPI()
 # TODO: move to main
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://589a-2a12-5940-76ab-00-2.ngrok-free.app"],
+    allow_origins=["https://ab328c6h7.duckdns.org"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*", "ngrok-skip-browser-warning"],
+    allow_headers=["*"],
 )
 
 

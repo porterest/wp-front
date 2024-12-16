@@ -5,15 +5,12 @@ import { BetStatusResponse, TimeResponse } from "../types/apiTypes";
 // Базовый URL для API
 const BASE_URL =
     process.env.REACT_APP_API_BASE_URL ||
-    "https://a0da-2a12-5940-76ab-00-2.ngrok-free.app";
+    "https://abchaaa.duckdns.org";
 
 // Создаем экземпляр axios
 export const apiClient = axios.create({
     baseURL: BASE_URL,
     withCredentials: true,
-    headers: {
-        "ngrok-skip-browser-warning": true, // Обязательный заголовок для ngrok
-    },
 });
 
 // Получение ставок пользователя
