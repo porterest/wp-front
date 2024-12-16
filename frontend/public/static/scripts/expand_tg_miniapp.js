@@ -1,0 +1,1 @@
+window.Telegram.WebApp.expand();
