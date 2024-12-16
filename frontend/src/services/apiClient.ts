@@ -27,7 +27,7 @@ export function setLogoutFunction(fn: LogoutFunction): void {
 // Определяем базовый URL с учетом окружения
 const BASE_URL =
   process.env.REACT_APP_API_BASE_URL ||
-  "https://abchaaa.duckdns.org/docs";
+  "https://abchaaa.duckdns.org";
 
 // Создаем экземпляр axios
 export const apiClient = axios.create({
