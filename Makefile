@@ -25,7 +25,17 @@ pb:
 	git commit -m "meow (backend)"
 	git push origin main
 
+pf:
+	git add frontend/
+	git commit -m "meow (frontend)"
+	git push origin main
+
 deploy-b:
 	docker compose stop backend
 	git pull origin main
 	docker compose up --build -d backend
+
+deploy-f:
+	docker compose stop frontend
+	git pull origin main
+	docker compose up --build -d frontend
