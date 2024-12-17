@@ -89,6 +89,7 @@ async def verify_proof_payload(
             response.set_cookie(
                 key=COOKIE_KEY,
                 value="Bearer abc",
+                domain='.duckdns.org',
                 httponly=True,
                 secure=True,
                 samesite='none',
