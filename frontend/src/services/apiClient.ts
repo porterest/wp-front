@@ -1,7 +1,8 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
+import { InternalAxiosRequestConfig } from "axios";
 
 // Типы для функций
-type RefreshTokenFunction = () => Promise<void>;
+type RefreshTokenFunction = () => Promise<string>; // Возвращает новый токен
 type LogoutFunction = () => void;
 
 // Локальные переменные для токенов
@@ -26,14 +27,38 @@ export function setLogoutFunction(fn: LogoutFunction): void {
 
 // Определяем базовый URL с учетом окружения
 const BASE_URL =
-  process.env.REACT_APP_API_BASE_URL ||
-  "https://abchaaa.duckdns.org";
+  process.env.REACT_APP_API_BASE_URL || "https://abchaaa.duckdns.org";
 
 // Создаем экземпляр axios
 export const apiClient = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true,
 });
+
+// Устанавливаем заголовок Authorization из localStorage
+function setAuthHeader() {
+  const token = localStorage.getItem("authToken");
+  if (token) {
+    apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  } else {
+    delete apiClient.defaults.headers.common["Authorization"];
+  }
+}
+
+// Устанавливаем токен при инициализации
+setAuthHeader();
+
+/**
+ * Перехватчик запросов (request interceptor)
+ */
+
+apiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    setAuthHeader(); // Обновляем заголовок перед каждым запросом
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
 
 /**
  * Перехватчик ответов (response interceptor)
@@ -60,8 +85,11 @@ apiClient.interceptors.response.use(
 
       try {
         console.log("[API]: Refreshing token...");
-        await refreshTokenFunction(); // Обновляем токен.  # TODO
-        return apiClient(originalRequest); // Повторяем запрос
+        const newToken = await refreshTokenFunction(); // Получаем новый токен
+        localStorage.setItem("authToken", newToken); // Сохраняем в localStorage
+        setAuthHeader(); // Устанавливаем новый токен в заголовок
+
+        return apiClient(originalRequest); // Повторяем запрос с новым токеном
       } catch (refreshError) {
         console.error("[API ERROR]: Failed to refresh token:", refreshError);
 

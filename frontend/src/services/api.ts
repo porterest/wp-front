@@ -1,17 +1,33 @@
 import axios from "axios";
-import {PairResponse, PlaceBetRequest, StatusResponse, UserBetsResponse, UserHistoryResponse} from "../types/apiTypes";
+import {
+    PairResponse,
+    PlaceBetRequest,
+    StatusResponse,
+    UserBetsResponse,
+    UserHistoryResponse,
+} from "../types/apiTypes";
 import { BetStatusResponse, TimeResponse } from "../types/apiTypes";
 
 // Базовый URL для API
 const BASE_URL =
-    process.env.REACT_APP_API_BASE_URL ||
-    "https://abchaaa.duckdns.org";
+  process.env.REACT_APP_API_BASE_URL || "https://abchaaa.duckdns.org";
 
 // Создаем экземпляр axios
 export const apiClient = axios.create({
     baseURL: BASE_URL,
-    withCredentials: true,
 });
+
+// Перехватчик для автоматической установки токена
+apiClient.interceptors.request.use(
+  (config) => {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+  },
+  (error) => Promise.reject(error),
+);
 
 // Получение ставок пользователя
 export async function getUserBets(): Promise<UserBetsResponse> {
@@ -39,7 +55,7 @@ export async function getUserHistory(): Promise<UserHistoryResponse> {
 export async function placeBet(data: PlaceBetRequest): Promise<StatusResponse> {
     try {
         const response = await apiClient.post<StatusResponse>("/bet", data);
-        return response.data; // Ожидаем объект типа StatusResponse
+        return response.data;
     } catch (error) {
         console.error("Error placing bet:", error);
         throw error;
@@ -51,7 +67,6 @@ export async function cancelBet(betId: string) {
         const response = await apiClient.post(`/bet/cancel`, { bet_id: betId });
         if (response.status === 200) {
             alert("Ставка успешно отменена.");
-            // Обновляем список ставок
         } else {
             alert("Не удалось отменить ставку. Попробуйте снова.");
         }
@@ -67,7 +82,7 @@ export async function fetchUserBalances(): Promise<any> {
         return response.data;
     } catch (error) {
         console.error("Failed to fetch user balances:", error);
-        throw error; // Пробрасываем ошибку для обработки на уровне вызова
+        throw error;
     }
 }
 
@@ -78,7 +93,6 @@ export async function getPairs(): Promise<PairResponse[]> {
     try {
         const response = await apiClient.get("/pair");
         return response.data;
-
     } catch (error) {
         console.error("Не удалось получить список пар:", error);
         throw error;

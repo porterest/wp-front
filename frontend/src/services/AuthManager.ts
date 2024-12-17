@@ -29,9 +29,13 @@ export class AuthManager {
   /**
    * Авторизация с использованием "proof".
    * @param proofData - Данные для проверки подлинности, полученные от TonConnect.
-   * @returns Информация о пользователе.
+   * @returns Объект с токенами и информацией о пользователе.
    */
-  async loginWithProof(proofData: ProofData): Promise<User> {
+  async loginWithProof(proofData: ProofData): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    user: User;
+  }> {
     try {
       console.log(
         "[AuthManager]: Starting loginWithProof with proofData:",
@@ -40,17 +44,16 @@ export class AuthManager {
 
       // Отправляет proofData на сервер для проверки подлинности.
       const response = await apiClient.post("/auth/verify_payload", proofData);
-      console.log("[AuthManager]: Server response:", response);
+      console.log("[AuthManager]: Server response:", response.data);
 
-      // После проверки сервер устанавливает cookies с токенами.
-      const user = await this.getUser(); // Загружает информацию о текущем пользователе.
-      console.log("[AuthManager]: User fetched after login:", user);
+      const { accessToken, refreshToken, user } = response.data;
 
-      if (!user) {
-        throw new Error("Failed to fetch user after login."); // Ошибка, если пользователь не загружен.
-      }
+      // Сохраняем токены в localStorage
+      localStorage.setItem("authToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+
       this.user = user; // Сохраняет данные о пользователе в локальной переменной.
-      return user; // Возвращает информацию о пользователе.
+      return { accessToken, refreshToken, user }; // Возвращает токены и пользователя.
     } catch (error) {
       console.error("[AuthManager]: Error in loginWithProof:", error);
       throw error; // Пробрасываем ошибку для обработки на уровне компонента.
@@ -59,19 +62,28 @@ export class AuthManager {
 
   /**
    * Обновление токена аутентификации.
+   * @returns Новый accessToken.
    */
-  async refreshToken(): Promise<void> {
+  async refreshToken(): Promise<string> {
     try {
       console.log("[AuthManager]: Refreshing token...");
 
-      // Проверяет наличие токена в cookies
-      if (!document.cookie.includes("widepiper-token")) {
-        console.log("[AuthManager]: Token cookie not found.");
-        return; // Завершает выполнение, если токен не найден.
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) {
+        throw new Error("Refresh token is missing in localStorage.");
       }
 
-      await apiClient.post("/auth/refresh"); // Отправляет запрос на обновление токена.
+      const response = await apiClient.post("/auth/refresh", {
+        refresh_token: refreshToken,
+      });
+
+      const { accessToken } = response.data;
+
+      // Сохраняем новый accessToken
+      localStorage.setItem("authToken", accessToken);
       console.log("[AuthManager]: Token refreshed successfully.");
+
+      return accessToken;
     } catch (error) {
       console.error("[AuthManager]: Failed to refresh token:", error);
       throw error; // Пробрасываем ошибку для возможной обработки выше.
@@ -89,6 +101,8 @@ export class AuthManager {
       console.warn("[AuthManager]: Logout request failed:", error);
     } finally {
       this.user = null; // Очищает информацию о текущем пользователе.
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
       console.log("[AuthManager]: User state cleared after logout.");
     }
   }
