@@ -24,9 +24,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
-# Initialize FastAPI app
-app = FastAPI()
-
 # TODO: move to main
 app.add_middleware(
     CORSMiddleware,
