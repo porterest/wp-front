@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { TonConnectButton, useTonWallet, useTonConnectUI } from "@tonconnect/ui-react";
 import { useTonConnectManager } from "../hooks/useTonConnectManager";
-import { useAuth } from "../context/AuthContext";
+// import { useAuth } from "../context/AuthContext";
 import { TonProofService } from "../services/TonProofService";
 import {apiClient} from "../services/api";
 
 const HomePage: React.FC = () => {
   const { wallet, openTonConnectModal } = useTonConnectManager();
-  const { isAuthenticated, loginWithProof } = useAuth();
+  // const { isAuthenticated, loginWithProof } = useAuth();
   const tonWallet = useTonWallet();
   const [tonConnectUI] = useTonConnectUI();
   const navigate = useNavigate();

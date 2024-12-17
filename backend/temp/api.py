@@ -1,21 +1,28 @@
+import logging
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Annotated, Optional, List
 from uuid import uuid4, UUID
-import asyncio
-
 
 from fastapi import FastAPI, HTTPException, Request, Response, Cookie
+from fastapi import status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from requests import CheckProofRequest
 
-# from tonutils.client import TonapiClient
-# from tonutils
+app = FastAPI()
 
-TON_API_KEY = "AF2YUOUVVZASO7AAAAAHSDOPWPGOF4LOYLDLZDUF7INN3A4IHORBAZAT3N2FHAAOHEGWCLQ"
-# api = TonapiClient(api_key=TON_API_KEY)
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
+    logging.error(f"{request}: {exc_str}")
+    content = {'status_code': 10422, 'message': exc_str, 'data': None}
+    return JSONResponse(content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -23,18 +30,11 @@ app = FastAPI()
 # TODO: move to main
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://ab328c6h7.duckdns.org"],
+    allow_origins=["https://589a-2a12-5940-76ab-00-2.ngrok-free.app"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["*", "ngrok-skip-browser-warning"],
 )
-
-
-# Store active connection status
-connections = {}
-
-# SSE Queue to manage events
-event_queue = asyncio.Queue()
 
 USER_ID = UUID('2ad27b24-b77c-45d9-9752-4043575c4b5b')
 
@@ -63,10 +63,6 @@ def verify_payload_and_signature(
         bool: True if the payload and signature are valid, False otherwise.
     """
     return True
-
-
-class DisconnectRequest(BaseModel):
-    address: str
 
 
 # Generate a payload for connection
@@ -227,6 +223,27 @@ async def get_tx_history(
         raise HTTPException(status_code=403, detail='Wrong token, fuck you!')
 
 
+bets = UserBetsResponse(
+    user_id=USER_ID,
+    bets=[
+        BetResponse(
+            bet_id=UUID('4063a32b-cd82-4577-a8ff-6ab705c580ea'),
+            amount=4.0,
+            vector=(10.2, 12.2),
+            pair_name='TON/BTC',
+            created_at=datetime.now() - timedelta(hours=1),
+        ),
+        BetResponse(
+            bet_id=UUID('d692a8f3-4de1-47e9-8a1b-328fa42f2430'),
+            amount=10.2,
+            vector=(2.5, 32.1),
+            pair_name='TON/ETH',
+            created_at=datetime.now() - timedelta(minutes=20, ),
+        ),
+    ],
+)
+
+
 @app.get('/user/bets')
 async def get_user_bets(
         token: str = Cookie(alias=COOKIE_KEY, default=None),
@@ -235,25 +252,7 @@ async def get_user_bets(
         print('token is none')
         raise HTTPException(status_code=401, detail='Token not provided')
     if token == 'Bearer abc':
-        return UserBetsResponse(
-            user_id=USER_ID,
-            bets=[
-                BetResponse(
-                    bet_id=UUID('4063a32b-cd82-4577-a8ff-6ab705c580ea'),
-                    amount=4.0,
-                    vector=(10.2, 12.2, 1),
-                    pair_name='TON/BTC',
-                    created_at=datetime.now() - timedelta(hours=1),
-                ),
-                BetResponse(
-                    bet_id=UUID('d692a8f3-4de1-47e9-8a1b-328fa42f2430'),
-                    amount=10.2,
-                    vector=(2.5, 32.1, 2),
-                    pair_name='TON/ETH',
-                    created_at=datetime.now() - timedelta(minutes=20, ),
-                ),
-            ],
-        )
+        return bets
     else:
         raise HTTPException(status_code=403, detail='Wrong token, fuck you!')
 
@@ -268,66 +267,76 @@ class CancelBetRequest(BaseModel):
     bet_id: UUID
 
 
+class PairResponse(BaseModel):
+    pair_id: UUID
+    name: str
+
+
+pairs = [
+    PairResponse(
+        pair_id=UUID('10fb4f3f-a2ed-4e2e-8127-10d3df9914b5'),
+        name='TON/BTC',
+    ),
+    PairResponse(
+        pair_id=UUID('4b30e509-9715-4432-a132-80c49bfe87bb'),
+        name='TON/ETH',
+    ),
+]
+
+
 @app.post('/bet')
 async def place_bet(
         place_request: PlaceBetRequest,
-        token: str = Cookie(alias=COOKIE_KEY, default=None),
-) -> None:
-    return
-
-
-@app.post('/bet/cancel')
-async def cancel_bet(
-        # bet: PlaceBetRequest,
         token: str = Cookie(alias=COOKIE_KEY, default=None),
 ) -> None:
     if not token:
         print('token is none')
         raise HTTPException(status_code=401, detail='Token not provided')
     if token == 'Bearer abc':
+        pair = list(filter(lambda x: x.pair_id == place_request.pair_id, pairs))[0]
+        bets.bets.append(
+            BetResponse(
+                bet_id=uuid4(),
+                amount=place_request.amount,
+                vector=place_request.predicted_vector,
+                pair_name=pair.name,
+                created_at=datetime.now(),
+            )
+        )
         return
     else:
         raise HTTPException(status_code=403, detail='Wrong token, fuck you!')
 
 
-# Mock event generator
-async def generate_mock_event():
-    """Simulate event generation for testing."""
-    while True:
-        await asyncio.sleep(600)  # Simulate periodic event generation
-        user_bets = UserBetsResponse(
-            user_id=USER_ID,
-            bets=[
-                BetResponse(
-                    bet_id=UUID('4063a32b-cd82-4577-a8ff-6ab705c580ea'),
-                    amount=4.0,
-                    vector=(10.2, 12.2, 1),
-                    pair_name='TON/BTC',
-                    created_at=datetime.now() - timedelta(hours=1),
-                )
-            ],
-        )
-        event_data = {
-            "event": "calculation_complete",
-            "data": user_bets.model_dump(),
-        }
-        await event_queue.put(event_data)
-        print("Mock event added to the queue.")
+@app.post('/bet/cancel')
+async def cancel_bet(
+        req: CancelBetRequest,
+        token: str = Cookie(alias=COOKIE_KEY, default=None),
+) -> None:
+    if not token:
+        print('token is none')
+        raise HTTPException(status_code=401, detail='Token not provided')
+    if token == 'Bearer abc':
+        bet = filter(lambda x: x.bet_id == req.bet_id, bets.bets)
+        bets.bets.remove(bet)
+        return
+
+    else:
+        raise HTTPException(status_code=403, detail='Wrong token, fuck you!')
 
 
-@app.get("/events")
-async def sse_endpoint():
-    """SSE endpoint to stream events to the client."""
+@app.get('/pairs')
+async def get_pairs(
+        token: str = Cookie(alias=COOKIE_KEY, default=None),
+) -> list[PairResponse]:
+    if not token:
+        print('token is none')
+        raise HTTPException(status_code=401, detail='Token not provided')
+    if token == 'Bearer abc':
+        return pairs
+    else:
+        raise HTTPException(status_code=403, detail='Wrong token, fuck you!')
 
-    async def event_generator():
-        while True:
-            try:
-                event = await event_queue.get()
-                yield f"event: {event['event']}\ndata: {event['data']}\n\n"
-            except asyncio.CancelledError:
-                break
-
-    return Response(event_generator(), media_type="text/event-stream")
 
 
 if __name__ == '__main__':
