@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { TonConnectButton, useTonWallet, useTonConnectUI } from "@tonconnect/ui-react";
 import { useTonConnectManager } from "../hooks/useTonConnectManager";
-// import { useAuth } from "../context/AuthContext";
 import { TonProofService } from "../services/TonProofService";
 import {apiClient} from "../services/api";
 
@@ -16,25 +15,25 @@ const HomePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Проверка, если кошелек подключен, запускаем авторизацию
-  // useEffect(() => {
-  //   const initTonConnect = async () => {
-  //     try {
-  //       // Устанавливаем состояние загрузки
-  //       tonConnectUI.setConnectRequestParameters({ state: "loading" });
-  //
-  //       // Получаем tonProofPayload с бэкенда
-  //       const tonProofPayload = await TonProofService.getTonProofPayload();
-  //
-  //       if (tonProofPayload) {
-  //         // Готовим параметры подключения с tonProof
-  //         tonConnectUI.setConnectRequestParameters({
-  //           state: "ready",
-  //           value: { tonProof: tonProofPayload },
-  //         });
-  //       } else {
-  //         // Если proof не найден, убираем загрузку
-  //         tonConnectUI.setConnectRequestParameters(null);
-  //       }
+  useEffect(() => {
+    const initTonConnect = async () => {
+      try {
+        // Устанавливаем состояние загрузки
+        tonConnectUI.setConnectRequestParameters({ state: "loading" });
+
+        // Получаем tonProofPayload с бэкенда
+        const tonProofPayload = await TonProofService.getTonProofPayload();
+
+        if (tonProofPayload) {
+          // Готовим параметры подключения с tonProof
+          tonConnectUI.setConnectRequestParameters({
+            state: "ready",
+            value: { tonProof: tonProofPayload },
+          });
+        } else {
+          // Если proof не найден, убираем загрузку
+          tonConnectUI.setConnectRequestParameters(null);
+        }
 
         // // Слушаем изменения статуса подключения
         // tonConnectUI.onStatusChange(async (wallet) => {
@@ -65,18 +64,18 @@ const HomePage: React.FC = () => {
         //     }
         //   }
         // });
-  //     } catch (error) {
-  //       console.error("[HomePage]: Error during initialization:", error);
-  //       setError(
-  //           error instanceof Error ? error.message : "Unknown error occurred."
-  //       );
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //
-  //   initTonConnect();
-  // }, []);
+      } catch (error) {
+        console.error("[HomePage]: Error during initialization:", error);
+        setError(
+            error instanceof Error ? error.message : "Unknown error occurred."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initTonConnect();
+  }, []);
 
   const handlePlayNow = async () => {
     console.log("Play Now");
