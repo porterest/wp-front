@@ -29,10 +29,10 @@ class TimeResponse(BaseModel):
 
 
 def next_block():
-    global CURRENT_BLOCK, BLOCK_STARTED_AT
+    global current_block, block_started_at
 
-    CURRENT_BLOCK += 1
-    BLOCK_STARTED_AT = datetime.now()
+    current_block += 1
+    block_started_at = datetime.now()
 
 
 @asynccontextmanager
@@ -77,7 +77,10 @@ app.middleware('http')(auth_middleware)
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
+async def validation_exception_handler(
+        request: Request,
+        exc: RequestValidationError,
+):
     exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
     logging.error(f"{request}: {exc_str}")
     content = {'status_code': 422, 'message': exc_str, 'data': None}
@@ -121,15 +124,19 @@ async def generate_proof_payload(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+valid_tokens = {
+    "accessToken": "Bearer abc",
+    "refreshToken": "Bearer cba",
+}
+
+
 @app.post("/auth/verify_payload")
 async def verify_proof_payload(
         request: CheckProofRequest,
 ):
     try:
         if verify_payload_and_signature(request):
-            return {
-                "token": "Bearer abc",
-            }
+            return valid_tokens
         else:
             raise HTTPException(status_code=401, detail="Proof check failed. Are you a villain?")
     except Exception as e:
@@ -141,11 +148,18 @@ async def logout():
     return
 
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
 @app.post('/auth/refresh')
-async def refresh():
-    return {
-        'token': 'Bearer abc',
-    }
+async def refresh(
+        refresh: RefreshRequest
+):
+    if refresh.refresh_token != 'Bearer cba':
+        raise HTTPException(status_code=401, detail='Fuck you')
+
+    return valid_tokens
 
 
 class BalanceResponse(BaseModel):
