@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { TonConnectButton, useTonWallet, useTonConnectUI } from "@tonconnect/ui-react";
+import {
+  TonConnectButton,
+  useTonConnectUI,
+  useTonWallet,
+} from "@tonconnect/ui-react";
 import { useTonConnectManager } from "../hooks/useTonConnectManager";
 import { TonProofService } from "../services/TonProofService";
-import {apiClient} from "../services/api";
 
 const HomePage: React.FC = () => {
   const { wallet, openTonConnectModal } = useTonConnectManager();
@@ -16,10 +19,26 @@ const HomePage: React.FC = () => {
 
   // Проверка, если кошелек подключен, запускаем авторизацию
   useEffect(() => {
+    // Устанавливаем состояние загрузки
+    tonConnectUI.setConnectRequestParameters({ state: "loading" });
     const initTonConnect = async () => {
       try {
-        // Устанавливаем состояние загрузки
-        tonConnectUI.setConnectRequestParameters({ state: "loading" });
+        const requestStorageAccess = async () => {
+          if (document.requestStorageAccess) {
+            try {
+              await document.requestStorageAccess();
+              console.log("Storage access granted!");
+            } catch (error) {
+              console.error("Storage access denied.", error);
+            }
+          } else {
+            console.warn(
+              "requestStorageAccess API is not supported in this browser.",
+            );
+          }
+        };
+
+        await requestStorageAccess();
 
         // Получаем tonProofPayload с бэкенда
         const tonProofPayload = await TonProofService.getTonProofPayload();
@@ -67,7 +86,7 @@ const HomePage: React.FC = () => {
       } catch (error) {
         console.error("[HomePage]: Error during initialization:", error);
         setError(
-            error instanceof Error ? error.message : "Unknown error occurred."
+          error instanceof Error ? error.message : "Unknown error occurred.",
         );
       } finally {
         setLoading(false);
@@ -92,7 +111,6 @@ const HomePage: React.FC = () => {
       // console.log("[HomePage]: TonProof payload fetched:", payload);
 
       const connectedWallet = await tonConnectUI.openModal();
-
 
       // if (!connectedWallet || !connectedWallet.account) {
       //   throw new Error("Wallet not connected or account data is missing.");
@@ -139,7 +157,7 @@ const HomePage: React.FC = () => {
     } catch (error) {
       console.error("[HomePage]: Error during Play Now flow:", error);
       setError(
-          error instanceof Error ? error.message : "An unknown error occurred."
+        error instanceof Error ? error.message : "An unknown error occurred.",
       );
     } finally {
       setLoading(false);
@@ -178,51 +196,51 @@ const HomePage: React.FC = () => {
   // }, [tonConnectUI]);
 
   return (
-      <div className="flex flex-col items-center justify-between min-h-screen bg-black text-white">
-        {/* Логотип */}
-        <div className="mt-10">
-          <img src="/logo.svg" alt="Widepiper Logo" className="w-40 h-40" />
-        </div>
-
-        {/* Приветствие */}
-        <div className="text-center px-6 mt-2">
-          <h2 className="text-2xl font-bold mb-3">Welcome to Widepiper!</h2>
-          <p className="text-gray-300">
-            Explore a new world of crypto gambling. Connect your wallet to get
-            started.
-          </p>
-        </div>
-
-        {/* Кнопки */}
-        <div className="mt-4 mb-20 space-y-4 w-full px-6">
-          {/* Ошибка */}
-          {error && <p className="text-red-500">{error}</p>}
-
-          {/* Кнопка TonConnect */}
-          {!tonWallet && (
-              <div className="flex justify-center mb-4">
-                <TonConnectButton />
-              </div>
-          )}
-
-          {/* Кнопка Play Now */}
-          <button
-              className="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-400 rounded-lg text-white font-bold hover:opacity-90"
-              onClick={handlePlayNow}
-              disabled={loading}
-          >
-            {loading ? "Connecting..." : "Play Now"}
-          </button>
-
-          {/* Кнопка Learn More */}
-          <button
-              className="w-full py-3 bg-gray-800 border border-gray-600 rounded-lg text-white font-bold hover:bg-gray-700"
-              onClick={() => window.open("https://widepiper.com/", "_blank")}
-          >
-            Learn More
-          </button>
-        </div>
+    <div className="flex flex-col items-center justify-between min-h-screen bg-black text-white">
+      {/* Логотип */}
+      <div className="mt-10">
+        <img src="/logo.svg" alt="Widepiper Logo" className="w-40 h-40" />
       </div>
+
+      {/* Приветствие */}
+      <div className="text-center px-6 mt-2">
+        <h2 className="text-2xl font-bold mb-3">Welcome to Widepiper!</h2>
+        <p className="text-gray-300">
+          Explore a new world of crypto gambling. Connect your wallet to get
+          started.
+        </p>
+      </div>
+
+      {/* Кнопки */}
+      <div className="mt-4 mb-20 space-y-4 w-full px-6">
+        {/* Ошибка */}
+        {error && <p className="text-red-500">{error}</p>}
+
+        {/* Кнопка TonConnect */}
+        {!tonWallet && (
+          <div className="flex justify-center mb-4">
+            <TonConnectButton />
+          </div>
+        )}
+
+        {/* Кнопка Play Now */}
+        <button
+          className="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-400 rounded-lg text-white font-bold hover:opacity-90"
+          onClick={handlePlayNow}
+          disabled={loading}
+        >
+          {loading ? "Connecting..." : "Play Now"}
+        </button>
+
+        {/* Кнопка Learn More */}
+        <button
+          className="w-full py-3 bg-gray-800 border border-gray-600 rounded-lg text-white font-bold hover:bg-gray-700"
+          onClick={() => window.open("https://widepiper.com/", "_blank")}
+        >
+          Learn More
+        </button>
+      </div>
+    </div>
   );
 };
 
