@@ -88,10 +88,10 @@ const HomePage: React.FC = () => {
     }
 
     try {
-      const payload = await TonProofService.getTonProofPayload();
-      console.log("[HomePage]: TonProof payload fetched:", payload);
+      // const payload = await TonProofService.getTonProofPayload();
+      // console.log("[HomePage]: TonProof payload fetched:", payload);
 
-      const connectedWallet = await openTonConnectModal(payload);
+      const connectedWallet = await tonConnectUI.openModal();
 
 
       // if (!connectedWallet || !connectedWallet.account) {
