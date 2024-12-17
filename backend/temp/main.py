@@ -61,7 +61,7 @@ async def auth_middleware(
         call_next,
 ):
     if request.url.path.startswith('/auth'):
-        return call_next(request)
+        return await call_next(request)
 
     token = request.headers.get('Authorization', None)
     if not token:
@@ -70,7 +70,7 @@ async def auth_middleware(
     if token != "Bearer abc":
         raise HTTPException(status_code=403, detail='Token is bullshit')
 
-    return call_next(request)
+    return await call_next(request)
 
 
 app.middleware('http')(auth_middleware)
