@@ -27,10 +27,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # TODO: move to main
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://ab328c6h7.duckdns.org"],
+    allow_origins=["https://ab328c6h7.duckdns.org", "https://web.telegram.org"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*", "ngrok-skip-browser-warning"],
+    allow_headers=["*"],
 )
 
 USER_ID = UUID('2ad27b24-b77c-45d9-9752-4043575c4b5b')
@@ -91,6 +91,7 @@ async def verify_proof_payload(
                 value="Bearer abc",
                 httponly=True,
                 secure=True,
+                samesite='none',
             )
             return
         else:
