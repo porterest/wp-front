@@ -4,7 +4,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: >
-      sh -c "python3 api.py"
+      sh -c "python3 main.py"
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -35,4 +35,3 @@ services:
     depends_on:
       - backend
       - frontend
-
