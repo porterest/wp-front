@@ -18,3 +18,14 @@ deploy:
 	@echo "Rebuilding and starting containers..."
 	docker compose up --build -d
 	@echo "Deployment complete."
+
+
+pb:
+	git add backend/
+	git commit -m "meow (backend)"
+	git push origin main
+
+deploy-b:
+	docker compose stop backend
+	git pull origin main
+	docker compose up --build -d backend
