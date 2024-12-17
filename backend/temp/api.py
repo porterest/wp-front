@@ -91,7 +91,6 @@ async def verify_proof_payload(
                 value="Bearer abc",
                 httponly=True,
                 secure=True,
-                samesite='none',
             )
             return
         else:
