@@ -2,8 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import Select from "react-select";
 import { CandleDataContext } from "../context/CandleDataContext";
 import { BetStatusResponse, PairResponse } from "../types/apiTypes";
-import { getUserStatus, fetchBetStatuses } from "../services/api";
-import Timer from "./Timer";
+import { getPairs, fetchBetStatuses } from "../services/api";
 
 interface SymbolSelectorProps {
     onSwitchMode: (mode: "Candles" | "Axes" | "Both") => void;
@@ -42,7 +41,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     useEffect(() => {
         const fetchPairs = async () => {
             try {
-                const data: PairResponse[] = await getUserStatus();
+                const data: PairResponse[] = await getPairs();
                 const fetchedOptions = data.map((pair: PairResponse) => ({
                     value: pair.pair_id,
                     label: pair.name,

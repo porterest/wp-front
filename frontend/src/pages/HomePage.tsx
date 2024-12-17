@@ -95,48 +95,48 @@ const HomePage: React.FC = () => {
       const connectedWallet = await openTonConnectModal(payload);
 
 
-      if (!connectedWallet || !connectedWallet.account) {
-        throw new Error("Wallet not connected or account data is missing.");
-      }
-
-      // После подключения кошелька запускаем авторизацию
-      if (
-          connectedWallet.connectItems?.tonProof &&
-          "proof" in connectedWallet.connectItems.tonProof
-      ) {
-        const tonProof = connectedWallet.connectItems.tonProof;
-        const verificationData = {
-          address: connectedWallet.account.address,
-          network: connectedWallet.account.chain.toString(),
-          public_key: connectedWallet.account.publicKey,
-          proof: {
-            timestamp: tonProof.proof.timestamp,
-            domain: {
-              LengthBytes: Number(tonProof.proof.domain.lengthBytes),
-              value: tonProof.proof.domain.value,
-            },
-            payload: tonProof.proof.payload,
-            signature: tonProof.proof.signature,
-            state_init: connectedWallet.account.walletStateInit,
-          },
-        };
-
-        try {
-          const response = await apiClient.post("/auth/verify_payload", verificationData);
-          const isValid = response.data?.isValid;
-
-          if (isValid) {
-            await loginWithProof(verificationData);
-            alert("Authentication successful!");
-            navigate("/game");
-          } else {
-            throw new Error("Invalid tonProof data");
-          }
-        } catch (error) {
-          console.error("Error during Play Now authorization:", error);
-          setError("Authentication failed.");
-        }
-      }
+      // if (!connectedWallet || !connectedWallet.account) {
+      //   throw new Error("Wallet not connected or account data is missing.");
+      // }
+      //
+      // // После подключения кошелька запускаем авторизацию
+      // if (
+      //     connectedWallet.connectItems?.tonProof &&
+      //     "proof" in connectedWallet.connectItems.tonProof
+      // ) {
+      //   const tonProof = connectedWallet.connectItems.tonProof;
+      //   const verificationData = {
+      //     address: connectedWallet.account.address,
+      //     network: connectedWallet.account.chain.toString(),
+      //     public_key: connectedWallet.account.publicKey,
+      //     proof: {
+      //       timestamp: tonProof.proof.timestamp,
+      //       domain: {
+      //         LengthBytes: Number(tonProof.proof.domain.lengthBytes),
+      //         value: tonProof.proof.domain.value,
+      //       },
+      //       payload: tonProof.proof.payload,
+      //       signature: tonProof.proof.signature,
+      //       state_init: connectedWallet.account.walletStateInit,
+      //     },
+      //   };
+      //
+      //   try {
+      //     const response = await apiClient.post("/auth/verify_payload", verificationData);
+      //     const isValid = response.data?.isValid;
+      //
+      //     if (isValid) {
+      //       await loginWithProof(verificationData);
+      //       alert("Authentication successful!");
+      //       navigate("/game");
+      //     } else {
+      //       throw new Error("Invalid tonProof data");
+      //     }
+      //   } catch (error) {
+      //     console.error("Error during Play Now authorization:", error);
+      //     setError("Authentication failed.");
+      //   }
+      // }
     } catch (error) {
       console.error("[HomePage]: Error during Play Now flow:", error);
       setError(
@@ -147,36 +147,36 @@ const HomePage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    tonConnectUI.onStatusChange(async (wallet) => {
-      if (wallet && wallet.connectItems?.tonProof && "proof" in wallet.connectItems.tonProof) {
-        // Проверяем tonProof на бэкенде
-        const verificationData = {
-          proof: wallet.connectItems.tonProof.proof,
-          address: wallet.account?.address,
-        };
-
-        try {
-          const response = await apiClient.post("/auth/verify_payload", verificationData);
-          const isValid = response.data?.isValid;
-
-          if (isValid) {
-            // Авторизуем пользователя
-            if (wallet.account) {
-              await loginWithProof(wallet.account);
-              alert("Authentication successful!");
-              navigate("/game");
-            }
-          } else {
-            throw new Error("Invalid tonProof data");
-          }
-        } catch (error) {
-          console.error("Error verifying tonProof:", error);
-          setError("Failed to verify wallet.");
-        }
-      }
-    });
-  }, [tonConnectUI]);
+  // useEffect(() => {
+  //   tonConnectUI.onStatusChange(async (wallet) => {
+  //     if (wallet && wallet.connectItems?.tonProof && "proof" in wallet.connectItems.tonProof) {
+  //       // Проверяем tonProof на бэкенде
+  //       const verificationData = {
+  //         proof: wallet.connectItems.tonProof.proof,
+  //         address: wallet.account?.address,
+  //       };
+  //
+  //       try {
+  //         const response = await apiClient.post("/auth/verify_payload", verificationData);
+  //         const isValid = response.data?.isValid;
+  //
+  //         if (isValid) {
+  //           // Авторизуем пользователя
+  //           if (wallet.account) {
+  //             await loginWithProof(wallet.account);
+  //             alert("Authentication successful!");
+  //             navigate("/game");
+  //           }
+  //         } else {
+  //           throw new Error("Invalid tonProof data");
+  //         }
+  //       } catch (error) {
+  //         console.error("Error verifying tonProof:", error);
+  //         setError("Failed to verify wallet.");
+  //       }
+  //     }
+  //   });
+  // }, [tonConnectUI]);
 
   return (
       <div className="flex flex-col items-center justify-between min-h-screen bg-black text-white">
