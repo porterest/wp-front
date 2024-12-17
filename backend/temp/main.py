@@ -125,8 +125,8 @@ async def generate_proof_payload(
 
 
 valid_tokens = {
-    "accessToken": "Bearer abc",
-    "refreshToken": "Bearer cba",
+    "accessToken": "abc",
+    "refreshToken": "cba",
 }
 
 
