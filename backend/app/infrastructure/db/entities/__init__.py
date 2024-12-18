@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Tuple, List
 from uuid import UUID as pyUUID
 
 from sqlalchemy import String, DateTime, ForeignKey, Enum as SQLEnum, BigInteger
@@ -9,6 +9,11 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from domain.enums import BetStatus, TransactionType, WalletType
 from domain.enums.deposit import DepositEntryStatus
+from uuid import UUID
+from sqlalchemy import Column, String, DateTime, Integer, Enum, func
+from sqlalchemy.dialects.postgresql import UUID as SQLUUID
+from sqlalchemy.ext.declarative import declarative_base
+from enum import Enum as PyEnum
 
 Base = declarative_base()
 
@@ -35,7 +40,8 @@ class User(AbstractBase):
     balances = relationship("Balance", back_populates="user")
     bets = relationship("Bet", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")
-    deposits = relationship('DepositEntry', back_populates='user')
+    deposit = relationship('DepositEntry', back_populates='user')
+    balance: Mapped[float]
 
 
 class Bet(AbstractBase):
@@ -66,18 +72,6 @@ class Transaction(AbstractBase):
     recipient: Mapped[str]
 
     user = relationship("User", back_populates="transactions")
-
-
-class Balance(AbstractBase):
-    __tablename__ = 'balances'
-
-    id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    user_id: Mapped[pyUUID] = mapped_column(ForeignKey('users.id'), index=True)
-    balance: Mapped[float]
-    token_type: Mapped[str] = mapped_column(String(50))
-
-    user = relationship("User", back_populates="balances")
-
 
 class Pair(AbstractBase):
     __tablename__ = 'pairs'
@@ -125,3 +119,35 @@ class DepositEntry(AbstractBase):
 
     app_wallet = relationship("AppWallet", back_populates="deposits")
     user = relationship('User', back_populates='deposits')
+
+class BlockStatus(PyEnum):
+    COMPLETED = "completed"
+    IN_PROGRESS = "in_progress"
+    INTERRUPTED = "interrupted"
+
+
+class Block(AbstractBase):
+    __tablename__ = "blocks"
+
+    id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    block_number: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
+    status: Mapped[BlockStatus] = mapped_column(Enum(BlockStatus), nullable=False, default=BlockStatus.IN_PROGRESS)
+    created_at: Mapped[Optional[DateTime]] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    completed_at: Mapped[Optional[DateTime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    result_vector: Mapped[Tuple[float, float]] = mapped_column(JSONB, nullable=True)
+    bets: Mapped[List["Bet"]] = relationship("Bet", back_populates="block")
+
+
+class ChainStatus(Enum):
+    ACTIVE = "active"
+    PAUSED = "paused"
+    COMPLETED = "completed"
+
+class Chain(Base):
+    __tablename__ = "chains"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    current_block: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[ChainStatus] = mapped_column(Enum(ChainStatus), nullable=False, default=ChainStatus.ACTIVE)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_update: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now())
