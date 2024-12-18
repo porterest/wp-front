@@ -104,7 +104,7 @@ export async function getPairs(): Promise<PairResponse[]> {
  */
 export async function fetchTime(): Promise<TimeResponse> {
     try {
-        const response = await apiClient.post<TimeResponse>("/time");
+        const response = await apiClient.get<TimeResponse>("/time");
         return response.data;
     } catch (error: any) {
         console.error("Ошибка получения времени:", error);

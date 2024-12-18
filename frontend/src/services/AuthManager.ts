@@ -68,19 +68,20 @@ export class AuthManager {
     try {
       console.log("[AuthManager]: Refreshing token...");
 
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (!refreshToken) {
+      const oldRefreshToken = localStorage.getItem("refreshToken");
+      if (!oldRefreshToken) {
         throw new Error("Refresh token is missing in localStorage.");
       }
 
       const response = await apiClient.post("/auth/refresh", {
-        refresh_token: refreshToken,
+        refresh_token: oldRefreshToken,
       });
 
-      const { accessToken } = response.data;
+      const { accessToken, refreshToken } = response.data;
 
       // Сохраняем новый accessToken
       localStorage.setItem("authToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
       console.log("[AuthManager]: Token refreshed successfully.");
 
       return accessToken;
