@@ -91,7 +91,7 @@ export async function fetchUserBalances(): Promise<any> {
  */
 export async function getPairs(): Promise<PairResponse[]> {
     try {
-        const response = await apiClient.get("/pair");
+        const response = await apiClient.get("/pairs");
         return response.data;
     } catch (error) {
         console.error("Не удалось получить список пар:", error);
