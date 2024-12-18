@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: donalds-back
+    command: [ "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080" ]
+    restart: unless-stopped
+    volumes:
+      - ./app/settings.json:/app/settings.json
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "9090:8080"
+
+
+include:
+  - ./database/db-compose.yaml

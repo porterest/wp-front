@@ -1,0 +1,6 @@
+settings.json
+**/__pycache__
+**/scrape.py
+**/.venv
+**/.idea
+**/.DS_Store
