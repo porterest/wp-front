@@ -316,7 +316,7 @@ async def place_bet(
 @app.post('/bet/cancel')
 async def cancel_bet(
         req: CancelBetRequest, ) -> None:
-    bet = filter(lambda x: x.bet_id == req.bet_id, bets.bets)
+    bet = list(filter(lambda x: x.bet_id == req.bet_id, bets.bets))[0]
     bets.bets.remove(bet)
     return
 
