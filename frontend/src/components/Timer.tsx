@@ -46,13 +46,16 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd }) => {
     };
 
     return (
-        <div className="p-2 bg-gray-800 text-white rounded-md text-center">
-            {timeLeft !== null ? (
-                <p>Время до конца блока: {formatTime(timeLeft)}</p>
-            ) : (
-                <p>Загрузка...</p>
-            )}
-        </div>
+      <div
+        className="p-2 bg-gradient-to-r from-[#40E0D0] to-[#8A2BE2] text-white rounded-b-md text-center"
+      >
+          {timeLeft !== null ? (
+            <p>Время до конца блока: {formatTime(timeLeft)}</p>
+          ) : (
+            <p>Загрузка...</p>
+          )}
+      </div>
+
     );
 };
 
