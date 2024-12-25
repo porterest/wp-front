@@ -27,11 +27,34 @@ interface AggregatedCandle {
 }
 
 // Функция для запроса данных с Binance API
+// export const fetchCandlestickData = async (
+//   symbol: string,
+//   interval: string = "5m",
+//   limit: number = 100,
+// ): Promise<RawCandle[]> => {
+//   try {
+//     const response = await fetch(
+//       `${API_BASE_URL}?symbol=${symbol}&interval=${interval}&limit=${limit}`,
+//     );
+//     if (!response.ok) {
+//       throw new Error(`Error fetching data: ${response.statusText}`);
+//     }
+//     return await response.json();
+//   } catch (error) {
+//     console.error("Failed to fetch candlestick data:", error);
+//     return [];
+//   }
+// };
+
 export const fetchCandlestickData = async (
   symbol: string,
   interval: string = "5m",
   limit: number = 100,
 ): Promise<RawCandle[]> => {
+  if (!symbol || symbol.trim() === "") {
+    throw new Error("Invalid symbol: Symbol is required and cannot be empty.");
+  }
+
   try {
     const response = await fetch(
       `${API_BASE_URL}?symbol=${symbol}&interval=${interval}&limit=${limit}`,
@@ -39,7 +62,13 @@ export const fetchCandlestickData = async (
     if (!response.ok) {
       throw new Error(`Error fetching data: ${response.statusText}`);
     }
-    return await response.json();
+
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      throw new Error(`Invalid data received for symbol: ${symbol}`);
+    }
+
+    return data;
   } catch (error) {
     console.error("Failed to fetch candlestick data:", error);
     return [];
@@ -48,6 +77,13 @@ export const fetchCandlestickData = async (
 
 // Функция для агрегации данных в интервал 10m
 export const aggregateTo10m = (rawData: RawCandle[]): AggregatedCandle[] => {
+  if (!Array.isArray(rawData) || rawData.length === 0) {
+    console.warn("No raw data provided for aggregation.");
+    return [];
+  }
+
+  rawData.sort((a, b) => a[0] - b[0]); // Сортировка по времени открытия
+
   const aggregatedData: AggregatedCandle[] = [];
 
   for (let i = 0; i < rawData.length; i += 2) {
@@ -61,11 +97,15 @@ export const aggregateTo10m = (rawData: RawCandle[]): AggregatedCandle[] => {
         high: Math.max(parseFloat(candle1[2]), parseFloat(candle2[2])),
         low: Math.min(parseFloat(candle1[3]), parseFloat(candle2[3])),
         volume: parseFloat(candle1[5]) + parseFloat(candle2[5]),
-        timestamp: candle1[0], // Время открытия первой свечи
+        timestamp: candle1[0],
       });
     }
   }
-  // console.log(aggregatedData);
+
+  if (rawData.length % 2 !== 0) {
+    console.warn("Odd number of candles, last candle was skipped.");
+  }
+
   return aggregatedData;
 };
 
@@ -74,6 +114,9 @@ export const getCandlestickData10m = async (
   symbol: string,
 ): Promise<AggregatedCandle[]> => {
   const rawData = await fetchCandlestickData(symbol, "5m");
-  console.log(rawData);
+  if (!rawData.length) {
+    console.warn("No data fetched for symbol:", symbol);
+    return [];
+  }
   return aggregateTo10m(rawData);
 };

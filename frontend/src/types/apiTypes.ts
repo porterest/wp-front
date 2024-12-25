@@ -51,7 +51,6 @@ export interface TimeResponse {
   server_time: string; // Текущее серверное время
   current_block: number; // ID текущего блока
   remaining_time_in_block: number; // Оставшееся время в секундах
-  block_duration_seconds: number; // Длительность блока
 }
 
 export interface BetStatusResponse {
@@ -64,5 +63,9 @@ export interface BetStatusResponse {
   block_duration_seconds: number; // Длительность блока
 }
 
+export interface DepositResponse {
+  wallet_address: string;
+  amount: number;
+}
 // Если BetStatus еще не описан
 export type BetStatus = "PENDING" | "WON" | "LOST"; // Пример возможных значений

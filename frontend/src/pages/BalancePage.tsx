@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   useTonWallet,
@@ -6,7 +6,64 @@ import {
   useTonConnectUI,
 } from "@tonconnect/ui-react";
 import { apiClient } from "../services/apiClient";
-import {fetchUserBalances} from "../services/api"; // Используем для запросов к бэкенду
+import { check_user_deposit, fetchUserBalances } from "../services/api"; // Используем для запросов к бэкенду
+
+// Типы данных контекста
+interface UserBalance {
+  balances: Record<string, number>;
+  totalBalance: number;
+  atRisk: number;
+}
+
+interface UserBalanceContextProps {
+  userData: UserBalance | null;
+  loading: boolean;
+  error: string | null;
+  reloadUserData: () => void;
+}
+
+// Контекст
+const UserBalanceContext = createContext<UserBalanceContextProps | undefined>(undefined);
+
+// Провайдер контекста
+export const UserBalanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [userData, setUserData] = useState<UserBalance | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadUserData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchUserBalances();
+      setUserData(data);
+    } catch (err) {
+      console.error("Error fetching user balances:", err);
+      setError("Failed to load user data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  return (
+    <UserBalanceContext.Provider value={{ userData, loading, error, reloadUserData: loadUserData }}>
+      {children}
+    </UserBalanceContext.Provider>
+  );
+};
+
+// Хук для использования контекста
+export const useUserBalance = () => {
+  const context = useContext(UserBalanceContext);
+  if (!context) {
+    throw new Error("useUserBalance must be used within a UserBalanceProvider");
+  }
+  return context;
+};
 
 const BalancePage: React.FC = () => {
   const [tonConnectUI] = useTonConnectUI(); // TonConnect API
@@ -49,7 +106,7 @@ const BalancePage: React.FC = () => {
     loadUserData();
   }, []);
   /**
-   * Копирование адреса кошелька
+   * Копирование адреса кошелька с отправкой запроса на бэкенд
    */
   const handleCopyAddress = async () => {
     if (!tonConnectUI.wallet) {
@@ -58,18 +115,23 @@ const BalancePage: React.FC = () => {
     }
 
     try {
+      const walletAddress = tonConnectUI.wallet.account.address;
+
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(
-          tonConnectUI.wallet.account.address,
-        );
+        // Копирование адреса в буфер обмена
+        await navigator.clipboard.writeText(walletAddress);
         alert("Wallet address copied to clipboard!");
+
+        // Отправка запроса на бэкенд
+        await check_user_deposit();
       } else {
         console.error("Clipboard API not supported");
       }
     } catch (error) {
-      console.error("Failed to copy address:", error);
+      console.error("Failed to copy address or send request:", error);
     }
   };
+
 
   /**
    * Отключение кошелька

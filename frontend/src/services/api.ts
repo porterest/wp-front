@@ -1,12 +1,14 @@
 import axios from "axios";
 import {
+    DepositResponse,
     PairResponse,
     PlaceBetRequest,
     StatusResponse,
     UserBetsResponse,
-    UserHistoryResponse,
+    UserHistoryResponse
 } from "../types/apiTypes";
 import { BetStatusResponse, TimeResponse } from "../types/apiTypes";
+import getPreviousBetEnd from "../pages/GamePage";
 
 // Базовый URL для API
 const BASE_URL =
@@ -52,9 +54,9 @@ export async function getUserHistory(): Promise<UserHistoryResponse> {
 }
 
 // Функция для отправки ставки
-export async function placeBet(data: PlaceBetRequest): Promise<StatusResponse> {
+export async function placeBet(data: PlaceBetRequest): Promise<void> {
     try {
-        const response = await apiClient.post<StatusResponse>("/bet", data);
+        const response = await apiClient.post<void>("/bet", data);
         return response.data;
     } catch (error) {
         console.error("Error placing bet:", error);
@@ -134,3 +136,31 @@ export async function fetchBetStatuses(): Promise<BetStatusResponse> {
         throw error;
     }
 }
+
+
+export async function check_user_deposit(): Promise<void> {
+    try {
+        await apiClient.get("/deposit");
+    } catch (error: any) {
+        console.error("Ошибка получения баланса:", error);
+
+        if (error.response) {
+            console.error("Ошибка сервера:", error.response.data);
+        }
+
+        throw error;
+    }
+}
+
+
+export async function fetchPreviousBetEnd(): Promise<{ x: number; y: number }> {
+    try {
+        const response = await apiClient.get<{ x: number; y: number }>("/block/last_vector");
+        return response.data; // Возвращаем данные с координатами
+    } catch (error) {
+        console.error("Ошибка загрузки предыдущей ставки:", error);
+        throw error;
+    }
+}
+
+

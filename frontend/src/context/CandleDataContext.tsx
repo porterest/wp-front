@@ -12,7 +12,10 @@ interface CandleData {
 
 interface CandleDataContextValue {
   data: CandleData[];
+  selectedPair: string;
   setSymbol: (symbol: string) => void;
+  isLoading: boolean;
+  error: string | null;
 }
 
 export const CandleDataContext = createContext<
@@ -20,33 +23,50 @@ export const CandleDataContext = createContext<
 >(undefined);
 
 export const CandleDataProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+                                                                        children,
+                                                                      }) => {
   const [data, setData] = useState<CandleData[]>([]);
-  const [symbol, setSymbol] = useState<string>("BTCUSDT");
+  const [selectedPair, setSelectedPair] = useState<string>("BTCUSDT");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
+  // Функция для загрузки данных свечей
+  const fetchData = async (symbol: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
       const candles = await getCandlestickData10m(symbol);
-      console.log("Updating context data with candles:", candles);
-
+      if (!candles || candles.length === 0) {
+        throw new Error("No data received from API.");
+      }
+      console.log(`Updating context data for ${symbol}:`, candles);
       setData(candles);
-    };
+    } catch (err) {
+      console.error(`Error fetching data for ${symbol}:`, err);
+      setError((err as Error).message || "Failed to fetch data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchData();
-
-    const interval = setInterval(
-      () => {
-        fetchData();
-      },
-      10 * 60 * 1000,
-    );
-
-    return () => clearInterval(interval);
-  }, [symbol]);
+  // Эффект для загрузки данных при изменении selectedPair
+  useEffect(() => {
+    if (selectedPair) {
+      fetchData(selectedPair);
+    }
+  }, [selectedPair]);
 
   return (
-    <CandleDataContext.Provider value={{ data, setSymbol }}>
+    <CandleDataContext.Provider
+      value={{
+        data,
+        selectedPair,
+        setSymbol: setSelectedPair,
+        isLoading,
+        error,
+      }}
+    >
       {children}
     </CandleDataContext.Provider>
   );

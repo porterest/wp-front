@@ -5,6 +5,7 @@ import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { Text } from "@react-three/drei";
+import { useUserBalance } from "../pages/BalancePage";
 
 interface BetArrowProps {
   previousBetEnd: THREE.Vector3; // Суммарная ставка всех пользователей за прошлый блок
@@ -45,7 +46,9 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   const [isDragging, setIsDragging] = useState(false); // Флаг перетаскивания
 
-  const userDeposit = 30; // Депозит пользователя
+  const { userData } = useUserBalance(); // Данные о балансе пользователя
+  const userDeposit = userData?.totalBalance || 0; // Берём баланс из контекста
+
   const maxArrowLength = 5; // Максимальная длина стрелки
 
   const handlePointerUp = () => {
