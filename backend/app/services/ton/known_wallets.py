@@ -1,9 +1,9 @@
 import logging
 from typing import Annotated, Callable
 
-from tonsdk.boc import Cell
+from pytoniq_core import Cell
 
-from abstractions.services.wallets_provider import KnownWalletsProviderInterface
+from abstractions.services.known_wallets import KnownWalletsProviderInterface
 from domain.ton.known_wallets import *
 from services.ton.tonconnect.exceptions import KeyCannotBeParsedException
 

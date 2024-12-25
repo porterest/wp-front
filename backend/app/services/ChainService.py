@@ -121,9 +121,6 @@ class ChainService(
                 remaining_time_in_block=None,
             )
 
-
-
-
     def stop_block_generation(self):
         """
         Останавливает процесс блокогенерации.

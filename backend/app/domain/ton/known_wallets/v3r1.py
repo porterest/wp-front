@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from tonsdk.boc import Cell
+from pytoniq_core import Cell
 
 from abstractions.ton.known_wallets import WalletContractInterface
 

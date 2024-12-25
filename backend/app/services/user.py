@@ -6,10 +6,8 @@ from sqlalchemy.exc import NoResultFound
 from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.user import UserServiceInterface
 from domain.dto.user import UpdateUserDTO, CreateUserDTO
-from domain.metaholder.responses import BetResponse
-from domain.metaholder.responses.transaction import TransactionResponse
-from domain.metaholder.responses.user import UserBetsResponse
-from domain.metaholder.responses.user_history import UserHistoryResponse
+from domain.metaholder.responses import TransactionResponse, BetResponse
+from domain.metaholder.responses.user import UserBetsResponse, UserHistoryResponse
 from domain.models import User
 from services.exceptions import NotFoundException, NoSuchUserException
 
@@ -17,6 +15,20 @@ from services.exceptions import NotFoundException, NoSuchUserException
 @dataclass
 class UserService(UserServiceInterface):
     user_repository: UserRepositoryInterface
+
+    async def get_user_bets(self, user_id: UUID) -> UserBetsResponse:
+        user = await self.get_user(user_id)
+        return UserBetsResponse(
+            user_id=user.id,
+            bets=[
+                BetResponse(
+                    amount=bet.amount,
+                    vector=bet.vector,
+                    pair_name=bet.pair.name,
+                    created_at=bet.created_at,
+                ) for bet in user.bets
+            ]
+        )
 
     async def get_user_history(self, user_id: UUID) -> UserHistoryResponse:
         user = await self.get_user(user_id=user_id)
@@ -26,22 +38,10 @@ class UserService(UserServiceInterface):
                 TransactionResponse(
                     type=t.type,
                     sender=t.sender,
-                    recipient=t.sender
+                    recipient=t.recipient,
+                    amount=t.amount,
+                    tx_id=t.tx_id if t.tx_id else None,
                 ) for t in user.transactions
-            ]
-        )
-
-    async def get_user_bets(self, user_id: UUID) -> UserBetsResponse:
-        user = await self.get_user(user_id=user_id)
-        return UserHistoryResponse(
-            user_id=user_id,
-            bets=[
-                BetResponse(
-                    amount=b.amount,
-                    vector=b.vector,
-                    pair_name=b.pair_name,
-                    created_at=b.created_at,
-                ) for b in user.bets
             ]
         )
 

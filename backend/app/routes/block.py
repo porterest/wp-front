@@ -9,6 +9,7 @@ router = APIRouter(
     tags=['block/']
 )
 
+
 @router.get('/last_vector')
 async def get_last_vector() -> Tuple[float, float]:
     service = get_block_service()

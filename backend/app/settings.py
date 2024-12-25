@@ -22,7 +22,12 @@ class TonConnectSettings(BaseSettings):
     allowed_domains: list[str]
 
 
-class JwtSettings:
+class TonSettings(BaseSettings):
+    tonconnect: TonConnectSettings
+    tonapi_key: SecretStr
+
+
+class JwtSettings(BaseSettings):
     secret_key: SecretStr
     issuer: str
     audience: str
@@ -30,10 +35,17 @@ class JwtSettings:
     refresh_expire: int
 
 
+class VaultSettings(BaseSettings):
+    host: str
+    port: int
+    token: SecretStr
+
+
 class Settings(BaseSettings):
     db: DBSettings
     jwt: JwtSettings
-    tonconnect: TonConnectSettings
+    ton: TonSettings
+    vault: VaultSettings
 
     debug: bool = True
 
@@ -42,6 +54,10 @@ class Settings(BaseSettings):
         json_file=Path(__file__).parent / 'settings.json',
         json_file_encoding='utf-8',
     )
+
+    @property
+    def allowed_domains(self) -> list[str]:
+        return self.ton.tonconnect.allowed_domains
 
     @classmethod
     def settings_customise_sources(

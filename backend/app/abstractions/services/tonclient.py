@@ -47,7 +47,7 @@ class TonClientInterface(ABC):
     async def get_public_key(self, address: str) -> str:
         ...
 
-   async def get_transactions(self, address: str) -> list[]:
+    async def get_transactions(self, address: str) -> list:
         ...
 
 

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-import jwt
 from jwt import (decode, encode,
                  ExpiredSignatureError as ExpiredSignatureJWTError,
                  InvalidTokenError as InvalidTokenJWTError

@@ -7,4 +7,3 @@ def get_user_service() -> UserServiceInterface:
     return UserService(
         user_repository=get_user_repository(),
     )
-

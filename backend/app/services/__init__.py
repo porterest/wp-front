@@ -1,4 +1,7 @@
-class SingletonMeta(type):
+from abc import ABCMeta
+
+
+class SingletonMeta(ABCMeta):
     """
     Метакласс для обеспечения, что существует только один экземпляр ChainService.
     """

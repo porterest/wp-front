@@ -5,4 +5,3 @@ class ChainStatus(Enum):
     ACTIVE = "active"
     PAUSED = "paused"
     COMPLETED = "completed"
-

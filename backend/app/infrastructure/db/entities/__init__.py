@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Optional, Tuple, List
+from typing import Optional, List
 from uuid import UUID as pyUUID
 
 from sqlalchemy import ForeignKey, Enum as SQLEnum, BigInteger, UUID
-from sqlalchemy import String, DateTime, Integer, Enum, func
+from sqlalchemy import String, DateTime, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -34,13 +34,13 @@ class User(AbstractBase):
     last_name: Mapped[Optional[str]] = mapped_column(String(255))
     last_activity: Mapped[Optional[datetime]]
 
+    balance: Mapped[float]
+
     wallet_address: Mapped[Optional[str]]
 
-    balances = relationship("Balance", back_populates="user")
     bets = relationship("Bet", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")
-    deposit = relationship('DepositEntry', back_populates='user')
-    balance: Mapped[float]
+    deposits = relationship('DepositEntry', back_populates='user')
 
 
 class Bet(AbstractBase):
@@ -84,16 +84,6 @@ class Pair(AbstractBase):
     bets = relationship("Bet", back_populates="pair")
 
 
-class AggregatedData(AbstractBase):
-    __tablename__ = 'aggregated_data'
-
-    id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    block_number: Mapped[int]
-    aggregated_vector: Mapped[dict] = mapped_column(JSONB)
-    ordinal_present: Mapped[bool]
-    aggregate_bet_amount: Mapped[float]
-
-
 class AppWallet(AbstractBase):
     __tablename__ = 'app_wallets'
 
@@ -116,28 +106,33 @@ class DepositEntry(AbstractBase):
 
     transaction_id: Mapped[Optional[pyUUID]] = mapped_column(ForeignKey('transactions.id'), nullable=True)
 
-    app_wallet = relationship("AppWallet", back_populates="deposits")
-    user = relationship('User', back_populates='deposits')
-    transaction = relationship('Transaction')
+    app_wallet: Mapped['AppWallet'] = relationship("AppWallet", back_populates="deposits")
+    user: Mapped['User'] = relationship('User', back_populates='deposits')
+    transaction: Mapped['Transaction'] = relationship('Transaction')
 
 
 class Block(AbstractBase):
     __tablename__ = "blocks"
 
     id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    block_number: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
-    status: Mapped[BlockStatus] = mapped_column(Enum(BlockStatus), nullable=False, default=BlockStatus.IN_PROGRESS)
-    created_at: Mapped[Optional[DateTime]] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    completed_at: Mapped[Optional[DateTime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    result_vector: Mapped[BetVector] = mapped_column(JSONB, nullable=True)
+    block_number: Mapped[int] = mapped_column(unique=True)
+    status: Mapped[BlockStatus] = mapped_column(SQLEnum(BlockStatus), default=BlockStatus.IN_PROGRESS)
+    result_vector: Mapped[Optional[BetVector]] = mapped_column(JSONB)
+
+    completed_at: Mapped[Optional[datetime]] = mapped_column()
+
+    chain_id: Mapped[pyUUID] = mapped_column(ForeignKey('chains.id'))
+
+    chain: Mapped['Chain'] = relationship("Chain", back_populates='blocks')
     bets: Mapped[List["Bet"]] = relationship("Bet", back_populates="block")
 
 
 class Chain(Base):
     __tablename__ = "chains"
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    current_block: Mapped[int] = mapped_column(Integer, nullable=False)
-    status: Mapped[ChainStatus] = mapped_column(Enum(ChainStatus), nullable=False, default=ChainStatus.ACTIVE)
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    current_block: Mapped[int]
+    status: Mapped[ChainStatus] = mapped_column(SQLEnum(ChainStatus), default=ChainStatus.ACTIVE)
     created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    last_update: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now())
+
+    blocks: Mapped[List[Block]] = relationship("Block", back_populates='chain')

@@ -10,14 +10,13 @@ from nacl.encoding import HexEncoder
 from nacl.exceptions import BadSignatureError
 from nacl.signing import VerifyKey
 from pytoniq_core import Address
-from pytonlib.utils.address import detect_address
-from tonsdk.boc import Cell
+from pytoniq_core import Cell
 
 from abstractions.services.auth.tokens import TokenServiceInterface
 from abstractions.services.auth.tonproof import TonProofServiceInterface
+from abstractions.services.known_wallets import KnownWalletsProviderInterface
 from abstractions.services.public_keys import PublicKeyProviderInterface
 from abstractions.services.tonclient import TonClientInterface
-from abstractions.services.wallets_provider import KnownWalletsProviderInterface
 from domain.ton.address import TonAddressInfo
 from domain.tonconnect.enums import VerifyResult
 from domain.tonconnect.requests import CheckProofRequest, CheckProofRequestRaw

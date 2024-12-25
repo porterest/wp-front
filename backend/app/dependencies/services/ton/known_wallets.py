@@ -1,4 +1,4 @@
-from abstractions.services.wallets_provider import KnownWalletsProviderInterface
+from abstractions.services.known_wallets import KnownWalletsProviderInterface
 from services.ton.known_wallets import KnownWalletsProvider
 
 

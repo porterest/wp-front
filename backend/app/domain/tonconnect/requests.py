@@ -1,12 +1,15 @@
 import base64
 import logging
 from copy import deepcopy
+from dataclasses import dataclass
 from typing import Optional
 
 from pydantic import BaseModel, Field, ConfigDict
 from pytoniq_core import Slice, Cell
 
 from domain.ton import InitialAccountState, TickTock, Library
+
+logger = logging.getLogger(__name__)
 
 
 class Domain(BaseModel):
@@ -29,24 +32,31 @@ class CheckProofRequest(BaseModel):
     proof: Proof
 
 
-logger = logging.getLogger(__name__)
+@dataclass
+class CheckProofRequestRaw:
+    request: CheckProofRequest
 
-
-class CheckProofRequestRaw(CheckProofRequest):
     address_bytes: Optional[bytes] = None
     workchain: Optional[int] = None
     init_state: Optional[InitialAccountState] = None
     data: Optional[Cell] = None
     code: Optional[str] = None
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    @property
+    def proof(self) -> Proof:
+        return self.request.proof
 
-    def __init__(self, request: CheckProofRequest):
-        # Initialize base class with existing properties
-        super().__init__(**request.dict())
+    @property
+    def address(self) -> str:
+        return self.request.address
 
+    @property
+    def public_key(self) -> str:
+        return self.request.public_key
+
+    def __post_init__(self):
         # Process the address to extract workchain and address bytes
-        address = self.address
+        address = self.request.address
         if len(address) > 2 and address[1] == ':':
             try:
                 self.workchain = int(address[:1])

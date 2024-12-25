@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Annotated
 
-from tonsdk.boc import Cell
+from pytoniq_core import Cell
 
 
 class KnownWalletsProviderInterface(ABC):
