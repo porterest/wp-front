@@ -1,4 +1,4 @@
-from infrastructure.db.repositories.UserRepository import UserRepository
+from infrastructure.db.repositories.ChainRepository import ChainRepository
 
 from . import get_session_maker
 

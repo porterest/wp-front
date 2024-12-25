@@ -1,20 +1,23 @@
 from dataclasses import dataclass
 from typing import Optional
+from uuid import UUID
+
+from pydantic import BaseModel
 
 from domain.dto import CreateDTO
 from domain.enums import BetStatus
+from domain.models.bet import BetVector
 
 
 @dataclass
 class CreateBetDTO(CreateDTO):
-    user_id: int
-    pair_id: int
+    user_id: UUID
+    pair_id: UUID
     amount: float
     block_number: int
-    vector: dict
+    vector: BetVector
     status: BetStatus = BetStatus.PENDING
 
 
-@dataclass
-class UpdateBetDTO:
+class UpdateBetDTO(BaseModel):
     status: Optional[BetStatus] = None

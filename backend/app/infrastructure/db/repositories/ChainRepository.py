@@ -1,10 +1,13 @@
+from abstractions.repositories.chain import ChainRepositoryInterface
 from domain.dto.chain import CreateChainDTO, UpdateChainDTO
 from domain.models.chain import Chain as ChainModel
 from infrastructure.db.entities import Chain
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
+
 class ChainRepository(
     AbstractSQLAlchemyRepository[Chain, ChainModel, CreateChainDTO, UpdateChainDTO],
+    ChainRepositoryInterface
 ):
     def create_dto_to_entity(self, dto: CreateChainDTO) -> Chain:
         return Chain(
@@ -21,5 +24,6 @@ class ChainRepository(
             current_block=entity.current_block,
             last_update=entity.last_update,
             created_at=entity.created_at,
+            updated_at=entity.last_update,
             status=entity.status
         )

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from pydantic import BaseModel
+
 from domain.dto import CreateDTO
 from domain.enums import WalletType
 
@@ -12,7 +14,6 @@ class CreateAppWalletDTO(CreateDTO):
     balance: float
 
 
-@dataclass
-class UpdateAppWalletDTO:
+class UpdateAppWalletDTO(BaseModel):
     wallet_type: Optional[WalletType] = None
     balance: Optional[float] = None

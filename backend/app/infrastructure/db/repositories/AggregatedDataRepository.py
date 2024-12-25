@@ -1,11 +1,12 @@
+from abstractions.repositories.aggregated_data import AggregatedDataRepositoryInterface
 from domain.dto.aggregated_data import CreateAggregatedDataDTO, UpdateAggregatedDataDTO
 from domain.models.aggregated_data import AggregatedData as AggregatedDataModel
 from infrastructure.db.entities import AggregatedData
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
-
 class AggregatedDataRepository(
-    AbstractSQLAlchemyRepository[AggregatedData, AggregatedDataModel, CreateAggregatedDataDTO, UpdateAggregatedDataDTO]
+    AbstractSQLAlchemyRepository[AggregatedData, AggregatedDataModel, CreateAggregatedDataDTO, UpdateAggregatedDataDTO],
+    AggregatedDataRepositoryInterface
 ):
     def create_dto_to_entity(self, dto: CreateAggregatedDataDTO) -> AggregatedData:
         return AggregatedData(
@@ -23,7 +24,6 @@ class AggregatedDataRepository(
             aggregated_vector=entity.aggregated_vector,
             ordinal_present=entity.ordinal_present,
             aggregate_bet_amount=entity.aggregate_bet_amount,
-            wallet_address=entity.wallet_address,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
         )

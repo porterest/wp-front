@@ -1,9 +1,10 @@
 from typing import List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from dependencies.repositories.pair import get_pair_repository
 from domain.metaholder.responses.pair import PairResponse
+from services.exceptions import NotFoundException
 
 router = APIRouter(
     prefix='/pair',
@@ -13,5 +14,12 @@ router = APIRouter(
 
 @router.get('')
 async def get_pairs_list() -> List[PairResponse]:
-    pairs = get_pair_repository()
-    return [PairResponse(name=x.name) for x in await pairs.get_all()]
+    try:
+        pairs = get_pair_repository()
+        # todo: сделать ли сервис ради этой строки
+        return [PairResponse(name=x.name, pair_id=x.id) for x in await pairs.get_all()]
+    except NotFoundException:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No one pair bro",
+        )

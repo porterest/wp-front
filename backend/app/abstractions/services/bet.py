@@ -7,7 +7,7 @@ from domain.dto.bet import CreateBetDTO, UpdateBetDTO
 
 class BetServiceInterface(ABC):
     @abstractmethod
-    async def create_bet(self, create_dto: CreateBetDTO) -> Bet:
+    async def create_bet(self, create_dto: CreateBetDTO) -> None:
         """
         Создаёт новую ставку.
         """

@@ -92,7 +92,6 @@ class TonProofService(TonProofServiceInterface):
                 f'Public key mismatch: provided public key {request_raw.public_key} does not match the parsed or retrieved public key {public_key}')
             return VerifyResult.PUBLIC_KEY_MISMATCH
 
-        # TODO: review, i'm not confident about that
         wanted_address = self.ton_client.get_account_address(request_raw.init_state)
         if not self.compare_addresses(wanted_address, request_raw.address_bytes):
             logger.error(f'Address mismatch: expected address {wanted_address}, but got {request_raw.address}')

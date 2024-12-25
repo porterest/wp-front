@@ -9,4 +9,3 @@ class AggregatedData(BaseModel):
     aggregated_vector: dict
     ordinal_present: bool
     aggregate_bet_amount: float
-    wallet_address: str

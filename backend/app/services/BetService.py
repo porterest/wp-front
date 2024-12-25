@@ -1,12 +1,11 @@
 from dataclasses import dataclass
-from typing import List
 from uuid import UUID
 
 from sqlalchemy.exc import NoResultFound
 
 from abstractions.repositories.bet import BetRepositoryInterface
-from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.bet import BetServiceInterface
+from abstractions.services.user import UserServiceInterface
 from domain.dto.bet import CreateBetDTO, UpdateBetDTO
 from domain.dto.user import UpdateUserDTO
 from domain.models.bet import Bet
@@ -16,8 +15,8 @@ from services.exceptions import NotFoundException
 @dataclass
 class BetService(BetServiceInterface):
     bet_repository: BetRepositoryInterface
-    user_service: UserRepositoryInterface
-    async def create_bet(self, create_dto: CreateBetDTO) -> Bet:
+    user_service: UserServiceInterface
+    async def create_bet(self, create_dto: CreateBetDTO) -> None:
         return await self.bet_repository.create(create_dto)
 
     async def get_bet_by_id(self, bet_id: UUID) -> Bet:
@@ -26,37 +25,28 @@ class BetService(BetServiceInterface):
         except NoResultFound:
             raise NotFoundException(f"Bet with ID {bet_id} not found.")
 
-    async def get_bets_by_user_id(self, user_id: UUID) -> List[Bet]:
-        return await self.bet_repository.get_by_user_id(user_id=user_id)
+    # async def get_bets_by_user_id(self, user_id: UUID) -> List[Bet]:
+    #     return await self.bet_repository.get_by_user_id(user_id=user_id)
+    #
+    # async def get_bets_by_block_id(self, block_id: UUID) -> List[Bet]:
+    #     return await self.bet_repository.get_by_block_id(block_id=block_id)
 
-    async def get_bets_by_block_id(self, block_id: UUID) -> List[Bet]:
-        return await self.bet_repository.get_by_block_id(block_id=block_id)
-
-    async def update_bet(self, bet_id: UUID, update_dto: UpdateBetDTO) -> Bet:
-        bet = await self.get_bet_by_id(bet_id=bet_id)
-        return await self.bet_repository.update(entity=bet, dto=update_dto)
+    async def update_bet(self, bet_id: UUID, update_dto: UpdateBetDTO) -> None:
+        return await self.bet_repository.update(bet_id, update_dto)
 
     async def cancel_bet(self, bet: Bet) -> None:
-        user = await self.get_user(bet.user_id)
+        user = await self.user_service.get_user(bet.user.id)
 
         update_user = UpdateUserDTO(
-            telegram_id=user.tg_id,
-            username=user.username,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            last_activity=user.last_activity,
-            wallet_address=user.wallet_address,
-            balances=user.balances,
-            bets=user.bets,
-            transactions=user.transactions,
-            deposit=user.deposit,
-            balance=user.balance + bet.amount
+            balance=user.balance + bet.amount,
         )
 
-        await self.update_user(user_id=user.id, update_dto=update_user)
+        await self.user_service.update_user(user_id=user.id, user=update_user)
 
-        bet.status = "cancelled"
-        await self.bet_repository.update(entity=bet)
+        update_bet = UpdateBetDTO(
+            status="cancelled"
+        )
+        await self.bet_repository.update(bet.id, update_bet)
 
     async def resolve_bets_for_block(self, block_id: UUID, results: dict) -> None:
         """

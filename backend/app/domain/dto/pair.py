@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from pydantic import BaseModel
+
 from domain.dto import CreateDTO
 
 
@@ -11,8 +13,7 @@ class CreatePairDTO(CreateDTO):
     last_ratio: str
 
 
-@dataclass
-class UpdatePairDTO:
+class UpdatePairDTO(BaseModel):
     name: Optional[str] = None
     contract_address: Optional[str] = None
     last_ratio: Optional[float] = None

@@ -8,9 +8,17 @@ from domain.models.base import BaseModel
 
 @dataclass
 class DepositEntry(BaseModel):
-    app_wallet: AppWallet
+    id: str
+    app_wallet_id: str
+    user_id: str
     tx_tag: str
     status: DepositEntryStatus
 
     amount: Optional[float] = None
     tx_id: Optional[str] = None
+
+    transaction_id: Mapped[Optional[pyUUID]] = mapped_column(ForeignKey('transactions.id'), nullable=True)
+
+    app_wallet = relationship("AppWallet", back_populates="deposits")
+    user = relationship('User', back_populates='deposits')
+    transaction = relationship('Transaction')

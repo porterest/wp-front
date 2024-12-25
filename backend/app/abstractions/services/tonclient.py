@@ -47,6 +47,9 @@ class TonClientInterface(ABC):
     async def get_public_key(self, address: str) -> str:
         ...
 
+   async def get_transactions(self, address: str) -> list[]:
+        ...
+
 
 if __name__ == '__main__':
     proof_init_object = {

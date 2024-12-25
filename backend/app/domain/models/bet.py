@@ -1,16 +1,25 @@
+import typing
 from dataclasses import dataclass
-from uuid import UUID
+from typing import TypeVar, Annotated
 
 from domain.enums import BetStatus
 from domain.models import Pair
 from domain.models.base import BaseModel
 
+BetVector = TypeVar('BetVector', bound=tuple[
+    Annotated[float, 'price'],
+    Annotated[float, 'bets amount'],
+])
+
+if typing.TYPE_CHECKING:
+    from domain.models.user import User
+
 
 @dataclass
 class Bet(BaseModel):
-    user_id: UUID
+    user: 'User'
     pair: Pair
     amount: float
     block_number: int
-    vector: tuple[float, float]
+    vector: BetVector
     status: BetStatus

@@ -1,11 +1,12 @@
+from abstractions.repositories.app_wallet import AppWalletRepositoryInterface
 from domain.dto.app_wallet import CreateAppWalletDTO, UpdateAppWalletDTO
 from domain.models.app_wallet import AppWallet as AppWalletModel
 from infrastructure.db.entities import AppWallet
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
-
 class AppWalletRepository(
-    AbstractSQLAlchemyRepository[AppWallet, AppWalletModel, CreateAppWalletDTO, UpdateAppWalletDTO]
+    AbstractSQLAlchemyRepository[AppWallet, AppWalletModel, CreateAppWalletDTO, UpdateAppWalletDTO],
+    AppWalletRepositoryInterface
 ):
     def create_dto_to_entity(self, dto: CreateAppWalletDTO) -> AppWallet:
         return AppWallet(
@@ -16,7 +17,7 @@ class AppWalletRepository(
 
     def entity_to_model(self, entity: AppWallet) -> AppWalletModel:
         return AppWalletModel(
-            wallet_id=entity.wallet_id,
+            id=entity.id,
             address=entity.address,
             wallet_type=entity.wallet_type,
             balance=entity.balance,

@@ -1,6 +1,8 @@
 from dataclasses import dataclass, Field
 from typing import Optional
 
+from pydantic import BaseModel
+
 from domain.dto import CreateDTO
 
 
@@ -12,8 +14,7 @@ class CreateAggregatedDataDTO(CreateDTO):
     aggregate_bet_amount: float
 
 
-@dataclass
-class UpdateAggregatedDataDTO:
+class UpdateAggregatedDataDTO(BaseModel):
     aggregated_vector: Optional[dict] = None
     ordinal_present: Optional[bool] = None
     transaction_count: Optional[int] = None

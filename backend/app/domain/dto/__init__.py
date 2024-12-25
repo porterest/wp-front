@@ -1,7 +1,7 @@
-from dataclasses import Field, dataclass
+from dataclasses import field, dataclass
 from uuid import UUID, uuid4
 
 
 @dataclass(kw_only=True)
 class CreateDTO:
-    id: UUID = Field(default_factory=uuid4)
+    id: UUID = field(default_factory=uuid4)

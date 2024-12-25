@@ -12,3 +12,6 @@ class NoSuchUserException(Exception):
 
 class ExpiredTokenException(Exception):
     ...
+
+class NoBlocksFoundException(Exception):
+    ...

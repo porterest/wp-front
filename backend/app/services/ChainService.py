@@ -4,35 +4,31 @@ from datetime import datetime, timedelta
 
 from apscheduler.schedulers.base import BaseScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from abstractions.services.bet import BetServiceInterface
 from abstractions.services.block import BlockServiceInterface
+from abstractions.services.chain import ChainServiceInterface
 from domain.dto.block import CreateBlockDTO
+from domain.metaholder.responses.block_state import BlockStateResponse
 from domain.models.block import Block
-from domain.metaholder.responses.block_state import TimeResponse
 from infrastructure.db.entities import BlockStatus
-from services.BetService import BetService
+from services import SingletonMeta
+from services.exceptions import NotFoundException
 
-class SingletonMeta(type):
-    """
-    Метакласс для обеспечения, что существует только один экземпляр ChainService.
-    """
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super().__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 @dataclass
-class ChainService(metaclass=SingletonMeta):
-    session: AsyncSession
+class ChainService(
+    ChainServiceInterface,
+    metaclass=SingletonMeta,
+):
     scheduler: BaseScheduler
-    block_repository: BlockServiceInterface
-    bet_service: BetService
-    local_start_time: datetime
+    block_service: BlockServiceInterface
+
+    bet_service: BetServiceInterface
+    local_start_time: datetime = None
 
     block_generation_interval: timedelta = timedelta(minutes=10)
+    logger = logging.getLogger(__name__)
 
     def __post_init__(self):
         self.logger = logging.getLogger("ChainService")
@@ -58,7 +54,7 @@ class ChainService(metaclass=SingletonMeta):
         self.logger.info(f"Block generation started at {datetime.now()}")
 
         # Получаем последний блок
-        last_block = await self.block_repository.get_last_block()
+        last_block = await self.block_service.get_last_block()
 
         # Если последний блок был прерван, обрабатываем его
         if last_block and last_block.status == BlockStatus.IN_PROGRESS:
@@ -72,18 +68,13 @@ class ChainService(metaclass=SingletonMeta):
         Обрабатывает прерванный блок.
         """
         self.logger.info(f"Handling interrupted block: {block.block_number}")
-        block.status = BlockStatus.INTERRUPTED
-        await self.block_repository.update(block.id, block)
-
-        # Отменяем ставки в прерванном блоке
-        for bet in block.bets:
-            await self.bet_service.cancel_bet(bet)
+        await self.block_service.handle_interrupted_block(block=block)
 
     async def _create_new_block(self):
         """
         Создаёт новый блок и сохраняет его в базе данных.
         """
-        last_block = await self.block_repository.get_last_block()
+        last_block = await self.block_service.get_last_block()
         new_block_number = last_block.block_number + 1 if last_block else 1
 
         # Устанавливаем время начала блока
@@ -96,37 +87,42 @@ class ChainService(metaclass=SingletonMeta):
             result_vector=None,
             created_at=self.local_start_time,
         )
-        await self.block_repository.create(new_block_dto)
+        await self.block_service.create(new_block_dto)
         self.logger.info(f"New block {new_block_number} created at {self.local_start_time}.")
 
-    async def get_current_block_state(self) -> TimeResponse:
+    async def get_current_block_state(self) -> BlockStateResponse:
         """
         Возвращает текущее состояние текущего блока, включая таймер для фронта.
         """
-        last_block = await self.block_repository.get_last_block()
-        if not last_block:
-            self.logger.info("No blocks found.")
-            return TimeResponse(
-                server_time=str(datetime.now()),
-                current_block=0,
-                remaining_time_in_block=0
+        try:
+            last_block = await self.block_service.get_last_block()
+
+            elapsed_time = (datetime.now() - last_block.created_at).total_seconds()
+            remaining_time = max(0, self.block_generation_interval.seconds - int(elapsed_time))
+
+            self.logger.info(
+                f"Current block state: "
+                f"Block number {last_block.block_number}, "
+                f"Status {last_block.status}, "
+                f"Remaining time: {remaining_time}s."
             )
 
-        elapsed_time = (datetime.now() - last_block.created_at).total_seconds()
-        remaining_time = max(0, self.block_generation_interval.seconds - int(elapsed_time))
+            return BlockStateResponse(
+                server_time=str(datetime.now()),
+                current_block=last_block.block_number,
+                remaining_time_in_block=int(remaining_time),
+            )
 
-        self.logger.info(
-            f"Current block state: "
-            f"Block number {last_block.block_number}, "
-            f"Status {last_block.status}, "
-            f"Remaining time: {remaining_time}s."
-        )
+        except NotFoundException:
+            self.logger.error(f"No one block bro", exc_info=True)
+            return BlockStateResponse(
+                server_time=str(datetime.now()),
+                current_block=-1,
+                remaining_time_in_block=None,
+            )
 
-        return TimeResponse(
-            server_time=str(datetime.now()),
-            current_block=last_block.block_number,
-            remaining_time_in_block=int(remaining_time),
-        )
+
+
 
     def stop_block_generation(self):
         """

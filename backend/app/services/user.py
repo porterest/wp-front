@@ -5,8 +5,11 @@ from sqlalchemy.exc import NoResultFound
 
 from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.user import UserServiceInterface
-from domain.dto.user import UpdateUserDTO
-from domain.metaholder.responses import UserHistoryResponse, TransactionResponse
+from domain.dto.user import UpdateUserDTO, CreateUserDTO
+from domain.metaholder.responses import BetResponse
+from domain.metaholder.responses.transaction import TransactionResponse
+from domain.metaholder.responses.user import UserBetsResponse
+from domain.metaholder.responses.user_history import UserHistoryResponse
 from domain.models import User
 from services.exceptions import NotFoundException, NoSuchUserException
 
@@ -28,17 +31,25 @@ class UserService(UserServiceInterface):
             ]
         )
 
+    async def get_user_bets(self, user_id: UUID) -> UserBetsResponse:
+        user = await self.get_user(user_id=user_id)
+        return UserHistoryResponse(
+            user_id=user_id,
+            bets=[
+                BetResponse(
+                    amount=b.amount,
+                    vector=b.vector,
+                    pair_name=b.pair_name,
+                    created_at=b.created_at,
+                ) for b in user.bets
+            ]
+        )
+
     async def get_user(self, user_id: UUID) -> User:
         try:
             return await self.user_repository.get(obj_id=user_id)
         except NoResultFound:
             raise NotFoundException(f"User with ID {user_id} not found.")
-
-    async def get_user_by_tg_id(self, tg_id: int) -> User:
-        user = await self.user_repository.get_by_tg_id(tg_id=tg_id)
-        if not user:
-            raise NoSuchUserException(f"User with Telegram ID {tg_id} not found.")
-        return user
 
     async def get_user_by_wallet(self, wallet_address: str) -> User:
         user = await self.user_repository.get_by_wallet(wallet_address=wallet_address)
@@ -51,8 +62,7 @@ class UserService(UserServiceInterface):
         Обновляет информацию о пользователе на основе переданного DTO.
         """
         user = await self.get_user(user_id=user_id)
-        user = self._apply_updates(user, update_dto)
-        await self.user_repository.update(user)
+        await self.user_repository.update(user_id, update_dto)
         return user
 
     async def delete_user(self, user_id: UUID) -> None:
@@ -60,11 +70,10 @@ class UserService(UserServiceInterface):
         Удаляет пользователя по его ID.
         """
         user = await self.get_user(user_id=user_id)
-        await self.user_repository.delete(user)
+        await self.user_repository.delete(user_id)
 
-    async def create_user(self, tg_id: int, wallet_address: str, username: str) -> User:
+    async def create_user(self, user: CreateUserDTO) -> None:
         """
         Создаёт нового пользователя.
         """
-        user = User(tg_id=tg_id, wallet_address=wallet_address, username=username)
-        return await self.user_repository.create(user)
+        await self.user_repository.create(user)

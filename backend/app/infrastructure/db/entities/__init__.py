@@ -2,18 +2,17 @@ from datetime import datetime
 from typing import Optional, Tuple, List
 from uuid import UUID as pyUUID
 
-from sqlalchemy import String, DateTime, ForeignKey, Enum as SQLEnum, BigInteger
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import ForeignKey, Enum as SQLEnum, BigInteger, UUID
+from sqlalchemy import String, DateTime, Integer, Enum, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from domain.enums import BetStatus, TransactionType, WalletType
+from domain.enums.block_status import BlockStatus
+from domain.enums.chain_status import ChainStatus
 from domain.enums.deposit import DepositEntryStatus
-from uuid import UUID
-from sqlalchemy import Column, String, DateTime, Integer, Enum, func
-from sqlalchemy.dialects.postgresql import UUID as SQLUUID
-from sqlalchemy.ext.declarative import declarative_base
-from enum import Enum as PyEnum
+from domain.models.bet import BetVector
 
 Base = declarative_base()
 
@@ -52,7 +51,7 @@ class Bet(AbstractBase):
     pair_id: Mapped[pyUUID] = mapped_column(ForeignKey('pairs.id'), index=True)
     amount: Mapped[float]
     block_number: Mapped[int] = mapped_column(index=True)
-    vector: Mapped[dict] = mapped_column(JSONB)
+    vector: Mapped[BetVector] = mapped_column(JSONB)
     status: Mapped[BetStatus] = mapped_column(SQLEnum(BetStatus), default=BetStatus.PENDING)
 
     user = relationship("User", back_populates="bets")
@@ -72,6 +71,7 @@ class Transaction(AbstractBase):
     recipient: Mapped[str]
 
     user = relationship("User", back_populates="transactions")
+
 
 class Pair(AbstractBase):
     __tablename__ = 'pairs'
@@ -110,20 +110,15 @@ class DepositEntry(AbstractBase):
 
     id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     app_wallet_id: Mapped[pyUUID] = mapped_column(ForeignKey('app_wallets.id'))
-    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id'))
+    user_id: Mapped[pyUUID] = mapped_column(ForeignKey('users.id'))
 
     status: Mapped[DepositEntryStatus] = mapped_column(SQLEnum(DepositEntryStatus))
 
-    amount: Mapped[Optional[float]]
-    tx_id: Mapped[Optional[str]]
+    transaction_id: Mapped[Optional[pyUUID]] = mapped_column(ForeignKey('transactions.id'), nullable=True)
 
     app_wallet = relationship("AppWallet", back_populates="deposits")
     user = relationship('User', back_populates='deposits')
-
-class BlockStatus(PyEnum):
-    COMPLETED = "completed"
-    IN_PROGRESS = "in_progress"
-    INTERRUPTED = "interrupted"
+    transaction = relationship('Transaction')
 
 
 class Block(AbstractBase):
@@ -134,14 +129,9 @@ class Block(AbstractBase):
     status: Mapped[BlockStatus] = mapped_column(Enum(BlockStatus), nullable=False, default=BlockStatus.IN_PROGRESS)
     created_at: Mapped[Optional[DateTime]] = mapped_column(DateTime(timezone=True), server_default=func.now())
     completed_at: Mapped[Optional[DateTime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    result_vector: Mapped[Tuple[float, float]] = mapped_column(JSONB, nullable=True)
+    result_vector: Mapped[BetVector] = mapped_column(JSONB, nullable=True)
     bets: Mapped[List["Bet"]] = relationship("Bet", back_populates="block")
 
-
-class ChainStatus(Enum):
-    ACTIVE = "active"
-    PAUSED = "paused"
-    COMPLETED = "completed"
 
 class Chain(Base):
     __tablename__ = "chains"

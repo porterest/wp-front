@@ -5,7 +5,7 @@ from typing import Callable, AsyncContextManager
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from abstractions.repositories import UOWInterface
-from infrastructure.repositories.sqlalchemy.AbstractRepository import AbstractSQLAlchemyRepository
+from infrastructure.db.repositories import AbstractSQLAlchemyRepository
 
 
 @dataclass

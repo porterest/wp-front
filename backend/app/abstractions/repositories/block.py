@@ -16,10 +16,6 @@ class BlockRepositoryInterface(
     async def get_last_block(self) -> Optional[Block]:
         pass
 
-    @abstractmethod
-    async def save(self, block: Block) -> None:
-        pass
-
-    @abstractmethod
-    async def update(self, block: Block) -> None:
-        pass
+    # @abstractmethod
+    # async def update(self, block: Block) -> None:
+    #     pass

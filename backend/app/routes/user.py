@@ -1,12 +1,12 @@
 import logging
-from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 
 from dependencies.services.user import get_user_service
-from domain.metaholder.responses import UserInfoResponse, BalanceResponse, UserBetsResponse, BetResponse, \
-    UserHistoryResponse
+from domain.metaholder.responses import BalanceResponse
+from domain.metaholder.responses.user_history import UserHistoryResponse
+from domain.metaholder.responses.user import UserBetsResponse
 from routes.helpers import get_user_id_from_request
 from services.exceptions import NotFoundException
 
@@ -53,7 +53,7 @@ async def get_users_bets(
     users = get_user_service()
 
     try:
-        return await users.get_user_history(user_id)  # TODO: another one
+        return await users.get_user_bets(user_id)
     except NotFoundException:
         logger.error(f"No user with ID {user_id}", exc_info=True)
         raise HTTPException(

@@ -1,12 +1,16 @@
+from abstractions.repositories.bet import BetRepositoryInterface
 from domain.dto.bet import CreateBetDTO, UpdateBetDTO
 from domain.models.bet import Bet as BetModel
 from infrastructure.db.entities import Bet
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
 
+
 class BetRepository(
-    AbstractSQLAlchemyRepository[Bet, BetModel, CreateBetDTO, UpdateBetDTO]
+    AbstractSQLAlchemyRepository[Bet, BetModel, CreateBetDTO, UpdateBetDTO],
+    BetRepositoryInterface
 ):
+
     def create_dto_to_entity(self, dto: CreateBetDTO) -> Bet:
         return Bet(
             user_id=dto.user_id,
@@ -19,9 +23,9 @@ class BetRepository(
 
     def entity_to_model(self, entity: Bet) -> BetModel:
         return BetModel(
-            bet_id=entity.bet_id,
-            user_id=entity.user_id,
-            pair_id=entity.pair_id,
+            id=entity.id,
+            user=entity.user,
+            pair=entity.pair,
             amount=entity.amount,
             block_number=entity.block_number,
             vector=entity.vector,

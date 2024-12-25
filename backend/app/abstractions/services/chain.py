@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
 from typing import Dict, Any
 
-class ChainServiceInterface(ABC):
+from domain.metaholder.responses.block_state import BlockStateResponse
 
+
+class ChainServiceInterface(ABC):
     @abstractmethod
     async def start_block_generation(self) -> None:
         """
@@ -33,7 +34,7 @@ class ChainServiceInterface(ABC):
         ...
 
     @abstractmethod
-    async def get_current_block_state(self) -> Dict[str, Any]:
+    async def get_current_block_state(self) -> BlockStateResponse:
         """
         Возвращает текущее состояние текущего блока, включая таймер для фронта.
         """
