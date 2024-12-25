@@ -10,11 +10,11 @@ services:
       - ./app/settings.json:/app/settings.json
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-    depends_on:
-      db:
-        condition: service_healthy
+#    depends_on:
+#      db:
+#        condition: service_healthy
     ports:
-      - "9090:8080"
+      - "8000:8080"
 
 
 include:

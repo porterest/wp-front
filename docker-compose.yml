@@ -1,14 +1,4 @@
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    command: >
-      sh -c "python3 main.py"
-    ports:
-      - "8000:8000"
-    restart: unless-stopped
-
   frontend:
     build:
       context: ./frontend
@@ -35,3 +25,7 @@ services:
     depends_on:
       - backend
       - frontend
+
+
+include:
+  - ./backend/compose.yaml
