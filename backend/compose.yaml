@@ -18,5 +18,5 @@ services:
 
 
 include:
-  - ./database/db-compose.yaml
+#  - ./database/db-compose.yaml
   - ./vault/vault-compose.yaml

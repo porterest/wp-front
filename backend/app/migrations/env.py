@@ -2,13 +2,13 @@ import asyncio
 import os
 from logging.config import fileConfig
 
-import dotenv
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from backend.infrastructure.db.entities import Base
+from infrastructure.db.entities import Base
+from settings import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -30,16 +30,7 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
-dotenv.load_dotenv(
-    dotenv_path='../database/.env'
-)
-
-db_uri = os.environ.get('DB_URL')
-
-if not db_uri:
-    raise RuntimeError("Set 'DB_URL' env var")
-
-config.set_main_option("sqlalchemy.url", db_uri)
+config.set_main_option("sqlalchemy.url", settings.db.url)
 
 
 def run_migrations_offline() -> None:
