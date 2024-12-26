@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     jwt: JwtSettings
     ton: TonSettings
     vault: VaultSettings
+    allowed_domains: list[str]
 
     debug: bool = True
 
@@ -54,10 +55,6 @@ class Settings(BaseSettings):
         json_file=Path(__file__).parent / 'settings.json',
         json_file_encoding='utf-8',
     )
-
-    @property
-    def allowed_domains(self) -> list[str]:
-        return self.ton.tonconnect.allowed_domains
 
     @classmethod
     def settings_customise_sources(
