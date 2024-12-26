@@ -44,5 +44,5 @@ class TonApiClient(TonClientInterface):
             logger.error(f"Failed to fetch {address} public key via API")
             raise PublicKeyCannotBeFetchedException()
 
-        response = TonApiPublicKeyResponse.model_validate_json(response.json())
+        response = TonApiPublicKeyResponse.model_validate(response.json())
         return response.public_key
