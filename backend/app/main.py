@@ -10,6 +10,7 @@ from routes import (
     user_router,
     chain_router,
     deposit_router,
+    auth_router,
 )
 from settings import settings
 
@@ -25,6 +26,7 @@ app.include_router(pair_router)
 app.include_router(user_router)
 app.include_router(chain_router)
 app.include_router(deposit_router)
+app.include_router(auth_router)
 
 app.add_middleware(
     CORSMiddleware,
