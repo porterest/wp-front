@@ -29,7 +29,7 @@ async def generate_payload(
         raise HTTPException(status_code=500, detail="oops") from e
 
 
-@router.post('/verify-payload')
+@router.post('/verify_payload')
 async def verify_payload(
         verify_payload_request: CheckProofRequest,
 ) -> AuthTokens:
