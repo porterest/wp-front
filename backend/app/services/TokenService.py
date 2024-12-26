@@ -66,7 +66,7 @@ class TokenService(TokenServiceInterface):
 
         token = encode(
             payload=claims,
-            key=self.jwt_settings.secret_key,
+            key=self.jwt_settings.secret_key.get_secret_value(),
             algorithm="HS256"
         )
 
@@ -76,7 +76,7 @@ class TokenService(TokenServiceInterface):
         try:
             claims = decode(
                 token,
-                self.jwt_settings.secret_key,
+                self.jwt_settings.secret_key.get_secret_value(),
                 algorithms=["HS256"],
                 issuer=self.jwt_settings.issuer,
                 audience=self.jwt_settings.audience,
