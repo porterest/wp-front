@@ -33,6 +33,6 @@ def get_tonproof_service() -> TonProofServiceInterface:
         known_wallets_provider=get_known_wallets_provider(),
 
         # settings
-        payload_ttl=settings.tonconnect.payload_ttl,
-        allowed_domains=settings.tonconnect.allowed_domains,
+        payload_ttl=settings.ton.tonconnect.payload_ttl,
+        allowed_domains=settings.allowed_domains,
     )
