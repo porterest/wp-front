@@ -124,7 +124,7 @@ class Block(AbstractBase):
     chain_id: Mapped[pyUUID] = mapped_column(ForeignKey('chains.id'))
 
     chain: Mapped['Chain'] = relationship("Chain", back_populates='blocks')
-    bets: Mapped[List["Bet"]] = relationship("Bet", back_populates="block")
+    bets: Mapped[List["Bet"]] = relationship("Bet")
 
 
 class Chain(Base):
