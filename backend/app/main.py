@@ -16,6 +16,14 @@ from settings import settings
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_domains,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
+
 # FastAPI.middleware is a decorator to add function-based middlewares,
 # but I guess it's quite ugly in terms of architecture - outers shouldn't be coupled with inners (right?)
 app.middleware('http')(check_for_auth)
@@ -27,14 +35,6 @@ app.include_router(user_router)
 app.include_router(chain_router)
 app.include_router(deposit_router)
 app.include_router(auth_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_domains,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
-)
 
 
 def custom_openapi():
