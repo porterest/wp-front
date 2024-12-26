@@ -16,6 +16,7 @@ async def check_for_auth(
 ):
     if request.url.path.startswith("/auth") or request.url.path.startswith("/docs") or request.url.path.startswith("/openapi"):
         response = await call_next(request)
+        print(request.headers)
         return response
 
     access_token = request.headers.get('Authorization')
