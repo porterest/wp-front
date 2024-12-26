@@ -1,6 +1,6 @@
 import base64
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -40,6 +40,17 @@ class CheckProofRequestRaw:
     init_state: Optional[InitialAccountState] = None
     data: Optional[Cell] = None
     code: Optional[str] = None
+
+    def __str__(self):
+        data = {
+            "request": self.request.model_dump(),
+            "address_bytes": self.address_bytes.decode(),
+            "workchain": self.workchain,
+            "init_state": asdict(self.init_state),
+            "data": str(self.data),
+            "code": self.code,
+        }
+        return str(data)
 
     @property
     def proof(self) -> Proof:

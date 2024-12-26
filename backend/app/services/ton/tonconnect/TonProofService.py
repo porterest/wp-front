@@ -54,6 +54,7 @@ class TonProofService(TonProofServiceInterface):
         request_raw = CheckProofRequestRaw(
             request=request,
         )
+        logger.debug(str(request_raw))
 
         # step 0.5: retrieve the proof from user and validate
         if not request_raw.workchain:
