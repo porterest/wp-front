@@ -8,9 +8,7 @@ from domain.tonconnect.requests import CheckProofRequest
 from domain.tonconnect.responses import GeneratePayloadResponse
 from services.ton.tonconnect.exceptions import InvalidPayloadToken, TonProofVerificationFailed
 
-router = APIRouter(
-    prefix='/ton',
-)
+router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
