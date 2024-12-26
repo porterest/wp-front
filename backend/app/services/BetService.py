@@ -16,6 +16,7 @@ from services.exceptions import NotFoundException
 class BetService(BetServiceInterface):
     bet_repository: BetRepositoryInterface
     user_service: UserServiceInterface
+
     async def create_bet(self, create_dto: CreateBetDTO) -> None:
         return await self.bet_repository.create(create_dto)
 

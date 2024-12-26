@@ -11,13 +11,17 @@ class PairRepository(
 ):
     def create_dto_to_entity(self, dto: CreatePairDTO) -> Pair:
         return Pair(
+            id=dto.id,
             name=dto.name,
-            contract_address=dto.contract_address
+            contract_address=dto.contract_address,
+            last_ratio=dto.last_ratio,
         )
 
     def entity_to_model(self, entity: Pair) -> PairModel:
         return PairModel(
+            id=entity.id,
             name=entity.name,
+            last_ratio=entity.last_ratio,
             contract_address=entity.contract_address,
             created_at=entity.created_at,
             updated_at=entity.updated_at,

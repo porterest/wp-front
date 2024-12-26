@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from datetime import datetime
+from typing import NoReturn
 from uuid import UUID
 
 from sqlalchemy.exc import NoResultFound
@@ -15,6 +17,16 @@ from services.exceptions import NotFoundException, NoSuchUserException
 @dataclass
 class UserService(UserServiceInterface):
     user_repository: UserRepositoryInterface
+
+    async def ensure_user(self, wallet_address: str) -> NoReturn:
+        user = await self.user_repository.get_by_wallet(wallet_address)
+        if not user:
+            dto = CreateUserDTO(
+                wallet_address=wallet_address,
+                last_activity=datetime.now(),
+            )
+
+            await self.user_repository.create(dto)
 
     async def get_user_bets(self, user_id: UUID) -> UserBetsResponse:
         user = await self.get_user(user_id)
