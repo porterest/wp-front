@@ -34,5 +34,5 @@ def get_tonproof_service() -> TonProofServiceInterface:
 
         # settings
         payload_ttl=settings.ton.tonconnect.payload_ttl,
-        allowed_domains=settings.allowed_domains,
+        allowed_domains=settings.ton.tonconnect.allowed_domains,
     )
