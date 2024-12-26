@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from enum import Enum
 
@@ -26,14 +27,16 @@ class TonApiClient(TonClientInterface):
     get_address_endpoint: str = ''
     get_pubkey_endpoint: str = '/v2/accounts/{}/publickey'
 
-    def _get_client(self) -> AsyncClient:
-        return AsyncClient(base_url=self.base_url)
+    @asynccontextmanager
+    async def _get_client(self) -> AsyncClient:
+        async with AsyncClient(base_url=self.base_url) as client:
+            yield client
 
     def _get_public_key_endpoint(self, address: str):
         return self.get_pubkey_endpoint.replace('{}', address)
 
     async def get_public_key(self, address: str) -> str:
-        with self._get_client() as client:  # type: AsyncClient
+        async with self._get_client() as client:  # type: AsyncClient
             response = await client.get(
                 url=self._get_public_key_endpoint(address),
             )
