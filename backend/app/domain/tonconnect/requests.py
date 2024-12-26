@@ -1,10 +1,9 @@
 import base64
 import logging
-from copy import deepcopy
 from dataclasses import dataclass
 from typing import Optional
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 from pytoniq_core import Slice, Cell
 
 from domain.ton import InitialAccountState, TickTock, Library
@@ -13,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class Domain(BaseModel):
-    length_bytes: int
+    length_bytes: int = Field(alias='LengthBytes')
     value: str
 
 
@@ -22,7 +21,7 @@ class Proof(BaseModel):
     domain: Domain
     signature: str
     payload: str
-    state_init: Optional[str] = Field(default=None, alias="state_init")
+    state_init: Optional[str] = Field(default=None)
 
 
 class CheckProofRequest(BaseModel):
