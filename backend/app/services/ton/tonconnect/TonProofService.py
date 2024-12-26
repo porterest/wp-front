@@ -57,7 +57,7 @@ class TonProofService(TonProofServiceInterface):
         logger.debug(str(request_raw))
 
         # step 0.5: retrieve the proof from user and validate
-        if not request_raw.workchain:
+        if request_raw.workchain is None:
             return VerifyResult.INVALID_ADDRESS
 
         if not request_raw.init_state:

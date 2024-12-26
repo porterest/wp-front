@@ -72,13 +72,13 @@ class CheckProofRequestRaw:
                 self.workchain = int(address[:1])
                 self.address_bytes = bytes.fromhex(address[2:])
                 logger.debug(f"workchain is {self.workchain}")
-                logger.debug(f"address bytes is {address[2:]} {address} {bytes.fromhex(address[2:])}")
+                logger.debug(f"address bytes is {address[2:]} {bytes.fromhex(address[2:])}")
             except ValueError:
                 self.workchain = None
                 self.address_bytes = None
-                print("Error parsing the address.")
+                logger.error("Error parsing the address.")
         else:
-            print("Invalid address format.")
+            logger.error("Invalid address format.")
 
         # Process the StateInit to extract code and data cells
         if self.proof.state_init:
@@ -126,6 +126,6 @@ class CheckProofRequestRaw:
                     libraries=libraries,
                 )
             except Exception as e:
-                print(f"Error processing state_init: {e}")
+                logger.error(f"Error processing state_init: {e}")
         else:
-            print("No state_init provided in proof.")
+            logger.error("No state_init provided in proof.")
