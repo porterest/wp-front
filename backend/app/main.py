@@ -20,7 +20,10 @@ from settings import settings
 
 app = FastAPI()
 logger = logging.getLogger(__name__)
-
+logging.basicConfig(
+    level=logging.DEBUG if settings.debug else logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(
