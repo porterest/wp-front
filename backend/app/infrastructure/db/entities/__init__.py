@@ -49,8 +49,8 @@ class Bet(AbstractBase):
     id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     user_id: Mapped[pyUUID] = mapped_column(ForeignKey('users.id'))
     pair_id: Mapped[pyUUID] = mapped_column(ForeignKey('pairs.id'), index=True)
+    block_id: Mapped[pyUUID] = mapped_column(ForeignKey('blocks.id'), index=True)
     amount: Mapped[float]
-    block_number: Mapped[int] = mapped_column(index=True)
     vector: Mapped[BetVector] = mapped_column(JSONB)
     status: Mapped[BetStatus] = mapped_column(SQLEnum(BetStatus), default=BetStatus.PENDING)
 
@@ -81,7 +81,7 @@ class Pair(AbstractBase):
     contract_address: Mapped[str] = mapped_column(String(255), unique=True)
     last_ratio: Mapped[float]
 
-    bets = relationship("Bet", back_populates="pair")
+    bets: Mapped[Bet] = relationship("Bet", back_populates="pair")
 
 
 class AppWallet(AbstractBase):
