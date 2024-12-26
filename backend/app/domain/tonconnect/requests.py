@@ -44,7 +44,7 @@ class CheckProofRequestRaw:
     def __str__(self):
         data = {
             "request": self.request.model_dump(),
-            "address_bytes": self.address_bytes.decode(),
+            "address_bytes": self.address_bytes.hex(),
             "workchain": self.workchain,
             "init_state": asdict(self.init_state),
             "data": str(self.data),
