@@ -49,6 +49,7 @@ async def verify_payload(
         )
         return tokens
     except TonProofVerificationFailed as e:
+        logger.error(verify_payload_request.address)
         raise HTTPException(status_code=400, detail=f'Invalid proof (backend): {e.status.name}')
     except InvalidPayloadToken:
         raise HTTPException(status_code=400, detail=f'Invalid payload (backend)')
