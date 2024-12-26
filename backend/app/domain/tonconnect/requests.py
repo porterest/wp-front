@@ -71,6 +71,8 @@ class CheckProofRequestRaw:
             try:
                 self.workchain = int(address[:1])
                 self.address_bytes = bytes.fromhex(address[2:])
+                logger.debug(f"workchain is {self.workchain}")
+                logger.debug(f"address bytes is {self.address_bytes.decode()}")
             except ValueError:
                 self.workchain = None
                 self.address_bytes = None
