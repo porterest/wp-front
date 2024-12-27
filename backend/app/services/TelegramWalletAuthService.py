@@ -6,10 +6,11 @@ from abstractions.services.auth import AuthServiceInterface
 from abstractions.services.auth.tokens import TokenServiceInterface
 from abstractions.services.user import UserServiceInterface
 from domain.dto.auth import AuthTokens, Credentials
-from services.exceptions import InvalidTokenException, NoSuchUserException, ExpiredTokenException, NotFoundException
+from services.exceptions import InvalidTokenException, NoSuchUserException, ExpiredTokenException
 from services.ton.tonconnect.exceptions import InvalidPayloadToken
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class TelegramWalletAuthService(AuthServiceInterface):
@@ -19,8 +20,7 @@ class TelegramWalletAuthService(AuthServiceInterface):
     async def get_user_id_from_jwt(self, token: str) -> UUID:
         try:
             payload = self.token_service.get_token_payload(token=token)
-            logger.error(payload)
-            address: str | None = payload.get('wallet', None)
+            address: str | None = payload.get('sub', None)
             if not address:
                 raise InvalidTokenException()
 
