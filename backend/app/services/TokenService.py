@@ -29,8 +29,7 @@ class TokenService(TokenServiceInterface):
             logger.error("Token has expired: %s", token)
         except InvalidTokenJWTError as ex:
             logger.error("Invalid token: %s. Error: %s", token, ex)
-        finally:
-            return False
+        return False
 
     def create_payload_token(self, ttl: int = 600) -> str:
         claims = {
