@@ -41,6 +41,8 @@ async def verify_payload(
             request=verify_payload_request,
         )
 
+        logger.error(verify_payload_request.proof.payload)
+
         tokens = await auth_service.create_token(
             credentials=Credentials(
                 payload=verify_payload_request.proof.payload,

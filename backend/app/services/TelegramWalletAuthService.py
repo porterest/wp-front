@@ -30,6 +30,7 @@ class TelegramWalletAuthService(AuthServiceInterface):
 
     async def create_token(self, credentials: Credentials) -> AuthTokens:
         payload_is_valid = self.token_service.validate_token(token=credentials.payload)
+
         if not payload_is_valid:
             raise InvalidPayloadToken
 
