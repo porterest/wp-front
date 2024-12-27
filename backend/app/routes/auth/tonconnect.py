@@ -60,7 +60,7 @@ async def verify_payload(
                 "accessToken": tokens.access_token.get_secret_value(),
                 "refreshToken": tokens.refresh_token.get_secret_value(),
                 'user': {
-                    "id": user.id,
+                    "id": str(user.id),
                     "name": user.username or 'LOLUSER'
                 }
             }
