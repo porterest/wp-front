@@ -102,7 +102,7 @@ class TonProofService(TonProofServiceInterface):
         msg_hash = nacl.hash.sha256(msg)
 
         public_key_bytes = bytes.fromhex(request_raw.public_key)
-        verify_key = VerifyKey(public_key_bytes, encoder=HexEncoder)
+        verify_key = VerifyKey(public_key_bytes)
 
         # Step 4: Verify the signature
         signature = base64.b64decode(request_raw.proof.signature)
