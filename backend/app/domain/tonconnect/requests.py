@@ -1,10 +1,9 @@
 import base64
 import logging
-from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Optional
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 from pytoniq_core import Slice, Cell
 
 from domain.ton import InitialAccountState, TickTock, Library
@@ -13,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class Domain(BaseModel):
-    length_bytes: int
+    length_bytes: int = Field(alias='LengthBytes')
     value: str
 
 
@@ -22,7 +21,7 @@ class Proof(BaseModel):
     domain: Domain
     signature: str
     payload: str
-    state_init: Optional[str] = Field(default=None, alias="state_init")
+    state_init: Optional[str] = Field(default=None)
 
 
 class CheckProofRequest(BaseModel):
@@ -41,6 +40,17 @@ class CheckProofRequestRaw:
     init_state: Optional[InitialAccountState] = None
     data: Optional[Cell] = None
     code: Optional[str] = None
+
+    def __str__(self):
+        data = {
+            "request": self.request.model_dump(),
+            "address_bytes": self.address_bytes.hex(),
+            "workchain": self.workchain,
+            "init_state": asdict(self.init_state),
+            "data": str(self.data),
+            "code": self.code,
+        }
+        return str(data)
 
     @property
     def proof(self) -> Proof:
@@ -61,12 +71,14 @@ class CheckProofRequestRaw:
             try:
                 self.workchain = int(address[:1])
                 self.address_bytes = bytes.fromhex(address[2:])
+                logger.debug(f"workchain is {self.workchain}")
+                logger.debug(f"address bytes is {address[2:]} {bytes.fromhex(address[2:])}")
             except ValueError:
                 self.workchain = None
                 self.address_bytes = None
-                print("Error parsing the address.")
+                logger.error("Error parsing the address.")
         else:
-            print("Invalid address format.")
+            logger.error("Invalid address format.")
 
         # Process the StateInit to extract code and data cells
         if self.proof.state_init:
@@ -114,6 +126,6 @@ class CheckProofRequestRaw:
                     libraries=libraries,
                 )
             except Exception as e:
-                print(f"Error processing state_init: {e}")
+                logger.error(f"Error processing state_init: {e}")
         else:
-            print("No state_init provided in proof.")
+            logger.error("No state_init provided in proof.")

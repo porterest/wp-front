@@ -54,9 +54,10 @@ class TonProofService(TonProofServiceInterface):
         request_raw = CheckProofRequestRaw(
             request=request,
         )
+        logger.debug(str(request_raw))
 
         # step 0.5: retrieve the proof from user and validate
-        if not request_raw.workchain:
+        if request_raw.workchain is None:
             return VerifyResult.INVALID_ADDRESS
 
         if not request_raw.init_state:
@@ -101,7 +102,7 @@ class TonProofService(TonProofServiceInterface):
         msg_hash = nacl.hash.sha256(msg)
 
         public_key_bytes = bytes.fromhex(request_raw.public_key)
-        verify_key = VerifyKey(public_key_bytes, encoder=HexEncoder)
+        verify_key = VerifyKey(public_key_bytes)
 
         # Step 4: Verify the signature
         signature = base64.b64decode(request_raw.proof.signature)
@@ -174,7 +175,7 @@ class TonProofService(TonProofServiceInterface):
         offset += len(payload_bytes)
 
         # Compute the SHA256 hash of the message
-        msg_hash = nacl.hash.sha256(message, encoder=nacl.encoding.RawEncoder)
+        msg_hash = nacl.hash.sha256(bytes(message), encoder=nacl.encoding.RawEncoder)
 
         # Construct the final message
         ff_bytes = b"\xFF\xFF"

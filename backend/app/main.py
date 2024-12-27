@@ -1,9 +1,12 @@
+import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse
 
 from dependencies.services.chain import get_chain_service
 from middlewares import check_for_auth
@@ -14,6 +17,7 @@ from routes import (
     user_router,
     chain_router,
     deposit_router,
+    auth_router,
 )
 from settings import settings
 
@@ -30,6 +34,32 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(lifespan=lifespan)
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.DEBUG if settings.debug else logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+        request: Request,
+        exc: RequestValidationError,
+):
+    exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
+    logger.error(f"{request}: {exc_str}")
+    content = {'status_code': 422, 'message': exc_str, 'data': None}
+    return JSONResponse(content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_domains,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
+
 # FastAPI.middleware is a decorator to add function-based middlewares,
 # but I guess it's quite ugly in terms of architecture - outers shouldn't be coupled with inners (right?)
 app.middleware('http')(check_for_auth)
@@ -40,14 +70,7 @@ app.include_router(pair_router)
 app.include_router(user_router)
 app.include_router(chain_router)
 app.include_router(deposit_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_domains,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
-)
+app.include_router(auth_router)
 
 
 def custom_openapi():

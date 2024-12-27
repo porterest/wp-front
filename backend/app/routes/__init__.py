@@ -4,3 +4,4 @@ from .chain import router as chain_router
 from .deposit import router as deposit_router
 from .pair import router as pair_router
 from .user import router as user_router
+from .auth import router as auth_router

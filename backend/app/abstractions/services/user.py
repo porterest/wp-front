@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import NoReturn
 from uuid import UUID
 
 from domain.dto.user import UpdateUserDTO
@@ -25,4 +26,8 @@ class UserServiceInterface(ABC):
 
     @abstractmethod
     async def get_user_bets(self, user_id: UUID) -> UserBetsResponse:
+        ...
+
+    @abstractmethod
+    async def ensure_user(self, wallet_address: str) -> NoReturn:
         ...

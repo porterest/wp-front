@@ -8,9 +8,7 @@ from domain.tonconnect.requests import CheckProofRequest
 from domain.tonconnect.responses import GeneratePayloadResponse
 from services.ton.tonconnect.exceptions import InvalidPayloadToken, TonProofVerificationFailed
 
-router = APIRouter(
-    prefix='/ton',
-)
+router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +29,7 @@ async def generate_payload(
         raise HTTPException(status_code=500, detail="oops") from e
 
 
-@router.post('/verify-payload')
+@router.post('/verify_payload')
 async def verify_payload(
         verify_payload_request: CheckProofRequest,
 ) -> AuthTokens:
@@ -51,6 +49,7 @@ async def verify_payload(
         )
         return tokens
     except TonProofVerificationFailed as e:
+        logger.error(verify_payload_request.address)
         raise HTTPException(status_code=400, detail=f'Invalid proof (backend): {e.status.name}')
     except InvalidPayloadToken:
         raise HTTPException(status_code=400, detail=f'Invalid payload (backend)')

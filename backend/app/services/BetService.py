@@ -9,6 +9,7 @@ from abstractions.services.bet import BetServiceInterface
 from abstractions.services.user import UserServiceInterface
 from domain.dto.bet import CreateBetDTO, UpdateBetDTO
 from domain.dto.user import UpdateUserDTO
+from domain.enums import BetStatus
 from domain.models.bet import Bet
 from services.exceptions import NotFoundException
 
@@ -56,10 +57,12 @@ class BetService(BetServiceInterface):
         """
         Обрабатывает все ставки для указанного блока на основе результатов.
         """
-        block = await self.block_repository.get_block(block_id)
+        block = await self.block_repository.get(block_id)
         bets = block.bets
         for bet in bets:
             # Пример обработки на основе результатов
             bet.result = results.get(bet.id, 0)
-            bet.status = "resolved"
-            await self.bet_repository.update(entity=bet)
+            dto = UpdateBetDTO(
+                status=BetStatus.RESOLVED,
+            )
+            await self.bet_repository.update(bet.id, dto)

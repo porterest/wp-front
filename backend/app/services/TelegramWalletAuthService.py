@@ -33,6 +33,9 @@ class TelegramWalletAuthService(AuthServiceInterface):
         if not payload_is_valid:
             raise InvalidPayloadToken
 
+        await self.user_service.ensure_user(wallet_address=credentials.wallet_address)
+
+        # noinspection PyUnreachableCode
         tokens = self.token_service.create_auth_token(
             wallet_address=credentials.wallet_address,
             payload=credentials.payload,

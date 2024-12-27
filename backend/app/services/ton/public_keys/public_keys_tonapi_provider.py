@@ -1,33 +1,20 @@
 import logging
+from dataclasses import dataclass
 
-from httpx import AsyncClient
+from pydantic import SecretStr
 
 from abstractions.services.public_keys import PublicKeyProviderInterface
-from .api import TonApiPublicKeyResponse
-from .exceptions import PublicKeyCannotBeFetchedException
+from ..client.api import TonApiClient
 
 logger = logging.getLogger(__name__)
 
 
+@dataclass
 class PublicKeyTonApiProvider(PublicKeyProviderInterface):
-    api_base_url: str = ''
+    api_token: SecretStr
 
-    get_public_key_endpoint: str = '/v2/accounts/{}/publickey'
-
-    def _get_client(self) -> AsyncClient:
-        return AsyncClient(base_url=self.api_base_url)
-
-    def _get_public_key_endpoint(self, address: str):
-        return self.get_public_key_endpoint.replace('{}', address)
+    def __post_init__(self):
+        self.client = TonApiClient(token=self.api_token)
 
     async def get_public_key(self, address: str) -> str:
-        with self._get_client() as client:  # type: AsyncClient
-            response = await client.get(
-                url=self._get_public_key_endpoint(address),
-            )
-        if not response.is_success:
-            logger.error(f"Failed to fetch {address} public key via API")
-            raise PublicKeyCannotBeFetchedException()
-
-        response = TonApiPublicKeyResponse.model_validate_json(response.json())
-        return response.public_key
+        return await self.client.get_public_key(address)

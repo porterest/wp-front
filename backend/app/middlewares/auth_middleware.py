@@ -1,12 +1,9 @@
 from uuid import UUID
 
-from fastapi import Request, HTTPException
+from fastapi import Request
 from fastapi.responses import JSONResponse
-from pydantic import SecretStr
-from starlette.datastructures import URL
 
 from dependencies.services.auth import get_auth_service
-from domain.dto.auth import AuthTokens
 from services.exceptions import InvalidTokenException, ExpiredTokenException, NoSuchUserException
 
 
@@ -14,7 +11,9 @@ async def check_for_auth(
         request: Request,
         call_next,
 ):
-    if request.url.path.startswith("/auth") or request.url.path.startswith("/docs") or request.url.path.startswith("/openapi"):
+    if (request.url.path.startswith("/auth")
+            or request.url.path.startswith("/docs") or
+            request.url.path.startswith("/openapi")):
         response = await call_next(request)
         return response
 

@@ -17,7 +17,7 @@ import WalletHandler from "./components/WalletHandler";
 
 const App: React.FC = () => {
   return (
-    <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/daria021/dummy/refs/heads/main/tonconnect-manifest.json">
+    <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/porterest/wp-front/refs/heads/main/frontend/public/tonconnect-manifest.json">
       <AuthProvider>
         <CandleDataProvider>
           <Router>

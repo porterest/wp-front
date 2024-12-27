@@ -31,9 +31,9 @@ pf:
 	git push origin main
 
 deploy-b:
-	docker compose stop backend
+	docker compose stop app
 	git pull origin main
-	docker compose up --build -d backend
+	docker compose up --build -d app
 
 deploy-f:
 	docker compose stop frontend
