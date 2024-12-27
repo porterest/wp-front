@@ -93,7 +93,7 @@ export async function fetchUserBalances(): Promise<any> {
  */
 export async function getPairs(): Promise<PairResponse[]> {
     try {
-        const response = await apiClient.get("/pairs");
+        const response = await apiClient.get("/pair");
         return response.data;
     } catch (error) {
         console.error("Не удалось получить список пар:", error);
@@ -106,7 +106,7 @@ export async function getPairs(): Promise<PairResponse[]> {
  */
 export async function fetchTime(): Promise<TimeResponse> {
     try {
-        const response = await apiClient.get<TimeResponse>("/time");
+        const response = await apiClient.get<TimeResponse>("/chain/time");
         return response.data;
     } catch (error: any) {
         console.error("Ошибка получения времени:", error);

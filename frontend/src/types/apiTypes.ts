@@ -48,6 +48,7 @@ export interface PairResponse {
 }
 
 export interface TimeResponse {
+  block_id: string;
   server_time: string; // Текущее серверное время
   current_block: number; // ID текущего блока
   remaining_time_in_block: number; // Оставшееся время в секундах
