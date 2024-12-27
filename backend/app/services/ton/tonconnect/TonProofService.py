@@ -175,7 +175,7 @@ class TonProofService(TonProofServiceInterface):
         offset += len(payload_bytes)
 
         # Compute the SHA256 hash of the message
-        msg_hash = nacl.hash.sha256(message, encoder=nacl.encoding.RawEncoder)
+        msg_hash = nacl.hash.sha256(bytes(message), encoder=nacl.encoding.RawEncoder)
 
         # Construct the final message
         ff_bytes = b"\xFF\xFF"
