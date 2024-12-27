@@ -52,7 +52,8 @@ async def verify_payload(
         logger.error(verify_payload_request.address)
         raise HTTPException(status_code=400, detail=f'Invalid proof (backend): {e.status.name}')
     except InvalidPayloadToken:
-        raise HTTPException(status_code=400, detail=f'Invalid payload (backend)')
+        logger.error(f"payload: {verify_payload_request.proof.payload}", exc_info=True)
+        raise HTTPException(status_code=400, detail=f'Invalid payload (backend)',)
     except Exception:
         logger.error("There is an error during verification or creating a token", exc_info=True)
         raise HTTPException(status_code=500, detail='no')

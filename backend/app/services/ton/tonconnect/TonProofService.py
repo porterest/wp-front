@@ -3,6 +3,7 @@ import base64
 import logging
 import struct
 from dataclasses import dataclass
+from datetime import datetime, timedelta, UTC
 from typing import Annotated
 
 from nacl.hash import sha256
@@ -75,12 +76,12 @@ class TonProofService(TonProofServiceInterface):
             return VerifyResult.DOMAIN_NOT_ALLOWED
 
         # step 3: check if payload expired
-        # proof_datetime = datetime.fromtimestamp(request_raw.proof.timestamp, tz=UTC)
-        # proof_expires = proof_datetime + timedelta(seconds=self.payload_ttl)
-        # if proof_expires < datetime.now(tz=UTC):
-        #     logger.error(
-        #         f"Proof expired: the proof DateTimes {proof_expires} is outside the allowed validity period: {self.payload_ttl} sec.")
-        #     return VerifyResult.PROOF_EXPIRED
+        proof_datetime = datetime.fromtimestamp(request_raw.proof.timestamp, tz=UTC)
+        proof_expires = proof_datetime + timedelta(seconds=self.payload_ttl)
+        if proof_expires < datetime.now(tz=UTC):
+            logger.error(
+                f"Proof expired: the proof DateTimes {proof_expires} is outside the allowed validity period: {self.payload_ttl} sec.")
+            return VerifyResult.PROOF_EXPIRED
 
         # step 6: retrieve user wallet's public key
         try:
