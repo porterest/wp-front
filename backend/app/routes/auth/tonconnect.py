@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException
+from starlette.responses import JSONResponse
 
 from dependencies.services.auth import get_tonproof_service, get_auth_service
 from domain.dto.auth import AuthTokens, Credentials
@@ -33,7 +34,7 @@ async def generate_payload(
 @router.post('/verify_payload')
 async def verify_payload(
         verify_payload_request: CheckProofRequest,
-) -> AuthTokens:
+) -> JSONResponse:
     tonproof_service = get_tonproof_service()
     auth_service = get_auth_service()
 
@@ -50,7 +51,13 @@ async def verify_payload(
                 wallet_address=verify_payload_request.address,
             ),
         )
-        return tokens
+        return JSONResponse(
+            status_code=200,
+            content={
+                "access_token": tokens.access_token.get_secret_value(),
+                "refresh_token": tokens.refresh_token.get_secret_value(),
+            }
+        )
     except TonProofVerificationFailed as e:
         logger.error(verify_payload_request.address)
         raise HTTPException(status_code=400, detail=f'Invalid proof (backend): {e.status.name}')
