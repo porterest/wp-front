@@ -21,6 +21,7 @@ async def generate_payload(
 
     try:
         payload = await tonproof_service.generate_payload()
+        logger.error(payload)
         return GeneratePayloadResponse(
             payload=payload,
         )
