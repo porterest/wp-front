@@ -17,11 +17,11 @@ async def check_for_auth(
         response = await call_next(request)
         return response
 
-    access_token = request.headers.get('Authorization')
+    access_token = request.headers.get('Authorization').replace('Bearer ', '')
 
     auth_service = get_auth_service()
     try:
-        if access_token != 'Bearer abc':
+        if access_token != 'abc':
             user_id = await auth_service.get_user_id_from_jwt(access_token)
         else:
             user_id = UUID('ff68456d-2b16-4fff-b1fb-041210ec6e9f')
