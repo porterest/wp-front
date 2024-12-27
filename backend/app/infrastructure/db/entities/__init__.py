@@ -54,8 +54,9 @@ class Bet(AbstractBase):
     vector: Mapped[BetVector] = mapped_column(JSONB)
     status: Mapped[BetStatus] = mapped_column(SQLEnum(BetStatus), default=BetStatus.PENDING)
 
-    user = relationship("User", back_populates="bets")
-    pair = relationship("Pair", back_populates="bets")
+    user: Mapped['User'] = relationship("User", back_populates="bets")
+    pair: Mapped['Pair'] = relationship("Pair", back_populates="bets")
+    block: Mapped['Block'] = relationship("Block", back_populates='bets')
 
 
 class Transaction(AbstractBase):
@@ -124,15 +125,17 @@ class Block(AbstractBase):
     chain_id: Mapped[pyUUID] = mapped_column(ForeignKey('chains.id'))
 
     chain: Mapped['Chain'] = relationship("Chain", back_populates='blocks')
-    bets: Mapped[List["Bet"]] = relationship("Bet")
+    bets: Mapped[List["Bet"]] = relationship("Bet", back_populates='block')
 
 
-class Chain(Base):
+class Chain(AbstractBase):
     __tablename__ = "chains"
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     current_block: Mapped[int]
+    pair_id: Mapped[pyUUID] = mapped_column(ForeignKey('pairs.id'))
     status: Mapped[ChainStatus] = mapped_column(SQLEnum(ChainStatus), default=ChainStatus.ACTIVE)
     created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     blocks: Mapped[List[Block]] = relationship("Block", back_populates='chain')
+    pair: Mapped[Pair] = relationship("Pair")

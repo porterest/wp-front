@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Tuple
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -13,6 +14,7 @@ from infrastructure.db.entities import BlockStatus
 class CreateBlockDTO(CreateDTO):
     block_number: int
     status: BlockStatus
+    chain_id: UUID
     result_vector: Optional[BetVector] = None
     created_at: Optional[datetime]
     completed_at: Optional[datetime] = None

@@ -15,9 +15,9 @@ if typing.TYPE_CHECKING:
     from domain.models.user import User
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Bet(BaseModel):
-    user: 'User'
+    user: typing.Optional['User'] = None
     pair: Pair
     amount: float
     block_number: int

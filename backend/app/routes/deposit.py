@@ -17,4 +17,4 @@ async def check_user_deposit(
 
     deposit_service = get_deposit_service()
 
-    await deposit_service.start_deposit_process()
+    await deposit_service.start_deposit_process(user_id)

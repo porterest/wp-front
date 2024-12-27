@@ -12,7 +12,7 @@ class UserServiceInterface(ABC):
         ...
 
     @abstractmethod
-    async def update_user(self, user_id: UUID, user: UpdateUserDTO) -> User:
+    async def update_user(self, user_id: UUID, update_dto: UpdateUserDTO) -> User:
         ...
 
     @abstractmethod

@@ -1,13 +1,24 @@
+from dataclasses import field, dataclass
+from typing import Optional
+
 from abstractions.repositories.app_wallet import AppWalletRepositoryInterface
 from domain.dto.app_wallet import CreateAppWalletDTO, UpdateAppWalletDTO
 from domain.models.app_wallet import AppWallet as AppWalletModel
 from infrastructure.db.entities import AppWallet
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
+
+@dataclass
 class AppWalletRepository(
     AbstractSQLAlchemyRepository[AppWallet, AppWalletModel, CreateAppWalletDTO, UpdateAppWalletDTO],
     AppWalletRepositoryInterface
 ):
+    # joined_fields: list[str] = field(default_factory=lambda: ['deposits'])
+    joined_fields: dict[str, Optional[list[str]]] = field(
+        default_factory=lambda: {
+            'deposits': None,
+        }
+    )
     def create_dto_to_entity(self, dto: CreateAppWalletDTO) -> AppWallet:
         return AppWallet(
             address=dto.address,

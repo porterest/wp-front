@@ -9,7 +9,7 @@ from domain.models.base import BaseModel
 @dataclass(kw_only=True)
 class Chain(BaseModel):
     id: UUID
+    pair_id: UUID
     current_block: int
-    last_update: datetime
     created_at: datetime
     status: ChainStatus

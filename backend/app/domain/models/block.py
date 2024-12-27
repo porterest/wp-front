@@ -1,15 +1,17 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List, Tuple
+from typing import Optional, List
+from uuid import UUID
 
 from domain.enums.block_status import BlockStatus
-from domain.models.bet import Bet, BetVector
 from domain.models.base import BaseModel
+from domain.models.bet import Bet, BetVector
 
 
 @dataclass(kw_only=True)
 class Block(BaseModel):
     block_number: int
+    chain_id: UUID
     status: BlockStatus
     created_at: Optional[datetime]
     completed_at: Optional[datetime]

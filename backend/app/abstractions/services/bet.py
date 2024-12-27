@@ -14,25 +14,23 @@ class BetServiceInterface(ABC):
         ...
 
     @abstractmethod
-    async def get_bet_by_id(self, bet_id: UUID) -> Bet:
-        """
-        Получает ставку по её ID.
-        """
+    async def get(self, bet_iid: UUID) -> Bet:
         ...
 
-    @abstractmethod
-    async def get_bets_by_user_id(self, user_id: UUID) -> List[Bet]:
-        """
-        Возвращает список ставок пользователя по его ID.
-        """
-        ...
-
-    @abstractmethod
-    async def get_bets_by_block_id(self, block_id: UUID) -> List[Bet]:
-        """
-        Возвращает список ставок для указанного блока.
-        """
-        ...
+    #
+    # @abstractmethod
+    # async def get_bets_by_user_id(self, user_id: UUID) -> List[Bet]:
+    #     """
+    #     Возвращает список ставок пользователя по его ID.
+    #     """
+    #     ...
+    #
+    # @abstractmethod
+    # async def get_bets_by_block_id(self, block_id: UUID) -> List[Bet]:
+    #     """
+    #     Возвращает список ставок для указанного блока.
+    #     """
+    #     ...
 
     @abstractmethod
     async def update_bet(self, bet_id: UUID, update_dto: UpdateBetDTO) -> Bet:
@@ -42,7 +40,7 @@ class BetServiceInterface(ABC):
         ...
 
     @abstractmethod
-    async def cancel_bet(self, bet: Bet) -> None:
+    async def cancel_bet(self, bet_id: UUID) -> None:
         """
         Отменяет ставку, добавляя сумму ставки к балансу пользователя.
         """

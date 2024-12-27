@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import func
@@ -21,33 +22,26 @@ class BlockService(BlockServiceInterface):
     async def create(self, create_dto):
         await self.block_repository.create(create_dto)
 
-    async def get_last_block(self) -> Block:
-        last_block = await self.block_repository.get_last_block()
-        if not last_block:
-            raise NotFoundException("No blocks found")
 
+    async def get_last_block(self, chain_id: UUID) -> Optional[Block]:
+        last_block = await self.block_repository.get_last_block(chain_id)
         return last_block
 
-    async def handle_interrupted_block(self, block: Block) -> None:
-        update_block = (
-            UpdateBlockDTO(
-                status=BlockStatus.INTERRUPTED,
-                result_vector=block.result_vector,
-                completed_at=block.completed_at
-            )
-        )
-        await self.block_repository.update(block.id, update_block)
-
+    async def handle_interrupted_block(self, block_id: UUID) -> None:
+        update_block = UpdateBlockDTO(
+            status=BlockStatus.INTERRUPTED,
+         )
+        await self.block_repository.update(block_id, update_block)
+        block = await self.block_repository.get(block_id)
         # Отменяем ставки в прерванном блоке
         for bet in block.bets:
-            await self.bet_service.cancel_bet(bet)
+            await self.bet_service.cancel_bet(bet.id)
 
     async def start_new_block(self, block_number: int) -> Block:
-        new_block = Block(block_number=block_number, status=BlockStatus.IN_PROGRESS)
         last_block = await self.get_last_block()
         if last_block:
             block = CreateBlockDTO(
-                block_number=last_block.block_number+1,
+                block_number=last_block.block_number + 1,
                 status=BlockStatus.IN_PROGRESS,
                 result_vector=None,
                 created_at=datetime.now(),
@@ -61,15 +55,16 @@ class BlockService(BlockServiceInterface):
             )
 
         await self.block_repository.create(block)
-        return new_block
+        block = await self.block_repository.get(block.id)
+        return block
 
     async def complete_block(self, block_id: UUID) -> None:
         block = await self.get_block_by_id(block_id)
-        update_block=(
+        update_block = (
             UpdateBlockDTO(
-                status = BlockStatus.COMPLETED,
-                result_vector = block.result_vector,
-                completed_at = block.completed_at
+                status=BlockStatus.COMPLETED,
+                result_vector=block.result_vector,
+                completed_at=block.completed_at
             )
         )
         block.status = BlockStatus.COMPLETED
@@ -82,8 +77,12 @@ class BlockService(BlockServiceInterface):
             raise NotFoundException(f"Block with ID {block_id} not found")
         return block
 
-
     async def rollback_block(self, block: Block) -> None:
         # Implement rollback logic here
+        update_block= UpdateBlockDTO(
+            status=BlockStatus.COMPLETED,
+            result_vector=block.result_vector,
+            completed_at=None,
+        )
         block.status = BlockStatus.COMPLETED
-        await self.block_repository.update(block)
+        await self.block_repository.update(block.id, update_block)

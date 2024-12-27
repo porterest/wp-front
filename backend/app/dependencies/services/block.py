@@ -1,4 +1,3 @@
-from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.services.block import BlockServiceInterface
 from dependencies.repositories.block import get_block_repository
 from dependencies.services.bet import get_bet_service

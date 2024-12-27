@@ -1,7 +1,11 @@
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
+from dependencies.services.chain import get_chain_service
 from middlewares import check_for_auth
 from routes import (
     bet_router,
@@ -13,7 +17,18 @@ from routes import (
 )
 from settings import settings
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    chain = get_chain_service()
+    await chain.start_block_generation()
+
+    yield
+
+    chain.stop_block_generation()
+
+
+app = FastAPI(lifespan=lifespan)
 
 # FastAPI.middleware is a decorator to add function-based middlewares,
 # but I guess it's quite ugly in terms of architecture - outers shouldn't be coupled with inners (right?)
@@ -39,9 +54,9 @@ def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
-        title="Custom API",
-        version="1.0.0",
-        description="This is a custom API with a Swagger 'Authorize' button.",
+        title="WP Metaholder API",
+        version="0.1.0",
+        description="meow",
         routes=app.routes,
     )
     # Define the security scheme

@@ -14,7 +14,7 @@ class CreateBetDTO(CreateDTO):
     user_id: UUID
     pair_id: UUID
     amount: float
-    block_number: int
+    block_id: UUID
     vector: BetVector
     status: BetStatus = BetStatus.PENDING
 

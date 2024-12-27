@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -10,6 +11,7 @@ from infrastructure.db.entities import ChainStatus
 @dataclass
 class CreateChainDTO(CreateDTO):
     current_block: int
+    pair_id: UUID
     status: ChainStatus
     created_at: datetime
     last_update: Optional[datetime] = None

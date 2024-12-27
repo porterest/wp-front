@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
+from uuid import UUID
 
 from abstractions.repositories import CRUDRepositoryInterface
 from domain.dto.block import CreateBlockDTO, UpdateBlockDTO
@@ -13,8 +14,12 @@ class BlockRepositoryInterface(
     ABC,
 ):
     @abstractmethod
-    async def get_last_block(self) -> Optional[Block]:
+    async def get_last_block(self, pair_id) -> Optional[Block]:
         pass
+
+    # @abstractmethod
+    # async def get(self, block_id: UUID) -> Optional[Block]:
+    #     pass
 
     # @abstractmethod
     # async def update(self, block: Block) -> None:

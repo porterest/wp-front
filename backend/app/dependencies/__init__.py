@@ -2,5 +2,5 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 def get_scheduler():
-    scheduler = AsyncIOScheduler
+    scheduler = AsyncIOScheduler()
     return scheduler
