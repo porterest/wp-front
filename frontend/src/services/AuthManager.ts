@@ -47,6 +47,7 @@ export class AuthManager {
       console.log("[AuthManager]: Server response:", response.data);
 
       const { accessToken, refreshToken, user } = response.data;
+      console.log("tokens ", accessToken, refreshToken);
 
       // Сохраняем токены в localStorage
       localStorage.setItem("authToken", accessToken);
