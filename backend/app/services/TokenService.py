@@ -23,7 +23,6 @@ class TokenService(TokenServiceInterface):
     def validate_token(self, token: str) -> bool:
         try:
             self.get_token_payload(token)
-            logger.error('payload ok')
             return True
         except ExpiredSignatureJWTError:
             logger.error("Token has expired: %s", token)
