@@ -153,9 +153,15 @@ export async function check_user_deposit(): Promise<void> {
 }
 
 
-export async function fetchPreviousBetEnd(): Promise<{ x: number; y: number }> {
+export async function fetchPreviousBetEnd(name: string): Promise<{ x: number; y: number }> {
     try {
-        const response = await apiClient.get<{ x: number; y: number }>("/block/last_vector");
+        const response = await apiClient.get<{ x: number; y: number }>(
+          "/block/last_vector",
+          {
+              params: {
+                  name: name,
+              }
+          });
         return response.data; // Возвращаем данные с координатами
     } catch (error) {
         console.error("Ошибка загрузки предыдущей ставки:", error);

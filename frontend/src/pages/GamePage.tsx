@@ -46,7 +46,7 @@ const GamePage: React.FC = () => {
     // Функция для загрузки предыдущей ставки
     const loadPreviousBetEnd = async () => {
         try {
-            const response = await fetchPreviousBetEnd(); // Делаем запрос к API
+            const response = await fetchPreviousBetEnd(selectedPair); // Делаем запрос к API
             const { x, y } = response;
             setPreviousBetEnd(new THREE.Vector3(x, y, 0)); // Устанавливаем полученные координаты
         } catch (error) {
@@ -103,7 +103,7 @@ const GamePage: React.FC = () => {
         if (betData && selectedPair) {
             try {
                 // Запрос к API для получения реальных значений агрегированной ставки прошлого блока
-                const { x: currentPrice, y: currentTransactions } = await fetchPreviousBetEnd();
+                const { x: currentPrice, y: currentTransactions } = await fetchPreviousBetEnd(selectedPair);
 
                 const [predictedX, predictedY] = betData.predicted_vector;
 
