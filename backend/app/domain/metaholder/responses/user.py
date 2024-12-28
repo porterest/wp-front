@@ -1,9 +1,9 @@
 from typing import List
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from domain.metaholder.responses import BetResponse, TransactionResponse, BalanceResponse
+from domain.metaholder.responses import BetResponse, TransactionResponse
 
 
 class UserBetsResponse(BaseModel):
@@ -15,6 +15,8 @@ class UserHistoryResponse(BaseModel):
     user_id: UUID
     transactions: List[TransactionResponse]
 
+
 class UserInfoResponse(BaseModel):
     user_id: UUID
-    balances: List[BalanceResponse]
+    balance: float
+    at_risk: float = Field(serialization_alias='atRisk')

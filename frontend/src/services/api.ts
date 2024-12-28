@@ -80,7 +80,7 @@ export async function cancelBet(betId: string) {
 
 export async function fetchUserBalances(): Promise<any> {
     try {
-        const response = await apiClient.get("/user/balances");
+        const response = await apiClient.get("/user/info");
         return response.data;
     } catch (error) {
         console.error("Failed to fetch user balances:", error);

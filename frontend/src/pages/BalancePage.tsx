@@ -9,14 +9,14 @@ import { apiClient } from "../services/apiClient";
 import { check_user_deposit, fetchUserBalances } from "../services/api"; // Используем для запросов к бэкенду
 
 // Типы данных контекста
-interface UserBalance {
-  balances: Record<string, number>;
-  totalBalance: number;
+interface UserInfo {
+  user_id: string;
+  balance: number;
   atRisk: number;
 }
 
 interface UserBalanceContextProps {
-  userData: UserBalance | null;
+  userData: UserInfo | null;
   loading: boolean;
   error: string | null;
   reloadUserData: () => void;
@@ -27,7 +27,7 @@ const UserBalanceContext = createContext<UserBalanceContextProps | undefined>(un
 
 // Провайдер контекста
 export const UserBalanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [userData, setUserData] = useState<UserBalance | null>(null);
+  const [userData, setUserData] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,11 +67,7 @@ export const useUserBalance = () => {
 
 const BalancePage: React.FC = () => {
   const [tonConnectUI] = useTonConnectUI(); // TonConnect API
-  const [userData, setUserData] = useState<{
-    balances: Record<string, number>;
-    totalBalance: number;
-    atRisk: number;
-  } | null>(null); // Состояние для данных пользователя
+  const [userData, setUserData] = useState<UserInfo | null>(null); // Состояние для данных пользователя
   const [loading, setLoading] = useState(false); // Состояние загрузки
   const [error, setError] = useState<string | null>(null); // Состояние ошибок
   const [menuOpen, setMenuOpen] = useState(false); // Состояние выпадающего меню
@@ -155,7 +151,7 @@ const BalancePage: React.FC = () => {
   } else if (error) {
     content = <p className="text-red-500">{error}</p>;
   } else if (userData) {
-    content = <p className="text-xl font-extrabold">{userData.atRisk} USDT</p>;
+    content = <p className="text-xl font-extrabold">{userData.atRisk} WPT</p>;
   } else {
     content = <p className="text-gray-500">No risk data available.</p>;
   }
@@ -170,15 +166,11 @@ const BalancePage: React.FC = () => {
     if (userData) {
       return (
         <>
-          <ul className="space-y-2 text-sm">
-            {Object.entries(userData.balances).map(([token, amount]) => (
-              <li key={token}>
-                <span className="font-bold text-white">{amount}</span> {token}
-              </li>
-            ))}
-          </ul>
           <p className="mt-4 text-xl font-extrabold">
-            {userData.totalBalance} total in USDT
+            Balance: {userData.balance} WPT
+          </p>
+          <p className="mt-4 text-xl font-extrabold">
+            At risk (total bets): {userData.atRisk} WPT
           </p>
         </>
       );
