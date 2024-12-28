@@ -155,41 +155,6 @@ const GamePage: React.FC = () => {
         }
     };
 
-    // Логика обновления статусов ставок
-    const handleTimerEnd = async () => {
-        try {
-            // Случайная задержка от 0 до 5 секунд
-            const delay = Math.random() * 5000;
-            await new Promise((resolve) => setTimeout(resolve, delay));
-
-            const response: BetStatusResponse = await fetchBetStatuses();
-
-            if (response.bets.length === 0) {
-                setBetStatus("");
-                setResult(null);
-            } else {
-                const completedBet = response.bets.find((bet) => bet.status === "result");
-                const frozenBet = response.bets.find((bet) => bet.status === "frozen");
-
-                if (completedBet) {
-                    setBetStatus("Result");
-                    setResult(
-                      `Ставка: ${completedBet.pair_name}, Результат: ${completedBet.result}`
-                    );
-                } else if (frozenBet) {
-                    setBetStatus("Frozen");
-                    setResult(`Ставка: ${frozenBet.pair_name}, Статус: Заморожено`);
-                }
-            }
-
-            if (response.bets.some((bet) => bet.status === "frozen")) {
-                console.log("Таймер перезапущен: есть замороженные ставки");
-            }
-        } catch (error) {
-            console.error("Ошибка получения статусов ставок:", error);
-        }
-    };
-
     // useEffect для предотвращения скроллинга
     useEffect(() => {
         const preventScroll = () => document.body.classList.add("no-scroll");
@@ -226,7 +191,7 @@ const GamePage: React.FC = () => {
           )}
 
           <Timer
-            onTimerEnd={handleTimerEnd}
+            onTimerEnd={() => {}}
             className="absolute top-[50px] left-1/2 transform -translate-x-1/2 z-10"
           />
 

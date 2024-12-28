@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import Select from "react-select";
 import { CandleDataContext } from "../context/CandleDataContext";
-import { BetStatusResponse, PairResponse } from "../types/apiTypes";
-import { getPairs, fetchBetStatuses } from "../services/api";
+import { PairResponse } from "../types/apiTypes";
+import { getPairs } from "../services/api";
 
 interface SymbolSelectorProps {
     onSwitchMode: (mode: "Candles" | "Axes" | "Both") => void;
@@ -54,24 +54,6 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
 
         fetchPairs();
     }, []);
-
-    // Обработка завершения таймера
-    const handleTimerEnd = async () => {
-        try {
-            const response: BetStatusResponse = await fetchBetStatuses();
-
-            // Обработка ответа
-            setBetStatus(response.bets.length ? "Result" : "Active");
-            setResult(response.bets.map((bet) => `Ставка: ${bet.status}`).join(", "));
-
-            // Если есть замороженные ставки, повторяем цикл
-            if (response.bets.some((bet) => bet.status === "frozen")) {
-                console.log("Установка нового таймера, так как есть замороженные ставки");
-            }
-        } catch (error) {
-            console.error("Ошибка получения статусов ставок:", error);
-        }
-    };
 
     const handlePairChange = (selectedOption: PairOption | null) => {
         setSelectedPair(selectedOption);
