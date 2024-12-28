@@ -47,7 +47,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
   const [isDragging, setIsDragging] = useState(false); // Флаг перетаскивания
 
   const { userData } = useUserBalance(); // Данные о балансе пользователя
-  const userDeposit = userData?.totalBalance || 0; // Берём баланс из контекста
+  const userDeposit = userData?.balance || 0; // Берём баланс из контекста
 
   const maxArrowLength = 5; // Максимальная длина стрелки
 
