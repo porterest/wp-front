@@ -46,6 +46,7 @@ const GamePage: React.FC = () => {
     // Функция для загрузки предыдущей ставки
     const loadPreviousBetEnd = async () => {
         try {
+            if (!selectedPair) return;
             const response = await fetchPreviousBetEnd(selectedPair); // Делаем запрос к API
             const { x, y } = response;
             setPreviousBetEnd(new THREE.Vector3(x, y, 0)); // Устанавливаем полученные координаты
