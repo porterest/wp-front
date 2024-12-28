@@ -7,7 +7,7 @@ from sqlalchemy import select, desc
 from abstractions.repositories.block import BlockRepositoryInterface
 from domain.dto.block import CreateBlockDTO, UpdateBlockDTO
 from domain.models.block import Block as BlockModel
-from infrastructure.db.entities import Block
+from infrastructure.db.entities import Block, Pair, Chain
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
 
@@ -26,6 +26,26 @@ class BlockRepository(
         async with self.session_maker() as session:
             res = await session.execute(
                 select(self.entity).where(self.entity.chain_id == chain_id).order_by(
+                    desc(self.entity.block_number, )).limit(1),
+            )
+
+            block = res.scalars().one_or_none()
+        return self.entity_to_model(block) if block else None
+
+    async def get_last_block_by_pair_name(self, name: str) -> Optional[Block]:
+        async with self.session_maker() as session:
+            pair = (await session.execute(
+                select(Pair)
+                .where(Pair.name == name)
+            )).scalars().one()
+
+            chain = (await session.execute(
+                select(Chain)
+                .where(Chain.pair_id == pair.id)
+            )).scalars().one()
+
+            res = await session.execute(
+                select(self.entity).where(self.entity.chain_id == chain.id).order_by(
                     desc(self.entity.block_number, )).limit(1),
             )
 

@@ -26,7 +26,9 @@ class BlockService(BlockServiceInterface):
     async def get_last_block(self, chain_id: UUID) -> Optional[Block]:
         last_block = await self.block_repository.get_last_block(chain_id)
         return last_block
-
+    async def get_last_block_by_pair_name(self, name: str) -> Optional[Block]:
+        last_block = await self.block_repository.get_last_block_by_pair_name(name)
+        return last_block
     async def handle_interrupted_block(self, block_id: UUID) -> None:
         update_block = UpdateBlockDTO(
             status=BlockStatus.INTERRUPTED,

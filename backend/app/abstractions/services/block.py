@@ -8,9 +8,15 @@ from domain.models.block import Block
 
 class BlockServiceInterface(ABC):
     @abstractmethod
-    async def get_last_block(self, chain_id) -> Optional[Block]:
+    async def get_last_block(self, chain_id: UUID) -> Optional[Block]:
         """
         Возвращает последний блок в системе.
+        """
+        ...
+    @abstractmethod
+    async def get_last_block_by_pair_name(self, name: str) -> Optional[Block]:
+        """
+        Возвращает последний блок в системе по имени пары.
         """
         ...
 

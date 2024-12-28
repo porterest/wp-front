@@ -11,9 +11,10 @@ router = APIRouter(
 
 
 @router.get('/last_vector')
-async def get_last_vector(pair_id: str) -> Tuple[float, float]:
+async def get_last_vector(name: str) -> Tuple[float, float]:
     service = get_block_service()
-    vector = await service.get_last_block(pair_id)
+    block = await service.get_last_block_by_pair_name(name)
+    vector = block.result_vector
     if not vector:
         return (2, 3)
     return vector.result_vector
