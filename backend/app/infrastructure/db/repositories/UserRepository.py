@@ -28,10 +28,13 @@ class UserRepository(
 
     def create_dto_to_entity(self, dto: CreateUserDTO) -> User:
         return User(
+            id=dto.id,
+            wallet_address=dto.wallet_address,
+            balance=0,
             username=dto.username,
             first_name=dto.first_name,
             last_name=dto.last_name,
-            last_activity=dto.last_activity
+            last_activity=dto.last_activity,
         )
 
     def entity_to_model(self, entity: User) -> UserModel:

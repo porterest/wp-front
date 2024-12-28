@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import logging
 import struct
@@ -5,8 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, UTC
 from typing import Annotated
 
-import nacl.hash
-from nacl.encoding import HexEncoder
+from nacl.hash import sha256
+from nacl.encoding import RawEncoder
 from nacl.exceptions import BadSignatureError
 from nacl.signing import VerifyKey
 from pytoniq_core import Address
@@ -17,10 +18,15 @@ from abstractions.services.auth.tonproof import TonProofServiceInterface
 from abstractions.services.known_wallets import KnownWalletsProviderInterface
 from abstractions.services.public_keys import PublicKeyProviderInterface
 from abstractions.services.tonclient import TonClientInterface
+from dependencies.services.auth import get_token_service
+from dependencies.services.ton.client import get_ton_client
+from dependencies.services.ton.known_wallets import get_known_wallets_provider
+from dependencies.services.ton.public_keys import get_public_key_provider
 from domain.ton.address import TonAddressInfo
 from domain.tonconnect.enums import VerifyResult
-from domain.tonconnect.requests import CheckProofRequest, CheckProofRequestRaw
+from domain.tonconnect.requests import CheckProofRequest, CheckProofRequestRaw, Proof, Domain
 from services.ton.tonconnect.exceptions import KeyCannotBeParsedException, TonProofVerificationFailed
+from settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -81,11 +87,19 @@ class TonProofService(TonProofServiceInterface):
         try:
             # 6b: use known wallets recognition and retrieve the pubkey from stateInit provided
             public_key = self.parse_wallet_public_key(request_raw.code, request_raw.data)
-        except KeyCannotBeParsedException as e:
-            logger.error(f'Wallet cannot be parsed from boc for {request.address}', exc_info=True)
-
-            # 6a: retrieve the pubkey from API (either tonapi or tonlib client)
-            public_key = await self.public_key_provider.get_public_key(request_raw.address)
+        except KeyCannotBeParsedException:
+            provider_type = type(self.public_key_provider)
+            provider_type_message = "API" if 'Api' in provider_type.__name__ else provider_type.__name__
+            logger.error(
+                f'Wallet cannot be parsed from boc for {request.address}, calling provider ({provider_type_message})',
+            )
+            try:
+                # 6a: retrieve the pubkey from API (either tonapi or tonlib client)
+                public_key = await self.public_key_provider.get_public_key(request_raw.address)
+                logger.info(f'Provider call for address {request_raw.address} is successful')
+            except Exception:
+                logger.error(f"Cant get public key for address {request_raw.address}", exc_info=True)
+                raise
 
         if request_raw.public_key.lower() != public_key.lower():
             logger.debug(
@@ -99,7 +113,7 @@ class TonProofService(TonProofServiceInterface):
 
         # step 5: assembling a message
         msg = self._create_message(request_raw)
-        msg_hash = nacl.hash.sha256(msg)
+        msg_hash = sha256(msg, encoder=RawEncoder)
 
         public_key_bytes = bytes.fromhex(request_raw.public_key)
         verify_key = VerifyKey(public_key_bytes)
@@ -110,6 +124,7 @@ class TonProofService(TonProofServiceInterface):
             verify_key.verify(msg_hash, signature)
             return VerifyResult.VALID
         except BadSignatureError:
+            logger.error('bad signature', exc_info=True)
             return VerifyResult.HASH_MISMATCH
 
     @property
@@ -125,7 +140,7 @@ class TonProofService(TonProofServiceInterface):
         Constructs the message as per the C# logic.
         """
         # Step 1: Workchain ID (Big Endian, 4 bytes)
-        wc_bytes = struct.pack(">I", request_raw.workchain)
+        wc_bytes = struct.pack(">I", int(request_raw.workchain))
 
         # Step 2: Timestamp (Little Endian, 8 bytes)
         ts_bytes = struct.pack("<Q", request_raw.proof.timestamp)
@@ -137,63 +152,25 @@ class TonProofService(TonProofServiceInterface):
         domain_bytes = request_raw.proof.domain.value.encode("utf-8")
         payload_bytes = request_raw.proof.payload.encode("utf-8")
 
-        # Calculate total message length
-        total_length = (
-                len(self.ton_proof_prefix)
-                + len(wc_bytes)
-                + len(request_raw.address_bytes)
-                + len(dl_bytes)
-                + len(domain_bytes)
-                + len(ts_bytes)
-                + len(payload_bytes)
+        message = (
+                self.ton_proof_prefix_bytes
+                + wc_bytes
+                + request_raw.address_bytes
+                + dl_bytes
+                + domain_bytes
+                + ts_bytes
+                + payload_bytes
         )
 
-        # Construct the message
-        message = bytearray(total_length)
-        offset = 0
-
-        # Copy all parts into the message
-        message[offset: offset + len(self.ton_proof_prefix_bytes)] = self.ton_proof_prefix_bytes
-        offset += len(self.ton_proof_prefix_bytes)
-
-        message[offset: offset + len(wc_bytes)] = wc_bytes
-        offset += len(wc_bytes)
-
-        message[offset: offset + len(request_raw.address_bytes)] = request_raw.address_bytes
-        offset += len(request_raw.address_bytes)
-
-        message[offset: offset + len(dl_bytes)] = dl_bytes
-        offset += len(dl_bytes)
-
-        message[offset: offset + len(domain_bytes)] = domain_bytes
-        offset += len(domain_bytes)
-
-        message[offset: offset + len(ts_bytes)] = ts_bytes
-        offset += len(ts_bytes)
-
-        message[offset: offset + len(payload_bytes)] = payload_bytes
-        offset += len(payload_bytes)
-
         # Compute the SHA256 hash of the message
-        msg_hash = nacl.hash.sha256(bytes(message), encoder=nacl.encoding.RawEncoder)
+        msg_hash = sha256(message, encoder=RawEncoder)
 
         # Construct the final message
         ff_bytes = b"\xFF\xFF"
-        final_length = len(ff_bytes) + len(self.ton_connect_prefix_bytes) + len(msg_hash)
+        # final_length = len(ff_bytes) + len(self.ton_connect_prefix_bytes) + len(msg_hash)
+        final_message = ff_bytes + self.ton_connect_prefix_bytes + msg_hash
 
-        final_message = bytearray(final_length)
-        offset = 0
-
-        final_message[offset: offset + len(ff_bytes)] = ff_bytes
-        offset += len(ff_bytes)
-
-        final_message[offset: offset + len(self.ton_connect_prefix_bytes)] = self.ton_connect_prefix_bytes
-        offset += len(self.ton_connect_prefix_bytes)
-
-        final_message[offset: offset + len(msg_hash)] = msg_hash
-        offset += len(msg_hash)
-
-        return bytes(final_message)
+        return final_message
 
     def parse_wallet_public_key(self, code: str, data: Cell) -> Annotated[str, 'Wallet public key']:
         return self.known_wallets_provider.get_wallet_public_key(code, data)
@@ -217,3 +194,54 @@ class TonProofService(TonProofServiceInterface):
         )
         composed_address = self.compose_address(composed_address_info)
         return composed_address == wanted_address.to_str(is_user_friendly=False)
+
+
+if __name__ == "__main__":
+    service = TonProofService(
+        # services
+        tokens_service=get_token_service(),
+        ton_client=get_ton_client(),
+        public_key_provider=get_public_key_provider(),
+        known_wallets_provider=get_known_wallets_provider(),
+
+        # settings
+        payload_ttl=settings.ton.tonconnect.payload_ttl,
+        allowed_domains=settings.ton.tonconnect.allowed_domains,
+    )
+
+    proof_init_object = {
+        "address": "0:f4355c5607b5a36e4462c9f8a9cbb9db0bf1ec9b8fc25987ecacc046eec3b770",
+        "network": "-239",
+        "public_key": "4f16b3d0e1bf086af95da8e8500638797837f48c0621b7e3d1791e65ab043fc3",
+        "proof": {
+            "timestamp": 1735327997,
+            "domain": {
+                "LengthBytes": 21,
+                "value": "ab328c6h7.duckdns.org"
+            },
+            "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMTA4ODk5Yi0yYzgxLTQ0ZTctODkxYy1jN2E1ZGFjNzZjYWMiLCJleHAiOjE3MzUzMzkzNjIsImlzcyI6IndpcGktYmFjayIsImF1ZCI6IndpcGktZnJvbnQifQ.TVtg5KbHIDBWWQGSewrBYHbgW9ygvZWDYdTBRJ6j000",
+            "signature": "i3E881kKct4p0NIij+WvHvjLPkS3wJ4qkplXz3SIghCmlpO+Ocatnf7ipMEW1LIzo8Kp77dDzwjN8rrjwYb6Ag==",
+            "state_init": "te6cckECFgEAAwQAAgE0AREBFP8A9KQT9LzyyAsCAgEgCAME+PKDCNcYINMf0x/THwL4I7vyZO1E0NMf0x/T//QE0VFDuvKhUVG68qIF+QFUEGT5EPKj+AAkpMjLH1JAyx9SMMv/UhD0AMntVPgPAdMHIcAAn2xRkyDXSpbTB9QC+wDoMOAhwAHjACHAAuMAAcADkTDjDQOkyMsfEssfy/8GBwUEAAr0AMntVABsgQEI1xj6ANM/MFIkgQEI9Fnyp4IQZHN0cnB0gBjIywXLAlAFzxZQA/oCE8tqyx8Syz/Jc/sAAG7SB/oA1NQi+QAFyMoHFcv/ydB3dIAYyMsFywIizxZQBfoCFMtrEszMyXP7AMhAFIEBCPRR8qcCAHCBAQjXGPoA0z/IVCBHgQEI9FHyp4IQbm90ZXB0gBjIywXLAlAGzxZQBPoCFMtqEssfyz/Jc/sAAgIBSA0JAgEgChUCASAMCwARuMl+1E0NcLH4AgFYEBIC5tAB0NMDIXGwkl8E4CLXScEgkl8E4ALTHyGCEHBsdWe9IoIQZHN0cr2wkl8F4AP6QDAg+kQByMoHy//J0O1E0IEBQNch9AQwXIEBCPQKb6Exs5JfB+AF0z/IJYIQcGx1Z7qSODDjDQOCEGRzdHK6kl8G4w0PDgCKUASBAQj0WTDtRNCBAUDXIMgBzxb0AMntVAFysI4jghBkc3Rygx6xcIAYUAXLBVADzxYj+gITy2rLH8s/yYBA+wCSXwPiAHgB+gD0BDD4J28iMFAKoSG+8uBQghBwbHVngx6xcIAYUATLBSbPFlj6Ahn0AMtpF8sfUmDLPyDJgED7AAYAPbKd+1E0IEBQNch9AQwAsjKB8v/ydABgQEI9ApvoTGAAUQAAAAApqaMXTxaz0OG/CGr5XajoUAY4eXg39IwGIbfj0XkeZasEP8NAAgEgFBMAGa8d9qJoQBBrkOuFj8AAGa3OdqJoQCBrkOuF/8AAWb0kK29qJoQICga5D6AhhHDUCAhHpJN9KZEM5pA+n/mDeBKAG3gQFImHFZ8xhKOjwYk="
+        }
+    }
+
+    # Constructing Request
+    proof = proof_init_object['proof']
+    domain = proof['domain']
+    req = CheckProofRequest(
+        address=proof_init_object['address'],
+        network=proof_init_object['network'],
+        public_key=proof_init_object['public_key'],
+        proof=Proof(
+            timestamp=proof['timestamp'],
+            domain=Domain(
+                LengthBytes=domain['LengthBytes'],
+                value=domain['value'],
+            ),
+            payload=proof['payload'],
+            signature=proof['signature'],
+            state_init=proof['state_init'],
+        )
+    )
+
+    asyncio.run(service.check_payload(request=req))

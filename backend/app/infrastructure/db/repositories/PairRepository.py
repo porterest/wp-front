@@ -34,7 +34,6 @@ class PairRepository(
             name=entity.name,
             last_ratio=entity.last_ratio,
             contract_address=entity.contract_address,
-            last_ratio=entity.last_ratio,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
         )

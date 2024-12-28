@@ -28,7 +28,7 @@ class User(AbstractBase):
     __tablename__ = 'users'
 
     id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
+    telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True, index=True)
     username: Mapped[Optional[str]] = mapped_column(String(255), unique=True)
     first_name: Mapped[Optional[str]] = mapped_column(String(255))
     last_name: Mapped[Optional[str]] = mapped_column(String(255))

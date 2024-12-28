@@ -27,8 +27,9 @@ class KnownWalletsProvider(KnownWalletsProviderInterface):
             code: Annotated[str, 'Encoded wallet code'],
             data: Cell
     ) -> Annotated[str, 'Known wallet public key']:
-        try:
-            return self.mapping[code](data)
-        except KeyError:
+        contract = self.mapping.get(code, None)
+        if not contract:
             logger.error(f"Failed to parse wallet publicKey for unknown code: {code}")
-            raise KeyCannotBeParsedException()
+            raise KeyCannotBeParsedException("Unknown wallet code")
+
+        return contract(data)
