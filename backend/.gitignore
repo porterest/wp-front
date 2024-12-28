@@ -4,3 +4,4 @@ settings.json
 **/.venv
 **/.idea
 **/.DS_Store
+**/database/*.csv
