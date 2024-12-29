@@ -16,6 +16,9 @@ const PairVectors: React.FC<PairVectorsProps> = ({
   const { scene } = useThree();
 
   useEffect(() => {
+    console.log('selectedPair: ', selectedPair);
+    console.log('previousBetEnd: ', previousBetEnd);
+    console.log('userLastBet: ', userLastBet);
     if (!previousBetEnd || !userLastBet) return;
 
     const startArrow = drawArrow(
@@ -24,7 +27,7 @@ const PairVectors: React.FC<PairVectorsProps> = ({
       0xff0000,
     ); // Red Arrow
     const userArrow = drawArrow(previousBetEnd, userLastBet, 0x00ff00); // Green Arrow
-
+    console.log('removing');
     // Cleanup on unmount
     return () => {
       scene.remove(startArrow);
