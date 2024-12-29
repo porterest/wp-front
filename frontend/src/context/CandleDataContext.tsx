@@ -53,7 +53,8 @@ export const CandleDataProvider: React.FC<{ children: ReactNode }> = ({
   // Эффект для загрузки данных при изменении selectedPair
   useEffect(() => {
     if (selectedPair) {
-      fetchData(selectedPair);
+      fetchData("BTCUSDT");
+      // fetchData(selectedPair);
     }
   }, [selectedPair]);
 
