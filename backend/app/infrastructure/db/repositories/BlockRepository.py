@@ -32,11 +32,11 @@ class BlockRepository(
             block = res.scalars().one_or_none()
         return self.entity_to_model(block) if block else None
 
-    async def get_last_block_by_pair_name(self, name: str) -> Optional[Block]:
+    async def get_last_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
         async with self.session_maker() as session:
             pair = (await session.execute(
                 select(Pair)
-                .where(Pair.name == name)
+                .where(Pair.id == pair_id)
             )).scalars().one()
 
             chain = (await session.execute(

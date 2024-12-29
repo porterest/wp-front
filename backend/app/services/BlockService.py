@@ -22,17 +22,18 @@ class BlockService(BlockServiceInterface):
     async def create(self, create_dto):
         await self.block_repository.create(create_dto)
 
-
     async def get_last_block(self, chain_id: UUID) -> Optional[Block]:
         last_block = await self.block_repository.get_last_block(chain_id)
         return last_block
-    async def get_last_block_by_pair_name(self, name: str) -> Optional[Block]:
-        last_block = await self.block_repository.get_last_block_by_pair_name(name)
+
+    async def get_last_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
+        last_block = await self.block_repository.get_last_block_by_pair_id(pair_id)
         return last_block
+
     async def handle_interrupted_block(self, block_id: UUID) -> None:
         update_block = UpdateBlockDTO(
             status=BlockStatus.INTERRUPTED,
-         )
+        )
         await self.block_repository.update(block_id, update_block)
         block = await self.block_repository.get(block_id)
         # Отменяем ставки в прерванном блоке
@@ -81,7 +82,7 @@ class BlockService(BlockServiceInterface):
 
     async def rollback_block(self, block: Block) -> None:
         # Implement rollback logic here
-        update_block= UpdateBlockDTO(
+        update_block = UpdateBlockDTO(
             status=BlockStatus.COMPLETED,
             result_vector=block.result_vector,
             completed_at=None,

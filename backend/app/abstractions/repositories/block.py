@@ -17,6 +17,9 @@ class BlockRepositoryInterface(
     async def get_last_block(self, pair_id) -> Optional[Block]:
         pass
 
+    @abstractmethod
+    async def get_last_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
+        ...
 
     # @abstractmethod
     # async def get(self, block_id: UUID) -> Optional[Block]:

@@ -13,8 +13,9 @@ class BlockServiceInterface(ABC):
         Возвращает последний блок в системе.
         """
         ...
+
     @abstractmethod
-    async def get_last_block_by_pair_name(self, name: str) -> Optional[Block]:
+    async def get_last_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
         """
         Возвращает последний блок в системе по имени пары.
         """

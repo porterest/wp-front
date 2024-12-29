@@ -1,4 +1,5 @@
 from typing import Tuple
+from uuid import UUID
 
 from fastapi import APIRouter
 
@@ -11,9 +12,9 @@ router = APIRouter(
 
 
 @router.get('/last_vector')
-async def get_last_vector(name: str) -> Tuple[float, float]:
+async def get_last_vector(pair_id: UUID) -> Tuple[float, float]:
     service = get_block_service()
-    block = await service.get_last_block_by_pair_name(name)
+    block = await service.get_last_block_by_pair_name()
     vector = block.result_vector
     if not vector:
         return (2, 3)
