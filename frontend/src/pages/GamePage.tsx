@@ -172,7 +172,6 @@ const GamePage: React.FC = () => {
           </div>
 
           <Canvas>
-              {/*<SceneProvider>*/}
                   <GraphModes
                     axisMode={axisMode}
                     currentMode={currentMode}
@@ -191,12 +190,11 @@ const GamePage: React.FC = () => {
                     onShowConfirmButton={handleShowConfirmButton}
                     axisMode={axisMode}
                   />
-                  {/*<PairVectors*/}
-                  {/*  useSelectedPair={useSelectedPair}*/}
-                  {/*  usePreviousBetEnd={usePreviousBet}*/}
-                  {/*  useUserLastBet={useLastBet}*/}
-                  {/*/>*/}
-              {/*</SceneProvider>*/}
+                  <PairVectors
+                    useSelectedPair={useSelectedPair}
+                    usePreviousBetEnd={usePreviousBet}
+                    useUserLastBet={useLastBet}
+                  />
           </Canvas>
 
 

@@ -5,6 +5,7 @@ import CandlestickChart from "./CandlestickChart";
 import GradientPlanes from "./GradientPlanes";
 import Axes from "./Axes";
 import { CandleData } from "./CandlestickChart";
+import { Html } from "@react-three/drei";
 
 interface GraphModesProps {
   currentMode: number; // Текущий режим отображения графика
@@ -35,7 +36,9 @@ const GraphModes: React.FC<GraphModesProps> = ({
 
   // Проверка данных
   if (!data || data.length === 0) {
-    return <div>No data available to render the graph.</div>;
+    return <Html>
+      <div>No data available to render the graph.</div>
+    </Html>;
   }
 
   // Рендеринг
@@ -45,7 +48,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
       <GradientPlanes />
       <Axes />
 
-      {/* Выбор режима отображения */}
+       {/*Выбор режима отображения */}
       {currentMode === 1 && (
         <BetArrow
           previousBetEnd={previousBetEnd}
