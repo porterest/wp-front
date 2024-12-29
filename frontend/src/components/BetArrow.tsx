@@ -6,7 +6,7 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { Text } from "@react-three/drei";
 import { useUserBalance } from "../pages/BalancePage";
-import { useScene } from "./SceneProvider";
+// import { useScene } from "./SceneProvider";
 
 interface BetArrowProps {
   previousBetEnd: THREE.Vector3;

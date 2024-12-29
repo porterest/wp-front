@@ -12,7 +12,7 @@ import { CandleDataContext } from "../context/CandleDataContext";
 import { fetchPreviousBetEnd, getUserBets, placeBet } from "../services/api";
 import { BetResponse, PlaceBetRequest } from "../types/apiTypes";
 import BetArrow from "../components/BetArrow";
-import { SceneProvider, useScene } from "../components/SceneProvider";
+// import { SceneProvider, useScene } from "../components/SceneProvider";
 
 const GamePage: React.FC = () => {
     const context = useContext(CandleDataContext);
@@ -172,7 +172,7 @@ const GamePage: React.FC = () => {
           </div>
 
           <Canvas>
-              <SceneProvider>
+              {/*<SceneProvider>*/}
                   <GraphModes
                     axisMode={axisMode}
                     currentMode={currentMode}
@@ -196,7 +196,7 @@ const GamePage: React.FC = () => {
                     usePreviousBetEnd={usePreviousBet}
                     useUserLastBet={useLastBet}
                   />
-              </SceneProvider>
+              {/*</SceneProvider>*/}
           </Canvas>
 
 

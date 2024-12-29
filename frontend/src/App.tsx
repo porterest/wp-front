@@ -14,14 +14,13 @@ import Layout from "./components/Layout";
 import { CandleDataProvider } from "./context/CandleDataContext";
 import { AuthProvider } from "./context/AuthContext";
 import WalletHandler from "./components/WalletHandler";
-import { SceneProvider } from "./components/SceneProvider";
+// import { SceneProvider } from "./components/SceneProvider";
 
 const App: React.FC = () => {
   return (
     <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/porterest/wp-front/refs/heads/main/frontend/public/tonconnect-manifest.json">
       <AuthProvider>
         <UserBalanceProvider>
-          <SceneProvider>
             <CandleDataProvider>
               <Router>
                 <Layout>
@@ -36,7 +35,6 @@ const App: React.FC = () => {
                 <WalletHandler />
               </Router>
             </CandleDataProvider>
-          </SceneProvider>
         </UserBalanceProvider>
       </AuthProvider>
     </TonConnectUIProvider>
