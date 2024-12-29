@@ -43,40 +43,40 @@ const GamePage: React.FC = () => {
     const [betStatus, setBetStatus] = useState<"Active" | "Frozen" | "Result" | "">("");
     const [result, setResult] = useState<string | null>(null);
 
-    // Функция для загрузки предыдущей ставки
-    const loadPreviousBetEnd = async () => {
+// Функция для загрузки прошлой ставки пользователя по паре
+    const loadUserLastBet = async (pair: string) => {
         try {
-            if (!selectedPair) return;
-            const response = await fetchPreviousBetEnd(selectedPair); // Делаем запрос к API
-            const { x, y } = response;
-            setPreviousBetEnd(new THREE.Vector3(x, y, 0)); // Устанавливаем полученные координаты
-        } catch (error) {
-            console.error("Ошибка загрузки предыдущей ставки:", error);
-        }
-    };
+            if (!pair) {
+                console.warn("Пара не выбрана");
+                return;
+            }
 
-    // Функция для загрузки последней ставки пользователя
-    const loadUserPreviousBet = async () => {
-        try {
-            const response = await getUserBets(); // Получаем все ставки пользователя
-            const lastBet = response.bets.sort(
-              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            )[0]; // Берём последнюю ставку по дате
+            const response = await getUserBets(); // Запрос всех ставок пользователя
+            const lastBet = response.bets
+              .filter((bet) => bet.pair_name === pair) // Фильтруем ставки по выбранной паре
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]; // Берем последнюю по дате
 
             if (lastBet && lastBet.vector) {
-                const { x, y } = lastBet.vector; // Предполагается, что координаты хранятся в `vector`
-                setUserPreviousBet(new THREE.Vector3(x, y, 0 || 0)); // Устанавливаем данные последней ставки
+                const { x, y } = lastBet.vector; // Извлекаем координаты
+                setUserPreviousBet(new THREE.Vector3(x, y, 0)); // Устанавливаем данные последней ставки
+            } else {
+                console.warn("Последняя ставка пользователя по данной паре не найдена");
             }
         } catch (error) {
-            console.error("Ошибка загрузки последней ставки пользователя:", error);
+            console.error("Ошибка загрузки прошлой ставки пользователя:", error);
         }
     };
 
-    // Загружаем данные при монтировании компонента
+// Загружаем данные при монтировании компонента
     useEffect(() => {
-        loadPreviousBetEnd();
-        loadUserPreviousBet();
-    }, []);
+        if (selectedPair) {
+            fetchPreviousBetEnd(selectedPair).then(({ x, y }) => {
+                setPreviousBetEnd(new THREE.Vector3(x, y, 0)); // Устанавливаем результирующую ставку прошлого блока
+            });
+            loadUserLastBet(selectedPair); // Загружаем прошлую ставку пользователя по выбранной паре
+        }
+    }, [selectedPair]);
+
 
     // Функция для управления отображением кнопки подтверждения ставки
     // const handleShowConfirmButton = (
