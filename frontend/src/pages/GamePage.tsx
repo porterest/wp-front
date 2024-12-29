@@ -45,7 +45,7 @@ const GamePage: React.FC = () => {
             const lastBet = response.bets
               .filter((bet) => bet.pair_name === pair)
               .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-
+            console.log(lastBet);
             if (lastBet && lastBet.vector) {
                 const { x, y } = lastBet.vector;
                 const userVector = new THREE.Vector3(x, y, 0);
@@ -63,6 +63,7 @@ const GamePage: React.FC = () => {
                 const resultVector = new THREE.Vector3(x, y, 0);
                 setPreviousBetEnd(resultVector);
                 loadUserLastBet(selectedPair, resultVector);
+                console.log(resultVector);
             });
         }
     }, [selectedPair]);
