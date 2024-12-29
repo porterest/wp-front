@@ -17,5 +17,5 @@ async def get_last_vector(pair_id: UUID) -> Tuple[float, float]:
     block = await service.get_last_block_by_pair_id(pair_id)
     vector = block.result_vector
     if not vector:
-        return (2, 3)
+        return (8, 21)
     return vector.result_vector
