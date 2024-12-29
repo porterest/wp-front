@@ -25,7 +25,7 @@ const GamePage: React.FC = () => {
 
     if (!data || data.length === 0) {
         console.error("No data available in CandleDataContext.");
-        return null;
+        // return null;
     }
 
     const [orbitControlsEnabled, setOrbitControlsEnabled] = useState(true);

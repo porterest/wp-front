@@ -8,7 +8,7 @@ import { CandleData } from "./CandlestickChart";
 
 interface GraphModesProps {
   currentMode: number; // Текущий режим отображения графика
-  data: CandleData[]; // Данные свечей
+  data: CandleData[] | null; // Данные свечей
   previousBetEnd: THREE.Vector3; // Конец предыдущей общей ставки
   userPreviousBet: THREE.Vector3; // Конец пунктира (прошлая ставка пользователя)
   setUserPreviousBet: (value: THREE.Vector3) => void; // Обновление конечной точки пользовательской ставки
