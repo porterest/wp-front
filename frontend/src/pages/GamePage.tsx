@@ -172,7 +172,7 @@ const GamePage: React.FC = () => {
               />
           </div>
 
-          <Canvas>
+          {/*<Canvas>*/}
               <Scene orbitControlsEnabled={orbitControlsEnabled}>
                   <GraphModes
                     axisMode={axisMode}
@@ -198,7 +198,7 @@ const GamePage: React.FC = () => {
                     useUserLastBet={useLastBet}
                   />
               </Scene>
-          </Canvas>
+          {/*</Canvas>*/}
 
 
           {showConfirmButton && (
