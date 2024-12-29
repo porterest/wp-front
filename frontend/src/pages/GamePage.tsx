@@ -71,7 +71,6 @@ const GamePage: React.FC = () => {
                 }
                 setPreviousBetEnd(resultVector);
                 loadUserLastBet(selectedPair, resultVector);
-                console.log(resultVector);
             });
         }
     }, [selectedPair]);
