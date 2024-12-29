@@ -38,17 +38,17 @@ const GamePage: React.FC = () => {
     const [selectedPair, setSelectedPair] = useState<string | null>(null);
     const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
 
-    const scene = useScene(); // Получаем сцену из react-three-fiber
+    // const scene = useScene(); // Получаем сцену из react-three-fiber
 
-    const drawArrow = (start: THREE.Vector3, end: THREE.Vector3, color = 0xff0000) => {
-        const arrowHelper = new THREE.ArrowHelper(
-          new THREE.Vector3().subVectors(end, start).normalize(),
-          start,
-          start.distanceTo(end),
-          color
-        );
-        scene.add(arrowHelper);
-    };
+    // const drawArrow = (start: THREE.Vector3, end: THREE.Vector3, color = 0xff0000) => {
+    //     const arrowHelper = new THREE.ArrowHelper(
+    //       new THREE.Vector3().subVectors(end, start).normalize(),
+    //       start,
+    //       start.distanceTo(end),
+    //       color
+    //     );
+    //     scene.add(arrowHelper);
+    // };
 
     const loadUserLastBet = async (pair: string, startVector: THREE.Vector3) => {
         try {

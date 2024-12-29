@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
-import { useScene } from "./SceneProvider";
+// import { useScene } from "./SceneProvider";
 import * as THREE from "three";
 import { Vector3 } from "three";
+import { useThree } from "@react-three/fiber";
 
 interface PairVectorsProps {
   useSelectedPair: () => string | null;
@@ -14,7 +15,7 @@ const PairVectors: React.FC<PairVectorsProps> = ({
   usePreviousBetEnd,
   useUserLastBet,
 }) => {
-  const scene = useScene();
+  const { scene } = useThree();
   const selectedPair = useSelectedPair();
 
   useEffect(() => {
