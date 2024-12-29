@@ -12,6 +12,7 @@ import { CandleDataContext } from "../context/CandleDataContext";
 import { fetchPreviousBetEnd, getUserBets, placeBet } from "../services/api";
 import { BetResponse, PlaceBetRequest } from "../types/apiTypes";
 import BetArrow from "../components/BetArrow";
+import Scene from "../components/Scene";
 // import { SceneProvider, useScene } from "../components/SceneProvider";
 
 const GamePage: React.FC = () => {
@@ -172,6 +173,7 @@ const GamePage: React.FC = () => {
           </div>
 
           <Canvas>
+              <Scene orbitControlsEnabled={orbitControlsEnabled}>
                   <GraphModes
                     axisMode={axisMode}
                     currentMode={currentMode}
@@ -195,6 +197,7 @@ const GamePage: React.FC = () => {
                     usePreviousBetEnd={usePreviousBet}
                     useUserLastBet={useLastBet}
                   />
+              </Scene>
           </Canvas>
 
 
