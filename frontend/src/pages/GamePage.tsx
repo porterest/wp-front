@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import GraphModes from "../components/GraphModes";
@@ -6,10 +6,11 @@ import Legend from "../components/Legend";
 import SymbolSelector from "../components/SymbolSelector";
 import Instructions from "../components/Instructions";
 import ConfirmBetButton from "../components/ConfirmBetButton";
+import PairVectors from "../components/PairVectors";
 import Timer from "../components/Timer";
 import { CandleDataContext } from "../context/CandleDataContext";
 import { fetchPreviousBetEnd, getUserBets, placeBet } from "../services/api";
-import { PlaceBetRequest } from "../types/apiTypes";
+import { BetResponse, PlaceBetRequest } from "../types/apiTypes";
 import BetArrow from "../components/BetArrow";
 import { SceneProvider, useScene } from "../components/SceneProvider";
 
@@ -60,7 +61,7 @@ const GamePage: React.FC = () => {
                 const { x, y } = lastBet.vector;
                 const userVector = new THREE.Vector3(x, y, 0);
                 setUserPreviousBet(userVector);
-                drawArrow(startVector, userVector, 0x00ff00); // Зеленая стрелка
+                // drawArrow(startVector, userVector, 0x00ff00); // Зеленая стрелка
             }
         } catch (error) {
             console.error("Ошибка загрузки прошлой ставки пользователя:", error);
@@ -72,11 +73,22 @@ const GamePage: React.FC = () => {
             fetchPreviousBetEnd(selectedPair).then(({ x, y }) => {
                 const resultVector = new THREE.Vector3(x, y, 0);
                 setPreviousBetEnd(resultVector);
-                drawArrow(new THREE.Vector3(0, 0, 0), resultVector, 0xff0000); // Красная стрелка
                 loadUserLastBet(selectedPair, resultVector);
+
+
+                // drawArrow(new THREE.Vector3(0, 0, 0), resultVector, 0xff0000); // Красная стрелка
             });
         }
     }, [selectedPair]);
+
+
+    // const [ useSelectedPair] = useState(selectedPair);
+
+    const useSelectedPair = () => {return selectedPair;};
+    const usePreviousBet = () => {return previousBetEnd;};
+    const useLastBet = () => {return userPreviousBet;};
+    // const [ usePreviousBet ] = useState(previousBetEnd);
+    // const [ useLastBet ] = useState(userPreviousBet);
 
     const handleShowConfirmButton = async (
       show: boolean,
@@ -178,6 +190,11 @@ const GamePage: React.FC = () => {
                     onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
                     onShowConfirmButton={handleShowConfirmButton}
                     axisMode={axisMode}
+                  />
+                  <PairVectors
+                    useSelectedPair={useSelectedPair}
+                    usePreviousBetEnd={usePreviousBet}
+                    useUserLastBet={useLastBet}
                   />
               </SceneProvider>
           </Canvas>
