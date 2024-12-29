@@ -1,15 +1,16 @@
 import React, { useContext, useEffect, useState } from "react";
+import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
-import Scene from "../components/Scene";
+import BetArrow from "../components/BetArrow";
 import GraphModes from "../components/GraphModes";
 import Legend from "../components/Legend";
 import SymbolSelector from "../components/SymbolSelector";
 import Instructions from "../components/Instructions";
 import ConfirmBetButton from "../components/ConfirmBetButton";
-import { CandleDataContext } from "../context/CandleDataContext";
-import { fetchBetStatuses, fetchPreviousBetEnd, placeBet, getUserBets } from "../services/api";
-import { PlaceBetRequest } from "../types/apiTypes";
 import Timer from "../components/Timer";
+import { CandleDataContext } from "../context/CandleDataContext";
+import { fetchPreviousBetEnd, getUserBets, placeBet } from "../services/api";
+import { PlaceBetRequest } from "../types/apiTypes";
 
 const GamePage: React.FC = () => {
     const context = useContext(CandleDataContext);
@@ -19,12 +20,12 @@ const GamePage: React.FC = () => {
     }
 
     const { data } = context;
+
     if (!data || data.length === 0) {
         console.error("No data available in CandleDataContext.");
-        return null;
+        return null; // Рендер остановится, если данных нет.
     }
 
-    // Локальные состояния
     const [orbitControlsEnabled, setOrbitControlsEnabled] = useState(true);
     const [currentMode, setCurrentMode] = useState(1);
     const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
@@ -34,15 +35,11 @@ const GamePage: React.FC = () => {
     const [showInstructions, setShowInstructions] = useState(false);
     const [selectedPair, setSelectedPair] = useState<string | null>(null);
     const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
+    const [betStatus, setBetStatus] = useState<"Active" | "Frozen" | "Result" | "">("");
 
-    // Функция для загрузки прошлой ставки пользователя по паре
+    // Функция для загрузки прошлой ставки пользователя
     const loadUserLastBet = async (pair: string, startVector: THREE.Vector3) => {
         try {
-            if (!pair) {
-                console.warn("Пара не выбрана");
-                return;
-            }
-
             const response = await getUserBets();
             const lastBet = response.bets
               .filter((bet) => bet.pair_name === pair)
@@ -52,26 +49,11 @@ const GamePage: React.FC = () => {
                 const { x, y } = lastBet.vector;
                 const userVector = new THREE.Vector3(x, y, 0);
                 setUserPreviousBet(userVector);
-                drawArrow(startVector, userVector, 0x00ff00); // Зеленая стрелка
             } else {
                 console.warn("Последняя ставка пользователя по данной паре не найдена");
             }
         } catch (error) {
             console.error("Ошибка загрузки прошлой ставки пользователя:", error);
-        }
-    };
-
-    // Функция для отрисовки стрелки
-    const drawArrow = (start: THREE.Vector3, end: THREE.Vector3, color = 0xff0000) => {
-        const arrowHelper = new THREE.ArrowHelper(
-          new THREE.Vector3().subVectors(end, start).normalize(),
-          start,
-          start.distanceTo(end),
-          color
-        );
-        const scene = context.scene;
-        if (scene) {
-            scene.add(arrowHelper);
         }
     };
 
@@ -81,12 +63,12 @@ const GamePage: React.FC = () => {
             fetchPreviousBetEnd(selectedPair).then(({ x, y }) => {
                 const resultVector = new THREE.Vector3(x, y, 0);
                 setPreviousBetEnd(resultVector);
-                drawArrow(new THREE.Vector3(0, 0, 0), resultVector, 0xff0000); // Красная стрелка
                 loadUserLastBet(selectedPair, resultVector);
             });
         }
     }, [selectedPair]);
 
+    // Обработчик для показа кнопки подтверждения ставки
     const handleShowConfirmButton = async (
       show: boolean,
       betData?: { amount: number; predicted_vector: number[] }
@@ -124,6 +106,7 @@ const GamePage: React.FC = () => {
         }
     };
 
+    // Обработка подтверждения ставки
     const handleConfirmBet = async () => {
         if (!currentBet) return;
 
@@ -138,6 +121,7 @@ const GamePage: React.FC = () => {
         }
     };
 
+    // Управление прокруткой
     useEffect(() => {
         const preventScroll = () => document.body.classList.add("no-scroll");
         const allowScroll = () => document.body.classList.remove("no-scroll");
@@ -190,7 +174,7 @@ const GamePage: React.FC = () => {
               />
           </div>
 
-          <Scene orbitControlsEnabled={orbitControlsEnabled}>
+          <Canvas>
               <GraphModes
                 axisMode={axisMode}
                 currentMode={currentMode}
@@ -201,7 +185,15 @@ const GamePage: React.FC = () => {
                 onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
                 onShowConfirmButton={handleShowConfirmButton}
               />
-          </Scene>
+              <BetArrow
+                previousBetEnd={previousBetEnd}
+                userPreviousBet={userPreviousBet}
+                setUserPreviousBet={setUserPreviousBet}
+                onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
+                onShowConfirmButton={handleShowConfirmButton}
+                axisMode={axisMode}
+              />
+          </Canvas>
 
           {showConfirmButton && (
             <div className="absolute bottom-[20px] right-[20px] z-10">
