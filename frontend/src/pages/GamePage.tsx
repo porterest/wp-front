@@ -83,13 +83,13 @@ const GamePage: React.FC = () => {
     }, [selectedPair]);
 
 
-    // const [ useSelectedPair] = useState(selectedPair);
+    const [ useSelectedPair] = useState(selectedPair);
 
-    const useSelectedPair = () => {return selectedPair;};
-    const usePreviousBet = () => {return previousBetEnd;};
-    const useLastBet = () => {return userPreviousBet;};
-    // const [ usePreviousBet ] = useState(previousBetEnd);
-    // const [ useLastBet ] = useState(userPreviousBet);
+    // const useSelectedPair = () => {return selectedPair;};
+    // const usePreviousBet = () => {return previousBetEnd;};
+    // const useLastBet = () => {return userPreviousBet;};
+    const [ usePreviousBet ] = useState(previousBetEnd);
+    const [ useLastBet ] = useState(userPreviousBet);
 
     const handleShowConfirmButton = async (
       show: boolean,

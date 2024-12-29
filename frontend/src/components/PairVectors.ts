@@ -5,9 +5,9 @@ import { Vector3 } from "three";
 import { useThree } from "@react-three/fiber";
 
 interface PairVectorsProps {
-  useSelectedPair: () => string | null;
-  usePreviousBetEnd: () => Vector3 | null;
-  useUserLastBet: () => Vector3 | null;
+  useSelectedPair: string | null;
+  usePreviousBetEnd: Vector3 | null;
+  useUserLastBet: Vector3 | null;
 }
 
 const PairVectors: React.FC<PairVectorsProps> = ({
@@ -16,16 +16,16 @@ const PairVectors: React.FC<PairVectorsProps> = ({
   useUserLastBet,
 }) => {
   const { scene } = useThree();
-  const selectedPair = useSelectedPair();
+  // const selectedPair = useSelectedPair();
 
   useEffect(() => {
-    const betEnd = usePreviousBetEnd();
-    const lastBet = useUserLastBet();
+    const betEnd = usePreviousBetEnd;
+    const lastBet = useUserLastBet;
     if (!betEnd || !lastBet) return;
     console.log(betEnd);
     drawArrow(new THREE.Vector3(0, 0, 0), betEnd, 0xff0000);
     drawArrow(betEnd, lastBet, 0x00ff00);
-  }, [selectedPair]);
+  }, [useSelectedPair]);
 
   const drawArrow = (
     start: THREE.Vector3,
