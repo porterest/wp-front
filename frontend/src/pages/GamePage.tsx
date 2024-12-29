@@ -11,6 +11,7 @@ import { CandleDataContext } from "../context/CandleDataContext";
 import { fetchPreviousBetEnd, getUserBets, placeBet } from "../services/api";
 import { PlaceBetRequest } from "../types/apiTypes";
 import BetArrow from "../components/BetArrow";
+import { SceneProvider } from "../components/SceneProvider";
 
 const GamePage: React.FC = () => {
     const context = useContext(CandleDataContext);
@@ -159,25 +160,28 @@ const GamePage: React.FC = () => {
           </div>
 
           <Canvas>
-              <BetArrow
-                previousBetEnd={previousBetEnd}
-                userPreviousBet={userPreviousBet}
-                setUserPreviousBet={setUserPreviousBet}
-                onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
-                onShowConfirmButton={handleShowConfirmButton}
-                axisMode={axisMode}
-              />
-              <GraphModes
-                axisMode={axisMode}
-                currentMode={currentMode}
-                data={data}
-                previousBetEnd={previousBetEnd}
-                userPreviousBet={userPreviousBet}
-                setUserPreviousBet={setUserPreviousBet}
-                onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
-                onShowConfirmButton={handleShowConfirmButton}
-              />
+              <SceneProvider>
+                  <GraphModes
+                    axisMode={axisMode}
+                    currentMode={currentMode}
+                    data={data}
+                    previousBetEnd={previousBetEnd}
+                    userPreviousBet={userPreviousBet}
+                    setUserPreviousBet={setUserPreviousBet}
+                    onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
+                    onShowConfirmButton={handleShowConfirmButton}
+                  />
+                  <BetArrow
+                    previousBetEnd={previousBetEnd}
+                    userPreviousBet={userPreviousBet}
+                    setUserPreviousBet={setUserPreviousBet}
+                    onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
+                    onShowConfirmButton={handleShowConfirmButton}
+                    axisMode={axisMode}
+                  />
+              </SceneProvider>
           </Canvas>
+
 
           {showConfirmButton && (
             <div className="absolute bottom-[20px] right-[20px] z-10">
