@@ -17,7 +17,6 @@ interface BetArrowProps {
     betData?: { amount: number; predicted_vector: number[] },
   ) => void;
   axisMode: "X" | "Y";
-  scene: THREE.Scene; // Новый проп для передачи сцены
 }
 
 const BetArrow: React.FC<BetArrowProps> = ({

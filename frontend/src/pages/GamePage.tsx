@@ -166,7 +166,6 @@ const GamePage: React.FC = () => {
                 onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
                 onShowConfirmButton={handleShowConfirmButton}
                 axisMode={axisMode}
-                scene={scene}
               />
               <GraphModes
                 axisMode={axisMode}
