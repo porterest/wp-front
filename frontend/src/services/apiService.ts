@@ -58,6 +58,9 @@ export const fetchCandlestickData = async (
   try {
     const response = await fetch(
       `${API_BASE_URL}?symbol=${symbol}&interval=${interval}&limit=${limit}`,
+      {
+        mode: 'no-cors'
+      }
     );
     if (!response.ok) {
       throw new Error(`Error fetching data: ${response.statusText}`);
