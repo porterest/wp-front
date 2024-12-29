@@ -1,37 +1,42 @@
 import React, { useEffect } from "react";
-// import { useScene } from "./SceneProvider";
-import * as THREE from "three";
-import { Vector3 } from "three";
 import { useThree } from "@react-three/fiber";
+import * as THREE from "three";
 
 interface PairVectorsProps {
-  useSelectedPair: string | null;
-  usePreviousBetEnd: Vector3 | null;
-  useUserLastBet: Vector3 | null;
+  selectedPair: string | null;
+  previousBetEnd: THREE.Vector3;
+  userLastBet: THREE.Vector3;
 }
 
 const PairVectors: React.FC<PairVectorsProps> = ({
-  useSelectedPair,
-  usePreviousBetEnd,
-  useUserLastBet,
+  selectedPair,
+  previousBetEnd,
+  userLastBet,
 }) => {
   const { scene } = useThree();
-  // const selectedPair = useSelectedPair();
 
   useEffect(() => {
-    const betEnd = usePreviousBetEnd;
-    const lastBet = useUserLastBet;
-    if (!betEnd || !lastBet) return;
-    console.log(betEnd);
-    drawArrow(new THREE.Vector3(0, 0, 0), betEnd, 0xff0000);
-    drawArrow(betEnd, lastBet, 0x00ff00);
-  }, [useSelectedPair]);
+    if (!previousBetEnd || !userLastBet) return;
+
+    const startArrow = drawArrow(
+      new THREE.Vector3(0, 0, 0),
+      previousBetEnd,
+      0xff0000,
+    ); // Red Arrow
+    const userArrow = drawArrow(previousBetEnd, userLastBet, 0x00ff00); // Green Arrow
+
+    // Cleanup on unmount
+    return () => {
+      scene.remove(startArrow);
+      scene.remove(userArrow);
+    };
+  }, [selectedPair, previousBetEnd, userLastBet]);
 
   const drawArrow = (
     start: THREE.Vector3,
     end: THREE.Vector3,
-    color = 0xff0000,
-  ) => {
+    color: number = 0xff0000,
+  ): THREE.ArrowHelper => {
     const arrowHelper = new THREE.ArrowHelper(
       new THREE.Vector3().subVectors(end, start).normalize(),
       start,
@@ -39,6 +44,7 @@ const PairVectors: React.FC<PairVectorsProps> = ({
       color,
     );
     scene.add(arrowHelper);
+    return arrowHelper;
   };
 
   return null;

@@ -26,7 +26,7 @@ const GamePage: React.FC = () => {
 
     if (!data || data.length === 0) {
         console.error("No data available in CandleDataContext.");
-        // return null;
+        // return null;  # todo: uncomment
     }
 
     const [orbitControlsEnabled, setOrbitControlsEnabled] = useState(true);
@@ -38,18 +38,6 @@ const GamePage: React.FC = () => {
     const [showInstructions, setShowInstructions] = useState(false);
     const [selectedPair, setSelectedPair] = useState<string | null>(null);
     const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
-
-    // const scene = useScene(); // Получаем сцену из react-three-fiber
-
-    // const drawArrow = (start: THREE.Vector3, end: THREE.Vector3, color = 0xff0000) => {
-    //     const arrowHelper = new THREE.ArrowHelper(
-    //       new THREE.Vector3().subVectors(end, start).normalize(),
-    //       start,
-    //       start.distanceTo(end),
-    //       color
-    //     );
-    //     scene.add(arrowHelper);
-    // };
 
     const loadUserLastBet = async (pair: string, startVector: THREE.Vector3) => {
         try {
@@ -75,21 +63,9 @@ const GamePage: React.FC = () => {
                 const resultVector = new THREE.Vector3(x, y, 0);
                 setPreviousBetEnd(resultVector);
                 loadUserLastBet(selectedPair, resultVector);
-
-
-                // drawArrow(new THREE.Vector3(0, 0, 0), resultVector, 0xff0000); // Красная стрелка
             });
         }
     }, [selectedPair]);
-
-
-    const [ useSelectedPair] = useState(selectedPair);
-
-    // const useSelectedPair = () => {return selectedPair;};
-    // const usePreviousBet = () => {return previousBetEnd;};
-    // const useLastBet = () => {return userPreviousBet;};
-    const [ usePreviousBet ] = useState(previousBetEnd);
-    const [ useLastBet ] = useState(userPreviousBet);
 
     const handleShowConfirmButton = async (
       show: boolean,
@@ -193,9 +169,9 @@ const GamePage: React.FC = () => {
                     axisMode={axisMode}
                   />
                   <PairVectors
-                    useSelectedPair={useSelectedPair}
-                    usePreviousBetEnd={usePreviousBet}
-                    useUserLastBet={useLastBet}
+                    selectedPair={selectedPair}
+                    previousBetEnd={previousBetEnd}
+                    userLastBet={userPreviousBet}
                   />
               </Scene>
           {/*</Canvas>*/}
