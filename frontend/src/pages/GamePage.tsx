@@ -11,7 +11,7 @@ import { CandleDataContext } from "../context/CandleDataContext";
 import { fetchPreviousBetEnd, getUserBets, placeBet } from "../services/api";
 import { PlaceBetRequest } from "../types/apiTypes";
 import BetArrow from "../components/BetArrow";
-import { SceneProvider } from "../components/SceneProvider";
+import { SceneProvider, useScene } from "../components/SceneProvider";
 
 const GamePage: React.FC = () => {
     const context = useContext(CandleDataContext);
@@ -37,7 +37,7 @@ const GamePage: React.FC = () => {
     const [selectedPair, setSelectedPair] = useState<string | null>(null);
     const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
 
-    const { scene } = useThree(); // Получаем сцену из react-three-fiber
+    const scene = useScene(); // Получаем сцену из react-three-fiber
 
     const drawArrow = (start: THREE.Vector3, end: THREE.Vector3, color = 0xff0000) => {
         const arrowHelper = new THREE.ArrowHelper(
