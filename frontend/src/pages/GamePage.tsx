@@ -157,19 +157,19 @@ const GamePage: React.FC = () => {
             className="absolute top-[50px] left-1/2 transform -translate-x-1/2 z-10"
           />
 
-          <div className="relative top-[5px] left-1/2 transform -translate-x-1/2 z-10">
-              <Legend items={legendItems} />
-          </div>
+          {/*<div className="relative top-[5px] left-1/2 transform -translate-x-1/2 z-10">*/}
+          {/*    <Legend items={legendItems} />*/}
+          {/*</div>*/}
 
-          <div className="absolute top-[100px] right-[20px] z-10">
-              <SymbolSelector
-                onSwitchMode={(mode) =>
-                  setCurrentMode(mode === "Axes" ? 1 : mode === "Candles" ? 2 : 3)
-                }
-                onAxisModeChange={setAxisMode}
-                onSymbolChange={(pair) => setSelectedPair(pair)}
-              />
-          </div>
+          {/*<div className="absolute top-[100px] right-[20px] z-10">*/}
+          {/*    <SymbolSelector*/}
+          {/*      onSwitchMode={(mode) =>*/}
+          {/*        setCurrentMode(mode === "Axes" ? 1 : mode === "Candles" ? 2 : 3)*/}
+          {/*      }*/}
+          {/*      onAxisModeChange={setAxisMode}*/}
+          {/*      onSymbolChange={(pair) => setSelectedPair(pair)}*/}
+          {/*    />*/}
+          {/*</div>*/}
 
           <Canvas>
               {/*<SceneProvider>*/}
