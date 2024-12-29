@@ -35,11 +35,11 @@ const GraphModes: React.FC<GraphModesProps> = ({
   const graphDimensions = { x: 10, y: 5, z: 5 };
 
   // Проверка данных
-  if (!data || data.length === 0) {
-    return <Html>
-      <div>No data available to render the graph.</div>
-    </Html>;
-  }
+  // if (!data || data.length === 0) {
+  //   return <Html>
+  //     <div>No data available to render the graph.</div>
+  //   </Html>;
+  // }
 
   // Рендеринг
   return (
@@ -60,7 +60,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
         />
       )}
 
-      {currentMode === 2 && (
+      {(currentMode === 2 && data) && (
         <CandlestickChart
           data={data}
           graphDimensions={graphDimensions}
@@ -70,11 +70,11 @@ const GraphModes: React.FC<GraphModesProps> = ({
 
       {currentMode === 3 && (
         <>
-          <CandlestickChart
+          {(data) && (<CandlestickChart
             data={data}
             graphDimensions={graphDimensions}
             mode="Both"
-          />
+          />)}
           <BetArrow
             previousBetEnd={previousBetEnd}
             userPreviousBet={userPreviousBet}
