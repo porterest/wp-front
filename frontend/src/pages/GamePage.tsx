@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Canvas, useThree, useFrame } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import GraphModes from "../components/GraphModes";
 import Legend from "../components/Legend";
@@ -10,6 +10,7 @@ import Timer from "../components/Timer";
 import { CandleDataContext } from "../context/CandleDataContext";
 import { fetchPreviousBetEnd, getUserBets, placeBet } from "../services/api";
 import { PlaceBetRequest } from "../types/apiTypes";
+import BetArrow from "../components/BetArrow";
 
 const GamePage: React.FC = () => {
     const context = useContext(CandleDataContext);
@@ -34,11 +35,10 @@ const GamePage: React.FC = () => {
     const [showInstructions, setShowInstructions] = useState(false);
     const [selectedPair, setSelectedPair] = useState<string | null>(null);
     const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
-    const [betStatus, setBetStatus] = useState<"Active" | "Frozen" | "Result" | "">("");
+
+    const { scene } = useThree(); // Получаем сцену из react-three-fiber
 
     const drawArrow = (start: THREE.Vector3, end: THREE.Vector3, color = 0xff0000) => {
-        const { scene } = useThree();
-
         const arrowHelper = new THREE.ArrowHelper(
           new THREE.Vector3().subVectors(end, start).normalize(),
           start,
@@ -122,7 +122,6 @@ const GamePage: React.FC = () => {
             console.log("Bet placed successfully:", response);
 
             setShowConfirmButton(false);
-            setBetStatus("Active");
         } catch (error) {
             console.error("Error placing bet:", error);
         }
@@ -160,6 +159,15 @@ const GamePage: React.FC = () => {
           </div>
 
           <Canvas>
+              <BetArrow
+                previousBetEnd={previousBetEnd}
+                userPreviousBet={userPreviousBet}
+                setUserPreviousBet={setUserPreviousBet}
+                onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
+                onShowConfirmButton={handleShowConfirmButton}
+                axisMode={axisMode}
+                scene={scene}
+              />
               <GraphModes
                 axisMode={axisMode}
                 currentMode={currentMode}

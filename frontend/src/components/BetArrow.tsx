@@ -8,16 +8,16 @@ import { Text } from "@react-three/drei";
 import { useUserBalance } from "../pages/BalancePage";
 
 interface BetArrowProps {
-  previousBetEnd: THREE.Vector3; // Суммарная ставка всех пользователей за прошлый блок
-  userPreviousBet: THREE.Vector3; // Личная предыдущая ставка пользователя
-  setUserPreviousBet: (value: THREE.Vector3) => void; // Callback для обновления userPreviousBet
-  onDragging: (isDragging: boolean) => void; // Callback для отслеживания перетаскивания
+  previousBetEnd: THREE.Vector3;
+  userPreviousBet: THREE.Vector3;
+  setUserPreviousBet: (value: THREE.Vector3) => void;
+  onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] },
   ) => void;
-  // Callback для управления кнопкой подтверждения
-  axisMode: "X" | "Y"; // Режим управления осями (X или Y)
+  axisMode: "X" | "Y";
+  scene: THREE.Scene; // Новый проп для передачи сцены
 }
 
 const BetArrow: React.FC<BetArrowProps> = ({
