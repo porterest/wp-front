@@ -22,6 +22,7 @@ const PairVectors: React.FC<PairVectorsProps> = ({
     const betEnd = usePreviousBetEnd();
     const lastBet = useUserLastBet();
     if (!betEnd || !lastBet) return;
+    console.log(betEnd);
     drawArrow(new THREE.Vector3(0, 0, 0), betEnd, 0xff0000);
     drawArrow(betEnd, lastBet, 0x00ff00);
   }, [selectedPair]);
