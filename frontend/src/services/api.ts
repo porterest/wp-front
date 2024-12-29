@@ -153,13 +153,13 @@ export async function check_user_deposit(): Promise<void> {
 }
 
 
-export async function fetchPreviousBetEnd(name: string): Promise<{ x: number; y: number }> {
+export async function fetchPreviousBetEnd(pairId: string): Promise<{ x: number; y: number }> {
     try {
         const response = await apiClient.get<{ x: number; y: number }>(
           "/block/last_vector",
           {
               params: {
-                  name: name,
+                  pair_id: pairId
               }
           });
         return response.data; // Возвращаем данные с координатами
