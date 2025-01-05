@@ -11,3 +11,6 @@ class AppWalletServiceInterface(ABC):
     @abstractmethod
     async def withdraw_to_user(self, user_id: UUID, amount: float):
         ...
+    @abstractmethod
+    async def get_inner_tokens_amount(self):
+        ...

@@ -50,6 +50,12 @@ class TonClientInterface(ABC):
     async def get_transactions(self, address: str) -> list:
         ...
 
+    async def mint_tokens(self, amount: int):
+        ...
+
+    async def burn_tokens(self, amount: int):
+        ...
+
 
 if __name__ == '__main__':
     proof_init_object = {

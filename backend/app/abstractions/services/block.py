@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from uuid import UUID
 from typing import Optional
+from uuid import UUID
 
 from domain.dto.block import CreateBlockDTO
 from domain.models.block import Block
@@ -9,6 +9,19 @@ from domain.models.block import Block
 class BlockServiceInterface(ABC):
     @abstractmethod
     async def get_last_block(self, chain_id: UUID) -> Optional[Block]:
+        """
+        Возвращает последний блок в системе.
+        """
+        ...
+
+    async def get_last_blocks(self) -> Optional[list[Block]]:
+        """
+        Возвращает последний блок в системе.
+        """
+        ...
+
+    @abstractmethod
+    async def get_block(self, block_id: UUID) -> Optional[Block]:
         """
         Возвращает последний блок в системе.
         """
@@ -25,7 +38,6 @@ class BlockServiceInterface(ABC):
     async def create(self, create_dto: CreateBlockDTO) -> None:
         ...
 
-
     @abstractmethod
     async def start_new_block(self, block_number: int) -> Block:
         """
@@ -40,7 +52,6 @@ class BlockServiceInterface(ABC):
         """
         ...
 
-
     @abstractmethod
     async def handle_interrupted_block(self, block: Block) -> None:
         """
@@ -54,5 +65,3 @@ class BlockServiceInterface(ABC):
         Выполняет откат или обработку прерванного блока.
         """
         ...
-
-

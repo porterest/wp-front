@@ -156,7 +156,7 @@ class ChainService(
             self.logger.error(f"No one block bro", exc_info=True)
             raise
 
-    def stop_block_generation(self):
+    async def stop_block_generation(self):
         """
         Останавливает процесс блокогенерации.
         """

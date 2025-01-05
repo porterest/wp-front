@@ -139,3 +139,13 @@ class Chain(AbstractBase):
 
     blocks: Mapped[List[Block]] = relationship("Block", back_populates='chain')
     pair: Mapped[Pair] = relationship("Pair")
+
+
+class Swap(AbstractBase):
+    __tablename__ = "swap"
+
+    id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    block_id: Mapped[pyUUID] = mapped_column(ForeignKey('blocks.id'))
+    block: Mapped[Block] = relationship("Block", back_populates='swap')
+    target_price: Mapped[float]
+    amount: Mapped[float]  # + если мы забираем свой токен (добавляем деньги) - если кладем наш токен(забираем деньги)

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class DexServiceInterface(ABC):
+class InnerTokenInterface(ABC):
     @abstractmethod
-    async def make_block_tx(self, ):
+    async def mint(self):
         ...

@@ -12,18 +12,23 @@ from domain.dto.block import UpdateBlockDTO, CreateBlockDTO
 from domain.models.block import Block
 from infrastructure.db.entities import BlockStatus
 from services.exceptions import NotFoundException
+from services.math_services.AggregateBetsService import AggregateBetsService
 
 
 @dataclass
 class BlockService(BlockServiceInterface):
     block_repository: BlockRepositoryInterface
     bet_service: BetServiceInterface
+    aggregate_bets_service: AggregateBetsService
 
     async def create(self, create_dto):
         await self.block_repository.create(create_dto)
 
     async def get_last_block(self, chain_id: UUID) -> Optional[Block]:
         last_block = await self.block_repository.get_last_block(chain_id)
+        return last_block
+    async def get_last_blocks(self) -> Optional[list[Block]]:
+        last_block = await self.block_repository.get_last_blocks()
         return last_block
 
     async def get_last_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
@@ -62,11 +67,12 @@ class BlockService(BlockServiceInterface):
         return block
 
     async def complete_block(self, block_id: UUID) -> None:
-        block = await self.get_block_by_id(block_id)
+        block = await self.get_block(block_id)
+        result_vector = await self.aggregate_bets_service.aggregate_bets(block_id)
         update_block = (
             UpdateBlockDTO(
                 status=BlockStatus.COMPLETED,
-                result_vector=block.result_vector,
+                result_vector=result_vector,
                 completed_at=block.completed_at
             )
         )
@@ -74,7 +80,7 @@ class BlockService(BlockServiceInterface):
         block.completed_at = func.now()
         await self.block_repository.update(block_id, update_block)
 
-    async def get_block_by_id(self, block_id: UUID) -> Block:
+    async def get_block(self, block_id: UUID) -> Block:
         block = await self.block_repository.get(block_id)
         if not block:
             raise NotFoundException(f"Block with ID {block_id} not found")

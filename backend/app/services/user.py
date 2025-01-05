@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import NoReturn
+from typing import NoReturn, Annotated
 from uuid import UUID
 
 from sqlalchemy.exc import NoResultFound
 
 from abstractions.repositories.user import UserRepositoryInterface
+from abstractions.services.block import BlockServiceInterface
 from abstractions.services.user import UserServiceInterface
 from domain.dto.user import UpdateUserDTO, CreateUserDTO
 from domain.metaholder.responses import TransactionResponse, BetResponse
@@ -17,6 +18,7 @@ from services.exceptions import NotFoundException, NoSuchUserException
 @dataclass
 class UserService(UserServiceInterface):
     user_repository: UserRepositoryInterface
+    block_service: BlockServiceInterface
 
     async def ensure_user(self, wallet_address: str) -> NoReturn:
         user = await self.user_repository.get_by_wallet(wallet_address)
@@ -89,3 +91,7 @@ class UserService(UserServiceInterface):
         Создаёт нового пользователя.
         """
         await self.user_repository.create(user)
+
+    async def get_users_activity(self, block_id: UUID) -> tuple[Annotated[int, 'Bets count'], Annotated[float, 'Bets volume']]:
+        block = await self.block_service.get_block(block_id)
+        return len(block.bets), sum(map(lambda bet: bet.amount, block.bets))

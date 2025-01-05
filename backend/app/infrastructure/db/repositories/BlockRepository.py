@@ -32,6 +32,21 @@ class BlockRepository(
             block = res.scalars().one_or_none()
         return self.entity_to_model(block) if block else None
 
+    async def get_last_blocks(self) -> Optional[list[Block]]:
+
+        async with self.session_maker() as session:
+            pairs_count = await session.execute(
+                select(Pair),
+            )
+            res = await session.execute(
+                select(self.entity).order_by(
+                    desc(self.entity.block_number, )).limit(pairs_count),
+            )
+
+            block = res.scalars().one_or_none()
+        return self.entity_to_model(block) if block else None
+
+
     async def get_last_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
         async with self.session_maker() as session:
             pair = (await session.execute(

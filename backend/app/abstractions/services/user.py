@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import NoReturn
+from typing import NoReturn, Annotated
 from uuid import UUID
 
 from domain.dto.user import UpdateUserDTO
@@ -30,4 +30,8 @@ class UserServiceInterface(ABC):
 
     @abstractmethod
     async def ensure_user(self, wallet_address: str) -> NoReturn:
+        ...
+
+    @abstractmethod
+    async def get_users_activity(self, block_id: UUID) -> tuple[Annotated[int, 'Bets count'], Annotated[float, 'Bets volume']]:
         ...
