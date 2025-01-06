@@ -1,8 +1,9 @@
 from dataclasses import dataclass
+from typing import Annotated
 
 from abstractions.services.dex import DexServiceInterface
 from abstractions.services.liquidity_management import LiquidityManagementServiceInterface
-from domain.enums.liquidity_action import LiquidityAction
+from domain.models.liquidity_action import LiquidityAction
 
 
 @dataclass
@@ -20,23 +21,33 @@ class LiquidityManager(LiquidityManagementServiceInterface):
 
         # Решение на основе совокупных данных
 
-    def decide_liquidity_action(self, deficit_or_surplus: dict, pool_trade_intensity: int, swap_volume: int,
-                                user_bet_count: int, user_volume: int, swap_count: int) -> LiquidityAction:
+    def decide_liquidity_action(
+            self,
+            inner_token_state: Annotated[float, 'inner token needed'],
+            other_token_state: Annotated[float, 'other pool token needed'],
+            pool_trade_intensity: Annotated[float, 'pool trade intensity score'],
+            swaps_volume_score: Annotated[float, 'how hard it is to move price'],
+            bets_count: Annotated[int, 'bets count within the block'],
+            bets_volume: Annotated[float, 'bets volume within the block'],
+    ) -> LiquidityAction:
         """
         Логика принятия решения по управлению ликвидностью.
         """
-        if deficit_or_surplus["token_x"] < 0 or deficit_or_surplus["token_y"] < 0:
-            if pool_trade_intensity > 100 and swap_volume > 3000:  # Высокая активность пула
-                return LiquidityAction.ADD  # Добавляем ликвидность
-            elif user_bet_count < 10:  # Низкая активность пользователей
-                return LiquidityAction.HOLD  # Ничего не делаем
-        elif deficit_or_surplus["token_x"] > 0 or deficit_or_surplus["token_y"] > 0:
-            if user_volume > 2000 and swap_count > 50:  # Высокая пользовательская активность и частые свапы
-                return LiquidityAction.REMOVE  # Убираем ликвидность
-            else:
-                return LiquidityAction.HOLD  # Ничего не делаем
+        if swaps_volume_score > 10:
+            return LiquidityAction.REMOVE
 
-        return LiquidityAction.HOLD  # По умолчанию удерживаем ликвидность
+        # if deficit_or_surplus["token_x"] < 0 or deficit_or_surplus["token_y"] < 0:
+        #     if pool_trade_intensity > 100 and last_swaps_volume > 3000:  # Высокая активность пула
+        #         return LiquidityAction.ADD  # Добавляем ликвидность
+        #     elif bets_count < 10:  # Низкая активность пользователей
+        #         return LiquidityAction.HOLD  # Ничего не делаем
+        # elif deficit_or_surplus["token_x"] > 0 or deficit_or_surplus["token_y"] > 0:
+        #     if bets_volume > 2000 and last_swaps_volume > 50:  # Высокая пользовательская активность и частые свапы
+        #         return LiquidityAction.REMOVE  # Убираем ликвидность
+        #     else:
+        #         return LiquidityAction.HOLD  # Ничего не делаем
+        #
+        # return LiquidityAction.HOLD  # По умолчанию удерживаем ликвидность
 
     async def manage_liquidity(self) -> dict:  # todo: remove?
         """

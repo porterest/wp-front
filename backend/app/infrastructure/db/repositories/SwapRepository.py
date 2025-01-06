@@ -1,14 +1,17 @@
 from dataclasses import field, dataclass
 from typing import Optional
 
-from abstractions.repositories.transaction import TransactionRepositoryInterface
+from abstractions.repositories.swap import SwapRepositoryInterface
+from domain.dto.swap import CreateSwapDTO, UpdateSwapDTO
+from domain.models.swap import Swap as SwapModel
+from infrastructure.db.entities import Swap
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
 
 @dataclass
 class SwapRepository(
     AbstractSQLAlchemyRepository[Swap, SwapModel, CreateSwapDTO, UpdateSwapDTO],
-    TransactionRepositoryInterface
+    SwapRepositoryInterface
 ):
     # joined_fields: list[str] = field(default_factory=lambda: ['user'])
     joined_fields: dict[str, Optional[list[str]]] = field(

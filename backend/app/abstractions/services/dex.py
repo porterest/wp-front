@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
+from typing import Annotated
+from uuid import UUID
 
-from domain.enums.liquidity_action import LiquidityAction
+from domain.dex import PoolState
+from domain.models.liquidity_action import LiquidityAction
 
 
 class DexServiceInterface(ABC):
@@ -9,19 +12,15 @@ class DexServiceInterface(ABC):
         ...
 
     @abstractmethod
-    async def provide_liquidity(self):
-        ...
-
-    @abstractmethod
     async def burn_lp_tokens(self):
         ...
 
     @abstractmethod
-    async def get_pool_state(self):
+    async def get_pool_state(self) -> PoolState:
         ...
 
     @abstractmethod
-    async def get_pool_activity(self):
+    async def get_pool_activity(self, pair_id: UUID) -> Annotated[float, 'pool trade intensity score']:
         ...
 
     @abstractmethod
@@ -39,4 +38,8 @@ class DexServiceInterface(ABC):
         Получает текущее соотношение ликвидности в пуле из внешнего API.
         :return: Соотношение токенов к тонам в пуле.
         """
+        ...
+
+    @abstractmethod
+    async def get_current_liquidity(self, pair_id: UUID) -> Annotated[float, 'хуй знает']:
         ...

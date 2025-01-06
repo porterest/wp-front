@@ -18,3 +18,9 @@ class User(BaseModel):
     balance: Optional[float] = None
     bets: Optional[List[Bet]] = None
     transactions: Optional[List[Transaction]] = None
+
+
+@dataclass(kw_only=True)
+class BettingActivity:
+    count: int
+    volume: float

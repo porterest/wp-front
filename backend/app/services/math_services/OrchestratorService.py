@@ -2,16 +2,19 @@ from dataclasses import dataclass
 from math import sqrt
 from uuid import UUID
 
+from abstractions.repositories.chain import ChainRepositoryInterface
 from abstractions.repositories.swap import SwapRepositoryInterface
 from abstractions.services.app_wallet import AppWalletProviderInterface
+from abstractions.services.assets_management import AssetsManagementServiceInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.dex import DexServiceInterface
 from abstractions.services.liquidity_management import LiquidityManagementServiceInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
 from abstractions.services.math.reward_distribution import RewardDistributionServiceInterface
+from abstractions.services.swap import SwapServiceInterface
 from abstractions.services.user import UserServiceInterface
-from domain.dto.user_prediction import CreateUserPredictionDTO
-from domain.enums.liquidity_action import LiquidityAction
+from domain.enums.liquidity_action import LiquidityActionType
+from domain.models.liquidity_action import LiquidityAction
 from domain.models.orchestrator_result import OrchestratorResult
 from domain.models.prediction import Prediction
 from domain.models.user_prediction import UserPrediction
@@ -25,9 +28,10 @@ class OrchestratorService:
     dex_service: DexServiceInterface
     reward_service: RewardDistributionServiceInterface
     user_service: UserServiceInterface
-    swap_repository: SwapRepositoryInterface
+    swap_service: SwapServiceInterface
     block_service: BlockServiceInterface
     app_wallet_provider: AppWalletProviderInterface
+    chain_repository: ChainRepositoryInterface
 
     async def process_block(self, block_id: UUID):
         """
@@ -38,6 +42,7 @@ class OrchestratorService:
         # Stage 1: calculations
 
         block = await self.block_service.get_block(block_id)
+        chain = await self.chain_repository.get(block.chain_id)
         # 1. Получение агрегированной ставки
         aggregated_bets = await self.aggregate_bets_service.aggregate_bets(block_id)
         print(f"Aggregated bets: {aggregated_bets}")
@@ -47,6 +52,12 @@ class OrchestratorService:
         print(f"Current pool state: {current_pool_state}")
 
         # 3. Расчет целевого состояния пула
+        calculated_swap = await self.swap_service.calculate_swap(
+            current_price=current_pool_state.price,
+            current_state=current_pool_state.balances,
+            target_price_change=aggregated_bets[0],
+        )
+
         target_x = sqrt(current_pool_state["token_x"] * current_pool_state["token_y"] / aggregated_bets[0])
         target_y = current_pool_state["token_x"] * current_pool_state["token_y"] / target_x
         target_pool_state = {
@@ -64,12 +75,17 @@ class OrchestratorService:
 
         # 5. Управление ликвидностью
         users_activity = await self.user_service.get_users_activity(block_id=block.id)
-        swaps = await self.swap_repository.get_last_swaps_for_chain(chain_id=block.chain_id, amount=10)
-        liquidity_action = self.liquidity_management_service.decide_liquidity_action(  # todo: check
-            pool_trade_intensity=pool_state_delta,
-            await self.dex_service.get_pool_activity(),
-            users_activity,
-            swaps,
+        swap_score = await self.swap_service.get_swap_score(pair_id=chain.pair_id)
+        pool_activity = await self.dex_service.get_pool_activity(pair_id=chain.pair_id)
+
+
+        liquidity_action = self.liquidity_management_service.decide_liquidity_action(
+            inner_token_state=None,
+            other_token_state=None,
+            pool_trade_intensity=pool_activity,
+            swaps_volume_score=swap_score,
+            bets_count=users_activity.count,
+            bets_volume=users_activity.volume,
         )
         print(f"Liquidity action: {liquidity_action}")
 
@@ -88,8 +104,9 @@ class OrchestratorService:
             user_predictions=user_predictions,
             actual_price_change=block.result_vector[0],
             actual_tx_count=block.result_vector[1],
+            block_id=block.id,
         )
-        rewards = self.reward_service.distribute_rewards(prediction_dto)
+        rewards = self.reward_service.calculate_rewards(prediction_dto)
         print(f"Rewards: {rewards}")
 
         # Получаем доступное количество внутренних токенов
@@ -102,9 +119,9 @@ class OrchestratorService:
         swap_cost = abs(pool_state_delta["token_x"])  # Считаем только токены X
 
         # Оценка затрат на ликвидность (например, на добавление ликвидности)
-        if liquidity_action == LiquidityAction.ADD:
+        if liquidity_action.action == LiquidityActionType.ADD:
             liquidity_cost = abs(self.liquidity_management_service.calculate_tokens_deficit_or_surplus()["token_x"])
-        elif liquidity_action == LiquidityAction.REMOVE:
+        elif liquidity_action.action == LiquidityActionType.REMOVE:
             liquidity_cost = 0  # Убираем ликвидность, это не требует затрат
         else:
             liquidity_cost = 0  # Если действие HOLD, затраты отсутствуют
@@ -139,7 +156,7 @@ class OrchestratorService:
         print(f"Liquidity management result: {liquidity_result}")
 
         # 9. Распределение наград
-        rewards = self.reward_service.distribute_rewards(prediction_dto)
+        rewards = self.user_service.distribute_rewards(rewards)
         rewards_result = {user_id: details.to_dict() for user_id, details in rewards.items()}
         print(f"Rewards distributed: {rewards_result}")
 

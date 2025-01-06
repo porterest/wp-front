@@ -1,4 +1,3 @@
-from typing import List
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -13,4 +12,3 @@ class PlaceBetRequest(BaseModel):
 class CancelBetRequest(BaseModel):
     # user_id: UUID
     bet_id: UUID
-

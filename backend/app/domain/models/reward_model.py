@@ -1,13 +1,12 @@
 from dataclasses import dataclass
 from typing import List, Dict
 
-from pydantic import BaseModel
 
 from domain.models.user_reward import UserReward
 
 
-@dataclass
-class RewardsModel(BaseModel):
+@dataclass(kw_only=True)
+class Rewards:
     total_reward_pool: float
     user_rewards: List[UserReward]
 

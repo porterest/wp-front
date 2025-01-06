@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class LiquidityAction(Enum):
+class LiquidityActionType(Enum):
     ADD = "add"
     REMOVE = "remove"
     HOLD = "hold"

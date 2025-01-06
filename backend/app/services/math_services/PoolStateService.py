@@ -1,7 +1,9 @@
 from dataclasses import dataclass
+from uuid import UUID
+
 from abstractions.services.dex import DexServiceInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
-from uuid import UUID
+
 
 @dataclass
 class PoolStateService:
@@ -44,7 +46,6 @@ class PoolStateService:
         }
         return delta
 
-
 # import asyncio
 # from uuid import uuid4
 #
@@ -78,4 +79,3 @@ class PoolStateService:
 #
 # # Запуск примера
 # asyncio.run(main())
-

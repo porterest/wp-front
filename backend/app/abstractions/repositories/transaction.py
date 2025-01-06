@@ -11,4 +11,21 @@ class TransactionRepositoryInterface(
     ],
     ABC,
 ):
-    ...
+    def get_system_reserve(self) -> float:
+        """
+        Возвращает текущий резерв системы (доступные средства).
+        """
+        pass
+
+    def get_current_liquidity(self) -> float:
+        """
+        Возвращает текущую ликвидность пула.
+        """
+        pass
+
+    def get_total_swap_volume(self) -> float:
+        """
+        Возвращает общий объем свапов.
+        """
+        pass
+

@@ -15,3 +15,15 @@ class SwapRepositoryInterface(
     @abstractmethod
     async def get_last_swaps_for_chain(self, chain_id: UUID, amount: int = 10) -> list[Swap]:
         ...
+
+    @abstractmethod
+    async def get_system_reserve(self):
+        ...
+
+    @abstractmethod
+    async def get_total_swap_volume(self):
+        ...
+
+    @abstractmethod
+    async def get_current_liquidity(self):
+        ...

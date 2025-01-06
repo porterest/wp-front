@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
 from domain.models.prediction import Prediction
+from domain.models.reward_model import Rewards
 
 
 class RewardDistributionServiceInterface(ABC):
@@ -25,14 +25,10 @@ class RewardDistributionServiceInterface(ABC):
         ...
 
     @abstractmethod
-    def distribute_rewards(self, prediction: Prediction) -> dict:
+    def calculate_rewards(self, prediction: Prediction) -> Rewards:
         """
         Распределяет вознаграждения среди пользователей на основе их предсказаний.
         :param prediction: DTO с предсказаниями пользователей и фактическими данными.
         :return: Словарь с вознаграждениями пользователей.
         """
-        ...
-
-    @abstractmethod
-    def distribute_rewards(self, prediction: Prediction) -> dict:
         ...

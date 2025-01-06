@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import NoReturn, Annotated
+from typing import Annotated
 from uuid import UUID
 
 from domain.dto.user import UpdateUserDTO
 from domain.metaholder.responses.user import UserBetsResponse, UserHistoryResponse
 from domain.models import User
+from domain.models.reward_model import Rewards
+from domain.models.user import BettingActivity
 
 
 class UserServiceInterface(ABC):
@@ -29,9 +31,13 @@ class UserServiceInterface(ABC):
         ...
 
     @abstractmethod
-    async def ensure_user(self, wallet_address: str) -> NoReturn:
+    async def ensure_user(self, wallet_address: str) -> None:
         ...
 
     @abstractmethod
-    async def get_users_activity(self, block_id: UUID) -> tuple[Annotated[int, 'Bets count'], Annotated[float, 'Bets volume']]:
+    async def get_users_activity(self, block_id: UUID) -> BettingActivity:
+        ...
+
+    @abstractmethod
+    async def distribute_rewards(self, rewards: Rewards) -> None:
         ...

@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
+from typing import Annotated
 
 from abstractions.services.dex import DexServiceInterface
-from domain.enums.liquidity_action import LiquidityAction
+from domain.models.liquidity_action import LiquidityAction
 
 
 class LiquidityManagementServiceInterface(ABC):
@@ -19,11 +20,12 @@ class LiquidityManagementServiceInterface(ABC):
     @abstractmethod
     def decide_liquidity_action(
             self,
-            deficit_or_surplus: dict,
-            pool_trade_intensity: int,
-            last_swap_volumes: int,
-            bets_count: int,
-            bets_volume: int,
+            inner_token_state: Annotated[float, 'inner token needed'],
+            other_token_state: Annotated[float, 'other pool token needed'],
+            pool_trade_intensity: Annotated[float, 'pool trade intensity score'],
+            swaps_volume_score: Annotated[float, 'how hard it is to move price'],
+            bets_count: Annotated[int, 'bets count within the block'],
+            bets_volume: Annotated[float, 'bets volume within the block'],
     ) -> LiquidityAction:
         """
         Логика принятия решения по управлению ликвидностью.

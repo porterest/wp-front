@@ -13,7 +13,6 @@ class Block(BaseModel):
     block_number: int
     chain_id: UUID
     status: BlockStatus
-    created_at: Optional[datetime]
-    completed_at: Optional[datetime]
+    completed_at: Optional[datetime] = None
     result_vector: Optional[BetVector] = None
     bets: Optional[List[Bet]] = None

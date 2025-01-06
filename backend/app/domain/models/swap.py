@@ -9,3 +9,9 @@ class Swap(BaseModel):
     block: Block
     target_price: float
     amount: float
+
+
+@dataclass
+class CalculatedSwap:
+    volume: float
+    target_token: str

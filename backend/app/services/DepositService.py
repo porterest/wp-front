@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import NoReturn
 from uuid import UUID
 
 from abstractions.repositories.deposit import DepositRepositoryInterface
@@ -16,5 +15,5 @@ class DepositService(
     async def check_user_transactions(self) -> list[DepositResponse]:
         ...
 
-    async def start_deposit_process(self, user_id: UUID) -> NoReturn:
+    async def start_deposit_process(self, user_id: UUID) -> None:
         ...

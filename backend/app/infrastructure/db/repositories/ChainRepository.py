@@ -15,7 +15,6 @@ class ChainRepository(
     AbstractSQLAlchemyRepository[Chain, ChainModel, CreateChainDTO, UpdateChainDTO],
     ChainRepositoryInterface
 ):
-    # joined_fields: dict[str, Optional[list[str]]] = field(default_factory=lambda: {'blocks': None})
     joined_fields: dict[str, Optional[list[str]]] = field(
         default_factory=lambda: {
             'blocks': None,

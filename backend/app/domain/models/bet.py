@@ -8,7 +8,7 @@ from domain.models.base import BaseModel
 
 BetVector = TypeVar('BetVector', bound=tuple[
     Annotated[float, 'price'],
-    Annotated[float, 'bets amount'],
+    Annotated[int, 'bets amount'],
 ])
 
 if typing.TYPE_CHECKING:
