@@ -3,10 +3,11 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from jwt import (decode, encode,
-                 ExpiredSignatureError as ExpiredSignatureJWTError,
-                 InvalidTokenError as InvalidTokenJWTError
-                 )
+from jwt import (
+    decode, encode,
+    ExpiredSignatureError as ExpiredSignatureJWTError,
+    InvalidTokenError as InvalidTokenJWTError
+)
 
 from abstractions.services.auth.tokens import TokenServiceInterface
 from domain.dto.auth import AuthTokens

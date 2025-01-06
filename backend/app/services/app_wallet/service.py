@@ -22,8 +22,8 @@ class AppWalletService(AppWalletServiceInterface):
         self.ton = LiteBalancer.from_mainnet_config(trust_level=1)
 
     async def get_deposit_address(self) -> Annotated[str, 'Address']:
-        address = await self.provider.get_deposit_address()
-        return address
+        wallet = await self.provider.get_deposit_wallet()
+        return wallet.address
 
     async def withdraw_to_user(self, user_id: UUID, amount: Annotated[float, 'tons to send']):
         user = await self.user_service.get_user(user_id=user_id)

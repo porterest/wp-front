@@ -5,7 +5,7 @@ from domain.models import AppWallet
 
 class AppWalletProviderInterface(ABC):
     @abstractmethod
-    async def get_deposit_address(self) -> str:
+    async def get_deposit_wallet(self) -> AppWallet:
         ...
 
     @abstractmethod

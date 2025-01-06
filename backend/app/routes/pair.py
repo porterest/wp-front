@@ -2,7 +2,6 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException
 
-from dependencies.repositories.pair import get_pair_repository
 from dependencies.services.pair import get_pair_service
 from domain.metaholder.responses.pair import PairResponse
 from services.exceptions import NotFoundException

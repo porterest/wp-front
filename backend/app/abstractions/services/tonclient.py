@@ -6,6 +6,7 @@ from typing import Annotated
 from pytoniq_core import Address, Cell, Builder
 
 from domain.ton import InitialAccountState
+from domain.ton.transaction import TonTransaction
 from domain.tonconnect.requests import CheckProofRequest, Proof, Domain, CheckProofRequestRaw
 
 
@@ -47,7 +48,7 @@ class TonClientInterface(ABC):
     async def get_public_key(self, address: str) -> str:
         ...
 
-    async def get_transactions(self, address: str) -> list:
+    async def get_transactions(self, address: str) -> list[TonTransaction]:
         ...
 
     async def mint_tokens(self, amount: int):

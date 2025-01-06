@@ -18,3 +18,7 @@ class SwapServiceInterface(ABC):
             target_price_change: float,
     ) -> CalculatedSwap:
         ...
+
+    @abstractmethod
+    async def swap_deposit(self, deposit_id: UUID) -> None:
+        ...
