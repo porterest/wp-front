@@ -1,60 +1,36 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
-import { getCandlestickData10m } from "../services/apiService";
+import { fetchCandles } from "../services/api";
+import { CandleData, CandleDataContextValue } from "../types/candles";
+import { PairOption } from "../types/pair";
 
-interface CandleData {
-  open: number;
-  close: number;
-  high: number;
-  low: number;
-  volume: number;
-  timestamp: number;
-}
+export const CandleDataContext = createContext<CandleDataContextValue | undefined>(undefined);
 
-interface CandleDataContextValue {
-  data: CandleData[];
-  selectedPair: string;
-  setSymbol: (symbol: string) => void;
-  isLoading: boolean;
-  error: string | null;
-}
-
-export const CandleDataContext = createContext<
-  CandleDataContextValue | undefined
->(undefined);
-
-export const CandleDataProvider: React.FC<{ children: ReactNode }> = ({
-                                                                        children,
-                                                                      }) => {
-  const [data, setData] = useState<CandleData[]>([]);
-  const [selectedPair, setSelectedPair] = useState<string>("BTCUSDT");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+export const CandleDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [data, setData] = useState<CandleData[]>([]); // Данные свечей
+  const [selectedPair, setSelectedPair] = useState<PairOption | null>(null); // По умолчанию
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Состояние загрузки
+  const [error, setError] = useState<string | null>(null); // Ошибки при загрузке
 
   // Функция для загрузки данных свечей
-  const fetchData = async (symbol: string) => {
+  const fetchData = async (pairId: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const candles = await getCandlestickData10m(symbol);
-      if (!candles || candles.length === 0) {
-        throw new Error("No data received from API.");
-      }
-      console.log(`Updating context data for ${symbol}:`, candles);
+      const candles = await fetchCandles(pairId); // Запрос данных с использованием функции fetchCandles
       setData(candles);
     } catch (err) {
-      console.error(`Error fetching data for ${symbol}:`, err);
-      setError((err as Error).message || "Failed to fetch data");
+      console.error(`Ошибка при загрузке данных для пары ${pairId}:`, err);
+      setError((err as Error).message || "Не удалось загрузить данные свечей");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Эффект для загрузки данных при изменении selectedPair
+  // Эффект для загрузки данных при изменении выбранной пары
   useEffect(() => {
-    if (selectedPair) {
-      fetchData("BTCUSDT");
-      // fetchData(selectedPair);
+    if (selectedPair?.value) {
+      fetchData(selectedPair.value); // Используем value из PairOption
     }
   }, [selectedPair]);
 
@@ -63,7 +39,7 @@ export const CandleDataProvider: React.FC<{ children: ReactNode }> = ({
       value={{
         data,
         selectedPair,
-        setSymbol: setSelectedPair,
+        setSymbol: setSelectedPair, // Функция для изменения выбранной пары
         isLoading,
         error,
       }}

@@ -4,6 +4,7 @@ import {
   setLogoutFunction,
   setRefreshTokenFunction,
 } from "../services/apiClient";
+import { ProofData } from "../types/tonProof";
 
 interface User {
   id: string;
@@ -13,7 +14,7 @@ interface User {
 interface AuthContextValue {
   isAuthenticated: boolean;
   user: User | null;
-  loginWithProof: (proofData: any) => Promise<void>;
+  loginWithProof: (proofData: ProofData) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   getCurrentUser: () => User | null;
@@ -37,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           const currentUser = await authManager.getUser();
           setUser(currentUser);
           setIsAuthenticated(true);
-        } catch (error) {
+        } catch {
           console.warn("[AuthContext]: Invalid token, logging out.");
           await handleLogout();
         }
@@ -65,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsAuthenticated(false);
   };
 
-  const loginWithProof = async (proofData: any) => {
+  const loginWithProof = async (proofData: ProofData) => {
     try {
       const { accessToken, refreshToken, user: loggedInUser } =
         await authManager.loginWithProof(proofData);

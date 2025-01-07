@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import {
-  useTonWallet,
+  // useTonWallet,
   useTonConnectUI,
   useIsConnectionRestored,
 } from "@tonconnect/ui-react";
@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 const WalletHandler: React.FC = () => {
   const { loginWithProof } = useAuth();
   const [tonConnectUI] = useTonConnectUI();
-  const wallet = useTonWallet();
+  // const wallet = useTonWallet();
   const isConnectionRestored = useIsConnectionRestored();
   const navigate = useNavigate();
 
@@ -33,7 +33,7 @@ const WalletHandler: React.FC = () => {
           await loginWithProof({
             address: wallet.account.address,
             network: wallet.account.chain.toString(),
-            public_key: wallet.account.publicKey,
+            public_key: wallet.account.publicKey!,
             proof: {
               timestamp: proof.timestamp,
               domain: {

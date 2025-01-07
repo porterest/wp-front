@@ -1,103 +1,73 @@
 import React from "react";
-
-export interface CandleData {
-  open: number; // Цена открытия
-  close: number; // Цена закрытия
-  high: number; // Максимальная цена
-  low: number; // Минимальная цена
-  volume: number; // Объем
-  timestamp: number; // Временная метка
-}
+import { useScale } from "../context/ScaleContext";
+import { CandleData } from "../types/candles";
 
 interface CandlestickChartProps {
   data: CandleData[];
-  graphDimensions: { x: number; y: number; z: number }; // Размеры графика
   mode: "Candles" | "Axes" | "Both"; // Режим отображения
 }
 
-const CandlestickChart: React.FC<CandlestickChartProps> = ({
-  data,
-  graphDimensions,
-  mode,
-}) => {
+const CandlestickChart: React.FC<CandlestickChartProps> = ({ data, mode }) => {
+  const { normalizeX, normalizeY, normalizeZ } = useScale();
+
   if (!data || data.length === 0) {
     console.warn("No data to render in CandlestickChart!");
     return null;
   }
 
-  const { x: graphWidth, y: graphHeight, z: graphDepth } = graphDimensions;
-
   // Определяем минимумы и максимумы для нормализации
-  const minPrice = Math.min(...data.map((candle) => candle.low));
-  const maxPrice = Math.max(...data.map((candle) => candle.high));
-  const priceRange = maxPrice - minPrice;
-
   const maxVolume = Math.max(...data.map((candle) => candle.volume));
 
-  // Коэффициенты масштабирования
-  const SCALE_Y = graphHeight / priceRange; // Высота графика по оси Y
-  const SCALE_X = graphWidth / data.length; // Ширина графика равномерно делится между свечами
-
-  // Определяем цвета свечей в зависимости от режима
+  // Определяем цвета свечей
   const getColor = (isBullish: boolean): string => {
     return isBullish ? "#32CD32" : "#ff4f4f"; // Зеленый для роста, красный для падения
   };
 
-  // Прозрачность свечей в режиме "Both"
   const getOpacity = (): number => {
-    return mode === "Both" ? 0.5 : 1; // 50% прозрачности для "Both", 100% для остальных режимов
+    return mode === "Both" ? 0.5 : 1;
   };
 
   return (
     <group>
       {/* Рендерим каждую свечу */}
       {data.map((candle, index) => {
-        const isBullish = candle.close > candle.open; // Определяем, является ли свеча растущей
-        const color = getColor(isBullish); // Получаем цвет свечи
+        const isBullish = candle.close > candle.open;
+        const color = getColor(isBullish);
 
-        // Масштабируем значения по оси Y
-        const normalizedOpen = (candle.open - minPrice) * SCALE_Y;
-        const normalizedClose = (candle.close - minPrice) * SCALE_Y;
-        const normalizedHigh = (candle.high - minPrice) * SCALE_Y;
-        const normalizedLow = (candle.low - minPrice) * SCALE_Y;
+        // Нормализация по осям
+        const normalizedOpen = normalizeY(candle.open);
+        const normalizedClose = normalizeY(candle.close);
+        const normalizedHigh = normalizeY(candle.high);
+        const normalizedLow = normalizeY(candle.low);
 
-        // Высота тела свечи
         const bodyHeight = Math.abs(normalizedClose - normalizedOpen);
-        // Положение центра тела свечи
-        const bodyY =
-          Math.min(normalizedOpen, normalizedClose) + bodyHeight / 2;
+        const bodyY = (normalizedOpen + normalizedClose) / 2;
 
-        // Высота теней свечи
         const shadowHeight = normalizedHigh - normalizedLow;
-        // Положение центра тени свечи
-        const shadowY = normalizedLow + shadowHeight / 2;
+        const shadowY = (normalizedHigh + normalizedLow) / 2;
 
-        // Нормализуем объем по оси Z
-        const normalizedVolume = candle.volume / maxVolume; // Пропорция относительно максимального объема
-        const positionX = (index * SCALE_X) / 2; // Расстояние между свечами
-        const positionZ = normalizedVolume * graphDepth; // Приводим объем к глубине графика
+        const positionX = normalizeX(index, data.length);
+        const positionZ = normalizeZ(candle.volume, maxVolume);
 
         return (
           <group key={index}>
             {/* Тело свечи */}
             <mesh position={[positionX, bodyY, positionZ]}>
-              <boxGeometry args={[SCALE_X * 0.8, bodyHeight, SCALE_X * 0.8]} />
+              <boxGeometry args={[0.5, bodyHeight, 0.5]} />
               <meshStandardMaterial
                 color={color}
-                transparent={mode === "Both"} // Включаем прозрачность для "Both"
-                opacity={getOpacity()} // Прозрачность 50% в режиме "Both"
+                transparent={mode === "Both"}
+                opacity={getOpacity()}
               />
             </mesh>
 
             {/* Тень свечи */}
             <mesh position={[positionX, shadowY, positionZ]}>
-              <boxGeometry
-                args={[SCALE_X * 0.2, shadowHeight, SCALE_X * 0.2]}
-              />
+              <boxGeometry args={[0.1, shadowHeight, 0.1]} />
               <meshStandardMaterial
                 color={color}
-                transparent={mode === "Both"} // Включаем прозрачность для "Both"
-                opacity={getOpacity()} // Прозрачность 50% в режиме "Both"
+                transparent={mode === "Both"}
+                opacity={getOpacity()}
               />
             </mesh>
           </group>

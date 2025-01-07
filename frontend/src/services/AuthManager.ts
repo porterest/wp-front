@@ -1,25 +1,10 @@
-import { apiClient } from "./apiClient"; // Импорт API-клиента для отправки запросов к бэкенду.
+import { apiClient } from "./apiClient";
+import { ProofData } from "../types/tonProof"; // Импорт API-клиента для отправки запросов к бэкенду.
 
 interface User {
   id: string; // Уникальный идентификатор пользователя.
   name: string; // Имя пользователя.
   // ... другие поля
-}
-
-interface ProofData {
-  address: string;
-  network: string;
-  public_key: string;
-  proof: {
-    timestamp: number;
-    domain: {
-      LengthBytes: number;
-      value: string;
-    };
-    payload: string;
-    signature: string;
-    state_init?: string;
-  };
 }
 
 // Класс AuthManager отвечает за управление авторизацией и взаимодействие с пользователем.

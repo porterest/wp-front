@@ -1,14 +1,14 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import {
-    DepositResponse,
+    // BackendCandle,
     PairResponse,
     PlaceBetRequest,
-    StatusResponse,
     UserBetsResponse,
     UserHistoryResponse
 } from "../types/apiTypes";
 import { BetStatusResponse, TimeResponse } from "../types/apiTypes";
-import getPreviousBetEnd from "../pages/GamePage";
+import { UserInfo } from "../types/user";
+import { CandleData } from "../types/candles";
 
 // Базовый URL для API
 const BASE_URL =
@@ -78,9 +78,9 @@ export async function cancelBet(betId: string) {
     }
 }
 
-export async function fetchUserBalances(): Promise<any> {
+export async function fetchUserBalances(): Promise<UserInfo> {
     try {
-        const response = await apiClient.get("/user/info");
+        const response = await apiClient.get<UserInfo>("/user/info");
         return response.data;
     } catch (error) {
         console.error("Failed to fetch user balances:", error);
@@ -108,13 +108,13 @@ export async function fetchTime(): Promise<TimeResponse> {
     try {
         const response = await apiClient.get<TimeResponse>("/chain/time");
         return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Ошибка получения времени:", error);
-
-        if (error.response) {
-            console.error("Ошибка сервера:", error.response.data);
+        if (error instanceof AxiosError) {
+            if (error.response) {
+                console.error("Ошибка сервера:", error.response.data);
+            }
         }
-
         throw error;
     }
 }
@@ -126,13 +126,14 @@ export async function fetchBetStatuses(): Promise<BetStatusResponse> {
     try {
         const response = await apiClient.get<BetStatusResponse>("/bets/status");
         return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Ошибка получения статусов ставок:", error);
+        if (error instanceof AxiosError) {
+            if (error.response) {
+                console.error("Ошибка сервера:", error.response.data);
+            }
 
-        if (error.response) {
-            console.error("Ошибка сервера:", error.response.data);
         }
-
         throw error;
     }
 }
@@ -141,13 +142,13 @@ export async function fetchBetStatuses(): Promise<BetStatusResponse> {
 export async function check_user_deposit(): Promise<void> {
     try {
         await apiClient.get("/deposit");
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Ошибка получения баланса:", error);
-
-        if (error.response) {
-            console.error("Ошибка сервера:", error.response.data);
+        if (error instanceof AxiosError) {
+            if (error.response) {
+                console.error("Ошибка сервера:", error.response.data);
+            }
         }
-
         throw error;
     }
 }
@@ -169,5 +170,71 @@ export async function fetchPreviousBetEnd(pairId: string): Promise<{ x: number; 
     }
 }
 
-
-
+/**
+ * Запрос данных свечей с бекенда
+ * @returns Список свечей в формате CandleData
+ * @param pairId
+ */
+export async function fetchCandles(pairId: string): Promise<CandleData[]> {
+    try {
+        // const response = await apiClient.get<BackendCandle[]>("/candles", {
+        //     params: { pair_id: pairId },
+        // });
+        //
+        // // Преобразуем данные в формат CandleData
+        // return response.data.map((candle: BackendCandle) => ({
+        //     open: candle.opening_price,
+        //     close: candle.closing_price,
+        //     high: candle.high_price,
+        //     low: candle.low_price,
+        //     volume: candle.volume,
+        //     block_number: candle.block_number,
+        // })) as CandleData[]; // Приводим к типу CandleData
+        console.log(pairId);
+        return [
+            {
+                open: 10,
+                close: 5,
+                high: 15,
+                low: 2,
+                volume: 5,
+                block_number: 1
+            },
+            {
+                open: 5,
+                close: 7,
+                high: 10,
+                low: 2,
+                volume: 7,
+                block_number: 2
+            },
+            {
+                open: 7,
+                close: 12,
+                high: 17,
+                low: 4,
+                volume: 3,
+                block_number: 3
+            },
+            {
+                open: 12,
+                close: 18,
+                high: 18,
+                low: 10,
+                volume: 2,
+                block_number: 4
+            },
+            {
+                open: 18,
+                close: 10,
+                high: 19,
+                low: 8,
+                volume: 9,
+                block_number: 5
+            },
+        ];
+    } catch (error) {
+        console.error("Ошибка при запросе данных свечей:", error);
+        throw error;
+    }
+}

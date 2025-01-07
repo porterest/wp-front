@@ -3,17 +3,15 @@ import Select from "react-select";
 import { CandleDataContext } from "../context/CandleDataContext";
 import { PairResponse } from "../types/apiTypes";
 import { getPairs } from "../services/api";
+import { PairOption } from "../types/pair";
 
 interface SymbolSelectorProps {
     onSwitchMode: (mode: "Candles" | "Axes" | "Both") => void;
     onAxisModeChange: (axis: "X" | "Y") => void;
-    onSymbolChange: (pair: string) => void;
+    onSymbolChange: (pair: PairOption) => void;
 }
 
-interface PairOption {
-    value: string;
-    label: string;
-}
+
 
 const SymbolSelector: React.FC<SymbolSelectorProps> = ({
                                                            onSwitchMode,
@@ -25,7 +23,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
         "Axes"
     );
     const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
-    const [currentPair, setCurrentPair] = useState<string>("BTCUSDT");
+    // const [currentPair, setCurrentPair] = useState<string>("BTCUSDT");
     const [betStatus, setBetStatus] = useState<"Active" | "Result" | "">(""); // Статус ставки
     const [result, setResult] = useState<string | null>(null); // Результат ставки
     const [options, setOptions] = useState<PairOption[]>([]);
@@ -60,8 +58,8 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
         setBetStatus("Active");
         setResult(null);
         if (selectedOption) {
-            setSymbol(selectedOption.value);
-            onSymbolChange(selectedOption.value);
+            setSymbol(selectedOption);
+            onSymbolChange(selectedOption);
         }
     };
 

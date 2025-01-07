@@ -5,11 +5,11 @@ import {
   useTonConnectUI,
   useTonWallet,
 } from "@tonconnect/ui-react";
-import { useTonConnectManager } from "../hooks/useTonConnectManager";
+// import { useTonConnectManager } from "../hooks/useTonConnectManager";
 import { TonProofService } from "../services/TonProofService";
 
 const HomePage: React.FC = () => {
-  const { wallet, openTonConnectModal } = useTonConnectManager();
+  // const { wallet, openTonConnectModal } = useTonConnectManager();
   // const { isAuthenticated, loginWithProof } = useAuth();
   const tonWallet = useTonWallet();
   const [tonConnectUI] = useTonConnectUI();
@@ -110,7 +110,7 @@ const HomePage: React.FC = () => {
       // const payload = await TonProofService.getTonProofPayload();
       // console.log("[HomePage]: TonProof payload fetched:", payload);
 
-      const connectedWallet = await tonConnectUI.openModal();
+      // const connectedWallet = await tonConnectUI.openModal();
 
       // if (!connectedWallet || !connectedWallet.account) {
       //   throw new Error("Wallet not connected or account data is missing.");

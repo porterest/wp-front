@@ -1,19 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  useTonWallet,
+  // useTonWallet,
   TonConnectButton,
   useTonConnectUI,
 } from "@tonconnect/ui-react";
-import { apiClient } from "../services/apiClient";
-import { check_user_deposit, fetchUserBalances } from "../services/api"; // Используем для запросов к бэкенду
+// import { apiClient } from "../services/apiClient";
+import { check_user_deposit, fetchUserBalances } from "../services/api";
+import { UserInfo } from "../types/user"; // Используем для запросов к бэкенду
 
-// Типы данных контекста
-interface UserInfo {
-  user_id: string;
-  balance: number;
-  atRisk: number;
-}
 
 interface UserBalanceContextProps {
   userData: UserInfo | null;

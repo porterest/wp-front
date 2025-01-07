@@ -6,7 +6,6 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { Text } from "@react-three/drei";
 import { useUserBalance } from "../pages/BalancePage";
-// import { useScene } from "./SceneProvider";
 
 interface BetArrowProps {
   previousBetEnd: THREE.Vector3;
@@ -32,7 +31,6 @@ const BetArrow: React.FC<BetArrowProps> = ({
   const yellowLine = useRef<Line2 | null>(null); // Линия для жёлтой стрелки
   const dashedLine = useRef<Line2 | null>(null); // Линия для пунктирной стрелки
   const { gl, camera, scene } = useThree();
-  // const scene = useScene();// Контекст Three.js
   const raycaster = useRef(new THREE.Raycaster()); // Raycaster для обнаружения кликов
   const plane = useRef(new THREE.Plane()); // Плоскость для ограничения движения
   const [xValue, setXValue] = useState(userPreviousBet.x); // Позиция X

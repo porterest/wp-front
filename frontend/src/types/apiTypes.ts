@@ -4,7 +4,7 @@ import { UUID } from "node:crypto";
 export interface BetResponse {
   bet_id: UUID;
   amount: number;
-  vector: Record<string, any>; // Можно уточнить тип, если известно
+  vector: number[]; // Можно уточнить тип, если известно
   pair_name: string;
   created_at: string; // ISO-формат даты
 }
@@ -57,11 +57,15 @@ export interface TimeResponse {
 export interface BetStatusResponse {
   bets: {
     bet_id: string;
-    status: "frozen" | "result"; // Статус ставки
-    pair_name: string; // Название пары
-    result?: string; // Результат (если завершено)
+    // Статус ставки
+    status: "frozen" | "result";
+    // Название пары
+    pair_name: string;
+    // Результат (если завершено)
+    result?: string;
   }[];
-  block_duration_seconds: number; // Длительность блока
+  // Длительность блока
+  block_duration_seconds: number;
 }
 
 export interface DepositResponse {
@@ -70,3 +74,12 @@ export interface DepositResponse {
 }
 // Если BetStatus еще не описан
 export type BetStatus = "PENDING" | "WON" | "LOST"; // Пример возможных значений
+
+export interface BackendCandle {
+  opening_price: number;
+  closing_price: number;
+  high_price: number;
+  low_price: number;
+  volume: number;
+  block_number: number;
+}

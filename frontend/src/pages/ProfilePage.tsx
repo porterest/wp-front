@@ -63,7 +63,7 @@ const ProfilePage: React.FC = () => {
       await tonConnectUI.disconnect(); // Отключаем текущий кошелек
       alert("Wallet disconnected. Please connect a new wallet."); // Показываем сообщение
 
-      tonConnectUI.openModal(); // Открываем модальное окно для подключения нового кошелька
+      await tonConnectUI.openModal(); // Открываем модальное окно для подключения нового кошелька
     } catch (error) {
       console.error("Failed to change wallet:", error); // Логируем ошибку
       alert("Failed to change wallet. Please try again."); // Показываем сообщение об ошибке
