@@ -27,3 +27,7 @@ class SwapRepositoryInterface(
     @abstractmethod
     async def get_current_liquidity(self):
         ...
+
+    @abstractmethod
+    async def get_by_block_id(self, block_id: UUID) -> Swap:
+        ...

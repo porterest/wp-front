@@ -1,4 +1,5 @@
-from abc import ABC
+from abc import ABC, abstractmethod
+from uuid import UUID
 
 from abstractions.repositories import CRUDRepositoryInterface
 from domain.dto.pair import CreatePairDTO, UpdatePairDTO
@@ -11,4 +12,6 @@ class PairRepositoryInterface(
     ],
     ABC,
 ):
-    ...
+    @abstractmethod
+    async def get_block_pair(self, block_id: UUID):
+        ...

@@ -16,10 +16,13 @@ class BlockRepository(
     AbstractSQLAlchemyRepository[Block, BlockModel, CreateBlockDTO, UpdateBlockDTO],
     BlockRepositoryInterface
 ):
+
+
     # joined_fields: list[str] = field(default_factory=lambda: ['bets', 'chain'])
     joined_fields: dict[str, Optional[list[str]]] = field(
         default_factory=lambda: {
             'chain': None,
+            'bets': None
         }
     )
     async def get_last_block(self, chain_id) -> Optional[Block]:
@@ -32,19 +35,16 @@ class BlockRepository(
             block = res.scalars().one_or_none()
         return self.entity_to_model(block) if block else None
 
-    async def get_last_blocks(self) -> Optional[list[Block]]:
+    async def get_n_last_blocks_by_pair_id(self, n: int, pair_id: str) -> Optional[list[Block]]:
 
         async with self.session_maker() as session:
-            pairs_count = await session.execute(
-                select(Pair),
-            )
             res = await session.execute(
-                select(self.entity).order_by(
-                    desc(self.entity.block_number, )).limit(pairs_count),
+                select(self.entity).where(self.entity.pair_id == pair_id).order_by(
+                    desc(self.entity.block_number, )).limit(n),
             )
 
-            block = res.scalars().one_or_none()
-        return self.entity_to_model(block) if block else None
+            blocks = res.scalars().all()
+        return [self.entity_to_model(block) for block in blocks] if blocks else None
 
 
     async def get_last_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:

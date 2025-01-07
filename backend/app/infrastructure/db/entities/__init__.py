@@ -82,7 +82,7 @@ class Pair(AbstractBase):
     contract_address: Mapped[str] = mapped_column(String(255), unique=True)
     last_ratio: Mapped[float]
 
-    bets: Mapped[Bet] = relationship("Bet", back_populates="pair")
+    bets: Mapped[list[Bet]] = relationship("Bet", back_populates="pair")
 
 
 class AppWallet(AbstractBase):
@@ -146,6 +146,6 @@ class Swap(AbstractBase):
 
     id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     block_id: Mapped[pyUUID] = mapped_column(ForeignKey('blocks.id'))
-    block: Mapped[Block] = relationship("Block", back_populates='swap')
+    block: Mapped[Block] = relationship("Block")
     target_price: Mapped[float]
     amount: Mapped[float]  # + если мы забираем свой токен (добавляем деньги) - если кладем наш токен(забираем деньги)

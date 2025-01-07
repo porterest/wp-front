@@ -12,8 +12,8 @@ class AppWalletProvider(AppWalletProviderInterface):
     vault_service: VaultServiceInterface
     wallet_repository: AppWalletRepositoryInterface
 
-    deposit_wallet_id: UUID = UUID('')
-    withdraw_wallet_id: UUID = UUID('')
+    deposit_wallet_id: UUID = UUID('46b83ad7-d3e2-4f52-b30e-ce2231464cd0')
+    withdraw_wallet_id: UUID = UUID('46b83ad7-d3e2-4f52-b30e-ce2231464cd0')
 
     async def get_deposit_wallet(self) -> str:
         wallet = await self.wallet_repository.get(self.deposit_wallet_id)

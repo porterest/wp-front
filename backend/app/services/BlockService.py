@@ -23,13 +23,15 @@ class BlockService(BlockServiceInterface):
 
     async def create(self, create_dto):
         await self.block_repository.create(create_dto)
+    async def get(self, block_id: UUID) -> Block:
+        return await self.block_repository.get(block_id)
 
     async def get_last_block(self, chain_id: UUID) -> Optional[Block]:
         last_block = await self.block_repository.get_last_block(chain_id)
         return last_block
-    async def get_last_blocks(self) -> Optional[list[Block]]:
-        last_block = await self.block_repository.get_last_blocks()
-        return last_block
+    async def get_n_last_blocks_by_pair_id(self, n: int, pair_id: UUID) -> Optional[list[Block]]:
+        last_blocks = await self.block_repository.get_n_last_blocks_by_pair_id(n, pair_id)
+        return last_blocks
 
     async def get_last_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
         last_block = await self.block_repository.get_last_block_by_pair_id(pair_id)

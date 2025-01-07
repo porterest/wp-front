@@ -4,6 +4,7 @@ from uuid import UUID
 
 from domain.dex import PoolState
 from domain.models.liquidity_action import LiquidityAction
+from domain.ton.transaction import TonTransaction
 
 
 class DexServiceInterface(ABC):
@@ -24,22 +25,19 @@ class DexServiceInterface(ABC):
         ...
 
     @abstractmethod
-    async def perform_swap(self, pool_state_delta: dict[str, float]) -> None:
-        """
-        Получает текущее соотношение ликвидности в пуле из внешнего API.
-        :return: Соотношение токенов к тонам в пуле.
-        """
-        ...
-
-    @abstractmethod
     async def perform_liquidity_action(self, liquidity_action: LiquidityAction, pool_state_delta: dict[str, float]) -> None:
-
-        """
-        Получает текущее соотношение ликвидности в пуле из внешнего API.
-        :return: Соотношение токенов к тонам в пуле.
-        """
         ...
 
     @abstractmethod
     async def get_current_liquidity(self, pair_id: UUID) -> Annotated[float, 'хуй знает']:
+        ...
+
+    @abstractmethod
+    async def perform_swap(
+            self,
+            pool_address: str,
+            target_token: str,
+            amount: float,
+            app_wallet_id: UUID,
+    ) -> TonTransaction:  # todo: rewrite to one perform_swap
         ...

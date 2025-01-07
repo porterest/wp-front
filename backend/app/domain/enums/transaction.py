@@ -7,3 +7,4 @@ class TransactionType(Enum):
     INTERNAL_WITHDRAWAL = "internal_withdrawal"  # bet creation
     EXTERNAL_WITHDRAWAL = "external_withdrawal"  # withdraw to external wallet
     REWARD = "reward"                            # reward for being involved in round
+    SWAP = 'swap'                                # any dex swap (deposit or bets implementation)

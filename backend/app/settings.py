@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     ton: TonSettings
     vault: VaultSettings
     allowed_domains: list[str]
+    inner_token_symbol: str
 
     debug: bool = True
 

@@ -14,17 +14,22 @@ from domain.enums.deposit import DepositEntryStatus
 from domain.metaholder.responses import TransactionResponse, BetResponse
 from domain.metaholder.responses.user import UserBetsResponse, UserHistoryResponse
 from domain.models import User
+from domain.models.reward_model import Rewards
 from domain.models.user import BettingActivity
 from services.exceptions import NotFoundException, NoSuchUserException
 
 
 @dataclass
 class UserService(UserServiceInterface):
+
+
     user_repository: UserRepositoryInterface
     block_service: BlockServiceInterface
     swap_service: SwapServiceInterface
     deposit_repository: DepositRepositoryInterface
 
+    async def distribute_rewards(self, rewards: Rewards) -> None:
+        pass
     async def ensure_user(self, wallet_address: str) -> None:
         user = await self.user_repository.get_by_wallet(wallet_address)
         if not user:
@@ -110,5 +115,5 @@ class UserService(UserServiceInterface):
     async def deposit_funded(self, deposit_id: UUID) -> None:
         deposit = await self.deposit_repository.get(deposit_id)
         if deposit.status == DepositEntryStatus.FUNDED:
-            await self.swap_service.swap()
+            await self.swap_service.swap_deposit(deposit.id)
             await self.user_repository.fund_user(deposit.user.id, deposit.transaction.amount)

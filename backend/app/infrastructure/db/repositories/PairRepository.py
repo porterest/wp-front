@@ -1,5 +1,6 @@
 from dataclasses import field, dataclass
 from typing import Optional
+from uuid import UUID
 
 from sqlalchemy import select
 
@@ -20,6 +21,11 @@ class PairRepository(
             'bets': None,
         }
     )
+    async def get_block_pair(self, block_id: UUID) -> Pair:
+        async with self.session_maker() as session:
+            res = await session.execute((select(self.entity)).where(block_id=block_id))
+            pair = res.scalar_one()
+            return self.entity_to_model(pair)
     def create_dto_to_entity(self, dto: CreatePairDTO) -> Pair:
         return Pair(
             id=dto.id,

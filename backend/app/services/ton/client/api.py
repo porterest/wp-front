@@ -51,6 +51,8 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 
+from pydantic import SecretStr
+
 from abstractions.services.tonclient import TonClientInterface
 
 
@@ -64,7 +66,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class MockTonApiClient(TonClientInterface):
-    token: str
+    token: SecretStr
     base_url: str = 'https://tonapi.io'
 
     async def get_public_key(self, address: str) -> str:

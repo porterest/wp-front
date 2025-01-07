@@ -15,4 +15,3 @@ class AppWalletProviderInterface(ABC):
     @abstractmethod
     async def get_available_inner_token_amount(self) -> float:
         ...
-
