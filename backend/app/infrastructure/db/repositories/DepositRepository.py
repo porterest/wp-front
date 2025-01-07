@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Optional
 
 from abstractions.repositories.deposit import DepositRepositoryInterface
@@ -24,6 +25,7 @@ class DepositRepository(
             'app_wallet': None,
         }
     )
+
     def entity_to_model(self, entity: DepositEntry) -> DepositEntryModel:
         return DepositEntryModel(
             id=entity.id,
@@ -60,4 +62,10 @@ class DepositRepository(
         )
 
     def create_dto_to_entity(self, dto: DepositEntryCreateDTO) -> DepositEntry:
-        pass
+        return DepositEntry(
+            app_wallet_id=dto.app_wallet_id,
+            user_id=dto.user_id,
+            status=dto.status,
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
+        )

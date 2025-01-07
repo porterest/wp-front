@@ -1,14 +1,16 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Annotated
 from uuid import UUID
 
 from sqlalchemy.exc import NoResultFound
 
+from abstractions.repositories.deposit import DepositRepositoryInterface
 from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.block import BlockServiceInterface
+from abstractions.services.swap import SwapServiceInterface
 from abstractions.services.user import UserServiceInterface
 from domain.dto.user import UpdateUserDTO, CreateUserDTO
+from domain.enums.deposit import DepositEntryStatus
 from domain.metaholder.responses import TransactionResponse, BetResponse
 from domain.metaholder.responses.user import UserBetsResponse, UserHistoryResponse
 from domain.models import User
@@ -20,6 +22,8 @@ from services.exceptions import NotFoundException, NoSuchUserException
 class UserService(UserServiceInterface):
     user_repository: UserRepositoryInterface
     block_service: BlockServiceInterface
+    swap_service: SwapServiceInterface
+    deposit_repository: DepositRepositoryInterface
 
     async def ensure_user(self, wallet_address: str) -> None:
         user = await self.user_repository.get_by_wallet(wallet_address)
@@ -102,3 +106,9 @@ class UserService(UserServiceInterface):
             count=len(block.bets),
             volume=sum(map(lambda bet: bet.amount, block.bets)),
         )
+
+    async def deposit_funded(self, deposit_id: UUID) -> None:
+        deposit = await self.deposit_repository.get(deposit_id)
+        if deposit.status == DepositEntryStatus.FUNDED:
+            await self.swap_service.swap()
+            await self.user_repository.fund_user(deposit.user.id, deposit.transaction.amount)

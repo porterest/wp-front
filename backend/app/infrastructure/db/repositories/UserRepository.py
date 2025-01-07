@@ -1,5 +1,6 @@
 from dataclasses import field, dataclass
 from typing import Optional
+from uuid import UUID
 
 from sqlalchemy import select
 
@@ -89,3 +90,9 @@ class UserRepository(
                 )
             )
             return res.scalars().one_or_none()
+
+    async def fund_user(self, user_id: UUID, amount: float) -> None:
+        async with self.session_maker() as session:
+            user = await session.get(self.entity, user_id)
+
+            user.balance += amount

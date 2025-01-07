@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Annotated
 from uuid import UUID
 
 from domain.dto.user import UpdateUserDTO
@@ -32,6 +31,10 @@ class UserServiceInterface(ABC):
 
     @abstractmethod
     async def ensure_user(self, wallet_address: str) -> None:
+        ...
+
+    @abstractmethod
+    async def deposit_funded(self, deposit_id: UUID) -> None:
         ...
 
     @abstractmethod

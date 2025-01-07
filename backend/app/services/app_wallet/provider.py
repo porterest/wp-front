@@ -15,7 +15,7 @@ class AppWalletProvider(AppWalletProviderInterface):
     deposit_wallet_id: UUID = UUID('')
     withdraw_wallet_id: UUID = UUID('')
 
-    async def get_deposit_address(self) -> str:
+    async def get_deposit_wallet(self) -> str:
         wallet = await self.wallet_repository.get(self.deposit_wallet_id)
         return wallet.address
 

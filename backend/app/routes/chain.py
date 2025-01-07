@@ -28,6 +28,6 @@ async def get_time(
         return await service.get_current_block_state(chains[0].id)
     except NotFoundException:
         raise HTTPException(
-            status_code=588,  # AAAAAAAA
+            status_code=503,  # AAAAAAAA
             detail=f"No one block bro",
         )
