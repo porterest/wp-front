@@ -1,8 +1,8 @@
 """init
 
-Revision ID: cd9c98f84d5b
+Revision ID: a820e7d5196f
 Revises: 
-Create Date: 2024-12-27 17:49:30.450566
+Create Date: 2025-01-08 06:52:17.360910
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'cd9c98f84d5b'
+revision: str = 'a820e7d5196f'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -29,15 +29,6 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('chains',
-    sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('current_block', sa.Integer(), nullable=False),
-    sa.Column('pair_id', sa.UUID(), nullable=False),
-    sa.Column('status', sa.Enum('ACTIVE', 'PAUSED', 'COMPLETED', name='chainstatus'), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('pairs',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
@@ -50,7 +41,7 @@ def upgrade() -> None:
     )
     op.create_table('users',
     sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('telegram_id', sa.BigInteger(), nullable=False),
+    sa.Column('telegram_id', sa.BigInteger(), nullable=True),
     sa.Column('username', sa.String(length=255), nullable=True),
     sa.Column('first_name', sa.String(length=255), nullable=True),
     sa.Column('last_name', sa.String(length=255), nullable=True),
@@ -63,24 +54,21 @@ def upgrade() -> None:
     sa.UniqueConstraint('username')
     )
     op.create_index(op.f('ix_users_telegram_id'), 'users', ['telegram_id'], unique=True)
-    op.create_table('blocks',
+    op.create_table('chains',
     sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('block_number', sa.Integer(), nullable=False),
-    sa.Column('status', sa.Enum('COMPLETED', 'IN_PROGRESS', 'INTERRUPTED', name='blockstatus'), nullable=False),
-    sa.Column('result_vector', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('completed_at', sa.DateTime(), nullable=True),
-    sa.Column('chain_id', sa.UUID(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('current_block', sa.Integer(), nullable=False),
+    sa.Column('pair_id', sa.UUID(), nullable=False),
+    sa.Column('status', sa.Enum('ACTIVE', 'PAUSED', 'COMPLETED', name='chainstatus'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['chain_id'], ['chains.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('block_number')
+    sa.ForeignKeyConstraint(['pair_id'], ['pairs.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('transactions',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('tx_id', sa.String(), nullable=True),
-    sa.Column('user_id', sa.UUID(), nullable=False),
-    sa.Column('type', sa.Enum('INTERNAL_DEPOSIT', 'EXTERNAL_DEPOSIT', 'INTERNAL_WITHDRAWAL', 'EXTERNAL_WITHDRAWAL', 'REWARD', name='transactiontype'), nullable=False),
+    sa.Column('user_id', sa.UUID(), nullable=True),
+    sa.Column('type', sa.Enum('INTERNAL_DEPOSIT', 'EXTERNAL_DEPOSIT', 'INTERNAL_WITHDRAWAL', 'EXTERNAL_WITHDRAWAL', 'REWARD', 'SWAP', name='transactiontype'), nullable=False),
     sa.Column('amount', sa.Float(), nullable=False),
     sa.Column('sender', sa.String(), nullable=False),
     sa.Column('recipient', sa.String(), nullable=False),
@@ -91,6 +79,31 @@ def upgrade() -> None:
     sa.UniqueConstraint('tx_id')
     )
     op.create_index(op.f('ix_transactions_type'), 'transactions', ['type'], unique=False)
+    op.create_table('blocks',
+    sa.Column('id', sa.UUID(), nullable=False),
+    sa.Column('block_number', sa.Integer(), nullable=False),
+    sa.Column('status', sa.Enum('COMPLETED', 'IN_PROGRESS', 'INTERRUPTED', name='blockstatus'), nullable=False),
+    sa.Column('result_vector', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+    sa.Column('completed_at', sa.DateTime(), nullable=True),
+    sa.Column('chain_id', sa.UUID(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['chain_id'], ['chains.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('deposit_entries',
+    sa.Column('id', sa.UUID(), nullable=False),
+    sa.Column('app_wallet_id', sa.UUID(), nullable=False),
+    sa.Column('user_id', sa.UUID(), nullable=False),
+    sa.Column('status', sa.Enum('PENDING', 'TIMED_OUT', 'FUNDED', 'SWAPPED', 'SUCCESS', name='depositentrystatus'), nullable=False),
+    sa.Column('transaction_id', sa.UUID(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['app_wallet_id'], ['app_wallets.id'], ),
+    sa.ForeignKeyConstraint(['transaction_id'], ['transactions.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('bets',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
@@ -108,17 +121,14 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_bets_block_id'), 'bets', ['block_id'], unique=False)
     op.create_index(op.f('ix_bets_pair_id'), 'bets', ['pair_id'], unique=False)
-    op.create_table('deposit_entries',
+    op.create_table('swap',
     sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('app_wallet_id', sa.UUID(), nullable=False),
-    sa.Column('user_id', sa.UUID(), nullable=False),
-    sa.Column('status', sa.Enum('PENDING', 'TIMED_OUT', 'FUNDED', name='depositentrystatus'), nullable=False),
-    sa.Column('transaction_id', sa.UUID(), nullable=True),
+    sa.Column('block_id', sa.UUID(), nullable=False),
+    sa.Column('target_price', sa.Float(), nullable=False),
+    sa.Column('amount', sa.Float(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['app_wallet_id'], ['app_wallets.id'], ),
-    sa.ForeignKeyConstraint(['transaction_id'], ['transactions.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['block_id'], ['blocks.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
@@ -126,16 +136,17 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_table('deposit_entries')
+    op.drop_table('swap')
     op.drop_index(op.f('ix_bets_pair_id'), table_name='bets')
     op.drop_index(op.f('ix_bets_block_id'), table_name='bets')
     op.drop_table('bets')
+    op.drop_table('deposit_entries')
+    op.drop_table('blocks')
     op.drop_index(op.f('ix_transactions_type'), table_name='transactions')
     op.drop_table('transactions')
-    op.drop_table('blocks')
+    op.drop_table('chains')
     op.drop_index(op.f('ix_users_telegram_id'), table_name='users')
     op.drop_table('users')
     op.drop_table('pairs')
-    op.drop_table('chains')
     op.drop_table('app_wallets')
     # ### end Alembic commands ###

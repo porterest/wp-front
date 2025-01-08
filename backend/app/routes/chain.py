@@ -25,7 +25,7 @@ async def get_time(
     #  но с другой стороны по сути ни один сервис не должен отдавать напрямую модели метахолдера короче хз наверное пох
     try:
         chains = await repository.get_all()  # пизда
-        return await service.get_current_block_state(chains[0].id)
+        return await service.get_current_block_state(chains[0].pair_id)
     except NotFoundException:
         raise HTTPException(
             status_code=503,  # AAAAAAAA

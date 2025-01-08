@@ -21,29 +21,29 @@ class ChainServiceInterface(ABC):
         """
         ...
 
-    @abstractmethod
-    async def _handle_interrupted_block(self, block: Any) -> None:
-        """
-        Обрабатывает прерванный блок.
-        """
-        ...
+    # @abstractmethod
+    # async def _handle_interrupted_block(self, block: Any) -> None:
+    #     """
+    #     Обрабатывает прерванный блок.
+    #     """
+    #     ...
+
+    # @abstractmethod
+    # async def _create_new_block(self, chain: Chain) -> None:
+    #     """
+    #     Создаёт новый блок и сохраняет его в базе данных.
+    #     """
+    #     ...
 
     @abstractmethod
-    async def _create_new_block(self, chain: Chain) -> None:
-        """
-        Создаёт новый блок и сохраняет его в базе данных.
-        """
-        ...
-
-    @abstractmethod
-    async def get_current_block_state(self, chain_id: UUID) -> BlockStateResponse:
+    async def get_current_block_state(self, pair_id: UUID) -> BlockStateResponse:
         """
         Возвращает текущее состояние текущего блока, включая таймер для фронта.
         """
         ...
 
     @abstractmethod
-    def stop_block_generation(self) -> None:
+    async def stop_block_generation(self) -> None:
         """
         Останавливает процесс блокогенерации.
         """

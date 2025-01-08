@@ -8,9 +8,9 @@ from domain.dto import CreateDTO
 from domain.enums import TransactionType
 
 
-@dataclass
+@dataclass(kw_only=True)
 class CreateTransactionDTO(CreateDTO):
-    user_id: UUID
+    user_id: Optional[UUID] = None
     type: TransactionType
     amount: float
     sender: str

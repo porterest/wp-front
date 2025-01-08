@@ -29,7 +29,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     yield
 
-    chain.stop_block_generation()
+    await chain.stop_block_generation()
+    logger.info('chains stopped, exiting...')
 
 
 app = FastAPI(lifespan=lifespan)
@@ -39,6 +40,8 @@ logging.basicConfig(
     level=logging.DEBUG if settings.debug else logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
+
+logging.getLogger('urllib3').setLevel(logging.INFO)
 
 
 @app.exception_handler(RequestValidationError)

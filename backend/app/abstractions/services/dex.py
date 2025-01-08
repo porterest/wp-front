@@ -25,7 +25,7 @@ class DexServiceInterface(ABC):
         ...
 
     @abstractmethod
-    async def perform_liquidity_action(self, liquidity_action: LiquidityAction, pool_state_delta: dict[str, float]) -> None:
+    async def perform_liquidity_action(self, liquidity_action: LiquidityAction) -> None:
         ...
 
     @abstractmethod
@@ -39,5 +39,5 @@ class DexServiceInterface(ABC):
             target_token: str,
             amount: float,
             app_wallet_id: UUID,
-    ) -> TonTransaction:  # todo: rewrite to one perform_swap
+    ) -> TonTransaction:
         ...

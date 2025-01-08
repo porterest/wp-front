@@ -75,7 +75,7 @@ class MockTonApiClient(TonClientInterface):
 
 
 # Usage example
-async def main():
-    mock_client = MockTonApiClient(token="dummy_token")
-    public_key = await mock_client.get_public_key("dummy_address")
-    logger.info(f"Retrieved mocked public key: {public_key}")
+# async def main():
+#     mock_client = MockTonApiClient(token="dummy_token")
+#     public_key = await mock_client.get_public_key("dummy_address")
+#     logger.info(f"Retrieved mocked public key: {public_key}")

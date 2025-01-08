@@ -44,8 +44,6 @@ async def check_for_auth(
             }
         )
 
-    print(request.scope.keys())
     request.scope['x_user_id'] = user_id
-    print(request.scope.keys())
     response = await call_next(request)
     return response

@@ -1,2 +1,2 @@
-class NoFoundException(Exception):
+class NotFoundException(Exception):
     ...

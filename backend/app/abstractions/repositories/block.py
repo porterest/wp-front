@@ -4,7 +4,6 @@ from uuid import UUID
 
 from abstractions.repositories import CRUDRepositoryInterface
 from domain.dto.block import CreateBlockDTO, UpdateBlockDTO
-from domain.models import Pair
 from domain.models.block import Block
 
 
@@ -15,8 +14,13 @@ class BlockRepositoryInterface(
     ABC,
 ):
     @abstractmethod
-    async def get_last_block(self, pair_id) -> Optional[Block]:
+    async def get_last_block(self, chain_id: UUID) -> Optional[Block]:
         pass
+
+    @abstractmethod
+    async def get_last_completed_block(self, chain_id: UUID) -> Optional[Block]:
+        ...
+
     @abstractmethod
     async def get_n_last_blocks_by_pair_id(self, n: int, pair_id: UUID) -> Optional[list[Block]]:
         pass

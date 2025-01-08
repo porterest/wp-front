@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
@@ -8,27 +9,32 @@ from sqlalchemy import func
 from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.services.bet import BetServiceInterface
 from abstractions.services.block import BlockServiceInterface
+from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
 from domain.dto.block import UpdateBlockDTO, CreateBlockDTO
 from domain.models.block import Block
-from infrastructure.db.entities import BlockStatus
+from domain.enums.block_status import BlockStatus
+from infrastructure.db.repositories.exceptions import NotFoundException as RepositoryNotFoundException
 from services.exceptions import NotFoundException
-from services.math_services.AggregateBetsService import AggregateBetsService
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
 class BlockService(BlockServiceInterface):
     block_repository: BlockRepositoryInterface
     bet_service: BetServiceInterface
-    aggregate_bets_service: AggregateBetsService
+    aggregate_bets_service: AggregateBetsServiceInterface
 
     async def create(self, create_dto):
         await self.block_repository.create(create_dto)
+
     async def get(self, block_id: UUID) -> Block:
         return await self.block_repository.get(block_id)
 
     async def get_last_block(self, chain_id: UUID) -> Optional[Block]:
         last_block = await self.block_repository.get_last_block(chain_id)
         return last_block
+
     async def get_n_last_blocks_by_pair_id(self, n: int, pair_id: UUID) -> Optional[list[Block]]:
         last_blocks = await self.block_repository.get_n_last_blocks_by_pair_id(n, pair_id)
         return last_blocks
@@ -41,19 +47,26 @@ class BlockService(BlockServiceInterface):
         update_block = UpdateBlockDTO(
             status=BlockStatus.INTERRUPTED,
         )
+        logger.info('begin handle_interrupted_block')
         await self.block_repository.update(block_id, update_block)
+        logger.info(update_block)
         block = await self.block_repository.get(block_id)
+        logger.info(block)
         # Отменяем ставки в прерванном блоке
         for bet in block.bets:
+            logger.info(f'нахуй эту ставку {bet}')
             await self.bet_service.cancel_bet(bet.id)
+            logger.info(f'{bet} в жопе')
 
-    async def start_new_block(self, block_number: int) -> Block:
-        last_block = await self.get_last_block()
+
+    async def start_new_block(self, chain_id: UUID) -> Block:
+        last_block = await self.block_repository.get_last_completed_block(chain_id)
         if last_block:
             block = CreateBlockDTO(
                 block_number=last_block.block_number + 1,
                 status=BlockStatus.IN_PROGRESS,
                 result_vector=None,
+                chain_id=chain_id,
                 created_at=datetime.now(),
             )
         else:
@@ -61,6 +74,7 @@ class BlockService(BlockServiceInterface):
                 block_number=1,
                 status=BlockStatus.IN_PROGRESS,
                 result_vector=None,
+                chain_id=chain_id,
                 created_at=datetime.now(),
             )
 
@@ -75,7 +89,7 @@ class BlockService(BlockServiceInterface):
             UpdateBlockDTO(
                 status=BlockStatus.COMPLETED,
                 result_vector=result_vector,
-                completed_at=block.completed_at
+                completed_at=datetime.now(),
             )
         )
         block.status = BlockStatus.COMPLETED
@@ -83,8 +97,9 @@ class BlockService(BlockServiceInterface):
         await self.block_repository.update(block_id, update_block)
 
     async def get_block(self, block_id: UUID) -> Block:
-        block = await self.block_repository.get(block_id)
-        if not block:
+        try:
+            block = await self.block_repository.get(block_id)
+        except RepositoryNotFoundException:
             raise NotFoundException(f"Block with ID {block_id} not found")
         return block
 

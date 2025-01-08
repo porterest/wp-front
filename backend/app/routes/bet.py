@@ -20,7 +20,7 @@ async def place_bet(bet: PlaceBetRequest, request: Request) -> None:
     user_id = get_user_id_from_request(request)
     chain_service = get_chain_service()
     chain = await chain_service.get_by_pair_id(bet.pair_id)
-    block_state = await chain_service.get_current_block_state(chain.id)
+    block_state = await chain_service.get_current_block_state(chain.pair_id)
     dto = CreateBetDTO(
         user_id=user_id,
         pair_id=bet.pair_id,

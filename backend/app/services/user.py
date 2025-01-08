@@ -11,6 +11,7 @@ from abstractions.services.swap import SwapServiceInterface
 from abstractions.services.user import UserServiceInterface
 from domain.dto.user import UpdateUserDTO, CreateUserDTO
 from domain.enums.deposit import DepositEntryStatus
+from domain.metaholder.enums import BetStatus as MetaholderBetStatus
 from domain.metaholder.responses import TransactionResponse, BetResponse
 from domain.metaholder.responses.user import UserBetsResponse, UserHistoryResponse
 from domain.models import User
@@ -21,15 +22,15 @@ from services.exceptions import NotFoundException, NoSuchUserException
 
 @dataclass
 class UserService(UserServiceInterface):
-
-
     user_repository: UserRepositoryInterface
     block_service: BlockServiceInterface
     swap_service: SwapServiceInterface
     deposit_repository: DepositRepositoryInterface
 
     async def distribute_rewards(self, rewards: Rewards) -> None:
-        pass
+        for reward in rewards.user_rewards:
+            await self.user_repository.fund_user(user_id=reward.user_id, amount=reward.reward)
+
     async def ensure_user(self, wallet_address: str) -> None:
         user = await self.user_repository.get_by_wallet(wallet_address)
         if not user:
@@ -46,8 +47,10 @@ class UserService(UserServiceInterface):
             user_id=user.id,
             bets=[
                 BetResponse(
+                    id=bet.id,
                     amount=bet.amount,
                     vector=bet.vector,
+                    status=MetaholderBetStatus(bet.status.value),
                     pair_name=bet.pair.name,
                     created_at=bet.created_at,
                 ) for bet in user.bets

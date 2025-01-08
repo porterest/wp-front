@@ -1,13 +1,15 @@
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 
-from domain.models.base import BaseModel
+from domain.models.liquidity_action import LiquidityAction
+from domain.models.reward_model import Rewards
+from domain.models.swap import CalculatedSwap
+from domain.ton.transaction import TonTransaction
 
 
 @dataclass(kw_only=True)
-class OrchestratorResult(BaseModel):
-    liquidity_result: Optional[dict]
-    swap_result: Optional[dict]
-    rewards_result: Optional[dict]
-
-
+class OrchestratorResult:
+    liquidity_action: Optional[LiquidityAction] = None
+    swap: Optional[CalculatedSwap] = None
+    swap_result: Optional[TonTransaction] = None
+    rewards: Optional[Rewards] = None

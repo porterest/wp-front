@@ -88,8 +88,10 @@ class UserRepository(
                 .where(
                     self.entity.wallet_address == wallet_address,
                 )
+                .options(*self.options)
             )
-            return res.scalars().one_or_none()
+            user = res.unique().scalars().one_or_none()
+        return self.entity_to_model(user)
 
     async def fund_user(self, user_id: UUID, amount: float) -> None:
         async with self.session_maker() as session:

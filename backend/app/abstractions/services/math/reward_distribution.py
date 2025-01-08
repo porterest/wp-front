@@ -25,7 +25,7 @@ class RewardDistributionServiceInterface(ABC):
         ...
 
     @abstractmethod
-    def calculate_rewards(self, prediction: Prediction) -> Rewards:
+    async def calculate_rewards(self, prediction: Prediction) -> Rewards:
         """
         Распределяет вознаграждения среди пользователей на основе их предсказаний.
         :param prediction: DTO с предсказаниями пользователей и фактическими данными.

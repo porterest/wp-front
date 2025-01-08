@@ -64,7 +64,7 @@ class Transaction(AbstractBase):
 
     id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     tx_id: Mapped[Optional[str]] = mapped_column(unique=True)
-    user_id: Mapped[pyUUID] = mapped_column(ForeignKey('users.id'))
+    user_id: Mapped[Optional[pyUUID]] = mapped_column(ForeignKey('users.id'))
     type: Mapped[TransactionType] = mapped_column(SQLEnum(TransactionType), index=True)
     amount: Mapped[float]
 
@@ -116,7 +116,7 @@ class Block(AbstractBase):
     __tablename__ = "blocks"
 
     id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    block_number: Mapped[int] = mapped_column(unique=True)
+    block_number: Mapped[int] = mapped_column()
     status: Mapped[BlockStatus] = mapped_column(SQLEnum(BlockStatus), default=BlockStatus.IN_PROGRESS)
     result_vector: Mapped[Optional[BetVector]] = mapped_column(JSONB)
 
