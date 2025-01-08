@@ -4,10 +4,15 @@ import { UUID } from "node:crypto";
 export interface BetResponse {
   bet_id: UUID;
   amount: number;
-  vector: number[]; // Можно уточнить тип, если известно
+  vector: BetVector; // Можно уточнить тип, если известно
   pair_name: string;
+  status: BetStatus;
   created_at: string; // ISO-формат даты
 }
+
+export type BetStatus = "PENDING" | "RESOLVED" | "CANCELED"; // Пример возможных значений
+
+export type BetVector = [price: number, betsAmount: number];
 
 export interface UserBetsResponse {
   user_id: string; // UUID
@@ -73,7 +78,6 @@ export interface DepositResponse {
   amount: number;
 }
 // Если BetStatus еще не описан
-export type BetStatus = "PENDING" | "WON" | "LOST"; // Пример возможных значений
 
 export interface BackendCandle {
   opening_price: number;

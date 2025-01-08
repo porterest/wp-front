@@ -56,7 +56,7 @@ export async function getUserHistory(): Promise<UserHistoryResponse> {
 // Функция для отправки ставки
 export async function placeBet(data: PlaceBetRequest): Promise<void> {
     try {
-        const response = await apiClient.post<void>("/bet", data);
+        const response = await apiClient.post<void>("/bets/bet", data);
         return response.data;
     } catch (error) {
         console.error("Error placing bet:", error);
@@ -66,7 +66,7 @@ export async function placeBet(data: PlaceBetRequest): Promise<void> {
 
 export async function cancelBet(betId: string) {
     try {
-        const response = await apiClient.post(`/bet/cancel`, { bet_id: betId });
+        const response = await apiClient.post(`/bets/cancel`, { bet_id: betId });
         if (response.status === 200) {
             alert("Ставка успешно отменена.");
         } else {
