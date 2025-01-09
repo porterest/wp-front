@@ -107,6 +107,7 @@ export async function getPairs(): Promise<PairResponse[]> {
 export async function fetchTime(): Promise<TimeResponse> {
     try {
         const response = await apiClient.get<TimeResponse>("/chain/time");
+        console.log(response.data);
         return response.data;
     } catch (error: unknown) {
         console.error("Ошибка получения времени:", error);
