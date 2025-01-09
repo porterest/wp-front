@@ -30,7 +30,7 @@ class RewardDistributionService(RewardDistributionServiceInterface):
         :param system_reserve: Общий резерв системы (доступные средства).
         :return: Динамический коэффициент наград.
         """
-        base_multiplier = 1.4  # Базовое значение
+        base_multiplier = 1.1  # Базовое значение
 
         # Учет резервов системы
         if system_reserve < 10000:
@@ -104,8 +104,8 @@ class RewardDistributionService(RewardDistributionServiceInterface):
             user_accuracies[user_prediction.user_id] = accuracy
             total_accuracy += accuracy * user_prediction.stake
 
-        if total_accuracy == 0:
-            raise ValueError("Нет достаточной точности для распределения наград.")
+        # if total_accuracy == 0:
+        #     raise ValueError("Нет достаточной точности для распределения наград.")
 
         # Расчет наград
         rewards = []
