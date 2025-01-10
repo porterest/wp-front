@@ -78,6 +78,18 @@ const GamePage: React.FC = () => {
     }
   }, [selectedPair]);
 
+  useEffect(() => {
+    console.log('data changed', data);
+  }, [data]);
+
+  useEffect(() => {
+    console.log('mode changed', currentMode);
+  }, [currentMode]);
+
+  useEffect(() => {
+    console.log('scales changed', scaleFunctions);
+  }, [scaleFunctions]);
+
   const handleShowConfirmButton = async (
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] },
@@ -129,6 +141,36 @@ const GamePage: React.FC = () => {
     { color: "blue", label: "Y-axis: Ton Price" },
     { color: "cyan", label: "Z-axis: Number of Transactions" },
   ];
+
+  useEffect(() => {
+    console.log("Scale functions:", scaleFunctions);
+    console.log("Data:", data);
+
+    if (scaleFunctions && data && data.length > 0 && [2, 3].includes(currentMode) ) {
+      const { denormalizeX } = scaleFunctions;
+
+      // Вычисляем границы графика
+      const minX = denormalizeX(0, data.length);
+      const maxX = denormalizeX(data.length - 1, data.length);
+
+      const minY = Math.min(...data.map((candle) => candle.low));
+      const maxY = Math.max(...data.map((candle) => candle.high));
+
+      console.log("Graph boundaries:");
+      console.log(`X-axis: from ${minX} to ${maxX}`);
+      console.log(`Y-axis: from ${minY} to ${maxY}`);
+      console.log(`Center: (${(minX + maxX) / 2}, ${(minY + maxY) / 2})`);
+
+      // Логируем каждую свечу
+      data.forEach((candle, index) => {
+        const normalizedX = denormalizeX(index, data.length);
+        console.log(`Candle ${index}:`);
+        console.log(`  X: ${normalizedX}`);
+        console.log(`  Open: ${candle.open}, Close: ${candle.close}`);
+        console.log(`  High: ${candle.high}, Low: ${candle.low}`);
+      });
+    }
+  }, [scaleFunctions, data, currentMode]);
 
   return (
     <div className="relative w-screen h-screen overflow-hidden touch-none">

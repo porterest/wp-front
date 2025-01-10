@@ -21,7 +21,7 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   // const normalizeY = (value: number) =>
   //   ((value - minPrice) / (maxPrice - minPrice)) * viewport.height - viewport.height / 2;
   const normalizeY = (value: number) =>
-    ((value - minPrice) / (maxPrice - minPrice)) * viewport.height * 0.8; // Добавьте коэффициент
+    ((value - minPrice) / (maxPrice - minPrice)) * viewport.height * 0.4; // Добавьте коэффициент
 
 
   // const normalizeZ = (volume: number, maxVolume: number) =>
