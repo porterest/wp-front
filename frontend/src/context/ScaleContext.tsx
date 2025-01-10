@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, useContext, useEffect, useMemo } from "react";
 import { useThree } from "@react-three/fiber";
 import { ScaleFunctions } from "../types/scale";
 import { CandleData } from "../types/candles";
@@ -8,6 +8,10 @@ const ScaleContext = createContext<ScaleFunctions | null>(null);
 
 export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleData[] }> = ({ children, data }) => {
   const { viewport } = useThree();
+
+  useEffect(() => {
+    console.log('viewport changed', viewport);
+  }, [viewport]);
 
   const minPrice = useMemo(() => Math.min(...data.map((d) => d.low)), [data]);
   const maxPrice = useMemo(() => Math.max(...data.map((d) => d.high)), [data]);
