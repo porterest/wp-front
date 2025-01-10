@@ -44,8 +44,16 @@ const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) =>
 
   useEffect(() => {
     onScaleReady(scaleFunctions); // Передаём функции вверх через callback
-    console.log('new scales');
   }, [onScaleReady, scaleFunctions]);
+  useEffect(() => {
+    console.log('new scaleFunctions');
+  }, [scaleFunctions]);
+  useEffect(() => {
+    console.log('new onScaleReady');
+  }, [onScaleReady]);
+
+
+
 
   return null;
 };
