@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from abstractions.services.app_wallet import AppWalletServiceInterface
 from abstractions.services.dex import DexServiceInterface
@@ -64,7 +64,7 @@ class MockDexService(DexServiceInterface):  # todo: mock
             token=f'other from {target_token}',
             sent_at=datetime.now(),
             status=TonTransactionStatus.COMPLETED,
-            tx_id='lalala',
+            tx_id=str(uuid4()),
         )
 
     async def perform_liquidity_action(self, liquidity_action: LiquidityAction) -> None:
