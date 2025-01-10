@@ -31,6 +31,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ data, mode }) => {
     <group>
       {/* Рендерим каждую свечу */}
       {data.map((candle, index) => {
+        console.log("normalizing candle");
         const isBullish = candle.close > candle.open;
         const color = getColor(isBullish);
 
@@ -48,6 +49,13 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ data, mode }) => {
 
         const positionX = normalizeX(index, data.length);
         const positionZ = normalizeZ(candle.volume, maxVolume);
+
+        console.log("lol", {
+          index,
+          normalizedX: positionX,
+          normalizedY: { open: normalizedOpen, close: normalizedClose },
+          normalizedZ: positionZ,
+        });
 
         return (
           <group key={index}>

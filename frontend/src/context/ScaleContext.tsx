@@ -13,14 +13,22 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   const maxPrice = useMemo(() => Math.max(...data.map((d) => d.high)), [data]);
   // const maxVolume = useMemo(() => Math.max(...data.map((d) => d.volume)), [data]);
 
+  // const normalizeX = (index: number, length: number) =>
+  //   (index / (length - 1)) * viewport.width - viewport.width / 2;
   const normalizeX = (index: number, length: number) =>
-    (index / (length - 1)) * viewport.width - viewport.width / 2;
+    ((index / length) * viewport.width) - viewport.width / 2;
 
+  // const normalizeY = (value: number) =>
+  //   ((value - minPrice) / (maxPrice - minPrice)) * viewport.height - viewport.height / 2;
   const normalizeY = (value: number) =>
-    ((value - minPrice) / (maxPrice - minPrice)) * viewport.height - viewport.height / 2;
+    ((value - minPrice) / (maxPrice - minPrice)) * viewport.height * 0.8; // Добавьте коэффициент
 
+
+  // const normalizeZ = (volume: number, maxVolume: number) =>
+  //   (volume / maxVolume) * viewport.width;
   const normalizeZ = (volume: number, maxVolume: number) =>
-    (volume / maxVolume) * viewport.width;
+    (volume / maxVolume) * 5; // Уменьшите масштаб
+
 
   const denormalizeX = (sceneValue: number, length: number) =>
     ((sceneValue + viewport.width / 2) / viewport.width) * (length - 1);
@@ -30,6 +38,8 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
 
   const denormalizeZ = (sceneValue: number, maxVolume: number) =>
     (sceneValue / viewport.width) * maxVolume;
+
+
 
   return (
     <ScaleContext.Provider

@@ -9,40 +9,31 @@ interface TimerProps {
 const Timer: React.FC<TimerProps> = ({ onTimerEnd }) => {
   const [timeLeft, setTimeLeft] = useState<number | null>(null); // Оставшееся время
 
+  const syncAndStartTimer = async () => {
+    try {
+      console.log("Starting timer");
+      const timeData = await fetchTime();
+      console.log(`time fetched : ${timeData}`);
+
+      const remainingTime = timeData.remaining_time_in_block * 1000; // В миллисекундах
+      console.log("remaining time", remainingTime);
+      setTimeLeft(remainingTime);
+    } catch (error) {
+      console.error("Ошибка синхронизации времени в Timer:", error);
+    }
+  };
+
   useEffect(() => {
-    const syncAndStartTimer = async () => {
-      try {
-        console.log("Starting timer");
-        const timeData = await fetchTime();
-        console.log(`time fetched : ${timeData}`);
-
-        const remainingTime = timeData.remaining_time_in_block * 1000; // В миллисекундах
-        console.log("remaining time", remainingTime);
-        setTimeLeft(remainingTime);
-
-        const timeout = setTimeout(() => {
-          onTimerEnd();
-          syncAndStartTimer();
-        }, remainingTime);
-
-        useEffect(() => {
-          if (timeLeft === 0) {
-            // Когда таймер достигает 0, запросить новое время
-            onTimerEnd();
-            syncAndStartTimer();
-          }
-        }, [timeLeft]);
-
-
-
-        return () => clearTimeout(timeout); // Очистка таймера при размонтировании
-      } catch (error) {
-        console.error("Ошибка синхронизации времени в Timer:", error);
-      }
-    };
-
+    // Первый запуск таймера при монтировании компонента
     syncAndStartTimer();
   }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0) {
+      onTimerEnd();
+      syncAndStartTimer(); // Сразу запрашиваем новое время
+    }
+  }, [timeLeft]); // Отслеживаем изменения timeLeft
 
   useEffect(() => {
     const interval = setInterval(() => {
