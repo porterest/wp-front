@@ -22,6 +22,7 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd }) => {
 
         const timeout = setTimeout(() => {
           onTimerEnd();
+          syncAndStartTimer();
         }, remainingTime);
 
         useEffect(() => {
