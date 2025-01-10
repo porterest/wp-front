@@ -13,8 +13,12 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd }) => {
     useEffect(() => {
         const syncAndStartTimer = async () => {
             try {
+                console.log("Starting timer");
                 const timeData = await fetchTime();
+                console.log(`time fetched : ${timeData}`)
+
                 const remainingTime = timeData.remaining_time_in_block * 1000; // В миллисекундах
+                console.log("remaining time", remainingTime);
                 setTimeLeft(remainingTime);
 
                 const timeout = setTimeout(() => {
