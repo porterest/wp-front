@@ -101,11 +101,13 @@ export async function getPairs(): Promise<PairResponse[]> {
     }
 }
 
+
 /**
  * Запрос текущего времени, блока и длительности
  */
 export async function fetchTime(): Promise<TimeResponse> {
     try {
+        console.log("fetching time");
         const response = await apiClient.get<TimeResponse>("/chain/time");
         console.log(response.data);
         return response.data;

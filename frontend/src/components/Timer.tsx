@@ -24,6 +24,16 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd }) => {
           onTimerEnd();
         }, remainingTime);
 
+        useEffect(() => {
+          if (timeLeft === 0) {
+            // Когда таймер достигает 0, запросить новое время
+            onTimerEnd();
+            syncAndStartTimer();
+          }
+        }, [timeLeft]);
+
+
+
         return () => clearTimeout(timeout); // Очистка таймера при размонтировании
       } catch (error) {
         console.error("Ошибка синхронизации времени в Timer:", error);
