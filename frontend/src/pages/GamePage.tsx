@@ -80,7 +80,7 @@ const GamePage: React.FC = () => {
   }, [selectedPair]);
 
   useEffect(() => {
-    console.log('pair changed', data);
+    console.log('pair changed', selectedPair);
   }, [selectedPair]);
 
   useEffect(() => {
@@ -183,9 +183,6 @@ const GamePage: React.FC = () => {
     }
   };
 
-
-
-
   const handleConfirmBet = async () => {
     if (!currentBet) return;
 
@@ -263,7 +260,9 @@ const GamePage: React.FC = () => {
           onSymbolChange={(pair) => {
             console.log("Symbol changed in GamePage:", pair);
             setSelectedPair(pair);
-          }}        />
+            console.log('sat selectedPair', selectedPair);
+          }}
+        />
       </div>
       <Scene
         orbitControlsEnabled={orbitControlsEnabled}

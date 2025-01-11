@@ -34,6 +34,7 @@ const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) =>
 
   useEffect(() => {
     onScaleReady(scaleFunctions);
+    console.log('scales exposed', scaleFunctions);
   }, [onScaleReady, scaleFunctions]);
 
   return null;
