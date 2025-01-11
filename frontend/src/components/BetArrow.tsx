@@ -18,7 +18,7 @@ interface BetArrowProps {
     betData?: { amount: number; predicted_vector: number[] },
   ) => void;
   axisMode: "X" | "Y";
-  pairId: string
+  pairId: string | undefined;
 }
 
 const BetArrow: React.FC<BetArrowProps> = ({
