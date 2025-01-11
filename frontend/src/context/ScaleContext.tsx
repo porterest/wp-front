@@ -16,12 +16,12 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   const maxPrice = useMemo(() => Math.max(...data.map((d) => d.high)), [data]);
 
   const normalizeX = useCallback((index: number, length: number) => {
-    return ((index / length) * viewport.width) - viewport.width / 2;
+    return ((index / length) * viewport.width) - viewport.width / 8;
   }, [viewport.width]);
 
   const normalizeY = useCallback(
     (value: number) => {
-      const graphHeight = viewport.height * 0.8; // Отступы для визуальной ясности
+      const graphHeight = viewport.height * 0.4; // Отступы для визуальной ясности
       return ((value - minPrice) / (maxPrice - minPrice)) * graphHeight - graphHeight / 2;
     },
     [minPrice, maxPrice, viewport.height]
@@ -62,11 +62,11 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   }, []);
 
   const denormalizeX = useCallback((sceneValue: number, length: number) => {
-    return ((sceneValue + viewport.width / 2) / viewport.width) * (length - 1);
+    return ((sceneValue + viewport.width / 8) / viewport.width) * (length - 1);
   }, [viewport.width]);
 
   const denormalizeY = useCallback((sceneValue: number) => {
-    return ((sceneValue + viewport.height / 2) / viewport.height) * (maxPrice - minPrice) + minPrice;
+    return ((sceneValue + viewport.height / 8) / viewport.height) * (maxPrice - minPrice) + minPrice;
   }, [viewport.height, minPrice, maxPrice]);
 
   const denormalizeZ = useCallback((sceneValue: number, maxVolume: number) => {
