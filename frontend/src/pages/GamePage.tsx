@@ -16,6 +16,7 @@ import { PairOption } from "../types/pair";
 const GamePage: React.FC = () => {
   const context = useContext(CandleDataContext);
 
+
   if (!context) {
     throw new Error(
       "CandleDataContext must be used within a CandleDataProvider",
@@ -115,6 +116,7 @@ const GamePage: React.FC = () => {
         console.log("Calculated bet request:", betRequest);
 
         setShowConfirmButton(true);
+        console.log('TRUUUUUUUUUE')
         setCurrentBet(betRequest);
       } catch (error) {
         console.error("Ошибка при расчёте ставки:", error);
@@ -137,6 +139,7 @@ const GamePage: React.FC = () => {
       console.error("Error placing bet:", error);
     }
   };
+  console.log("showConfirmButton state:", showConfirmButton);
 
   const legendItems = [
     { color: "5e00f5", label: "X-axis: Time Progress" },
