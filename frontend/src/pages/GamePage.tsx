@@ -95,6 +95,7 @@ const GamePage: React.FC = () => {
     betData?: { amount: number; predicted_vector: number[] },
   ) => {
     if (betData && selectedPair && scaleFunctions) {
+      console.log(`betData: ${JSON.stringify(betData)}, selectedPair: ${JSON.stringify(selectedPair)}, scaleFunctions: ${JSON.stringify(scaleFunctions)}`);
       try {
         const { denormalizeX, denormalizeY } = scaleFunctions;
 
@@ -123,6 +124,7 @@ const GamePage: React.FC = () => {
       setShowConfirmButton(false);
     }
   };
+
 
   const handleConfirmBet = async () => {
     if (!currentBet) return;
@@ -212,14 +214,7 @@ const GamePage: React.FC = () => {
           onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
           onShowConfirmButton={handleShowConfirmButton}
         />
-        {/*<BetArrow*/}
-        {/*  previousBetEnd={previousBetEnd}*/}
-        {/*  userPreviousBet={userPreviousBet}*/}
-        {/*  setUserPreviousBet={setUserPreviousBet}*/}
-        {/*  onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}*/}
-        {/*  onShowConfirmButton={handleShowConfirmButton}*/}
-        {/*  axisMode={axisMode}*/}
-        {/*/>*/}
+
       </Scene>
       {showConfirmButton && (
         <div className="absolute bottom-[20px] right-[20px] z-10">
