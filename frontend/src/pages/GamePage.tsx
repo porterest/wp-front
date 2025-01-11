@@ -16,7 +16,6 @@ import { PairOption } from "../types/pair";
 const GamePage: React.FC = () => {
   const context = useContext(CandleDataContext);
 
-
   if (!context) {
     throw new Error(
       "CandleDataContext must be used within a CandleDataProvider",
@@ -71,10 +70,10 @@ const GamePage: React.FC = () => {
   useEffect(() => {
     if (selectedPair) {
       fetchPreviousBetEnd(selectedPair.value).then(({ x, y }) => {
-        console.log('жопа')
-        console.log(selectedPair.value)
+        console.log("жопа");
+        console.log(selectedPair.value);
         const resultVector = new THREE.Vector3(x, y, 0);
-        console.log('res', JSON.stringify(resultVector, null, 2));
+        console.log("res", JSON.stringify(resultVector, null, 2));
         setPreviousBetEnd(resultVector);
         loadUserLastBet(selectedPair.value);
       });
@@ -82,11 +81,11 @@ const GamePage: React.FC = () => {
   }, [selectedPair]);
 
   useEffect(() => {
-    console.log('pair changed', selectedPair);
+    console.log("pair changed", selectedPair);
   }, [selectedPair]);
 
   useEffect(() => {
-    console.log('data changed', data);
+    console.log("data changed", data);
   }, [data]);
 
   // useEffect(() => {
@@ -94,7 +93,7 @@ const GamePage: React.FC = () => {
   // }, [currentMode]);
 
   useEffect(() => {
-    console.log('scales changed', scaleFunctions);
+    console.log("scales changed", scaleFunctions);
   }, [scaleFunctions]);
 
   // const handleShowConfirmButton = async (
@@ -145,14 +144,18 @@ const GamePage: React.FC = () => {
   ) => {
     // Если данные не готовы, ждем и пробуем снова
     if (!betData || !selectedPair || !scaleFunctions) {
-      console.log("Waiting for selectedPair or scaleFunctions to be defined...");
+      console.log(
+        "Waiting for selectedPair or scaleFunctions to be defined...",
+      );
       setTimeout(() => handleShowConfirmButton(show, betData), 100);
       return;
     }
 
     // Все условия выполнены, переходим к расчету ставки
     console.log("All conditions met, proceeding with bet calculation.");
-    console.log(`betData: ${JSON.stringify(betData)}, selectedPair: ${JSON.stringify(selectedPair)}, scaleFunctions: ${JSON.stringify(scaleFunctions)}`);
+    console.log(
+      `betData: ${JSON.stringify(betData)}, selectedPair: ${JSON.stringify(selectedPair)}, scaleFunctions: ${JSON.stringify(scaleFunctions)}`,
+    );
 
     try {
       const { denormalizeX, denormalizeY } = scaleFunctions;
@@ -211,17 +214,17 @@ const GamePage: React.FC = () => {
   //     const { denormalizeX } = scaleFunctions;
   //
 
-      // // Вычисляем границы графика
-      // const minX = denormalizeX(0, data.length);
-      // const maxX = denormalizeX(data.length - 1, data.length);
-      //
-      // const minY = Math.min(...data.map((candle) => candle.low));
-      // const maxY = Math.max(...data.map((candle) => candle.high));
-      //
-      // // console.log("Graph boundaries:");
-      // console.log(`X-axis: from ${minX} to ${maxX}`);
-      // console.log(`Y-axis: from ${minY} to ${maxY}`);
-      // console.log(`Center: (${(minX + maxX) / 2}, ${(minY + maxY) / 2})`);
+  // // Вычисляем границы графика
+  // const minX = denormalizeX(0, data.length);
+  // const maxX = denormalizeX(data.length - 1, data.length);
+  //
+  // const minY = Math.min(...data.map((candle) => candle.low));
+  // const maxY = Math.max(...data.map((candle) => candle.high));
+  //
+  // // console.log("Graph boundaries:");
+  // console.log(`X-axis: from ${minX} to ${maxX}`);
+  // console.log(`Y-axis: from ${minY} to ${maxY}`);
+  // console.log(`Center: (${(minX + maxX) / 2}, ${(minY + maxY) / 2})`);
   //
   //     // Логируем каждую свечу
   //     data.forEach((candle, index) => {
@@ -234,7 +237,6 @@ const GamePage: React.FC = () => {
   //   }
   // }, [scaleFunctions, data, currentMode]);
   //
-
 
   return (
     <div className="relative w-screen h-screen overflow-hidden touch-none">
@@ -283,7 +285,6 @@ const GamePage: React.FC = () => {
             handleShowConfirmButton(show, betData);
           }}
         />
-
       </Scene>
       {showConfirmButton && (
         <div className="absolute bottom-[20px] right-[20px] z-10">
