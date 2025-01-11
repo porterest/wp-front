@@ -112,10 +112,12 @@ const GamePage: React.FC = () => {
           amount: betData.amount,
           predicted_vector: [absoluteVolumeChange, absolutePriceChange],
         };
+        console.log("scaleFunctions:", scaleFunctions ? "defined" : "null");
 
         console.log("Calculated bet request:", betRequest);
 
         setShowConfirmButton(true);
+        console.log("showConfirmButton set to true");
         console.log('TRUUUUUUUUUE')
         setCurrentBet(betRequest);
       } catch (error) {
@@ -219,6 +221,7 @@ const GamePage: React.FC = () => {
           onShowConfirmButton={(show, betData) => {
             console.log("onShowConfirmButton called with:", show, betData);
             handleShowConfirmButton(show, betData);
+
           }}
         />
 
