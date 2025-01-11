@@ -40,6 +40,12 @@ class BlockServiceInterface(ABC):
         Возвращает последний блок в системе по имени пары.
         """
         ...
+    @abstractmethod
+    async def get_last_completed_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
+        """
+        Возвращает последний блок в системе по имени пары.
+        """
+        ...
 
     @abstractmethod
     async def create(self, create_dto: CreateBlockDTO) -> None:

@@ -18,4 +18,4 @@ async def get_last_vector(pair_id: UUID) -> Tuple[float, float]:
     vector = block.result_vector
     # if vector == (0, 0):
     #     return (8, 21)
-    return vector.result_vector
+    return vector
