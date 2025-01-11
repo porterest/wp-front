@@ -141,10 +141,6 @@ const GamePage: React.FC = () => {
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] },
   ) => {
-    console.log("betData exists:", !!betData);
-    console.log("selectedPair exists:", selectedPair);
-    console.log("scaleFunctions exists:", scaleFunctions);
-
     // Если данные не готовы, ждем и пробуем снова
     if (!betData || !selectedPair || !scaleFunctions) {
       console.log("Waiting for selectedPair or scaleFunctions to be defined...");
@@ -259,7 +255,6 @@ const GamePage: React.FC = () => {
           onSymbolChange={(pair) => {
             console.log("Symbol changed in GamePage:", pair);
             setSelectedPair(pair);
-            setTimeout(function () { console.log('sat selectedPair', selectedPair); }, 2000);
           }}
         />
       </div>
@@ -291,8 +286,6 @@ const GamePage: React.FC = () => {
       {showConfirmButton && (
         <div className="absolute bottom-[20px] right-[20px] z-10">
           <ConfirmBetButton onConfirm={handleConfirmBet} />
-          console.log("onShowConfirmButton called with:", show, betData);
-
         </div>
       )}
     </div>
