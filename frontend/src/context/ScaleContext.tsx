@@ -19,11 +19,13 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
     return ((index / length) * viewport.width) - viewport.width / 2;
   }, [viewport.width]);
 
-  const normalizeY = useCallback((value: number) => {
-    const padding = 0.1; // 10% отступ от верхнего и нижнего края
-    const adjustedHeight = viewport.height * (1 - padding * 2);
-    return ((value - minPrice) / (maxPrice - minPrice)) * adjustedHeight - adjustedHeight / 2;
-  }, [minPrice, maxPrice, viewport.height]);
+  const normalizeY = useCallback(
+    (value: number) => {
+      return ((value - minPrice) / (maxPrice - minPrice)) * viewport.height * 0.8 - viewport.height / 2;
+    },
+    [minPrice, maxPrice, viewport.height]
+  );
+
 
 
 

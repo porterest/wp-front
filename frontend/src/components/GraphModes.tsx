@@ -47,8 +47,8 @@ const GraphModes: React.FC<GraphModesProps> = ({
 
   // Вычисление minPrice и maxPrice из данных
   // Вычисление minPrice и maxPrice из данных
-  const { scene } = useThree(); // Доступ к сцене
-  const { normalizeY } = useScale(); // Получаем функции нормализации из контекста
+  const { scene, viewport } = useThree(); // Получаем `scene` и `viewport` из `useThree`
+  const { normalizeY } = useScale(); // Контекст нормализации
 
   // Вычисление minPrice и maxPrice
   const minPrice = useMemo(() => {
@@ -60,8 +60,9 @@ const GraphModes: React.FC<GraphModesProps> = ({
   }, [data]);
 
   useEffect(() => {
-    const minY = normalizeY(minPrice);
-    const maxY = normalizeY(maxPrice);
+    const minY = normalizeY(minPrice) + viewport.height * 0.1; // Поднимаем линию вверх
+    const maxY = normalizeY(maxPrice) - viewport.height * 0.1; // Опускаем линию вниз
+
 
     // Линия для minPrice
     const minLine = new THREE.Line(
@@ -90,6 +91,12 @@ const GraphModes: React.FC<GraphModesProps> = ({
       scene.remove(maxLine); // Удаляем линии при размонтировании
     };
   }, [minPrice, maxPrice, normalizeY, scene]);
+
+  useEffect(() => {
+    console.log("Viewport height:", viewport.height);
+    console.log("Normalized minY:", normalizeY(minPrice));
+    console.log("Normalized maxY:", normalizeY(maxPrice));
+  });
 
   // Мемоизация рендера контента в зависимости от currentMode
   const renderContent = useMemo(() => {
