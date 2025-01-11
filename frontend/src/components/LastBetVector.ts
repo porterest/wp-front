@@ -85,25 +85,23 @@ const LastBetVector: React.FC<PairVectorsProps> = ({
 
     const group = new THREE.Group();
 
-    // Создаем линию (стержень стрелки)
-    const lineGeometry = new THREE.CylinderGeometry(0.05, 0.05, length, 12);
+    // Линия (стержень стрелки)
+    const lineGeometry = new THREE.CylinderGeometry(0.03, 0.03, length, 12);
     const lineMaterial = new THREE.MeshBasicMaterial({ color });
     const line = new THREE.Mesh(lineGeometry, lineMaterial);
 
-    // Устанавливаем позицию и ориентацию линии
-    line.position.set(0, length / 2, 0);
+    line.position.y = length / 2; // Центрируем линию
     line.quaternion.setFromUnitVectors(
       new THREE.Vector3(0, 1, 0),
       normalizedDirection
     );
 
-    // Создаем конус (наконечник стрелки)
-    const coneGeometry = new THREE.ConeGeometry(0.1, 0.3, 12);
+    // Конус (наконечник стрелки)
+    const coneGeometry = new THREE.ConeGeometry(0.1, 0.2, 12);
     const coneMaterial = new THREE.MeshBasicMaterial({ color });
     const cone = new THREE.Mesh(coneGeometry, coneMaterial);
 
-    // Устанавливаем позицию и ориентацию конуса
-    cone.position.set(0, length + 0.15, 0);
+    cone.position.y = length + 0.1; // Ставим конус на конец линии
     cone.quaternion.setFromUnitVectors(
       new THREE.Vector3(0, 1, 0),
       normalizedDirection

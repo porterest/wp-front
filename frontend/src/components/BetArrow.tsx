@@ -366,10 +366,10 @@ const BetArrow: React.FC<BetArrowProps> = ({
       {/*  <meshStandardMaterial color="yellow" />*/}
       {/*</mesh>*/}
       {/* Белый конус (стрелка) */}
-      <mesh ref={dashedArrowRef}>
-        <coneGeometry args={[0.1, 0.3, 12]} />
-        <meshStandardMaterial color="white" />
-      </mesh>
+      {/*<mesh ref={dashedArrowRef}>*/}
+      {/*  <coneGeometry args={[0.1, 0.3, 12]} />*/}
+      {/*  <meshStandardMaterial color="white" />*/}
+      {/*</mesh>*/}
       {/* Сфера на конце стрелки */}
       <mesh ref={endpointRef} position={[xValue, yValue, dashedLineStart.z]}>
         <sphereGeometry args={[1, 16, 16]} />
