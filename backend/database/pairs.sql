@@ -1,0 +1,1 @@
+INSERT INTO public.pairs (id, name, contract_address, last_ratio, created_at, updated_at) VALUES ('b4ff7d35-1c3a-4a3d-87ae-61d1aa83bff2', 'TON/X', 'af', 1, '2024-12-26 15:44:49.000000', '2024-12-26 15:44:52.000000');
