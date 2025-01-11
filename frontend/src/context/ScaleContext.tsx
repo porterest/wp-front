@@ -19,14 +19,20 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
     return ((index / length) * viewport.width) - viewport.width / 8;
   }, [viewport.width]);
 
+  const padding = 0.1; // 10% от общего диапазона
   const normalizeY = useCallback(
     (value: number) => {
-      const graphHeight = viewport.height * 0.4; // Отступы для визуальной ясности
-      return ((value - minPrice) / (maxPrice - minPrice)) * graphHeight - graphHeight / 2;
+      const graphHeight = viewport.height * 0.8; // Высота графика
+      const paddedMin = minPrice - (maxPrice - minPrice) * padding;
+      const paddedMax = maxPrice + (maxPrice - minPrice) * padding;
+      return ((value - paddedMin) / (paddedMax - paddedMin)) * graphHeight;
     },
     [minPrice, maxPrice, viewport.height]
   );
-
+  useEffect(() => {
+    console.log('Normalized minY:', normalizeY(minPrice));
+    console.log('Normalized maxY:', normalizeY(maxPrice));
+  }, [minPrice, maxPrice, normalizeY]);
 
 
   data.forEach((candle, index) => {
@@ -65,9 +71,18 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
     return ((sceneValue + viewport.width / 8) / viewport.width) * (length - 1);
   }, [viewport.width]);
 
-  const denormalizeY = useCallback((sceneValue: number) => {
-    return ((sceneValue + viewport.height / 8) / viewport.height) * (maxPrice - minPrice) + minPrice;
-  }, [viewport.height, minPrice, maxPrice]);
+  const denormalizeY = useCallback(
+    (sceneValue: number) => {
+      const graphHeight = viewport.height * 0.8;
+      return (sceneValue / graphHeight) * (maxPrice - minPrice) + minPrice;
+    },
+    [viewport.height, minPrice, maxPrice]
+  );
+  useEffect(() => {
+    console.log('Min line Y:', normalizeY(minPrice));
+    console.log('Max line Y:', normalizeY(maxPrice));
+  }, [normalizeY, minPrice, maxPrice]);
+
 
   const denormalizeZ = useCallback((sceneValue: number, maxVolume: number) => {
     return (sceneValue / viewport.width) * maxVolume;
