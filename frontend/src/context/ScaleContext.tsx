@@ -6,7 +6,9 @@ import { CandleData } from "../types/candles";
 const ScaleContext = createContext<ScaleFunctions | null>(null);
 
 export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleData[] }> = ({ children, data }) => {
-  const { viewport } = useThree();
+  const { viewport, scene } = useThree();
+
+  console.log(scene.position, scene.scale, viewport.height, viewport.width);
 
   useEffect(() => {
     console.log('viewport changed', viewport);
