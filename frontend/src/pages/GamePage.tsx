@@ -134,7 +134,6 @@ const GamePage: React.FC = () => {
   // };
 
 
-
   const handleShowConfirmButton = async (
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] },
@@ -143,37 +142,43 @@ const GamePage: React.FC = () => {
     console.log("selectedPair exists:", !!selectedPair);
     console.log("scaleFunctions exists:", !!scaleFunctions);
 
-    if (betData && selectedPair && scaleFunctions) {
-      // Логика обработки ставки
-      console.log(`betData: ${JSON.stringify(betData)}, selectedPair: ${JSON.stringify(selectedPair)}, scaleFunctions: ${JSON.stringify(scaleFunctions)}`);
-      try {
-        const { denormalizeX, denormalizeY } = scaleFunctions;
-
-        const [sceneX, sceneY] = betData.predicted_vector;
-
-        const absoluteVolumeChange = denormalizeX(sceneX, data.length);
-        const absolutePriceChange = denormalizeY(sceneY);
-
-        const betRequest: PlaceBetRequest = {
-          pair_id: selectedPair.value,
-          amount: betData.amount,
-          predicted_vector: [absoluteVolumeChange, absolutePriceChange],
-        };
-
-        console.log("Calculated bet request:", betRequest);
-
-        setShowConfirmButton(true);
-        setCurrentBet(betRequest);
-      } catch (error) {
-        console.error("Ошибка при расчёте ставки:", error);
-        setShowConfirmButton(false);
-      }
-    } else {
+    // Если данные не готовы, ждем и пробуем снова
+    if (!betData || !selectedPair || !scaleFunctions) {
       console.log("Waiting for selectedPair or scaleFunctions to be defined...");
-      // Добавьте задержку перед повторной проверкой
       setTimeout(() => handleShowConfirmButton(show, betData), 100);
+      return;
+    }
+
+    // Все условия выполнены, переходим к расчету ставки
+    console.log("All conditions met, proceeding with bet calculation.");
+    console.log(`betData: ${JSON.stringify(betData)}, selectedPair: ${JSON.stringify(selectedPair)}, scaleFunctions: ${JSON.stringify(scaleFunctions)}`);
+
+    try {
+      const { denormalizeX, denormalizeY } = scaleFunctions;
+
+      const [sceneX, sceneY] = betData.predicted_vector;
+
+      // Преобразуем координаты
+      const absoluteVolumeChange = denormalizeX(sceneX, data.length);
+      const absolutePriceChange = denormalizeY(sceneY);
+
+      const betRequest: PlaceBetRequest = {
+        pair_id: selectedPair.value,
+        amount: betData.amount,
+        predicted_vector: [absoluteVolumeChange, absolutePriceChange],
+      };
+
+      console.log("Calculated bet request:", betRequest);
+
+      // Устанавливаем состояние
+      setShowConfirmButton(true);
+      setCurrentBet(betRequest);
+    } catch (error) {
+      console.error("Ошибка при расчёте ставки:", error);
+      setShowConfirmButton(false);
     }
   };
+
 
 
 

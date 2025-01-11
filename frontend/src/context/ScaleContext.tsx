@@ -71,16 +71,18 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   }, []);
 
   const denormalizeX = useCallback((sceneValue: number, length: number) => {
-    return ((sceneValue + viewport.width / 8) / viewport.width) * (length - 1);
-  }, [viewport.width]);
+    return (sceneValue / 5) * length; // 5 — это масштаб из normalizeX
+  }, []);
+
 
   const denormalizeY = useCallback(
     (sceneValue: number) => {
-      const graphHeight = viewport.height * 0.8;
+      const graphHeight = 5; // Такой же, как в normalizeY
       return (sceneValue / graphHeight) * (maxPrice - minPrice) + minPrice;
     },
-    [viewport.height, minPrice, maxPrice]
+    [minPrice, maxPrice]
   );
+
   useEffect(() => {
     console.log('Min line Y:', normalizeY(minPrice));
     console.log('Max line Y:', normalizeY(maxPrice));
@@ -88,8 +90,9 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
 
 
   const denormalizeZ = useCallback((sceneValue: number, maxVolume: number) => {
-    return (sceneValue / viewport.width) * maxVolume;
-  }, [viewport.width]);
+    return (sceneValue / 5) * maxVolume; // 5 — это масштаб из normalizeZ
+  }, []);
+
 
   const scaleFunctions = useMemo(() => ({
     normalizeX,
