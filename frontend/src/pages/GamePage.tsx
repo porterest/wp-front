@@ -95,6 +95,10 @@ const GamePage: React.FC = () => {
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] },
   ) => {
+    console.log("betData exists:", !!betData);
+    console.log("selectedPair exists:", !!selectedPair);
+    console.log("scaleFunctions exists:", !!scaleFunctions);
+
     if (betData && selectedPair && scaleFunctions) {
       console.log(`betData: ${JSON.stringify(betData)}, selectedPair: ${JSON.stringify(selectedPair)}, scaleFunctions: ${JSON.stringify(scaleFunctions)}`);
       try {
@@ -206,7 +210,10 @@ const GamePage: React.FC = () => {
       <Scene
         orbitControlsEnabled={orbitControlsEnabled}
         data={data}
-        onScaleReady={setScaleFunctions}
+        onScaleReady={(scales) => {
+          console.log("Scales from Scene:", scales);
+          setScaleFunctions(scales);
+        }}
       >
         <GraphModes
           axisMode={axisMode}
