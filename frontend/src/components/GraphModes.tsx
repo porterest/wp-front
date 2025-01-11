@@ -42,12 +42,13 @@ const GraphModes: React.FC<GraphModesProps> = ({
     if (currentMode === 1) {
       console.log("Passing previousBetEnd to LastBetVector:", previousBetEnd);
 
-      return (
-        <LastBetVector
-          selectedPair={selectedPair}
-          previousBetEnd={previousBetEnd}
-        />
-      );
+      return ;
+      // (
+      //   <LastBetVector
+      //     selectedPair={selectedPair}
+      //     previousBetEnd={previousBetEnd}
+      //   />
+      // );
     }
     if (currentMode === 2 && data) {
       console.log("Passing previousBetEnd to LastBetVector:", previousBetEnd);
