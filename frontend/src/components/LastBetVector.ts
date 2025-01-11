@@ -5,7 +5,7 @@ import { PairOption } from "../types/pair";
 
 interface PairVectorsProps {
   selectedPair: PairOption | null;
-  previousBetEnd: THREE.Vector3 | null; // Уточнение типа для возможности отсутствия данных
+  previousBetEnd: THREE.Vector3 | null;
 }
 
 const LastBetVector: React.FC<PairVectorsProps> = ({
@@ -21,7 +21,7 @@ const LastBetVector: React.FC<PairVectorsProps> = ({
     maxY: 10,
     minZ: -10,
     maxZ: 10,
-  }; // Границы графика
+  };
 
   useEffect(() => {
     if (!selectedPair) {
@@ -37,14 +37,12 @@ const LastBetVector: React.FC<PairVectorsProps> = ({
     console.log("Selected Pair: ", selectedPair);
     console.log("Previous Bet End: ", previousBetEnd);
 
-    // Ограничиваем длину вектора и рисуем стрелку
     const arrow = drawArrow(
       new THREE.Vector3(0, 0, 0),
       previousBetEnd,
-      0xff0000
+      0xffff00 // Желтый цвет стрелки
     );
 
-    // Очистка стрелки при размонтировании компонента
     return () => {
       if (arrow) {
         scene.remove(arrow);
@@ -53,13 +51,6 @@ const LastBetVector: React.FC<PairVectorsProps> = ({
     };
   }, [selectedPair, previousBetEnd, scene]);
 
-  /**
-   * Функция для ограничения вектора в пределах заданных границ.
-   * @param vector Исходный вектор.
-   * @param min Минимальные значения границ.
-   * @param max Максимальные значения границ.
-   * @returns Ограниченный вектор.
-   */
   const clampVector = (
     vector: THREE.Vector3,
     min: THREE.Vector3,
@@ -72,51 +63,60 @@ const LastBetVector: React.FC<PairVectorsProps> = ({
     );
   };
 
-  /**
-   * Функция для отрисовки стрелки между двумя точками с ограничением длины.
-   * @param start Начальная точка.
-   * @param end Конечная точка.
-   * @param color Цвет стрелки.
-   * @returns ArrowHelper объект, добавленный в сцену.
-   */
   const drawArrow = (
     start: THREE.Vector3,
     end: THREE.Vector3,
-    color: number = 0xff0000
-  ): THREE.ArrowHelper => {
+    color: number
+  ): THREE.Group => {
     const chartMin = new THREE.Vector3(bounds.minX, bounds.minY, bounds.minZ);
     const chartMax = new THREE.Vector3(bounds.maxX, bounds.maxY, bounds.maxZ);
 
-    // Ограничиваем конечную точку в пределах границ
     const clampedEnd = clampVector(end, chartMin, chartMax);
-
-    // Вычисляем направление и длину вектора
     const direction = new THREE.Vector3().subVectors(clampedEnd, start);
     let length = direction.length();
 
-    // Ограничиваем длину до maxLength
     if (length > maxLength) {
       direction.setLength(maxLength);
       length = maxLength;
       console.log(`Vector length limited to ${maxLength}`);
     }
 
-    const normalizedDirection = direction.normalize();
+    const normalizedDirection = direction.clone().normalize();
 
-    console.log("Start vector:", start);
-    console.log("Clamped end vector:", clampedEnd);
-    console.log("Normalized direction vector:", normalizedDirection);
+    const group = new THREE.Group();
 
-    const arrowHelper = new THREE.ArrowHelper(
-      normalizedDirection,
-      start,
-      length,
-      color
+    // Создаем линию (стержень стрелки)
+    const lineGeometry = new THREE.CylinderGeometry(0.05, 0.05, length, 12);
+    const lineMaterial = new THREE.MeshBasicMaterial({ color });
+    const line = new THREE.Mesh(lineGeometry, lineMaterial);
+
+    // Устанавливаем позицию и ориентацию линии
+    line.position.set(0, length / 2, 0);
+    line.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      normalizedDirection
     );
-    scene.add(arrowHelper);
-    console.log("Arrow added to scene:", arrowHelper);
 
-    return arrowHelper;
+    // Создаем конус (наконечник стрелки)
+    const coneGeometry = new THREE.ConeGeometry(0.1, 0.3, 12);
+    const coneMaterial = new THREE.MeshBasicMaterial({ color });
+    const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+
+    // Устанавливаем позицию и ориентацию конуса
+    cone.position.set(0, length + 0.15, 0);
+    cone.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      normalizedDirection
+    );
+
+    group.add(line);
+    group.add(cone);
+    group.position.copy(start);
+
+    scene.add(group);
+    console.log("Arrow added to scene:", group);
+
+    return group;
   };
 
   return null;
