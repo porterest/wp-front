@@ -9,7 +9,6 @@ import { PairOption } from "../types/pair";
 import { CandleData } from "../types/candles";
 import { Html } from "@react-three/drei";
 import { useScale } from "../context/ScaleContext";
-import { useThree } from "@react-three/fiber"; // Импорт useThree
 
 interface GraphModesProps {
   currentMode: number; // Текущий режим отображения графика
