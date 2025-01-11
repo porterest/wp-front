@@ -43,7 +43,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
   // Обертка для предотвращения постоянного изменения ссылок
   const memoizedSetUserPreviousBet = useCallback(setUserPreviousBet, []);
   const memoizedOnDragging = useCallback(onDragging, []);
-  const memoizedOnShowConfirmButton = useCallback(onShowConfirmButton, []);
+  // const memoizedOnShowConfirmButton = useCallback(onShowConfirmButton, []);
 
   // Вычисление minPrice и maxPrice из данных
   // Вычисление minPrice и maxPrice из данных
@@ -145,7 +145,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
         setUserPreviousBet={memoizedSetUserPreviousBet}
         axisMode={axisMode}
         onDragging={memoizedOnDragging}
-        onShowConfirmButton={memoizedOnShowConfirmButton}
+        onShowConfirmButton={onShowConfirmButton}
       />
       {renderContent}
     </>

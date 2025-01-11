@@ -137,7 +137,6 @@ const GamePage: React.FC = () => {
   //   }
   // };
 
-
   const handleShowConfirmButton = async (
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] },
