@@ -91,6 +91,50 @@ const GamePage: React.FC = () => {
     console.log('scales changed', scaleFunctions);
   }, [scaleFunctions]);
 
+  // const handleShowConfirmButton = async (
+  //   show: boolean,
+  //   betData?: { amount: number; predicted_vector: number[] },
+  // ) => {
+  //   console.log("betData exists:", !!betData);
+  //   console.log("selectedPair exists:", !!selectedPair);
+  //   console.log("scaleFunctions exists:", !!scaleFunctions);
+  //
+  //   if (betData && selectedPair && scaleFunctions) {
+  //     console.log(`betData: ${JSON.stringify(betData)}, selectedPair: ${JSON.stringify(selectedPair)}, scaleFunctions: ${JSON.stringify(scaleFunctions)}`);
+  //     try {
+  //       const { denormalizeX, denormalizeY } = scaleFunctions;
+  //
+  //       // Внутренние координаты из сцены
+  //       const [sceneX, sceneY] = betData.predicted_vector;
+  //
+  //       // Преобразуем в абсолютные значения
+  //       const absoluteVolumeChange = denormalizeX(sceneX, data.length);
+  //       const absolutePriceChange = denormalizeY(sceneY);
+  //
+  //       const betRequest: PlaceBetRequest = {
+  //         pair_id: selectedPair.value,
+  //         amount: betData.amount,
+  //         predicted_vector: [absoluteVolumeChange, absolutePriceChange],
+  //       };
+  //       console.log("scaleFunctions:", scaleFunctions ? "defined" : "null");
+  //
+  //       console.log("Calculated bet request:", betRequest);
+  //
+  //       setShowConfirmButton(true);
+  //       console.log("showConfirmButton set to true");
+  //       console.log('TRUUUUUUUUUE')
+  //       setCurrentBet(betRequest);
+  //     } catch (error) {
+  //       console.error("Ошибка при расчёте ставки:", error);
+  //       setShowConfirmButton(false);
+  //     }
+  //   } else {
+  //     setShowConfirmButton(false);
+  //   }
+  // };
+
+
+
   const handleShowConfirmButton = async (
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] },
@@ -100,14 +144,13 @@ const GamePage: React.FC = () => {
     console.log("scaleFunctions exists:", !!scaleFunctions);
 
     if (betData && selectedPair && scaleFunctions) {
+      // Логика обработки ставки
       console.log(`betData: ${JSON.stringify(betData)}, selectedPair: ${JSON.stringify(selectedPair)}, scaleFunctions: ${JSON.stringify(scaleFunctions)}`);
       try {
         const { denormalizeX, denormalizeY } = scaleFunctions;
 
-        // Внутренние координаты из сцены
         const [sceneX, sceneY] = betData.predicted_vector;
 
-        // Преобразуем в абсолютные значения
         const absoluteVolumeChange = denormalizeX(sceneX, data.length);
         const absolutePriceChange = denormalizeY(sceneY);
 
@@ -116,22 +159,22 @@ const GamePage: React.FC = () => {
           amount: betData.amount,
           predicted_vector: [absoluteVolumeChange, absolutePriceChange],
         };
-        console.log("scaleFunctions:", scaleFunctions ? "defined" : "null");
 
         console.log("Calculated bet request:", betRequest);
 
         setShowConfirmButton(true);
-        console.log("showConfirmButton set to true");
-        console.log('TRUUUUUUUUUE')
         setCurrentBet(betRequest);
       } catch (error) {
         console.error("Ошибка при расчёте ставки:", error);
         setShowConfirmButton(false);
       }
     } else {
-      setShowConfirmButton(false);
+      console.log("Waiting for selectedPair or scaleFunctions to be defined...");
+      // Добавьте задержку перед повторной проверкой
+      setTimeout(() => handleShowConfirmButton(show, betData), 100);
     }
   };
+
 
 
   const handleConfirmBet = async () => {
