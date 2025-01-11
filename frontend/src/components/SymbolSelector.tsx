@@ -54,7 +54,8 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     }, []);
 
     const handlePairChange = (selectedOption: PairOption | null) => {
-        setSelectedPair(selectedOption);
+      console.log("Selected option:", selectedOption); // Лог для проверки
+      setSelectedPair(selectedOption);
         setBetStatus("Active");
         setResult(null);
         if (selectedOption) {

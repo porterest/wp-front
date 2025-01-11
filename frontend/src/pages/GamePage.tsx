@@ -154,6 +154,10 @@ const GamePage: React.FC = () => {
   ];
 
   useEffect(() => {
+    console.log("showConfirmButton state changed:", showConfirmButton);
+  }, [showConfirmButton]);
+
+  useEffect(() => {
     console.log("Scale functions:", scaleFunctions);
     console.log("Data:", data);
 
@@ -204,8 +208,10 @@ const GamePage: React.FC = () => {
             setCurrentMode(mode === "Axes" ? 1 : mode === "Candles" ? 2 : 3)
           }
           onAxisModeChange={setAxisMode}
-          onSymbolChange={(pair) => setSelectedPair(pair)}
-        />
+          onSymbolChange={(pair) => {
+            console.log("Symbol changed in GamePage:", pair);
+            setSelectedPair(pair);
+          }}        />
       </div>
       <Scene
         orbitControlsEnabled={orbitControlsEnabled}
