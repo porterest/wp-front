@@ -17,6 +17,13 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd }) => {
 
       const remainingTime = timeData.remaining_time_in_block * 1000; // В миллисекундах
       console.log("remaining time", remainingTime);
+
+      if (remainingTime === 0) {
+        console.log("Получено 0, ждём 5 секунд и повторяем запрос...");
+        setTimeout(syncAndStartTimer, 5000); // Подождать 5 секунд и повторно вызвать
+        return; // Завершаем текущий вызов, чтобы не устанавливать 0 в timeLeft
+      }
+
       setTimeLeft(remainingTime);
     } catch (error) {
       console.error("Ошибка синхронизации времени в Timer:", error);

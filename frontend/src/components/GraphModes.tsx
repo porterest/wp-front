@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useEffect } from "react";
 import BetArrow from "./BetArrow"; // Компонент для управления стрелкой
 import * as THREE from "three";
 import CandlestickChart from "./CandlestickChart";
@@ -8,6 +8,8 @@ import LastBetVector from "./LastBetVector";
 import { PairOption } from "../types/pair";
 import { CandleData } from "../types/candles";
 import { Html } from "@react-three/drei";
+import { useScale } from "../context/ScaleContext";
+import { useThree } from "@react-three/fiber"; // Импорт useThree
 
 interface GraphModesProps {
   currentMode: number; // Текущий режим отображения графика
@@ -42,6 +44,52 @@ const GraphModes: React.FC<GraphModesProps> = ({
   const memoizedSetUserPreviousBet = useCallback(setUserPreviousBet, []);
   const memoizedOnDragging = useCallback(onDragging, []);
   const memoizedOnShowConfirmButton = useCallback(onShowConfirmButton, []);
+
+  const {normalizeY } = useScale();
+  // Вычисление minPrice и maxPrice из данных
+  const minPrice = useMemo(() => {
+    return data ? Math.min(...data.map((candle) => candle.low)) : 0;
+  }, [data]);
+
+  const maxPrice = useMemo(() => {
+    return data ? Math.max(...data.map((candle) => candle.high)) : 1; // 1 чтобы избежать деления на 0
+  }, [data]);
+
+
+  useEffect(() => {
+    const { scene } = useThree(); // Получаем текущую сцену из контекста Three.js
+
+    const minY = normalizeY(minPrice);
+    const maxY = normalizeY(maxPrice);
+
+    // Линия для minPrice
+    const minLine = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-10, minY, 0),
+        new THREE.Vector3(10, minY, 0),
+      ]),
+      new THREE.LineBasicMaterial({ color: 0xff0000 }) // Красная линия
+    );
+
+    // Линия для maxPrice
+    const maxLine = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-10, maxY, 0),
+        new THREE.Vector3(10, maxY, 0),
+      ]),
+      new THREE.LineBasicMaterial({ color: 0x00ff00 }) // Зеленая линия
+    );
+
+    // Добавляем линии к сцене
+    scene.add(minLine);
+    scene.add(maxLine);
+
+    // Удаляем линии при размонтировании компонента
+    return () => {
+      scene.remove(minLine);
+      scene.remove(maxLine);
+    };
+  }, [minPrice, maxPrice, normalizeY, useThree]);
 
   // Мемоизация рендера контента в зависимости от currentMode
   const renderContent = useMemo(() => {
