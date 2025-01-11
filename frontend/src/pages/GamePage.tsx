@@ -80,12 +80,16 @@ const GamePage: React.FC = () => {
   }, [selectedPair]);
 
   useEffect(() => {
+    console.log('pair changed', data);
+  }, [selectedPair]);
+
+  useEffect(() => {
     console.log('data changed', data);
   }, [data]);
 
-  useEffect(() => {
-    console.log('mode changed', currentMode);
-  }, [currentMode]);
+  // useEffect(() => {
+  //   console.log('mode changed', currentMode);
+  // }, [currentMode]);
 
   useEffect(() => {
     console.log('scales changed', scaleFunctions);
