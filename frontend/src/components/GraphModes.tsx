@@ -60,37 +60,37 @@ const GraphModes: React.FC<GraphModesProps> = ({
   }, [data]);
 
   useEffect(() => {
-    const minY = normalizeY(minPrice) + viewport.height * 0.1; // Поднимаем линию вверх
-    const maxY = normalizeY(maxPrice) - viewport.height * 0.1; // Опускаем линию вниз
+    const minY = normalizeY(minPrice);
+    const maxY = normalizeY(maxPrice);
 
+    console.log(`Min line Y: ${minY}, Max line Y: ${maxY}`); // Логируем для проверки
 
-    // Линия для minPrice
+    // Создаём линии
     const minLine = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(-10, minY, 0),
-        new THREE.Vector3(10, minY, 0),
+        new THREE.Vector3(-viewport.width / 2, minY, 0),
+        new THREE.Vector3(viewport.width / 2, minY, 0),
       ]),
       new THREE.LineBasicMaterial({ color: 0xff0000 }) // Красная линия
     );
 
-    // Линия для maxPrice
     const maxLine = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(-10, maxY, 0),
-        new THREE.Vector3(10, maxY, 0),
+        new THREE.Vector3(-viewport.width / 2, maxY, 0),
+        new THREE.Vector3(viewport.width / 2, maxY, 0),
       ]),
-      new THREE.LineBasicMaterial({ color: 0x00ff00 }) // Зеленая линия
+      new THREE.LineBasicMaterial({ color: 0x00ff00 }) // Зелёная линия
     );
 
-    // Добавляем линии на сцену
     scene.add(minLine);
     scene.add(maxLine);
 
     return () => {
       scene.remove(minLine);
-      scene.remove(maxLine); // Удаляем линии при размонтировании
+      scene.remove(maxLine);
     };
-  }, [minPrice, maxPrice, normalizeY, scene]);
+  }, [minPrice, maxPrice, normalizeY, scene, viewport.width]);
+
 
   useEffect(() => {
     console.log("Viewport height:", viewport.height);

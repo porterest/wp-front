@@ -21,11 +21,12 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
 
   const normalizeY = useCallback(
     (value: number) => {
-      const graphHeight = viewport.height * 0.8; // Оставляем небольшой отступ сверху и снизу
+      const graphHeight = viewport.height * 0.8; // Отступы для визуальной ясности
       return ((value - minPrice) / (maxPrice - minPrice)) * graphHeight - graphHeight / 2;
     },
     [minPrice, maxPrice, viewport.height]
   );
+
 
 
   data.forEach((candle, index) => {
