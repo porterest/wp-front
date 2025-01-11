@@ -35,8 +35,13 @@ const GraphModes: React.FC<GraphModesProps> = ({
                                                  onDragging,
                                                  onShowConfirmButton,
                                                }) => {
+  console.log(previousBetEnd)
+  console.log(selectedPair)
+  console.log("жопа2")
   const renderContent = () => {
     if (currentMode === 1) {
+      console.log("Passing previousBetEnd to LastBetVector:", previousBetEnd);
+
       return (
         <LastBetVector
           selectedPair={selectedPair}
@@ -45,10 +50,15 @@ const GraphModes: React.FC<GraphModesProps> = ({
       );
     }
     if (currentMode === 2 && data) {
+      console.log("Passing previousBetEnd to LastBetVector:", previousBetEnd);
+
       return <CandlestickChart data={data} mode="Candles" />;
     }
     if (currentMode === 3 && data) {
+      console.log("Passing previousBetEnd to LastBetVector:", previousBetEnd);
+
       return (
+
         <>
           <CandlestickChart data={data} mode="Both" />
           <LastBetVector

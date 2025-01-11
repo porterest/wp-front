@@ -33,6 +33,10 @@ const LastBetVector: React.FC<PairVectorsProps> = ({
     end: THREE.Vector3,
     color: number = 0xff0000,
   ): THREE.ArrowHelper => {
+    console.log("Start vector:", start);
+    console.log("End vector:", end);
+    console.log("Direction:", new THREE.Vector3().subVectors(end, start).normalize());
+
     const arrowHelper = new THREE.ArrowHelper(
       new THREE.Vector3().subVectors(end, start).normalize(),
       start,
@@ -40,6 +44,8 @@ const LastBetVector: React.FC<PairVectorsProps> = ({
       color,
     );
     scene.add(arrowHelper);
+    console.log("Arrow added to scene:", arrowHelper);
+
     return arrowHelper;
   };
 
