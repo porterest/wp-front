@@ -139,8 +139,8 @@ const GamePage: React.FC = () => {
     betData?: { amount: number; predicted_vector: number[] },
   ) => {
     console.log("betData exists:", !!betData);
-    console.log("selectedPair exists:", !!selectedPair);
-    console.log("scaleFunctions exists:", !!scaleFunctions);
+    console.log("selectedPair exists:", selectedPair);
+    console.log("scaleFunctions exists:", scaleFunctions);
 
     // Если данные не готовы, ждем и пробуем снова
     if (!betData || !selectedPair || !scaleFunctions) {
