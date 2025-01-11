@@ -35,7 +35,7 @@ class ChainService(
     bet_service: BetServiceInterface
     orchestrator_service: OrchestratorServiceInterface
 
-    block_generation_interval: timedelta = timedelta(minutes=5)
+    block_generation_interval: timedelta = timedelta(minutes=1.5)
     logger = logging.getLogger(__name__)
 
     def __post_init__(self):

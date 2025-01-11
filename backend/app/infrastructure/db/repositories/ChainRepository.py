@@ -10,6 +10,7 @@ from domain.models.chain import Chain as ChainModel
 from infrastructure.db.entities import Chain
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
+
 @dataclass
 class ChainRepository(
     AbstractSQLAlchemyRepository[Chain, ChainModel, CreateChainDTO, UpdateChainDTO],

@@ -32,7 +32,7 @@ async def place_bet(bet: PlaceBetRequest, request: Request) -> None:
     return await service.create_bet(dto)
 
 
-@router.post('/bet/cancel')
+@router.post('/cancel')
 async def cancel_bet(bet: CancelBetRequest) -> None:
     service = get_bet_service()
     # bet = await service.get(bet.bet_id)
