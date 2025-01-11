@@ -9,6 +9,7 @@ import { PairOption } from "../types/pair";
 import { CandleData } from "../types/candles";
 import { Html } from "@react-three/drei";
 import { useScale } from "../context/ScaleContext";
+import { useThree } from "@react-three/fiber";
 
 interface GraphModesProps {
   currentMode: number; // Текущий режим отображения графика
@@ -46,19 +47,19 @@ const GraphModes: React.FC<GraphModesProps> = ({
 
   // Вычисление minPrice и maxPrice из данных
   // Вычисление minPrice и maxPrice из данных
+  const { scene } = useThree(); // Доступ к сцене
+  const { normalizeY } = useScale(); // Получаем функции нормализации из контекста
+
+  // Вычисление minPrice и maxPrice
   const minPrice = useMemo(() => {
     return data ? Math.min(...data.map((candle) => candle.low)) : 0;
   }, [data]);
 
   const maxPrice = useMemo(() => {
-    return data ? Math.max(...data.map((candle) => candle.high)) : 1; // 1 чтобы избежать деления на 0
+    return data ? Math.max(...data.map((candle) => candle.high)) : 1; // Значение по умолчанию
   }, [data]);
 
-  const { normalizeY } = useScale();
-
-  // Добавление линий для проверки minPrice и maxPrice
   useEffect(() => {
-    const scene = new THREE.Scene();
     const minY = normalizeY(minPrice);
     const maxY = normalizeY(maxPrice);
 
@@ -80,13 +81,15 @@ const GraphModes: React.FC<GraphModesProps> = ({
       new THREE.LineBasicMaterial({ color: 0x00ff00 }) // Зеленая линия
     );
 
-    scene.add(minLine, maxLine);
+    // Добавляем линии на сцену
+    scene.add(minLine);
+    scene.add(maxLine);
 
     return () => {
       scene.remove(minLine);
-      scene.remove(maxLine);
+      scene.remove(maxLine); // Удаляем линии при размонтировании
     };
-  }, [minPrice, maxPrice, normalizeY]);
+  }, [minPrice, maxPrice, normalizeY, scene]);
 
   // Мемоизация рендера контента в зависимости от currentMode
   const renderContent = useMemo(() => {
