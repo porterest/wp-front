@@ -13,7 +13,7 @@ const LastBetVector: React.FC<PairVectorsProps> = ({
                                                      previousBetEnd,
                                                    }) => {
   const { scene } = useThree();
-  const maxLength = 5; // Максимальная длина стрелки
+  const maxLength = 2; // Максимальная длина стрелки
 
   useEffect(() => {
     if (!selectedPair) {

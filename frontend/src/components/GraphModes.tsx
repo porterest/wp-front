@@ -25,30 +25,28 @@ interface GraphModesProps {
 }
 
 const GraphModes: React.FC<GraphModesProps> = ({
-                                                 currentMode,
-                                                 data,
-                                                 selectedPair,
-                                                 previousBetEnd,
-                                                 userPreviousBet,
-                                                 setUserPreviousBet,
-                                                 axisMode,
-                                                 onDragging,
-                                                 onShowConfirmButton,
-                                               }) => {
-  console.log(previousBetEnd)
-  console.log(selectedPair)
-  console.log("жопа2")
+  currentMode,
+  data,
+  selectedPair,
+  previousBetEnd,
+  userPreviousBet,
+  setUserPreviousBet,
+  axisMode,
+  onDragging,
+  onShowConfirmButton,
+}) => {
+  console.log(previousBetEnd);
+  console.log(selectedPair);
+  console.log("жопа2");
   const renderContent = () => {
     if (currentMode === 1) {
       console.log("Passing previousBetEnd to LastBetVector:", previousBetEnd);
 
-      return ;
-      // (
-      //   <LastBetVector
-      //     selectedPair={selectedPair}
-      //     previousBetEnd={previousBetEnd}
-      //   />
-      // );
+      return;
+      <LastBetVector
+        selectedPair={selectedPair}
+        previousBetEnd={previousBetEnd}
+      />;
     }
     if (currentMode === 2 && data) {
       console.log("Passing previousBetEnd to LastBetVector:", previousBetEnd);
@@ -59,7 +57,6 @@ const GraphModes: React.FC<GraphModesProps> = ({
       console.log("Passing previousBetEnd to LastBetVector:", previousBetEnd);
 
       return (
-
         <>
           <CandlestickChart data={data} mode="Both" />
           <LastBetVector

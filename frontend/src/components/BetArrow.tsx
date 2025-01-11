@@ -360,11 +360,11 @@ const BetArrow: React.FC<BetArrowProps> = ({
       >
         Bet: ${betAmount.toFixed(2)}
       </Text>
-      {/* Жёлтый конус (стрелка) */}
-      <mesh ref={yellowArrowRef}>
-        <coneGeometry args={[0.1, 0.3, 12]} />
-        <meshStandardMaterial color="yellow" />
-      </mesh>
+      {/*/!* Жёлтый конус (стрелка) *!/*/}
+      {/*<mesh ref={yellowArrowRef}>*/}
+      {/*  <coneGeometry args={[0.1, 0.3, 12]} />*/}
+      {/*  <meshStandardMaterial color="yellow" />*/}
+      {/*</mesh>*/}
       {/* Белый конус (стрелка) */}
       <mesh ref={dashedArrowRef}>
         <coneGeometry args={[0.1, 0.3, 12]} />
