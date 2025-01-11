@@ -28,6 +28,7 @@ const Scene: React.FC<SceneProps> = ({ children, orbitControlsEnabled, data, onS
   );
 };
 
+
 const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) => void }> = ({ onScaleReady }) => {
   const scaleFunctions = useScale();
 

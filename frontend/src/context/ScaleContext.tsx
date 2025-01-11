@@ -20,8 +20,10 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   }, [viewport.width]);
 
   const normalizeY = useCallback((value: number) => {
-    return ((value - minPrice) / (maxPrice - minPrice)) * viewport.height - viewport.height / 2;
+    return ((value - minPrice) / (maxPrice - minPrice)) * viewport.height * 0.8 - viewport.height / 2;
   }, [minPrice, maxPrice, viewport.height]);
+
+
 
   data.forEach((candle, index) => {
     const normalizedOpen = normalizeY(candle.open);
@@ -35,6 +37,10 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
     console.log(`  High Y: ${normalizedHigh}`);
     console.log(`  Low Y: ${normalizedLow}`);
   });
+  console.log("Viewport height:", viewport.height);
+  console.log("Min price:", minPrice);
+  console.log("Max price:", maxPrice);
+
 
 
   const normalizeZ = useCallback((volume: number, maxVolume: number) => {
