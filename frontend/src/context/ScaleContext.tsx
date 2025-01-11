@@ -19,12 +19,13 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
     return ((index / length) * viewport.width) - viewport.width / 8;
   }, [viewport.width]);
 
-  const padding = 0.1; // 10% от общего диапазона
   const normalizeY = useCallback(
     (value: number) => {
-      const graphHeight = viewport.height * 0.8; // Высота графика
-      const paddedMin = minPrice - (maxPrice - minPrice) * padding;
-      const paddedMax = maxPrice + (maxPrice - minPrice) * padding;
+      const graphHeight = viewport.height; // Берем полную высоту куба
+      const paddedMin = minPrice; // Убираем padding, чтобы жестко вписать в куб
+      const paddedMax = maxPrice; // Используем реальные границы
+
+      // Нормализуем значения в диапазон от 0 до graphHeight
       return ((value - paddedMin) / (paddedMax - paddedMin)) * graphHeight;
     },
     [minPrice, maxPrice, viewport.height]
