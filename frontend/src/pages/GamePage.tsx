@@ -149,6 +149,7 @@ const GamePage: React.FC = () => {
     if (scaleFunctions && data && data.length > 0 && [2, 3].includes(currentMode) ) {
       const { denormalizeX } = scaleFunctions;
 
+
       // Вычисляем границы графика
       const minX = denormalizeX(0, data.length);
       const maxX = denormalizeX(data.length - 1, data.length);
@@ -171,6 +172,8 @@ const GamePage: React.FC = () => {
       });
     }
   }, [scaleFunctions, data, currentMode]);
+
+
 
   return (
     <div className="relative w-screen h-screen overflow-hidden touch-none">
