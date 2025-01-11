@@ -56,12 +56,12 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     const handlePairChange = (selectedOption: PairOption | null) => {
       console.log("Selected option:", selectedOption); // Лог для проверки
       setSelectedPair(selectedOption);
-        setBetStatus("Active");
-        setResult(null);
-        if (selectedOption) {
-            setSymbol(selectedOption);
-            onSymbolChange(selectedOption);
-        }
+      setBetStatus("Active");
+      setResult(null);
+      if (selectedOption) {
+          setSymbol(selectedOption);
+          onSymbolChange(selectedOption);
+      }
     };
 
     const handleGlobalModeSwitch = () => {

@@ -260,7 +260,7 @@ const GamePage: React.FC = () => {
           onSymbolChange={(pair) => {
             console.log("Symbol changed in GamePage:", pair);
             setSelectedPair(pair);
-            console.log('sat selectedPair', selectedPair);
+            setTimeout(function () { console.log('sat selectedPair', selectedPair); }, 2000);
           }}
         />
       </div>
@@ -285,7 +285,6 @@ const GamePage: React.FC = () => {
           onShowConfirmButton={(show, betData) => {
             console.log("onShowConfirmButton called with:", show, betData);
             handleShowConfirmButton(show, betData);
-
           }}
         />
 
