@@ -157,9 +157,9 @@ export async function check_user_deposit(): Promise<void> {
 }
 
 
-export async function fetchPreviousBetEnd(pairId: string): Promise<{ x: number; y: number }> {
+export async function fetchPreviousBetEnd(pairId: string): Promise<number[]> {
     try {
-        const response = await apiClient.get<{ x: number; y: number }>(
+        const response = await apiClient.get<number[]>(
           "/block/last_vector",
           {
               params: {

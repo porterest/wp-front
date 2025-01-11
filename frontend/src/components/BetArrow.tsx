@@ -209,18 +209,18 @@ const BetArrow: React.FC<BetArrowProps> = ({
       }
 
       try {
-        const { x, y } = await fetchPreviousBetEnd(pairId);
-        const newPosition = new THREE.Vector3(x, y, previousBetEnd.z);
+        const data = await fetchPreviousBetEnd(pairId);
+        const newPosition = new THREE.Vector3(data[0], data[1], previousBetEnd.z);
         setUserPreviousBet(newPosition);
 
         if (yellowLine.current) {
-          yellowLine.current.geometry.setPositions([0, 0, 0, x, y, previousBetEnd.z]);
+          yellowLine.current.geometry.setPositions([0, 0, 0, data[0], data[1], previousBetEnd.z]);
         }
 
         if (dashedLine.current) {
           dashedLine.current.geometry.setPositions([
             previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-            x, y, previousBetEnd.z,
+            data[0], data[1], previousBetEnd.z,
           ]);
         }
       } catch (error) {

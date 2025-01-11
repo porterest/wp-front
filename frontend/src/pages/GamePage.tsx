@@ -69,10 +69,10 @@ const GamePage: React.FC = () => {
 
   useEffect(() => {
     if (selectedPair) {
-      fetchPreviousBetEnd(selectedPair.value).then(({ x, y }) => {
+      fetchPreviousBetEnd(selectedPair.value).then((data: number[]) => {
         console.log("ЖОПА");
         console.log(selectedPair.value);
-        const resultVector = new THREE.Vector3(x, y, 0);
+        const resultVector = new THREE.Vector3(data[0], data[1], 0);
         console.log("res", JSON.stringify(resultVector, null, 2));
         setPreviousBetEnd(resultVector);
         loadUserLastBet(selectedPair.value);
