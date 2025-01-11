@@ -74,7 +74,7 @@ const GamePage: React.FC = () => {
         console.log('жопа')
         console.log(selectedPair.value)
         const resultVector = new THREE.Vector3(x, y, 0);
-        console.log(`res ${resultVector}`);
+        console.log('res', JSON.stringify(resultVector, null, 2));
         setPreviousBetEnd(resultVector);
         loadUserLastBet(selectedPair.value);
       });
