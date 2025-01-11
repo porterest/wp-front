@@ -5,28 +5,32 @@ interface ConfirmBetButtonProps {
 }
 
 export const ConfirmBetButton: React.FC<ConfirmBetButtonProps> = ({ onConfirm }) => {
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const handleClick = () => {
     onConfirm();
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000); // Hide the message after 3 seconds
+    setShowModal(true);
+    setTimeout(() => setShowModal(false), 3000); // Закрыть окно через 3 секунды
   };
 
   return (
-    <div className="relative">
+    <>
       <button
         onClick={handleClick}
         className="absolute bottom-[70px] right-[20px] bg-cyan-400 text-white py-2 px-4 rounded-lg cursor-pointer z-10 hover:bg-cyan-500"
       >
         Confirm Bet
       </button>
-      {showSuccess && (
-        <div className="absolute bottom-[120px] right-[20px] bg-green-500 text-white p-2 rounded shadow-md">
-          Bet placed successfully!
+
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-20">
+          <div className="bg-white rounded-lg p-6 shadow-lg text-center">
+            <h2 className="text-xl font-semibold mb-2">Success!</h2>
+            <p>Bet placed successfully.</p>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

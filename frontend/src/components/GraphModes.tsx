@@ -146,6 +146,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
         axisMode={axisMode}
         onDragging={memoizedOnDragging}
         onShowConfirmButton={onShowConfirmButton}
+        pairId={selectedPair?.value}
       />
       {renderContent}
     </>
