@@ -45,7 +45,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
   const memoizedOnDragging = useCallback(onDragging, []);
   const memoizedOnShowConfirmButton = useCallback(onShowConfirmButton, []);
 
-  const {normalizeY } = useScale();
+  // Вычисление minPrice и maxPrice из данных
   // Вычисление minPrice и maxPrice из данных
   const minPrice = useMemo(() => {
     return data ? Math.min(...data.map((candle) => candle.low)) : 0;
@@ -55,10 +55,11 @@ const GraphModes: React.FC<GraphModesProps> = ({
     return data ? Math.max(...data.map((candle) => candle.high)) : 1; // 1 чтобы избежать деления на 0
   }, [data]);
 
+  const { normalizeY } = useScale();
 
+  // Добавление линий для проверки minPrice и maxPrice
   useEffect(() => {
-    const { scene } = useThree(); // Получаем текущую сцену из контекста Three.js
-
+    const scene = new THREE.Scene();
     const minY = normalizeY(minPrice);
     const maxY = normalizeY(maxPrice);
 
@@ -80,16 +81,13 @@ const GraphModes: React.FC<GraphModesProps> = ({
       new THREE.LineBasicMaterial({ color: 0x00ff00 }) // Зеленая линия
     );
 
-    // Добавляем линии к сцене
-    scene.add(minLine);
-    scene.add(maxLine);
+    scene.add(minLine, maxLine);
 
-    // Удаляем линии при размонтировании компонента
     return () => {
       scene.remove(minLine);
       scene.remove(maxLine);
     };
-  }, [minPrice, maxPrice, normalizeY, useThree]);
+  }, [minPrice, maxPrice, normalizeY]);
 
   // Мемоизация рендера контента в зависимости от currentMode
   const renderContent = useMemo(() => {
