@@ -21,13 +21,11 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
 
   const normalizeY = useCallback(
     (value: number) => {
-      return ((value - minPrice) / (maxPrice - minPrice)) * viewport.height * 0.8 - viewport.height / 2;
+      const graphHeight = viewport.height * 0.8; // Оставляем небольшой отступ сверху и снизу
+      return ((value - minPrice) / (maxPrice - minPrice)) * graphHeight - graphHeight / 2;
     },
     [minPrice, maxPrice, viewport.height]
   );
-
-
-
 
 
   data.forEach((candle, index) => {
@@ -46,6 +44,16 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   console.log("Min price:", minPrice);
   console.log("Max price:", maxPrice);
 
+  useEffect(() => {
+    const minY = normalizeY(minPrice);
+    const maxY = normalizeY(maxPrice);
+
+    console.log(`Min line Y: ${minY}`);
+    console.log(`Max line Y: ${maxY}`);
+  });
+  data?.forEach((candle, index) => {
+    console.log(`Candle ${index}: Open Y: ${normalizeY(candle.open)}, Close Y: ${normalizeY(candle.close)}`);
+  });
 
 
   const normalizeZ = useCallback((volume: number, maxVolume: number) => {
