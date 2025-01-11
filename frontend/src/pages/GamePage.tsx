@@ -212,13 +212,19 @@ const GamePage: React.FC = () => {
           userPreviousBet={userPreviousBet}
           setUserPreviousBet={setUserPreviousBet}
           onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
-          onShowConfirmButton={handleShowConfirmButton}
+          // onShowConfirmButton={handleShowConfirmButton}
+          onShowConfirmButton={(show, betData) => {
+            console.log("onShowConfirmButton called with:", show, betData);
+            handleShowConfirmButton(show, betData);
+          }}
         />
 
       </Scene>
       {showConfirmButton && (
         <div className="absolute bottom-[20px] right-[20px] z-10">
           <ConfirmBetButton onConfirm={handleConfirmBet} />
+          console.log("onShowConfirmButton called with:", show, betData);
+
         </div>
       )}
     </div>
