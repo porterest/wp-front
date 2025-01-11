@@ -23,7 +23,7 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
 
   const normalizeY = useCallback(
     (value: number) => {
-      const graphHeight = viewport.height / 4; // Берем полную высоту куба
+      const graphHeight = 5; // Берем полную высоту куба
       const paddedMin = minPrice; // Убираем padding, чтобы жестко вписать в куб
       const paddedMax = maxPrice; // Используем реальные границы
 
