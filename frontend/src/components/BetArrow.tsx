@@ -174,32 +174,34 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   useEffect(() => {
     const updateLinePosition = async () => {
-      if (!pairId) {
-        console.warn("Pair ID is not provided. Skipping fetchPreviousBetEnd.");
-        return;
-      }
-
       try {
-        const { x, y } = await fetchPreviousBetEnd(pairId);
-        const newPosition = new THREE.Vector3(x, y, previousBetEnd.z);
-        setUserPreviousBet(newPosition);
+        if (pairId) {
+          // Если pairId есть, загружаем данные с сервера
+          const { x, y } = await fetchPreviousBetEnd(pairId);
+          const newPosition = new THREE.Vector3(x, y, previousBetEnd.z);
+          setUserPreviousBet(newPosition);
 
-        if (yellowLine.current) {
-          yellowLine.current.geometry.setPositions([
-            0, 0, 0,
-            newPosition.x, newPosition.y, newPosition.z,
-          ]);
-          yellowLine.current.geometry.computeBoundingBox();
-          yellowLine.current.geometry.computeBoundingSphere();
-        }
+          // Обновляем жёлтую линию
+          if (yellowLine.current) {
+            yellowLine.current.geometry.setPositions([
+              0, 0, 0,
+              newPosition.x, newPosition.y, newPosition.z,
+            ]);
+            yellowLine.current.geometry.computeBoundingBox();
+            yellowLine.current.geometry.computeBoundingSphere();
+          }
 
-        if (dashedLine.current) {
-          dashedLine.current.geometry.setPositions([
-            previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-            newPosition.x, newPosition.y, previousBetEnd.z,
-          ]);
-          dashedLine.current.geometry.computeBoundingBox();
-          dashedLine.current.geometry.computeBoundingSphere();
+          // Обновляем пунктирную линию
+          if (dashedLine.current) {
+            dashedLine.current.geometry.setPositions([
+              previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
+              newPosition.x, newPosition.y, previousBetEnd.z,
+            ]);
+            dashedLine.current.geometry.computeBoundingBox();
+            dashedLine.current.geometry.computeBoundingSphere();
+          }
+        } else {
+          console.warn("Pair ID is not provided. Skipping fetchPreviousBetEnd.");
         }
       } catch (error) {
         console.error("Failed to fetch previous bet end:", error);
