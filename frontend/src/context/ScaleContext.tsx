@@ -18,7 +18,7 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   const maxPrice = useMemo(() => Math.max(...data.map((d) => d.high)), [data]);
 
   const normalizeX = useCallback((index: number, length: number) => {
-    return ((index / length) * 5) - 5 / 5;
+    return (index / length) * 5;
   }, [viewport.width]);
 
   const normalizeY = useCallback(
