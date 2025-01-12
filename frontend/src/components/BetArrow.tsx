@@ -2,11 +2,10 @@ import React, { useRef, useState, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2";
-import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
-import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { Text } from "@react-three/drei";
 import { useUserBalance } from "../pages/BalancePage";
-import { fetchPreviousBetEnd } from "../services/api";
+import BetLines from "./BetLines";
+
 // import { data } from "autoprefixer";
 
 interface BetArrowProps {
@@ -171,154 +170,86 @@ const BetArrow: React.FC<BetArrowProps> = ({
   //   };
   // }, [scene]);
 
-  useEffect(() => {
-    const yellowLineGeometry = new LineGeometry();
-    yellowLineGeometry.setPositions([
-      0, 0, 0,
-      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-    ]);
-    yellowLineGeometry.computeBoundingBox();
-    yellowLineGeometry.computeBoundingSphere();
-    yellowLineGeometry.attributes.position.needsUpdate = true;
+  // useEffect(() => {
+  //   const yellowLineGeometry = new LineGeometry();
+  //   yellowLineGeometry.setPositions([
+  //     0, 0, 0,
+  //     previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
+  //   ]);
+  //   yellowLineGeometry.computeBoundingBox();
+  //   yellowLineGeometry.computeBoundingSphere();
+  //   yellowLineGeometry.attributes.position.needsUpdate = true;
+  //
+  //   const yellowLineMaterial = new LineMaterial({
+  //     color: "yellow",
+  //     linewidth: 3,
+  //     resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+  //   });
+  //
+  //   const yellowLineInstance = new Line2(yellowLineGeometry, yellowLineMaterial);
+  //   yellowLine.current = yellowLineInstance;
+  //   scene.add(yellowLineInstance);
+  //
+  //   const dashedLineGeometry = new LineGeometry();
+  //   dashedLineGeometry.setPositions([
+  //     previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
+  //     previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
+  //   ]);
+  //   dashedLineGeometry.computeBoundingBox();
+  //   dashedLineGeometry.computeBoundingSphere();
+  //   dashedLineGeometry.attributes.position.needsUpdate = true;
+  //
+  //   const dashedLineMaterial = new LineMaterial({
+  //     color: "white",
+  //     linewidth: 3,
+  //     resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+  //   });
+  //
+  //   const dashedLineInstance = new Line2(dashedLineGeometry, dashedLineMaterial);
+  //   dashedLine.current = dashedLineInstance;
+  //   scene.add(dashedLineInstance);
+  //
+  //   return () => {
+  //     scene.remove(yellowLineInstance);
+  //     scene.remove(dashedLineInstance);
+  //   };
+  // }, [scene, previousBetEnd]);
+  //
+  // useEffect(() => {
+  //   const updateLinePosition = async () => {
+  //     if (!pairId) {
+  //       console.warn("Pair ID is not provided. Skipping fetchPreviousBetEnd.");
+  //       return;
+  //     }
+  //
+  //     try {
+  //       const data = await fetchPreviousBetEnd(pairId);
+  //       const newPosition = new THREE.Vector3(data[0], data[1], previousBetEnd.z);
+  //       setUserPreviousBet(newPosition);
+  //       setFetchedData([data[0], data[1]]);
+  //
+  //       if (yellowLine.current) {
+  //         yellowLine.current.geometry.setPositions([0, 0, 0, data[0], data[1], previousBetEnd.z]);
+  //         yellowLine.current.geometry.attributes.position.needsUpdate = true;
+  //       }
+  //
+  //       if (dashedLine.current) {
+  //         const start = xValue && yValue ? [xValue, yValue] : [data[0], data[1]];
+  //         dashedLine.current.geometry.setPositions([
+  //           ...start, previousBetEnd.z,
+  //           previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
+  //         ]);
+  //         dashedLine.current.geometry.attributes.position.needsUpdate = true;
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to fetch previous bet end:", error);
+  //     }
+  //   };
+  //
+  //   updateLinePosition();
+  // }, [pairId, previousBetEnd, xValue, yValue]);
 
-    const yellowLineMaterial = new LineMaterial({
-      color: "yellow",
-      linewidth: 3,
-      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-    });
 
-    const yellowLineInstance = new Line2(yellowLineGeometry, yellowLineMaterial);
-    yellowLine.current = yellowLineInstance;
-    scene.add(yellowLineInstance);
-
-    const dashedLineGeometry = new LineGeometry();
-    dashedLineGeometry.setPositions([
-      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-    ]);
-    dashedLineGeometry.computeBoundingBox();
-    dashedLineGeometry.computeBoundingSphere();
-    dashedLineGeometry.attributes.position.needsUpdate = true;
-
-    const dashedLineMaterial = new LineMaterial({
-      color: "white",
-      linewidth: 3,
-      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-    });
-
-    const dashedLineInstance = new Line2(dashedLineGeometry, dashedLineMaterial);
-    dashedLine.current = dashedLineInstance;
-    scene.add(dashedLineInstance);
-
-    return () => {
-      scene.remove(yellowLineInstance);
-      scene.remove(dashedLineInstance);
-    };
-  }, [scene, previousBetEnd]);
-
-  useEffect(() => {
-    const updateLinePosition = async () => {
-      if (!pairId) {
-        console.warn("Pair ID is not provided. Skipping fetchPreviousBetEnd.");
-        return;
-      }
-
-      try {
-        const data = await fetchPreviousBetEnd(pairId);
-        const newPosition = new THREE.Vector3(data[0], data[1], previousBetEnd.z);
-        setUserPreviousBet(newPosition);
-        setFetchedData([data[0], data[1]]);
-
-        if (yellowLine.current) {
-          yellowLine.current.geometry.setPositions([0, 0, 0, data[0], data[1], previousBetEnd.z]);
-          yellowLine.current.geometry.attributes.position.needsUpdate = true;
-        }
-
-        if (dashedLine.current) {
-          const start = xValue && yValue ? [xValue, yValue] : [data[0], data[1]];
-          dashedLine.current.geometry.setPositions([
-            ...start, previousBetEnd.z,
-            previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-          ]);
-          dashedLine.current.geometry.attributes.position.needsUpdate = true;
-        }
-      } catch (error) {
-        console.error("Failed to fetch previous bet end:", error);
-      }
-    };
-
-    updateLinePosition();
-  }, [pairId, previousBetEnd, xValue, yValue]);
-
-
-  useFrame(() => {
-    if (!fetchedData) return; // Проверяем, что данные загружены
-
-    const [dataX, dataY] = fetchedData;
-
-    // Обновляем позицию и ориентацию жёлтого конуса
-    if (yellowArrowRef.current) {
-      yellowArrowRef.current.position.set(
-        fixedPreviousBetEnd.x,
-        fixedPreviousBetEnd.y,
-        fixedPreviousBetEnd.z,
-      );
-
-      const direction = new THREE.Vector3()
-        .subVectors(fixedPreviousBetEnd, new THREE.Vector3(0, 0, 0))
-        .normalize();
-      const quaternion = new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        direction,
-      );
-      yellowArrowRef.current.setRotationFromQuaternion(quaternion);
-      yellowArrowRef.current.updateMatrix();
-    }
-
-    // Обновляем позицию и ориентацию белого конуса
-    if (dashedArrowRef.current) {
-      dashedArrowRef.current.position.set(dataX, dataY, dashedLineStart.z);
-
-      const direction = new THREE.Vector3()
-        .subVectors(
-          new THREE.Vector3(xValue, yValue, dashedLineStart.z),
-          dashedLineStart,
-        )
-        .normalize();
-      const quaternion = new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        direction,
-      );
-      dashedArrowRef.current.setRotationFromQuaternion(quaternion);
-      dashedArrowRef.current.updateMatrix();
-    }
-
-    // Обновляем геометрию жёлтой линии
-    const yellowLinePositions = [0, 0, 0, dataX, dataY, previousBetEnd.z];
-    if (yellowLine.current?.geometry) {
-      yellowLine.current.geometry.setPositions(yellowLinePositions);
-      yellowLine.current.geometry.attributes.position.needsUpdate = true;
-    }
-
-    console.log("координаты для жёлтой линии");
-    console.log(yellowLinePositions);
-    console.log(0, 0, 0, dataX, dataY, previousBetEnd.z);
-
-    // Обновляем геометрию пунктирной линии
-    const dashedLinePositions = [
-      dataX, dataY, previousBetEnd.z,
-      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-    ];
-    if (dashedLine.current?.geometry) {
-      dashedLine.current.geometry.setPositions(dashedLinePositions);
-      dashedLine.current.geometry.attributes.position.needsUpdate = true;
-    }
-
-    console.log("геометрия пунктирной линии");
-    console.log(dashedLinePositions);
-    console.log(dataX, dataY, previousBetEnd.z,
-      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
-  });
 
 
   useEffect(() => {
@@ -362,6 +293,15 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   return (
     <>
+      {/* Линии и конусы */}
+      <BetLines
+        previousBetEnd={previousBetEnd}
+        xValue={xValue}
+        yValue={yValue}
+        fetchedData={fetchedData}
+        fixedPreviousBetEnd={fixedPreviousBetEnd}
+        dashedLineStart={dashedLineStart}
+      />
       {/* Текст депозита */}
       <Text
         position={[
