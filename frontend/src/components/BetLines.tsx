@@ -219,8 +219,8 @@ const BetLines: React.FC<BetLinesProps> = ({
       </mesh>
 
       <mesh ref={sphereRef} position={[userPreviousBet.x, userPreviousBet.y, previousBetEnd.z]}>
-        <sphereGeometry args={[1, 16, 16]} />
-        <meshStandardMaterial color="blue" opacity={0} transparent />
+        <sphereGeometry args={[0.5, 16, 16]} />
+        <meshStandardMaterial color="blue" opacity={0.5} transparent />
       </mesh>
     </>
   );
