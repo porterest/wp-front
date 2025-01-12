@@ -40,7 +40,6 @@ class ChainService(
 
     def __post_init__(self):
         self.logger = logging.getLogger("ChainService")
-        logging.basicConfig(level=logging.INFO)
 
     async def start_block_generation(self):
         """
