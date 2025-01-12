@@ -175,6 +175,8 @@ const BetLines: React.FC<BetLinesProps> = ({
   useFrame(() => {
     const clampedYellowEnd = resrtictVector(previousBetEnd, 2.5);
     const clampedDashedEnd = resrtictVector(userPreviousBet, 5);
+    console.log(clampedDashedEnd);
+    console.log(clampedDashedEnd);
 
     if (yellowLine.current && yellowLine.current.geometry) {
       yellowLine.current.geometry.setPositions([0, 0, 0, clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z]);
