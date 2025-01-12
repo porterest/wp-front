@@ -64,6 +64,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   useEffect(() => {
     // Создаем линии
     const yellowLineGeometry = new LineGeometry();
+    console.log("restricting previous in effect");
     const previousBetToRender = restrictVector(previousBetEnd, 2.5);
     yellowLineGeometry.setPositions([0, 0, 0, previousBetToRender.x, previousBetToRender.y, previousBetToRender.z]);
     const yellowLineMaterial = new LineMaterial({
@@ -75,6 +76,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     yellowLine.current = new Line2(yellowLineGeometry, yellowLineMaterial);
     scene.add(yellowLine.current);
 
+    console.log("restricting current in effect");
     const betToRender = restrictVector(userPreviousBet, 5);
 
     const dashedLineGeometry = new LineGeometry();
@@ -180,7 +182,9 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [gl.domElement]);
 
   useFrame(() => {
+    console.log("restricting previous in frame");
     const clampedYellowEnd = restrictVector(previousBetEnd, 2.5);
+    console.log("restricting current in frame");
     const clampedDashedEnd = restrictVector(userPreviousBet, 5);
     console.log(clampedDashedEnd);
     console.log(clampedDashedEnd);
