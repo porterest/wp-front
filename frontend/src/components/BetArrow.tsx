@@ -177,7 +177,10 @@ const BetArrow: React.FC<BetArrowProps> = ({
       0, 0, 0, // Начало жёлтой линии
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z, // Конец жёлтой линии
     ]);
-  console.log("Начало жёлтой линии");
+    yellowLineGeometry.computeBoundingBox();
+    yellowLineGeometry.computeBoundingSphere();
+
+    console.log("Начало жёлтой линии");
   console.log(yellowLineGeometry);
   console.log(previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
     const yellowLineMaterial = new LineMaterial({
@@ -196,6 +199,9 @@ const BetArrow: React.FC<BetArrowProps> = ({
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z, // Начало пунктирной линии (конец жёлтой линии)
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z, // Временно совпадает с началом
     ]);
+    dashedLineGeometry.computeBoundingBox();
+    dashedLineGeometry.computeBoundingSphere();
+
 
     console.log('координаты для пунктирной линии');
     console.log(dashedLineGeometry);
