@@ -7,7 +7,7 @@ import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { Text } from "@react-three/drei";
 import { useUserBalance } from "../pages/BalancePage";
 import { fetchPreviousBetEnd } from "../services/api";
-import { data } from "autoprefixer";
+// import { data } from "autoprefixer";
 
 interface BetArrowProps {
   previousBetEnd: THREE.Vector3;
