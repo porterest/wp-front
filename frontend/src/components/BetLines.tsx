@@ -20,6 +20,7 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              fixedPreviousBetEnd,
                                              dashedLineStart,
                                            }) => {
+  const maxArrowLength = 2; // Максимальная длина жёлтой стрелки
   const yellowLine = useRef<Line2 | null>(null);
   const dashedLine = useRef<Line2 | null>(null);
   const yellowArrowRef = useRef<THREE.Mesh>(null); // Жёлтый конус
@@ -65,48 +66,58 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Обновление линий и конусов
   useFrame(() => {
+    // Ограничиваем длину жёлтой линии
+    const direction = new THREE.Vector3()
+      .subVectors(previousBetEnd, new THREE.Vector3(0, 0, 0))
+      .normalize();
+
+    let length = direction.length();
+    if (length > maxArrowLength) {
+      direction.setLength(maxArrowLength);
+      length = maxArrowLength;
+      console.log(`Длина жёлтой стрелки ограничена до ${maxArrowLength}`);
+    }
+
+    const clampedEnd = new THREE.Vector3().addVectors(
+      new THREE.Vector3(0, 0, 0),
+      direction.multiplyScalar(length)
+    );
+
     // Обновляем позицию и ориентацию жёлтого конуса
     if (yellowArrowRef.current) {
       yellowArrowRef.current.position.set(
-        fixedPreviousBetEnd.x,
-        fixedPreviousBetEnd.y,
-        fixedPreviousBetEnd.z,
+        clampedEnd.x,
+        clampedEnd.y,
+        clampedEnd.z
       );
 
-      const direction = new THREE.Vector3()
-        .subVectors(fixedPreviousBetEnd, new THREE.Vector3(0, 0, 0))
-        .normalize();
-      const quaternion = new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        direction,
-      );
-      yellowArrowRef.current.setRotationFromQuaternion(quaternion);
+      yellowArrowRef.current.lookAt(0, 0, 0);
       yellowArrowRef.current.updateMatrix();
+    }
+
+    // Обновляем геометрию жёлтой линии
+    const yellowLinePositions = [0, 0, 0, clampedEnd.x, clampedEnd.y, clampedEnd.z];
+    if (yellowLine.current?.geometry) {
+      yellowLine.current.geometry.setPositions(yellowLinePositions);
+      yellowLine.current.geometry.attributes.position.needsUpdate = true;
     }
 
     // Обновляем позицию и ориентацию белого конуса
     if (dashedArrowRef.current) {
       dashedArrowRef.current.position.set(xValue, yValue, dashedLineStart.z);
 
-      const direction = new THREE.Vector3()
+      const whiteDirection = new THREE.Vector3()
         .subVectors(
           new THREE.Vector3(xValue, yValue, dashedLineStart.z),
-          dashedLineStart,
+          dashedLineStart
         )
         .normalize();
-      const quaternion = new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        direction,
-      );
-      dashedArrowRef.current.setRotationFromQuaternion(quaternion);
-      dashedArrowRef.current.updateMatrix();
-    }
 
-    // Обновляем геометрию жёлтой линии
-    const yellowLinePositions = [0, 0, 0, previousBetEnd.x, previousBetEnd.y, previousBetEnd.z];
-    if (yellowLine.current?.geometry) {
-      yellowLine.current.geometry.setPositions(yellowLinePositions);
-      yellowLine.current.geometry.attributes.position.needsUpdate = true;
+      dashedArrowRef.current.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        whiteDirection
+      );
+      dashedArrowRef.current.updateMatrix();
     }
 
     // Обновляем геометрию пунктирной линии
