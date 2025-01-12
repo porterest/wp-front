@@ -50,7 +50,7 @@ const GamePage: React.FC = () => {
           (a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         )[0];
-      console.log("lastBet:", lastBet);
+      console.log("last user Bet:", lastBet);
       if (!lastBet) {
         console.log("mocking lastBet");
         setUserPreviousBet(new THREE.Vector3(2, 3, 1));

@@ -7,6 +7,7 @@ import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { Text } from "@react-three/drei";
 import { useUserBalance } from "../pages/BalancePage";
 import { fetchPreviousBetEnd } from "../services/api";
+import { data } from "autoprefixer";
 
 interface BetArrowProps {
   previousBetEnd: THREE.Vector3;
@@ -39,6 +40,8 @@ const BetArrow: React.FC<BetArrowProps> = ({
   const [xValue, setXValue] = useState(userPreviousBet.x); // Позиция X
   const [yValue, setYValue] = useState(userPreviousBet.y); // Позиция Y
   const [betAmount, setBetAmount] = useState(0); // Размер ставки
+  const [fetchedData, setFetchedData] = useState<[number, number] | null>(null);
+
 
   // Копируем начальную позицию предыдущей ставки
   const fixedPreviousBetEnd = previousBetEnd.clone(); // Конец жёлтой линии
@@ -205,13 +208,14 @@ const BetArrow: React.FC<BetArrowProps> = ({
     const updateLinePosition = async () => {
       if (!pairId) {
         console.warn("Pair ID is not provided. Skipping fetchPreviousBetEnd.");
-        return; // Выходим из функции, если pairId отсутствует
+        return;
       }
 
       try {
         const data = await fetchPreviousBetEnd(pairId);
         const newPosition = new THREE.Vector3(data[0], data[1], previousBetEnd.z);
         setUserPreviousBet(newPosition);
+        setFetchedData([data[0], data[1]]); // Сохраняем data в состояние
 
         if (yellowLine.current) {
           yellowLine.current.geometry.setPositions([0, 0, 0, data[0], data[1], previousBetEnd.z]);
@@ -219,8 +223,8 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
         if (dashedLine.current) {
           dashedLine.current.geometry.setPositions([
-            previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
             data[0], data[1], previousBetEnd.z,
+            previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
           ]);
         }
       } catch (error) {
@@ -232,21 +236,23 @@ const BetArrow: React.FC<BetArrowProps> = ({
   }, [pairId, previousBetEnd]);
 
   useFrame(() => {
+    if (!fetchedData) return; // Проверяем, что данные загружены
+
+    const [dataX, dataY] = fetchedData;
+
     // Обновляем позицию и ориентацию жёлтого конуса
     if (yellowArrowRef.current) {
-      // Устанавливаем позицию в конец линии
       yellowArrowRef.current.position.set(
         fixedPreviousBetEnd.x,
         fixedPreviousBetEnd.y,
         fixedPreviousBetEnd.z,
       );
 
-      // Направляем конус вдоль линии
       const direction = new THREE.Vector3()
         .subVectors(fixedPreviousBetEnd, new THREE.Vector3(0, 0, 0))
-        .normalize(); // Вектор направления от начала к концу линии
+        .normalize();
       const quaternion = new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0), // Ось Y — базовая ориентация конуса
+        new THREE.Vector3(0, 1, 0),
         direction,
       );
       yellowArrowRef.current.setRotationFromQuaternion(quaternion);
@@ -255,18 +261,16 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
     // Обновляем позицию и ориентацию белого конуса
     if (dashedArrowRef.current) {
-      // Устанавливаем позицию в конец пунктирной линии
       dashedArrowRef.current.position.set(xValue, yValue, dashedLineStart.z);
 
-      // Направляем конус вдоль пунктирной линии
       const direction = new THREE.Vector3()
         .subVectors(
-          new THREE.Vector3(xValue, yValue, dashedLineStart.z), // Конец линии
-          dashedLineStart, // Начало линии
+          new THREE.Vector3(xValue, yValue, dashedLineStart.z),
+          dashedLineStart,
         )
-        .normalize(); // Вектор направления
+        .normalize();
       const quaternion = new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0), // Ось Y — базовая ориентация конуса
+        new THREE.Vector3(0, 1, 0),
         direction,
       );
       dashedArrowRef.current.setRotationFromQuaternion(quaternion);
@@ -274,27 +278,17 @@ const BetArrow: React.FC<BetArrowProps> = ({
     }
 
     // Обновляем геометрию жёлтой линии
-    const yellowLinePositions = [
-      0,
-      0,
-      0,
-      fixedPreviousBetEnd.x,
-      fixedPreviousBetEnd.y,
-      fixedPreviousBetEnd.z,
-    ];
+    const yellowLinePositions = [0, 0, 0, dataX, dataY, previousBetEnd.z];
     yellowLine.current?.geometry.setPositions(yellowLinePositions);
 
     // Обновляем геометрию пунктирной линии
     const dashedLinePositions = [
-      dashedLineStart.x,
-      dashedLineStart.y,
-      dashedLineStart.z,
-      xValue,
-      yValue,
-      dashedLineStart.z,
+      dataX, dataY, previousBetEnd.z,
+      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
     ];
     dashedLine.current?.geometry.setPositions(dashedLinePositions);
   });
+
 
   useEffect(() => {
     const canvas = gl.domElement;
@@ -360,17 +354,17 @@ const BetArrow: React.FC<BetArrowProps> = ({
       >
         Bet: ${betAmount.toFixed(2)}
       </Text>
-      {/*/!* Жёлтый конус (стрелка) *!/*/}
-      {/*<mesh ref={yellowArrowRef}>*/}
-      {/*  <coneGeometry args={[0.1, 0.3, 12]} />*/}
-      {/*  <meshStandardMaterial color="yellow" />*/}
-      {/*</mesh>*/}
-      {/* Белый конус (стрелка) */}
-      {/*<mesh ref={dashedArrowRef}>*/}
-      {/*  <coneGeometry args={[0.1, 0.3, 12]} />*/}
-      {/*  <meshStandardMaterial color="white" />*/}
-      {/*</mesh>*/}
-      {/* Сфера на конце стрелки */}
+      {/* Жёлтый конус (стрелка) */}
+      <mesh ref={yellowArrowRef}>
+        <coneGeometry args={[0.1, 0.3, 12]} />
+        <meshStandardMaterial color="yellow" />
+      </mesh>
+       Белый конус (стрелка)
+      <mesh ref={dashedArrowRef}>
+        <coneGeometry args={[0.1, 0.3, 12]} />
+        <meshStandardMaterial color="white" />
+      </mesh>
+       Сфера на конце стрелки
       <mesh ref={endpointRef} position={[xValue, yValue, dashedLineStart.z]}>
         <sphereGeometry args={[1, 16, 16]} />
         <meshStandardMaterial color="blue" opacity={0} transparent />
