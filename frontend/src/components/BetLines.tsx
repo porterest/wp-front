@@ -18,7 +18,7 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              yValue,
                                              dashedLineStart,
                                            }) => {
-  const maxYellowLength = 3.5; // Увеличенная максимальная длина желтой стрелки
+  const maxYellowLength = 4; // Увеличиваем длину жёлтой стрелки
   const yellowLine = useRef<Line2 | null>(null);
   const dashedLine = useRef<Line2 | null>(null);
   const yellowArrowRef = useRef<THREE.Mesh>(null); // Жёлтый конус
@@ -43,7 +43,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     const dashedLineGeometry = new LineGeometry();
     dashedLineGeometry.setPositions([
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-      xValue, yValue, dashedLineStart.z,
+      xValue, yValue, previousBetEnd.z,
     ]);
 
     const dashedLineMaterial = new LineMaterial({
@@ -83,7 +83,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     // Обновляем позицию и ориентацию жёлтого конуса
     if (yellowArrowRef.current) {
       yellowArrowRef.current.position.copy(clampedYellowEnd);
-      yellowArrowRef.current.lookAt(0, 0, 0); // Конус смотрит в начало стрелки
+      yellowArrowRef.current.lookAt(0, 0, 0);
       yellowArrowRef.current.updateMatrix();
     }
 
@@ -94,21 +94,17 @@ const BetLines: React.FC<BetLinesProps> = ({
       yellowLine.current.geometry.attributes.position.needsUpdate = true;
     }
 
-    // Белая линия начинается от конца желтой
-    const dashedLineStart = clampedYellowEnd.clone();
-    const dashedLineEnd = new THREE.Vector3(xValue, yValue, dashedLineStart.z);
-
     // Обновляем позицию и ориентацию белого конуса
     if (dashedArrowRef.current) {
-      dashedArrowRef.current.position.copy(dashedLineEnd);
-      dashedArrowRef.current.lookAt(dashedLineStart); // Конус смотрит в начало белой линии
+      dashedArrowRef.current.position.set(xValue, yValue, dashedLineStart.z);
+      dashedArrowRef.current.lookAt(clampedYellowEnd);
       dashedArrowRef.current.updateMatrix();
     }
 
-    // Обновляем геометрию белой пунктирной линии
+    // Обновляем геометрию белой линии (без ограничения)
     const dashedLinePositions = [
-      dashedLineStart.x, dashedLineStart.y, dashedLineStart.z,
-      dashedLineEnd.x, dashedLineEnd.y, dashedLineEnd.z,
+      clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z,
+      xValue, yValue, previousBetEnd.z,
     ];
     if (dashedLine.current?.geometry) {
       dashedLine.current.geometry.setPositions(dashedLinePositions);
