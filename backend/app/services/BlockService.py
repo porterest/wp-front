@@ -61,9 +61,9 @@ class BlockService(BlockServiceInterface):
             await self.bet_service.cancel_bet(bet.id)
             logger.info(f'{bet} в жопе')
 
-
     async def start_new_block(self, chain_id: UUID) -> Block:
         last_block = await self.block_repository.get_last_completed_block(chain_id)
+        logger.info(f'last completed block is {last_block.id} ({last_block.status})')
         if last_block:
             block = CreateBlockDTO(
                 block_number=last_block.block_number + 1,

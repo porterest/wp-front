@@ -104,7 +104,7 @@ class ChainService(
 
                 if last_block:
                     elapsed_time = (datetime.now() - last_block.created_at).seconds + 1
-                    self.logger.info(f'elapsed_time {elapsed_time}, block {last_block.id}')
+                    self.logger.info(f'elapsed_time {elapsed_time}, block {last_block.id}, status {last_block.status}')
                     if (elapsed_time >= self.block_generation_interval.total_seconds()
                             and last_block.status == BlockStatus.IN_PROGRESS):
                         try:
