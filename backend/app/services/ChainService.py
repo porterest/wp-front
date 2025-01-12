@@ -168,7 +168,8 @@ class ChainService(
                 f"Текущее состояние блока: "
                 f"Номер блока {last_block.block_number}, "
                 f"Статус {last_block.status}, "
-                f"Оставшееся время: {remaining_time} сек."
+                f"Оставшееся время: {remaining_time} сек. "
+                f"(elapsed {elapsed_time}, interval {self.block_generation_interval.seconds - elapsed_time})"
             )
 
             return BlockStateResponse(
