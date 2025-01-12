@@ -9,7 +9,6 @@ interface BetLinesProps {
   previousBetEnd: THREE.Vector3;
   xValue: number;
   yValue: number;
-  fixedPreviousBetEnd: THREE.Vector3;
   dashedLineStart: THREE.Vector3;
 }
 
@@ -19,7 +18,8 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              yValue,
                                              dashedLineStart,
                                            }) => {
-  const maxArrowLength = 2; // Максимальная длина жёлтой стрелки
+  const maxYellowLength = 3; // Максимальная длина жёлтой стрелки
+  const maxDashedLength = 4; // Максимальная длина белой пунктирной стрелки
   const yellowLine = useRef<Line2 | null>(null);
   const dashedLine = useRef<Line2 | null>(null);
   const yellowArrowRef = useRef<THREE.Mesh>(null); // Жёлтый конус
@@ -66,63 +66,62 @@ const BetLines: React.FC<BetLinesProps> = ({
   // Обновление линий и конусов
   useFrame(() => {
     // Ограничиваем длину жёлтой линии
-    const direction = new THREE.Vector3()
+    const yellowDirection = new THREE.Vector3()
       .subVectors(previousBetEnd, new THREE.Vector3(0, 0, 0))
       .normalize();
 
-    let length = direction.length();
-    if (length > maxArrowLength) {
-      direction.setLength(maxArrowLength);
-      length = maxArrowLength;
-      console.log(`Длина жёлтой стрелки ограничена до ${maxArrowLength}`);
+    let yellowLength = yellowDirection.length();
+    if (yellowLength > maxYellowLength) {
+      yellowDirection.setLength(maxYellowLength);
+      yellowLength = maxYellowLength;
     }
 
-    const clampedEnd = new THREE.Vector3().addVectors(
+    const clampedYellowEnd = new THREE.Vector3().addVectors(
       new THREE.Vector3(0, 0, 0),
-      direction.multiplyScalar(length)
+      yellowDirection.multiplyScalar(yellowLength)
     );
 
     // Обновляем позицию и ориентацию жёлтого конуса
     if (yellowArrowRef.current) {
-      yellowArrowRef.current.position.set(
-        clampedEnd.x,
-        clampedEnd.y,
-        clampedEnd.z
-      );
-
+      yellowArrowRef.current.position.copy(clampedYellowEnd);
       yellowArrowRef.current.lookAt(0, 0, 0);
       yellowArrowRef.current.updateMatrix();
     }
 
     // Обновляем геометрию жёлтой линии
-    const yellowLinePositions = [0, 0, 0, clampedEnd.x, clampedEnd.y, clampedEnd.z];
+    const yellowLinePositions = [0, 0, 0, clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z];
     if (yellowLine.current?.geometry) {
       yellowLine.current.geometry.setPositions(yellowLinePositions);
       yellowLine.current.geometry.attributes.position.needsUpdate = true;
     }
 
+    // Ограничиваем длину белой линии
+    const whiteDirection = new THREE.Vector3()
+      .subVectors(new THREE.Vector3(xValue, yValue, dashedLineStart.z), clampedYellowEnd)
+      .normalize();
+
+    let whiteLength = whiteDirection.length();
+    if (whiteLength > maxDashedLength) {
+      whiteDirection.setLength(maxDashedLength);
+      whiteLength = maxDashedLength;
+    }
+
+    const clampedWhiteEnd = new THREE.Vector3().addVectors(
+      clampedYellowEnd,
+      whiteDirection.multiplyScalar(whiteLength)
+    );
+
     // Обновляем позицию и ориентацию белого конуса
     if (dashedArrowRef.current) {
-      dashedArrowRef.current.position.set(xValue, yValue, dashedLineStart.z);
-
-      const whiteDirection = new THREE.Vector3()
-        .subVectors(
-          new THREE.Vector3(xValue, yValue, dashedLineStart.z),
-          dashedLineStart
-        )
-        .normalize();
-
-      dashedArrowRef.current.quaternion.setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        whiteDirection
-      );
+      dashedArrowRef.current.position.copy(clampedWhiteEnd);
+      dashedArrowRef.current.lookAt(clampedYellowEnd);
       dashedArrowRef.current.updateMatrix();
     }
 
-    // Обновляем геометрию пунктирной линии
+    // Обновляем геометрию белой пунктирной линии
     const dashedLinePositions = [
-      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-      xValue, yValue, previousBetEnd.z,
+      clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z,
+      clampedWhiteEnd.x, clampedWhiteEnd.y, clampedWhiteEnd.z,
     ];
     if (dashedLine.current?.geometry) {
       dashedLine.current.geometry.setPositions(dashedLinePositions);
