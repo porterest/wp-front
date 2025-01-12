@@ -174,15 +174,13 @@ const BetArrow: React.FC<BetArrowProps> = ({
   useEffect(() => {
     const yellowLineGeometry = new LineGeometry();
     yellowLineGeometry.setPositions([
-      0, 0, 0, // Начало жёлтой линии
-      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z, // Конец жёлтой линии
+      0, 0, 0,
+      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
     ]);
     yellowLineGeometry.computeBoundingBox();
     yellowLineGeometry.computeBoundingSphere();
+    yellowLineGeometry.attributes.position.needsUpdate = true;
 
-    console.log("Начало жёлтой линии");
-  console.log(yellowLineGeometry);
-  console.log(previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
     const yellowLineMaterial = new LineMaterial({
       color: "yellow",
       linewidth: 3,
@@ -193,20 +191,14 @@ const BetArrow: React.FC<BetArrowProps> = ({
     yellowLine.current = yellowLineInstance;
     scene.add(yellowLineInstance);
 
-    // Задаём корректные начальные координаты для пунктирной линии
     const dashedLineGeometry = new LineGeometry();
     dashedLineGeometry.setPositions([
-      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z, // Начало пунктирной линии (конец жёлтой линии)
-      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z, // Временно совпадает с началом
+      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
+      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
     ]);
     dashedLineGeometry.computeBoundingBox();
     dashedLineGeometry.computeBoundingSphere();
-
-
-    console.log('координаты для пунктирной линии');
-    console.log(dashedLineGeometry);
-    console.log(previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
+    dashedLineGeometry.attributes.position.needsUpdate = true;
 
     const dashedLineMaterial = new LineMaterial({
       color: "white",
@@ -222,8 +214,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
       scene.remove(yellowLineInstance);
       scene.remove(dashedLineInstance);
     };
-  }, [scene, previousBetEnd]); // Добавляем зависимость от previousBetEnd
-
+  }, [scene, previousBetEnd]);
 
   useEffect(() => {
     const updateLinePosition = async () => {
@@ -236,24 +227,19 @@ const BetArrow: React.FC<BetArrowProps> = ({
         const data = await fetchPreviousBetEnd(pairId);
         const newPosition = new THREE.Vector3(data[0], data[1], previousBetEnd.z);
         setUserPreviousBet(newPosition);
-        setFetchedData([data[0], data[1]]); // Сохраняем data в состояние
+        setFetchedData([data[0], data[1]]);
 
         if (yellowLine.current) {
           yellowLine.current.geometry.setPositions([0, 0, 0, data[0], data[1], previousBetEnd.z]);
+          yellowLine.current.geometry.attributes.position.needsUpdate = true;
         }
-        console.log('координаты для желтой линии');
-        console.log(yellowLine);
-        console.log([0, 0, 0, data[0], data[1], previousBetEnd.z]);
 
         if (dashedLine.current) {
           dashedLine.current.geometry.setPositions([
             data[0], data[1], previousBetEnd.z,
             previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
           ]);
-          console.log('координаты для пунктирной линии');
-          console.log(dashedLine);
-          console.log(data[0], data[1], previousBetEnd.z,
-            previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
+          dashedLine.current.geometry.attributes.position.needsUpdate = true;
         }
       } catch (error) {
         console.error("Failed to fetch previous bet end:", error);
@@ -307,9 +293,12 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
     // Обновляем геометрию жёлтой линии
     const yellowLinePositions = [0, 0, 0, dataX, dataY, previousBetEnd.z];
-    yellowLine.current?.geometry.setPositions(yellowLinePositions);
+    if (yellowLine.current?.geometry) {
+      yellowLine.current.geometry.setPositions(yellowLinePositions);
+      yellowLine.current.geometry.attributes.position.needsUpdate = true;
+    }
 
-    console.log('координаты для жёлтой линии');
+    console.log("координаты для жёлтой линии");
     console.log(yellowLinePositions);
     console.log(0, 0, 0, dataX, dataY, previousBetEnd.z);
 
@@ -318,11 +307,15 @@ const BetArrow: React.FC<BetArrowProps> = ({
       dataX, dataY, previousBetEnd.z,
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
     ];
-    console.log('геометрия пунктирной линии');
+    if (dashedLine.current?.geometry) {
+      dashedLine.current.geometry.setPositions(dashedLinePositions);
+      dashedLine.current.geometry.attributes.position.needsUpdate = true;
+    }
+
+    console.log("геометрия пунктирной линии");
     console.log(dashedLinePositions);
     console.log(dataX, dataY, previousBetEnd.z,
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
-    dashedLine.current?.geometry.setPositions(dashedLinePositions);
   });
 
 
