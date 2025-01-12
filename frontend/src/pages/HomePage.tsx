@@ -199,7 +199,7 @@ const HomePage: React.FC = () => {
     <div className="flex flex-col items-center justify-between min-h-screen bg-black text-white">
       {/* Логотип */}
       <div className="mt-10">
-        <img src="/logo.svg" alt="Widepiper Logo" className="w-40 h-40" />
+        <img src="/logo.png" alt="Widepiper Logo" className="w-40 h-40" />
       </div>
 
       {/* Приветствие */}
