@@ -52,6 +52,7 @@ class ChainService(
             trigger=IntervalTrigger(seconds=self.block_generation_interval.seconds),
             id="block_generation",
             replace_existing=True,
+            misfire_grace_time=None,  # noqa
         )
         self.scheduler.start()
         self.logger.info("Сервис генерации блоков запущен.")
