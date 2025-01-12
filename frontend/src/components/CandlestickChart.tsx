@@ -9,10 +9,10 @@ interface CandlestickChartProps {
 
 const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) => {
   const { normalizeX, normalizeY, normalizeZ } = useScale();
-  console.log("CandlestickChart rerendered");
+  // console.log("CandlestickChart rerendered");
 
   if (!data || data.length === 0) {
-    console.warn("No data to render in CandlestickChart!");
+    // console.warn("No data to render in CandlestickChart!");
     return null;
   }
 
@@ -32,14 +32,14 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
   return (
     <group>
       {data.map((candle, index) => {
-        console.log("Rendering candle", {
-          index,
-          open: candle.open,
-          close: candle.close,
-          high: candle.high,
-          low: candle.low,
-          volume: candle.volume,
-        });
+        // console.log("Rendering candle", {
+        //   index,
+        //   open: candle.open,
+        //   close: candle.close,
+        //   high: candle.high,
+        //   low: candle.low,
+        //   volume: candle.volume,
+        // });
 
         const isBullish = candle.close > candle.open;
         const color = getColor(isBullish);
@@ -59,12 +59,12 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
         const positionX = normalizeX(index, data.length);
         const positionZ = normalizeZ(candle.volume, maxVolume);
 
-        console.log("Normalized values", {
-          index,
-          normalizedX: positionX,
-          normalizedY: { open: normalizedOpen, close: normalizedClose },
-          normalizedZ: positionZ,
-        });
+        // console.log("Normalized values", {
+        //   index,
+        //   normalizedX: positionX,
+        //   normalizedY: { open: normalizedOpen, close: normalizedClose },
+        //   normalizedZ: positionZ,
+        // });
 
         return (
           <group key={index}>
