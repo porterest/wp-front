@@ -38,7 +38,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const plane = useRef(new THREE.Plane());
   let isDragging = false;
 
-  const restictVector = (vector: THREE.Vector3, max: number) => {
+  const restrictVector = (vector: THREE.Vector3, max: number) => {
     // Calculate the current max coordinate
     console.log(vector);
     const maxCoordinate = Math.max(
@@ -64,7 +64,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   useEffect(() => {
     // Создаем линии
     const yellowLineGeometry = new LineGeometry();
-    const previousBetToRender = restictVector(previousBetEnd, 2.5);
+    const previousBetToRender = restrictVector(previousBetEnd, 2.5);
     yellowLineGeometry.setPositions([0, 0, 0, previousBetToRender.x, previousBetToRender.y, previousBetToRender.z]);
     const yellowLineMaterial = new LineMaterial({
       color: "yellow",
@@ -75,7 +75,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     yellowLine.current = new Line2(yellowLineGeometry, yellowLineMaterial);
     scene.add(yellowLine.current);
 
-    const betToRender = restictVector(userPreviousBet, 5);
+    const betToRender = restrictVector(userPreviousBet, 5);
 
     const dashedLineGeometry = new LineGeometry();
     dashedLineGeometry.setPositions([
@@ -180,8 +180,8 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [gl.domElement]);
 
   useFrame(() => {
-    const clampedYellowEnd = restictVector(previousBetEnd, 2.5);
-    const clampedDashedEnd = restictVector(userPreviousBet, 5);
+    const clampedYellowEnd = restrictVector(previousBetEnd, 2.5);
+    const clampedDashedEnd = restrictVector(userPreviousBet, 5);
     console.log(clampedDashedEnd);
     console.log(clampedDashedEnd);
 
