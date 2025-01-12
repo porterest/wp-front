@@ -173,7 +173,10 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   useEffect(() => {
     const yellowLineGeometry = new LineGeometry();
-    yellowLineGeometry.setPositions([0, 0, 0, previousBetEnd.x, previousBetEnd.y, previousBetEnd.z]);
+    yellowLineGeometry.setPositions([
+      0, 0, 0, // Начало жёлтой линии
+      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z, // Конец жёлтой линии
+    ]);
 
     const yellowLineMaterial = new LineMaterial({
       color: "yellow",
@@ -185,8 +188,12 @@ const BetArrow: React.FC<BetArrowProps> = ({
     yellowLine.current = yellowLineInstance;
     scene.add(yellowLineInstance);
 
+    // Задаём корректные начальные координаты для пунктирной линии
     const dashedLineGeometry = new LineGeometry();
-    dashedLineGeometry.setPositions([0, 0, 0, 0, 0, 0]);
+    dashedLineGeometry.setPositions([
+      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z, // Начало пунктирной линии (конец жёлтой линии)
+      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z, // Временно совпадает с началом
+    ]);
 
     const dashedLineMaterial = new LineMaterial({
       color: "white",
@@ -202,7 +209,8 @@ const BetArrow: React.FC<BetArrowProps> = ({
       scene.remove(yellowLineInstance);
       scene.remove(dashedLineInstance);
     };
-  }, [scene]);
+  }, [scene, previousBetEnd]); // Добавляем зависимость от previousBetEnd
+
 
   useEffect(() => {
     const updateLinePosition = async () => {
@@ -286,6 +294,8 @@ const BetArrow: React.FC<BetArrowProps> = ({
       dataX, dataY, previousBetEnd.z,
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
     ];
+    console.log('геометрия пунктирной линии');
+    console.log(dashedLinePositions);
     dashedLine.current?.geometry.setPositions(dashedLinePositions);
   });
 
@@ -304,29 +314,28 @@ const BetArrow: React.FC<BetArrowProps> = ({
     };
   }, [gl.domElement, isDragging, axisMode]);
 
+
   useFrame(() => {
+    if (!fetchedData) return; // Проверяем, что данные загружены
+
+    const [dataX, dataY] = fetchedData; // Получаем координаты из состояния
+
     updateDynamicPlane();
 
-    const yellowLinePositions = [
-      0,
-      0,
-      0,
-      fixedPreviousBetEnd.x,
-      fixedPreviousBetEnd.y,
-      fixedPreviousBetEnd.z,
-    ];
+    // Обновляем геометрию жёлтой линии
+    const yellowLinePositions = [0, 0, 0, dataX, dataY, previousBetEnd.z];
     yellowLine.current?.geometry.setPositions(yellowLinePositions);
 
+    // Обновляем геометрию пунктирной линии
     const dashedLinePositions = [
-      dashedLineStart.x,
-      dashedLineStart.y,
-      dashedLineStart.z,
-      xValue,
-      yValue,
-      dashedLineStart.z,
+      dataX, dataY, previousBetEnd.z,
+      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
     ];
+    console.log("геометрия пунктирной линии");
+    console.log(dashedLinePositions);
     dashedLine.current?.geometry.setPositions(dashedLinePositions);
   });
+
 
   return (
     <>
@@ -364,11 +373,11 @@ const BetArrow: React.FC<BetArrowProps> = ({
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="white" />
       </mesh>
-       Сфера на конце стрелки
-      <mesh ref={endpointRef} position={[xValue, yValue, dashedLineStart.z]}>
-        <sphereGeometry args={[1, 16, 16]} />
-        <meshStandardMaterial color="blue" opacity={0} transparent />
-      </mesh>
+      {/* Сфера на конце стрелки*/}
+      {/*<mesh ref={endpointRef} position={[xValue, yValue, dashedLineStart.z]}>*/}
+      {/*  <sphereGeometry args={[1, 16, 16]} />*/}
+      {/*  <meshStandardMaterial color="blue" opacity={0} transparent />*/}
+      {/*</mesh>*/}
     </>
   );
 };
