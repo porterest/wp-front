@@ -178,7 +178,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
 
     if (sphereRef.current) {
-      sphereRef.current.position.copy(clampedYellowEnd);
+      sphereRef.current.position.copy(userPreviousBet);
     }
 
     if (yellowArrowRef.current) {
