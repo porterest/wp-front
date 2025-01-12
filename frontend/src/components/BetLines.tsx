@@ -4,16 +4,18 @@ import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
+import { useUserBalance } from "../pages/BalancePage"; // Для получения баланса
 
 interface BetLinesProps {
-  previousBetEnd: THREE.Vector3; // Конец желтой линии
-  userPreviousBet: THREE.Vector3; // Ставка пользователя
-  onDragging: (isDragging: boolean) => void; // Колбек для управления состоянием перетаскивания
+  previousBetEnd: THREE.Vector3;
+  userPreviousBet: THREE.Vector3;
+  onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] },
-  ) => void; // Колбек для отображения кнопки подтверждения
-  maxYellowLength: number; // Максимальная длина желтой стрелки
+  ) => void;
+  maxYellowLength: number;
+  axisMode: "X" | "Y";
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
@@ -22,6 +24,7 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              onDragging,
                                              onShowConfirmButton,
                                              maxYellowLength,
+                                             axisMode,
                                            }) => {
   const yellowLine = useRef<Line2 | null>(null);
   const dashedLine = useRef<Line2 | null>(null);
@@ -32,14 +35,16 @@ const BetLines: React.FC<BetLinesProps> = ({
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
-
   const [isDragging, setIsDragging] = useState(false);
   const [xValue, setXValue] = useState(userPreviousBet.x);
   const [yValue, setYValue] = useState(userPreviousBet.y);
   const [betAmount, setBetAmount] = useState(0);
 
+  const { userData } = useUserBalance();
+  const userBalance = userData?.balance || 0;
+
   useEffect(() => {
-    // Создаем желтую линию
+    // Создаем линии
     const yellowLineGeometry = new LineGeometry();
     yellowLineGeometry.setPositions([0, 0, 0, previousBetEnd.x, previousBetEnd.y, previousBetEnd.z]);
     const yellowLineMaterial = new LineMaterial({
@@ -51,7 +56,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     yellowLine.current = new Line2(yellowLineGeometry, yellowLineMaterial);
     scene.add(yellowLine.current);
 
-    // Создаем белую линию
     const dashedLineGeometry = new LineGeometry();
     dashedLineGeometry.setPositions([
       previousBetEnd.x,
@@ -82,7 +86,6 @@ const BetLines: React.FC<BetLinesProps> = ({
         amount: betAmount,
         predicted_vector: [xValue, yValue],
       });
-
       setIsDragging(false);
       onDragging(false);
     }
@@ -97,9 +100,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     );
 
     raycaster.current.setFromCamera(mouse, camera);
-    const intersects = raycaster.current.intersectObject(sphereRef.current);
-
-    return intersects.length > 0;
+    return raycaster.current.intersectObject(sphereRef.current).length > 0;
   };
 
   const handlePointerDown = (event: PointerEvent) => {
@@ -124,19 +125,24 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     const direction = new THREE.Vector3().subVectors(intersection, previousBetEnd);
     let distance = direction.length();
-
     if (distance > maxYellowLength) {
       distance = maxYellowLength;
       direction.setLength(maxYellowLength);
     }
 
     const newEnd = previousBetEnd.clone().add(direction);
+    if (axisMode === "X") {
+      newEnd.y = previousBetEnd.y; // Фиксируем Y
+    } else if (axisMode === "Y") {
+      newEnd.x = previousBetEnd.x; // Фиксируем X
+    }
+
     setXValue(newEnd.x);
     setYValue(newEnd.y);
 
     const percentage = distance / maxYellowLength;
-    const bet = percentage * 1000; // Пример расчета суммы ставки
-    setBetAmount(Math.min(bet, 1000));
+    const bet = percentage * userBalance;
+    setBetAmount(Math.min(bet, userBalance));
   };
 
   const updateDynamicPlane = () => {
@@ -146,7 +152,6 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   useEffect(() => {
     const canvas = gl.domElement;
-
     canvas.addEventListener("pointermove", handlePointerMove);
     canvas.addEventListener("pointerdown", handlePointerDown);
     canvas.addEventListener("pointerup", handlePointerUp);
@@ -159,37 +164,30 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [gl.domElement, isDragging]);
 
   useFrame(() => {
-    const direction = new THREE.Vector3().subVectors(previousBetEnd, new THREE.Vector3(0, 0, 0));
-    if (direction.length() > maxYellowLength) {
-      direction.setLength(maxYellowLength);
-    }
-    const clampedYellowEnd = new THREE.Vector3().addVectors(new THREE.Vector3(0, 0, 0), direction);
+    const clampedYellowEnd = previousBetEnd.clone().add(
+      new THREE.Vector3(xValue - previousBetEnd.x, yValue - previousBetEnd.y, 0).clampLength(0, maxYellowLength),
+    );
 
-    const yellowLinePositions = [0, 0, 0, clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z];
-    if (yellowLine.current?.geometry) {
-      yellowLine.current.geometry.setPositions(yellowLinePositions);
-      yellowLine.current.geometry.attributes.position.needsUpdate = true;
-    }
+    yellowLine.current?.geometry.setPositions([0, 0, 0, clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z]);
+    yellowLine.current?.geometry.attributes.position.needsUpdate = true;
 
-    const dashedLinePositions = [
+    dashedLine.current?.geometry.setPositions([
       clampedYellowEnd.x,
       clampedYellowEnd.y,
       clampedYellowEnd.z,
       userPreviousBet.x,
       userPreviousBet.y,
       userPreviousBet.z,
-    ];
-    if (dashedLine.current?.geometry) {
-      dashedLine.current.geometry.setPositions(dashedLinePositions);
-      dashedLine.current.geometry.attributes.position.needsUpdate = true;
-    }
+    ]);
+    dashedLine.current?.geometry.attributes.position.needsUpdate = true;
 
-    if (sphereRef.current) {
-      const spherePosition = userPreviousBet.length() > 0
-        ? userPreviousBet
-        : clampedYellowEnd;
-      sphereRef.current.position.copy(spherePosition);
-    }
+    sphereRef.current?.position.copy(clampedYellowEnd);
+
+    yellowArrowRef.current?.position.copy(clampedYellowEnd);
+    yellowArrowRef.current?.lookAt(previousBetEnd);
+
+    dashedArrowRef.current?.position.copy(userPreviousBet);
+    dashedArrowRef.current?.lookAt(clampedYellowEnd);
   });
 
   return (
@@ -198,12 +196,10 @@ const BetLines: React.FC<BetLinesProps> = ({
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="yellow" />
       </mesh>
-
       <mesh ref={dashedArrowRef}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="white" />
       </mesh>
-
       <mesh ref={sphereRef}>
         <sphereGeometry args={[0.2, 16, 16]} />
         <meshStandardMaterial color="blue" />
