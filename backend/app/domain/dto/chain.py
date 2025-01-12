@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from domain.dto import CreateDTO
 from infrastructure.db.entities import ChainStatus
 
+
 @dataclass
 class CreateChainDTO(CreateDTO):
     current_block: int
@@ -15,6 +16,7 @@ class CreateChainDTO(CreateDTO):
     status: ChainStatus
     created_at: datetime
     last_update: Optional[datetime] = None
+
 
 class UpdateChainDTO(BaseModel):
     current_block: Optional[int] = None

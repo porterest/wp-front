@@ -1,6 +1,9 @@
 from abstractions.services.dex import DexServiceInterface
-from services.DEXService import DexService
+from dependencies.services.app_wallet.service import get_app_wallet_service
+from services.DEXService import MockDexService
 
 
 def get_dex_service() -> DexServiceInterface:
-    return DexService()
+    return MockDexService(
+        app_wallet_service=get_app_wallet_service(),
+    )  # todo: mock

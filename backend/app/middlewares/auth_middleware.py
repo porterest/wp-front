@@ -18,7 +18,16 @@ async def check_for_auth(
         response = await call_next(request)
         return response
 
-    access_token = request.headers.get('Authorization').replace('Bearer ', '')
+    if 'Authorization' not in request.headers:
+        return JSONResponse(
+            status_code=401,
+            content={
+                'detail': 'Token is empty',
+            }
+        )
+
+    access_token = request.headers['Authorization'].replace('Bearer ', '')
+
 
     auth_service = get_auth_service()
     try:
@@ -44,8 +53,6 @@ async def check_for_auth(
             }
         )
 
-    print(request.scope.keys())
     request.scope['x_user_id'] = user_id
-    print(request.scope.keys())
     response = await call_next(request)
     return response

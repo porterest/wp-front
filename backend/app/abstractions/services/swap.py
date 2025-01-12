@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from abstractions.services.block import BlockServiceInterface
 from domain.dex.pool import PoolBalances
 from domain.models.swap import CalculatedSwap
 
@@ -24,4 +23,6 @@ class SwapServiceInterface(ABC):
     async def swap_deposit(self, deposit_id: UUID) -> None:
         pass
 
-
+    @abstractmethod
+    async def bet_swap(self, calculated_swap: CalculatedSwap, pair_id: UUID) -> None:
+        ...

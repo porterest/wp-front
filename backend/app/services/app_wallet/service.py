@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Annotated
@@ -8,13 +7,26 @@ from pytoniq import LiteBalancer, WalletV4R2
 
 from abstractions.services.app_wallet import AppWalletServiceInterface, AppWalletProviderInterface
 from abstractions.services.user import UserServiceInterface
-from services.app_wallet.provider import AppWalletProvider
+from domain.models import AppWallet
+from domain.models.swap import CalculatedSwap
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class AppWalletService(AppWalletServiceInterface):
+    async def get_wallet_id_to_perform_swap(self, swap: CalculatedSwap) -> UUID:
+        return await self.provider.get_wallet_id_to_perform_swap(swap)
+
+    async def get_wallet(self, wallet_id: UUID) -> AppWallet:
+        return await self.provider.get_wallet(wallet_id)
+
+    async def get_token_amount(self, token_symbol: str) -> float:
+        return await self.provider.get_token_amount(token_symbol)
+
+    async def get_inner_tokens_amount(self) -> float:
+        return await self.provider.get_available_inner_token_amount()
+
     provider: AppWalletProviderInterface
     user_service: UserServiceInterface = None
 
@@ -24,6 +36,10 @@ class AppWalletService(AppWalletServiceInterface):
     async def get_deposit_address(self) -> Annotated[str, 'Address']:
         wallet = await self.provider.get_deposit_wallet()
         return wallet.address
+
+    async def get_deposit_wallet_id(self) -> UUID:
+        wallet = await self.provider.get_deposit_wallet()
+        return wallet.id
 
     async def withdraw_to_user(self, user_id: UUID, amount: Annotated[float, 'tons to send']):
         user = await self.user_service.get_user(user_id=user_id)
@@ -62,15 +78,14 @@ class AppWalletService(AppWalletServiceInterface):
 
         logger.debug("balancer closed")
 
-
-if __name__ == '__main__':
-    provider = AppWalletProvider(
-        vault_service=get_vault_service(),
-        wallet_repository=get_wallet_repository()
-    )
-
-    service = AppWalletService(
-        provider=provider,
-    )
-
-    asyncio.run(service.withdraw_to_user(UUID('de5b5876-16ea-485b-8ced-6e3611d4b3ff'), amount=0.05))
+# if __name__ == '__main__':
+#     provider = AppWalletProvider(
+#         vault_service=get_vault_service(),
+#         wallet_repository=get_wallet_repository()
+#     )
+#
+#     service = AppWalletService(
+#         provider=provider,
+#     )
+#
+#     asyncio.run(service.withdraw_to_user(UUID('de5b5876-16ea-485b-8ced-6e3611d4b3ff'), amount=0.05))

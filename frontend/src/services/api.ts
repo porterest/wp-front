@@ -56,7 +56,7 @@ export async function getUserHistory(): Promise<UserHistoryResponse> {
 // Функция для отправки ставки
 export async function placeBet(data: PlaceBetRequest): Promise<void> {
     try {
-        const response = await apiClient.post<void>("/bet", data);
+        const response = await apiClient.post<void>("/bets/bet", data);
         return response.data;
     } catch (error) {
         console.error("Error placing bet:", error);
@@ -66,7 +66,7 @@ export async function placeBet(data: PlaceBetRequest): Promise<void> {
 
 export async function cancelBet(betId: string) {
     try {
-        const response = await apiClient.post(`/bet/cancel`, { bet_id: betId });
+        const response = await apiClient.post(`/bets/cancel`, { bet_id: betId });
         if (response.status === 200) {
             alert("Ставка успешно отменена.");
         } else {
@@ -101,12 +101,15 @@ export async function getPairs(): Promise<PairResponse[]> {
     }
 }
 
+
 /**
  * Запрос текущего времени, блока и длительности
  */
 export async function fetchTime(): Promise<TimeResponse> {
     try {
+        console.log("fetching time");
         const response = await apiClient.get<TimeResponse>("/chain/time");
+        console.log(response.data);
         return response.data;
     } catch (error: unknown) {
         console.error("Ошибка получения времени:", error);
@@ -154,9 +157,9 @@ export async function check_user_deposit(): Promise<void> {
 }
 
 
-export async function fetchPreviousBetEnd(pairId: string): Promise<{ x: number; y: number }> {
+export async function fetchPreviousBetEnd(pairId: string): Promise<number[]> {
     try {
-        const response = await apiClient.get<{ x: number; y: number }>(
+        const response = await apiClient.get<number[]>(
           "/block/last_vector",
           {
               params: {

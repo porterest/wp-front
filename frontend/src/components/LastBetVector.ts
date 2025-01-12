@@ -5,42 +5,116 @@ import { PairOption } from "../types/pair";
 
 interface PairVectorsProps {
   selectedPair: PairOption | null;
-  previousBetEnd: THREE.Vector3;
+  previousBetEnd: THREE.Vector3 | null;
 }
 
 const LastBetVector: React.FC<PairVectorsProps> = ({
-  selectedPair,
-  previousBetEnd,
-}) => {
+                                                     selectedPair,
+                                                     previousBetEnd,
+                                                   }) => {
   const { scene } = useThree();
+  const maxLength = 2; // Максимальная длина стрелки
+  const bounds = {
+    minX: -10,
+    maxX: 10,
+    minY: -10,
+    maxY: 10,
+    minZ: -10,
+    maxZ: 10,
+  };
 
   useEffect(() => {
-    console.log('selectedPair: ', selectedPair);
-    console.log('previousBetEnd: ', previousBetEnd);
-    if (!previousBetEnd) return;
+    if (!selectedPair) {
+      console.warn("No selected pair provided.");
+      return;
+    }
 
-    drawArrow(
+    if (!previousBetEnd) {
+      console.warn("No previous bet end provided.");
+      return;
+    }
+
+    console.log("Selected Pair: ", selectedPair);
+    console.log("Previous Bet End: ", previousBetEnd);
+
+    const arrow = drawArrow(
       new THREE.Vector3(0, 0, 0),
       previousBetEnd,
-      0xff0000,
-    ); // Red Arrow
-    // drawArrow(previousBetEnd, userLastBet, 0x00ff00); // Green Arrow
+      0xffff00 // Желтый цвет стрелки
+    );
 
-  }, [selectedPair, previousBetEnd]);
+    return () => {
+      if (arrow) {
+        scene.remove(arrow);
+        console.log("Arrow removed from scene.");
+      }
+    };
+  }, [selectedPair, previousBetEnd, scene]);
+
+  const clampVector = (
+    vector: THREE.Vector3,
+    min: THREE.Vector3,
+    max: THREE.Vector3
+  ) => {
+    return new THREE.Vector3(
+      Math.max(min.x, Math.min(max.x, vector.x)),
+      Math.max(min.y, Math.min(max.y, vector.y)),
+      Math.max(min.z, Math.min(max.z, vector.z))
+    );
+  };
 
   const drawArrow = (
     start: THREE.Vector3,
     end: THREE.Vector3,
-    color: number = 0xff0000,
-  ): THREE.ArrowHelper => {
-    const arrowHelper = new THREE.ArrowHelper(
-      new THREE.Vector3().subVectors(end, start).normalize(),
-      start,
-      start.distanceTo(end),
-      color,
+    color: number
+  ): THREE.Group => {
+    const chartMin = new THREE.Vector3(bounds.minX, bounds.minY, bounds.minZ);
+    const chartMax = new THREE.Vector3(bounds.maxX, bounds.maxY, bounds.maxZ);
+
+    const clampedEnd = clampVector(end, chartMin, chartMax);
+    const direction = new THREE.Vector3().subVectors(clampedEnd, start);
+    let length = direction.length();
+
+    if (length > maxLength) {
+      direction.setLength(maxLength);
+      length = maxLength;
+      console.log(`Vector length limited to ${maxLength}`);
+    }
+
+    const normalizedDirection = direction.clone().normalize();
+
+    const group = new THREE.Group();
+
+    // Линия (стержень стрелки)
+    const lineGeometry = new THREE.CylinderGeometry(0.03, 0.03, length, 12);
+    const lineMaterial = new THREE.MeshBasicMaterial({ color });
+    const line = new THREE.Mesh(lineGeometry, lineMaterial);
+
+    line.position.y = length / 2; // Центрируем линию
+    line.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      normalizedDirection
     );
-    scene.add(arrowHelper);
-    return arrowHelper;
+
+    // Конус (наконечник стрелки)
+    const coneGeometry = new THREE.ConeGeometry(0.1, 0.2, 12);
+    const coneMaterial = new THREE.MeshBasicMaterial({ color });
+    const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+
+    cone.position.y = length + 0.1; // Ставим конус на конец линии
+    cone.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      normalizedDirection
+    );
+
+    group.add(line);
+    group.add(cone);
+    group.position.copy(start);
+
+    scene.add(group);
+    console.log("Arrow added to scene:", group);
+
+    return group;
   };
 
   return null;

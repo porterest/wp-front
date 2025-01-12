@@ -1,0 +1,1 @@
+INSERT INTO public.app_wallets (id, address, wallet_type, balance, created_at, updated_at) VALUES ('46b83ad7-d3e2-4f52-b30e-ce2231464cd0', 'UQD0NVxWB7WjbkRiyfipy7nbC_Hsm4_CWYfsrMBG7sO3cEO8', 'DEPOSIT', 0.29, '2025-01-07 17:16:48.000000', '2025-01-07 17:16:53.000000');

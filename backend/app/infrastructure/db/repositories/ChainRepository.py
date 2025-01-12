@@ -10,6 +10,7 @@ from domain.models.chain import Chain as ChainModel
 from infrastructure.db.entities import Chain
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
+
 @dataclass
 class ChainRepository(
     AbstractSQLAlchemyRepository[Chain, ChainModel, CreateChainDTO, UpdateChainDTO],
@@ -36,7 +37,7 @@ class ChainRepository(
                 res = await session.execute(
                     select(self.entity).where(self.entity.pair_id == pair_id)
                 )
-            chain = res.scalars().one_or_none()
+            chain = res.unique().scalars().one_or_none()
         return self.entity_to_model(chain) if chain else None
 
     def create_dto_to_entity(self, dto: CreateChainDTO) -> Chain:

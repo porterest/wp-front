@@ -1,7 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from enum import Enum
 
 from httpx import AsyncClient
 from pydantic import SecretStr
@@ -9,12 +8,6 @@ from pydantic import SecretStr
 from abstractions.services.tonclient import TonClientInterface
 from services.ton.public_keys.api import TonApiPublicKeyResponse
 from services.ton.public_keys.exceptions import PublicKeyCannotBeFetchedException
-
-
-class HTTPMethod(Enum):
-    GET = 'get'
-    POST = 'post'
-
 
 logger = logging.getLogger(__name__)
 
@@ -47,13 +40,13 @@ class TonApiClient(TonClientInterface):
         response = TonApiPublicKeyResponse.model_validate(response.json())
         return response.public_key
 
-import logging
-from dataclasses import dataclass
-from enum import Enum
-
-from pydantic import SecretStr
-
-from abstractions.services.tonclient import TonClientInterface
+# import logging
+# from dataclasses import dataclass
+# from enum import Enum
+#
+# from pydantic import SecretStr
+#
+# from abstractions.services.tonclient import TonClientInterface
 
 
 # class HTTPMethod(Enum):

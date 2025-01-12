@@ -1,3 +1,4 @@
+import logging
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Type, Optional
@@ -8,8 +9,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.orm import joinedload, InstrumentedAttribute
 
 from abstractions.repositories import CRUDRepositoryInterface
-from infrastructure.db.repositories.exceptions import NoFoundException
+from infrastructure.db.repositories.exceptions import NotFoundException
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class AbstractSQLAlchemyRepository[Entity, Model, CreateDTO, UpdateDTO](
@@ -91,7 +93,7 @@ class AbstractSQLAlchemyRepository[Entity, Model, CreateDTO, UpdateDTO](
                     obj = await session.get(self.entity, obj_id)
                 return self.entity_to_model(obj)
             except NoResultFound:
-                raise NoFoundException
+                raise NotFoundException
 
     async def update(self, obj_id: str, obj: UpdateDTO) -> None:
         async with self.session_maker() as session:
@@ -107,6 +109,7 @@ class AbstractSQLAlchemyRepository[Entity, Model, CreateDTO, UpdateDTO](
                 await session.delete(obj)
 
     async def get_all(self, limit: int = 100, offset: int = 0, joined: bool = True) -> list[Model]:
+        logger.info(type(self))
         async with self.session_maker() as session:
             if joined:
                 if self.options:

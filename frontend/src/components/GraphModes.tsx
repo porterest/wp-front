@@ -4,7 +4,6 @@ import * as THREE from "three";
 import CandlestickChart from "./CandlestickChart";
 import GradientPlanes from "./GradientPlanes";
 import Axes from "./Axes";
-import LastBetVector from "./LastBetVector";
 import { PairOption } from "../types/pair";
 import { CandleData } from "../types/candles";
 import { Html } from "@react-three/drei";
@@ -25,27 +24,71 @@ interface GraphModesProps {
 }
 
 const GraphModes: React.FC<GraphModesProps> = ({
-  currentMode,
-  data,
-  selectedPair,
-  previousBetEnd,
-  userPreviousBet,
-  setUserPreviousBet,
-  axisMode,
-  onDragging,
-  onShowConfirmButton,
-}) => {
-  // Проверка данных
+                                                 currentMode,
+                                                 data,
+                                                 selectedPair,
+                                                 previousBetEnd,
+                                                 userPreviousBet,
+                                                 setUserPreviousBet,
+                                                 axisMode,
+                                                 onDragging,
+                                                 onShowConfirmButton,
+                                               }) => {
+  console.log(previousBetEnd);
+  console.log(selectedPair);
+  console.log("жопа2");
+  const renderContent = () => {
+    if (currentMode === 1) {
+      console.log("Passing previousBetEnd to BetArrow:", previousBetEnd);
+
+      return (
+        <BetArrow
+          previousBetEnd={previousBetEnd}
+          userPreviousBet={userPreviousBet}
+          setUserPreviousBet={setUserPreviousBet}
+          axisMode={axisMode}
+          onDragging={onDragging}
+          onShowConfirmButton={onShowConfirmButton}
+          pairId={selectedPair?.value}
+        />
+      );
+    }
+    if (currentMode === 2 && data) {
+      console.log("Passing previousBetEnd to BetArrow:", previousBetEnd);
+
+      return <CandlestickChart data={data} mode="Candles" />;
+    }
+    if (currentMode === 3 && data) {
+      console.log("Passing previousBetEnd to BetArrow:", previousBetEnd);
+
+      return (
+        <>
+          <CandlestickChart data={data} mode="Both" />
+          <BetArrow
+            previousBetEnd={previousBetEnd}
+            userPreviousBet={userPreviousBet}
+            setUserPreviousBet={setUserPreviousBet}
+            axisMode={axisMode}
+            onDragging={onDragging}
+            onShowConfirmButton={onShowConfirmButton}
+            pairId={selectedPair?.value}
+          />
+        </>
+      );
+    }
+    return null;
+  };
+
   if (!data || data.length === 0) {
-    return <Html>
-      <div>No data available to render the graph.</div>
-    </Html>;
+    return (
+      <Html>
+        <div>No data available to render the graph.</div>
+      </Html>
+    );
   }
 
-  // Рендеринг
   return (
     <>
-      {/* Градиентные плоскости и оси всегда отображаются */}
       <GradientPlanes />
       <Axes />
       <BetArrow
@@ -55,37 +98,9 @@ const GraphModes: React.FC<GraphModesProps> = ({
         axisMode={axisMode}
         onDragging={onDragging}
         onShowConfirmButton={onShowConfirmButton}
+        pairId={selectedPair?.value}
       />
-
-      {/*Выбор режима отображения */}
-      {currentMode === 1 && (
-        <LastBetVector
-          selectedPair={selectedPair}
-          previousBetEnd={previousBetEnd}
-        />
-      )}
-
-      {currentMode === 2 && data && (
-        <CandlestickChart
-          data={data}
-          mode="Candles"
-        />
-      )}
-
-      {currentMode === 3 && (
-        <>
-          {data && (
-            <CandlestickChart
-              data={data}
-              mode="Both"
-            />
-          )}
-          <LastBetVector
-            selectedPair={selectedPair}
-            previousBetEnd={previousBetEnd}
-          />
-        </>
-      )}
+      {renderContent()}
     </>
   );
 };

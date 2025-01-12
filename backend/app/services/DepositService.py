@@ -4,8 +4,9 @@ from uuid import UUID
 from apscheduler.schedulers.base import BaseScheduler
 
 from abstractions.repositories.deposit import DepositRepositoryInterface
+from abstractions.repositories.pair import PairRepositoryInterface
 from abstractions.repositories.transaction import TransactionRepositoryInterface
-from abstractions.services.app_wallet import AppWalletProviderInterface
+from abstractions.services.app_wallet import AppWalletProviderInterface, AppWalletServiceInterface
 from abstractions.services.deposit import DepositServiceInterface
 from abstractions.services.dex import DexServiceInterface
 from abstractions.services.tonclient import TonClientInterface
@@ -23,24 +24,25 @@ class DepositService(
     DepositServiceInterface,
 ):
     deposit_repository: DepositRepositoryInterface
-    app_wallet_provider: AppWalletProviderInterface
+    app_wallet_service: AppWalletServiceInterface
     transaction_repository: TransactionRepositoryInterface
     user_service: UserServiceInterface
     scheduler: BaseScheduler
     ton_client: TonClientInterface
     dex_service: DexServiceInterface
+    pair_repository: PairRepositoryInterface
 
-    inner_token: str = 'WPT'
+    inner_token_symbol: str
 
     async def check_user_transactions(self) -> list[DepositResponse]:
         ...
 
     async def start_deposit_process(self, user_id: UUID) -> None:
-        app_wallet = await self.app_wallet_provider.get_deposit_wallet()
+        app_wallet_id = await self.app_wallet_service.get_deposit_wallet_id()
         user = await self.user_service.get_user(user_id)
         dto = DepositEntryCreateDTO(
             user_id=user.id,
-            app_wallet_id=app_wallet.id,
+            app_wallet_id=app_wallet_id,
         )
         await self.deposit_repository.create(dto)
         self.scheduler.add_job(
@@ -80,12 +82,17 @@ class DepositService(
 
                     await self.deposit_repository.update(deposit_id, dto)
 
+                    pair = await self.pair_repository.get_pair_by_tokens(
+                        token1=self.inner_token_symbol,
+                        token2=transaction.token,
+                    )
+
                     # performing a swap from TON/USDT/etc. for inner token
                     await self.dex_service.perform_swap(
-                        address=deposit.app_wallet.address,
                         amount=transaction.amount,
-                        from_token=transaction.token,
-                        to_token=self.inner_token,
+                        target_token=f"not {self.inner_token_symbol}",  # todo: mock
+                        app_wallet_id=await self.app_wallet_service.get_deposit_wallet_id(),
+                        pool_address=pair.contract_address,
                     )
 
                     # funding a user after successful swap

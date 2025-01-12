@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from uuid import UUID
 
 from abstractions.repositories import CRUDRepositoryInterface
 from domain.dto.chain import CreateChainDTO, UpdateChainDTO
@@ -12,5 +13,5 @@ class ChainRepositoryInterface(
     ABC,
 ):
     @abstractmethod
-    async def get_by_pair_id(self, pair_id) -> Chain:
+    async def get_by_pair_id(self, pair_id: UUID) -> Chain:
         ...

@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from abstractions.repositories.block import BlockRepositoryInterface
+from abstractions.repositories.pair import PairRepositoryInterface
 from abstractions.repositories.swap import SwapRepositoryInterface
-from abstractions.services.app_wallet import AppWalletProviderInterface
+from abstractions.services.app_wallet import AppWalletServiceInterface
 from abstractions.services.dex import DexServiceInterface
 from abstractions.services.math.reward_distribution import RewardDistributionServiceInterface
 from domain.models.prediction import Prediction
 from domain.models.reward_model import Rewards
-from domain.models.user_prediction import UserPrediction
 from domain.models.user_reward import UserReward
 
 
@@ -15,8 +15,9 @@ from domain.models.user_reward import UserReward
 class RewardDistributionService(RewardDistributionServiceInterface):
     swap_repository: SwapRepositoryInterface
     block_repository: BlockRepositoryInterface
+    pair_repository: PairRepositoryInterface
     dex_service: DexServiceInterface
-    app_wallets: AppWalletProviderInterface
+    app_wallets: AppWalletServiceInterface
 
     FIXED_REWARD: int = 1  # guaranteed reward for participating in the round
     reward_multiplier: float = .0
@@ -29,7 +30,7 @@ class RewardDistributionService(RewardDistributionServiceInterface):
         :param system_reserve: Общий резерв системы (доступные средства).
         :return: Динамический коэффициент наград.
         """
-        base_multiplier = 1.4  # Базовое значение
+        base_multiplier = 1.1  # Базовое значение
 
         # Учет резервов системы
         if system_reserve < 10000:
@@ -72,14 +73,17 @@ class RewardDistributionService(RewardDistributionServiceInterface):
         total_stake = sum(user_prediction.stake for user_prediction in prediction.user_predictions)
 
         block = await self.block_repository.get(obj_id=prediction.block_id)
-        pair = await self.block_repository.get_block_pair(block_id=prediction.block_id)
+        pair = await self.pair_repository.get_block_pair(block_id=prediction.block_id)
 
         # Получаем текущие показатели системы
         current_liquidity = await self.dex_service.get_current_liquidity(pair_id=pair.id)
         swaps = await self.swap_repository.get_last_swaps_for_chain(chain_id=block.chain_id)
-        system_reserve = await self.app_wallets.get_available_inner_token_amount()
+        system_reserve = await self.app_wallets.get_inner_tokens_amount()
 
-        swaps_volume = sum(map(lambda swap: swap.amount, swaps))
+        if swaps:
+            swaps_volume = sum(map(lambda swap: swap.amount, swaps))
+        else:
+            swaps_volume = 0
 
         # Рассчитываем динамический multiplier
         self.reward_multiplier = self.determine_reward_multiplier(
@@ -100,8 +104,8 @@ class RewardDistributionService(RewardDistributionServiceInterface):
             user_accuracies[user_prediction.user_id] = accuracy
             total_accuracy += accuracy * user_prediction.stake
 
-        if total_accuracy == 0:
-            raise ValueError("Нет достаточной точности для распределения наград.")
+        # if total_accuracy == 0:
+        #     raise ValueError("Нет достаточной точности для распределения наград.")
 
         # Расчет наград
         rewards = []
@@ -118,40 +122,40 @@ class RewardDistributionService(RewardDistributionServiceInterface):
                 )
             )
 
-        return Rewards(total_reward_pool=reward_pool, user_rewards=rewards)
+        return Rewards(total_reward_pool=sum(map(lambda x: x.reward, rewards)), user_rewards=rewards)
 
-
-# Пример использования
-if __name__ == "__main__":
-    prediction = Prediction(
-        user_predictions=[
-            UserPrediction(
-                user_id='user_1',
-                stake=100,
-                predicted_price_change=95,
-                predicted_tx_count=55
-            ),
-            UserPrediction(
-                user_id='user_2',
-                stake=200,
-                predicted_price_change=110,
-                predicted_tx_count=60
-            ),
-            UserPrediction(
-                user_id='user_3',
-                stake=300,
-                predicted_price_change=80,
-                predicted_tx_count=30
-            ),
-        ],
-        actual_price_change=100,
-        actual_tx_count=50,
-        block_id=None,
-    )
-
-    service = RewardDistributionService(
-
-    )
-    result = service.calculate_rewards(prediction)
-    for user_id, reward in result["rewards"].items():
-        print(f"Пользователь {user_id} получает награду: {reward:.2f}")
+#
+# # Пример использования
+# if __name__ == "__main__":
+#     prediction = Prediction(
+#         user_predictions=[
+#             UserPrediction(
+#                 user_id='user_1',
+#                 stake=100,
+#                 predicted_price_change=95,
+#                 predicted_tx_count=55
+#             ),
+#             UserPrediction(
+#                 user_id='user_2',
+#                 stake=200,
+#                 predicted_price_change=110,
+#                 predicted_tx_count=60
+#             ),
+#             UserPrediction(
+#                 user_id='user_3',
+#                 stake=300,
+#                 predicted_price_change=80,
+#                 predicted_tx_count=30
+#             ),
+#         ],
+#         actual_price_change=100,
+#         actual_tx_count=50,
+#         block_id=None,
+#     )
+#
+#     service = RewardDistributionService(
+#
+#     )
+#     result = service.calculate_rewards(prediction)
+#     for user_id, reward in result["rewards"].items():
+#         print(f"Пользователь {user_id} получает награду: {reward:.2f}")

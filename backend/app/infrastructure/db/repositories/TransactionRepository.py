@@ -7,6 +7,7 @@ from domain.models.transaction import Transaction as TransactionModel
 from infrastructure.db.entities import Transaction
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
+
 @dataclass
 class TransactionRepository(
     AbstractSQLAlchemyRepository[Transaction, TransactionModel, CreateTransactionDTO, UpdateTransactionDTO],
@@ -18,11 +19,16 @@ class TransactionRepository(
             'user': None,
         }
     )
+
     def create_dto_to_entity(self, dto: CreateTransactionDTO) -> Transaction:
         return Transaction(
+            id=dto.id,
             user_id=dto.user_id,
             type=dto.type,
-            amount=dto.amount
+            amount=dto.amount,
+            tx_id=dto.tx_id,
+            recipient=dto.recipient,
+            sender=dto.sender,
         )
 
     def entity_to_model(self, entity: Transaction) -> TransactionModel:

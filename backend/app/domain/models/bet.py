@@ -1,6 +1,7 @@
 import typing
 from dataclasses import dataclass
-from typing import TypeVar, Annotated
+from typing import TypeVar, Annotated, Optional
+from uuid import UUID
 
 from domain.enums import BetStatus
 from domain.models import Pair
@@ -8,7 +9,7 @@ from domain.models.base import BaseModel
 
 BetVector = TypeVar('BetVector', bound=tuple[
     Annotated[float, 'price'],
-    Annotated[int, 'bets amount'],
+    Annotated[float, 'bets amount'],
 ])
 
 if typing.TYPE_CHECKING:
@@ -17,9 +18,11 @@ if typing.TYPE_CHECKING:
 
 @dataclass(kw_only=True)
 class Bet(BaseModel):
-    user: typing.Optional['User'] = None
-    pair: Pair
+    user: Optional['User'] = None
+    pair: Optional[Pair] = None
     amount: float
     block_number: int
     vector: BetVector
     status: BetStatus
+
+    user_id: Optional[UUID] = None

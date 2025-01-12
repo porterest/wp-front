@@ -5,8 +5,8 @@ from sqlalchemy.exc import NoResultFound
 
 from abstractions.repositories.bet import BetRepositoryInterface
 from abstractions.repositories.block import BlockRepositoryInterface
+from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.bet import BetServiceInterface
-from abstractions.services.user import UserServiceInterface
 from domain.dto.bet import CreateBetDTO, UpdateBetDTO
 from domain.dto.user import UpdateUserDTO
 from domain.enums import BetStatus
@@ -17,7 +17,7 @@ from services.exceptions import NotFoundException
 @dataclass
 class BetService(BetServiceInterface):
     bet_repository: BetRepositoryInterface
-    user_service: UserServiceInterface
+    user_repository: UserRepositoryInterface
     block_repository: BlockRepositoryInterface
 
     async def create_bet(self, create_dto: CreateBetDTO) -> None:
@@ -40,16 +40,16 @@ class BetService(BetServiceInterface):
 
     async def cancel_bet(self, bet_id: UUID) -> None:
         bet = await self.get(bet_id)
-        user = await self.user_service.get_user(bet.user.id)
+        user = await self.user_repository.get(bet.user.id)
 
         update_user = UpdateUserDTO(
             balance=user.balance + bet.amount,
         )
 
-        await self.user_service.update_user(user_id=user.id, update_dto=update_user)
+        await self.user_repository.update(obj_id=user.id, obj=update_user)
 
         update_bet = UpdateBetDTO(
-            status="canceled"
+            status=BetStatus.CANCELED
         )
         await self.bet_repository.update(bet.id, update_bet)
 

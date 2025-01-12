@@ -3,10 +3,11 @@ from math import sqrt
 from uuid import UUID
 
 from abstractions.repositories.deposit import DepositRepositoryInterface
+from abstractions.repositories.pair import PairRepositoryInterface
 from abstractions.repositories.swap import SwapRepositoryInterface
 from abstractions.repositories.transaction import TransactionRepositoryInterface
 from abstractions.repositories.user import UserRepositoryInterface
-from abstractions.services.app_wallet import AppWalletProviderInterface
+from abstractions.services.app_wallet import AppWalletServiceInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.dex import DexServiceInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
@@ -26,11 +27,12 @@ class SwapService(SwapServiceInterface):
     deposit_repository: DepositRepositoryInterface
     transaction_repository: TransactionRepositoryInterface
     dex_service: DexServiceInterface
-    app_wallets: AppWalletProviderInterface
+    app_wallet_service: AppWalletServiceInterface
+    pair_repository: PairRepositoryInterface
 
     inner_token_symbol: str
 
-    inner_token_to_ton_pool_address: str = ''  # todo: later should be dynamic
+    inner_token_to_ton_pool_address: str = 'lalala'  # todo: later should be dynamic
 
     async def get_swap_score(self, pair_id: UUID) -> float:
         """
@@ -49,9 +51,8 @@ class SwapService(SwapServiceInterface):
         weighted_scores = []
 
         for index, block in enumerate(blocks[1:], start=1):
-            swap = await self.swap_repository.get_by_block_id(
-                block.id)  # Используем swap_repository для получения объема свапа
-            if swap.amount == 0:
+            swap = await self.swap_repository.get_by_block_id(block.id)
+            if not swap or swap.amount == 0:
                 continue
 
             # Изменение цены между текущим и предыдущим блоком
@@ -100,7 +101,7 @@ class SwapService(SwapServiceInterface):
             target_token = other_token_symbol
             swap_volume = (
                                   current_state[target_token] - (
-                                      pool_invariant / sqrt(pool_invariant / price_difference))
+                                  pool_invariant / sqrt(pool_invariant / price_difference))
                           ) / (1 - commission)
 
         return CalculatedSwap(volume=swap_volume, target_token=target_token)
@@ -131,12 +132,31 @@ class SwapService(SwapServiceInterface):
             pool_address=self.inner_token_to_ton_pool_address,
             amount=converted_amount,
             target_token=self.inner_token_symbol,
-            app_wallet_id=(await self.app_wallets.get_deposit_wallet()).id,
+            app_wallet_id=await self.app_wallet_service.get_deposit_wallet_id(),
         )
 
         transaction = CreateTransactionDTO(
             amount=blockchain_tx.amount,
             user_id=deposit.user.id,
+            tx_id=blockchain_tx.tx_id,
+            type=TransactionType.SWAP,
+            sender=blockchain_tx.from_address,
+            recipient=blockchain_tx.to_address,
+        )
+
+        await self.transaction_repository.create(transaction)
+
+    async def bet_swap(self, calculated_swap: CalculatedSwap, pair_id: UUID) -> None:
+        pair = await self.pair_repository.get(pair_id)
+        blockchain_tx = await self.dex_service.perform_swap(
+            pool_address=pair.contract_address,
+            target_token=calculated_swap.target_token,
+            amount=calculated_swap.volume,
+            app_wallet_id=await self.app_wallet_service.get_wallet_id_to_perform_swap(calculated_swap),
+        )
+
+        transaction = CreateTransactionDTO(
+            amount=blockchain_tx.amount,
             tx_id=blockchain_tx.tx_id,
             type=TransactionType.SWAP,
             sender=blockchain_tx.from_address,

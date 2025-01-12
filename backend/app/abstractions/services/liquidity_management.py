@@ -1,13 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import Annotated
 
-from abstractions.services.dex import DexServiceInterface
+from domain.dex import PoolState
 from domain.models.liquidity_action import LiquidityAction
+from domain.models.swap import CalculatedSwap
 
 
-class LiquidityManagementServiceInterface(ABC):
-    dex_service: DexServiceInterface
-
+class LiquidityManagerInterface(ABC):
     @abstractmethod
     async def calculate_tokens_deficit_or_surplus(self, current_state: dict, target_state: dict) -> dict:
         """
@@ -23,6 +22,8 @@ class LiquidityManagementServiceInterface(ABC):
             inner_token_state: Annotated[float, 'inner token needed'],
             other_token_state: Annotated[float, 'other pool token needed'],
             pool_trade_intensity: Annotated[float, 'pool trade intensity score'],
+            pool_state: Annotated[PoolState, 'current pool state'],
+            calculated_swap: Annotated[CalculatedSwap, 'calculated swap of the current block'],
             swaps_volume_score: Annotated[float, 'how hard it is to move price'],
             bets_count: Annotated[int, 'bets count within the block'],
             bets_volume: Annotated[float, 'bets volume within the block'],
@@ -32,12 +33,6 @@ class LiquidityManagementServiceInterface(ABC):
         """
         ...
 
-    @abstractmethod
-    async def manage_liquidity(self) -> dict:
-        """
-        Управляет ликвидностью на основе анализа пула, пользователей и объемов свапов.
-        """
-        ...
 
 #
 # import asyncio

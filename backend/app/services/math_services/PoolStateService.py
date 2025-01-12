@@ -3,6 +3,7 @@ from uuid import UUID
 
 from abstractions.services.dex import DexServiceInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
+from domain.dex import PoolState
 
 
 @dataclass
@@ -10,28 +11,12 @@ class PoolStateService:
     dex_service: DexServiceInterface
     aggregate_bets_service: AggregateBetsServiceInterface
 
-    async def get_current_pool_state(self) -> dict:
+    async def get_current_pool_state(self) -> PoolState:
         """
         Получает текущее состояние пула через DexService.
         :return: Словарь с балансами токенов в пуле.
         """
         return await self.dex_service.get_pool_state()
-
-    async def calculate_target_pool_state(self, block_id: UUID) -> dict:
-        """
-        Рассчитывает целевое состояние пула на основе агрегированных ставок.
-        :param block_id: ID блока, для которого нужно рассчитать целевое состояние.
-        :return: Словарь с целевыми балансами токенов.
-        """
-        # Получаем агрегированные ставки (агрегированные вектора)
-        aggregated_vector = await self.aggregate_bets_service.aggregate_bets(block_id)
-
-        # Используем агрегированные значения для расчета целевого состояния пула
-        target_pool_state = {
-            "token_x": aggregated_vector[0],  # Целевой баланс токена X
-            "token_y": aggregated_vector[1],  # Целевой баланс токена Y
-        }
-        return target_pool_state
 
     async def calculate_pool_state_delta(self, current_state: dict, target_state: dict) -> dict:
         """

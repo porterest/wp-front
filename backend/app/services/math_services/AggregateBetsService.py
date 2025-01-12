@@ -1,22 +1,21 @@
 from dataclasses import dataclass
-from typing import Annotated
 from uuid import UUID
 
-from abstractions.services.block import BlockServiceInterface
+from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
 from domain.models.bet import BetVector
 
 
 @dataclass
 class AggregateBetsService(AggregateBetsServiceInterface):
-    block_service: BlockServiceInterface
+    block_repository: BlockRepositoryInterface
 
     async def aggregate_bets(
             self,
             block_id: UUID,
     ) -> BetVector:
         # Получаем ставки для указанного блока
-        block = await self.block_service.get_block(block_id)
+        block = await self.block_repository.get(block_id)
 
         # Инициализация агрегированных значений
         total_weight = 0
@@ -25,7 +24,7 @@ class AggregateBetsService(AggregateBetsServiceInterface):
 
         # Агрегируем значения с учётом веса (суммы ставки)
         for bet in block.bets:
-            weight = bet['amount']  # Сумма ставки пользователя
+            weight = bet.amount  # Сумма ставки пользователя
             total_weight += weight
             aggregate_x += bet.vector[0] * weight
             aggregate_y += bet.vector[1] * weight
