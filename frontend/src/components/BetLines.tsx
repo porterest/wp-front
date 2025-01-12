@@ -193,6 +193,17 @@ const BetLines: React.FC<BetLinesProps> = ({
       const spherePosition = userPreviousBet.length() > 0 ? userPreviousBet : clampedYellowEnd;
       sphereRef.current.position.copy(spherePosition);
     }
+
+    // Обновляем ориентацию конусов
+    if (yellowArrowRef.current) {
+      yellowArrowRef.current.position.copy(clampedYellowEnd);
+      yellowArrowRef.current.lookAt(new THREE.Vector3(0, 0, 0));
+    }
+
+    if (dashedArrowRef.current) {
+      dashedArrowRef.current.position.copy(userPreviousBet);
+      dashedArrowRef.current.lookAt(clampedYellowEnd);
+    }
   });
 
   return (
