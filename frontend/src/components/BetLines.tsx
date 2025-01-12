@@ -117,7 +117,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       isDragging = false;
       onDragging(false);
       onShowConfirmButton(true, {
-        amount: 0, // Тут можно добавить логику расчета ставки
+        amount: 0, // Здесь можно настроить расчет суммы
         predicted_vector: [userPreviousBet.x, userPreviousBet.y],
       });
     }
