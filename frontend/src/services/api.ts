@@ -35,6 +35,8 @@ apiClient.interceptors.request.use(
 export async function getUserBets(): Promise<UserBetsResponse> {
     try {
         const response = await apiClient.get<UserBetsResponse>("/user/bets");
+        console.log('ставка юзера');
+        console.log(response);
         return response.data;
     } catch (error) {
         console.error("Error fetching user bets:", error);

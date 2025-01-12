@@ -38,32 +38,32 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   }, [minPrice, maxPrice, normalizeY]);
 
 
-  data.forEach((candle, index) => {
-    const normalizedOpen = normalizeY(candle.open);
-    const normalizedClose = normalizeY(candle.close);
-    const normalizedHigh = normalizeY(candle.high);
-    const normalizedLow = normalizeY(candle.low);
-
-    console.log(`Candle ${index}:`);
-    console.log(`  Open Y: ${normalizedOpen}`);
-    console.log(`  Close Y: ${normalizedClose}`);
-    console.log(`  High Y: ${normalizedHigh}`);
-    console.log(`  Low Y: ${normalizedLow}`);
-  });
-  console.log("Viewport height:", viewport.height);
-  console.log("Min price:", minPrice);
-  console.log("Max price:", maxPrice);
-
-  useEffect(() => {
-    const minY = normalizeY(minPrice);
-    const maxY = normalizeY(maxPrice);
-
-    console.log(`Min line Y: ${minY}`);
-    console.log(`Max line Y: ${maxY}`);
-  });
-  data?.forEach((candle, index) => {
-    console.log(`Candle ${index}: Open Y: ${normalizeY(candle.open)}, Close Y: ${normalizeY(candle.close)}`);
-  });
+  // data.forEach((candle, index) => {
+  //   const normalizedOpen = normalizeY(candle.open);
+  //   const normalizedClose = normalizeY(candle.close);
+  //   const normalizedHigh = normalizeY(candle.high);
+  //   const normalizedLow = normalizeY(candle.low);
+  //
+  //   console.log(`Candle ${index}:`);
+  //   console.log(`  Open Y: ${normalizedOpen}`);
+  //   console.log(`  Close Y: ${normalizedClose}`);
+  //   console.log(`  High Y: ${normalizedHigh}`);
+  //   console.log(`  Low Y: ${normalizedLow}`);
+  // });
+  // console.log("Viewport height:", viewport.height);
+  // console.log("Min price:", minPrice);
+  // console.log("Max price:", maxPrice);
+  //
+  // useEffect(() => {
+  //   const minY = normalizeY(minPrice);
+  //   const maxY = normalizeY(maxPrice);
+  //
+  //   console.log(`Min line Y: ${minY}`);
+  //   console.log(`Max line Y: ${maxY}`);
+  // });
+  // data?.forEach((candle, index) => {
+  //   console.log(`Candle ${index}: Open Y: ${normalizeY(candle.open)}, Close Y: ${normalizeY(candle.close)}`);
+  // });
 
 
   const normalizeZ = useCallback((volume: number, maxVolume: number) => {
