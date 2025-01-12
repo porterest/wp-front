@@ -124,21 +124,21 @@ const BetLines: React.FC<BetLinesProps> = ({
     raycaster.current.ray.intersectPlane(plane.current, intersection);
 
     const direction = new THREE.Vector3().subVectors(intersection, previousBetEnd);
+    let newEnd = previousBetEnd.clone().add(direction);
 
     if (axisMode === "X") {
-      direction.y = 0; // Ограничиваем движение по Y
+      newEnd.y = previousBetEnd.y;
     } else if (axisMode === "Y") {
-      direction.x = 0; // Ограничиваем движение по X
+      newEnd.x = previousBetEnd.x;
     }
 
-    let distance = direction.length();
+    const distance = direction.length();
 
     if (distance > maxYellowLength) {
-      distance = maxYellowLength;
       direction.setLength(maxYellowLength);
+      newEnd = previousBetEnd.clone().add(direction);
     }
 
-    const newEnd = previousBetEnd.clone().add(direction);
     handleDrag(newEnd);
   };
 
