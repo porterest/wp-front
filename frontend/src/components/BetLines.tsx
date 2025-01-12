@@ -18,7 +18,7 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              yValue,
                                              dashedLineStart,
                                            }) => {
-  const maxYellowLength = 4; // Увеличиваем длину жёлтой стрелки
+  const maxYellowLength = 5; // Увеличенная максимальная длина жёлтой стрелки
   const yellowLine = useRef<Line2 | null>(null);
   const dashedLine = useRef<Line2 | null>(null);
   const yellowArrowRef = useRef<THREE.Mesh>(null); // Жёлтый конус
@@ -43,7 +43,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     const dashedLineGeometry = new LineGeometry();
     dashedLineGeometry.setPositions([
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-      xValue, yValue, previousBetEnd.z,
+      xValue, yValue, dashedLineStart.z,
     ]);
 
     const dashedLineMaterial = new LineMaterial({
@@ -83,8 +83,10 @@ const BetLines: React.FC<BetLinesProps> = ({
     // Обновляем позицию и ориентацию жёлтого конуса
     if (yellowArrowRef.current) {
       yellowArrowRef.current.position.copy(clampedYellowEnd);
-      yellowArrowRef.current.lookAt(0, 0, 0);
-      yellowArrowRef.current.updateMatrix();
+      yellowArrowRef.current.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0), // Начальное направление вверх
+        yellowDirection.clone().normalize() // Вектор направления жёлтой стрелки
+      );
     }
 
     // Обновляем геометрию жёлтой линии
@@ -94,17 +96,24 @@ const BetLines: React.FC<BetLinesProps> = ({
       yellowLine.current.geometry.attributes.position.needsUpdate = true;
     }
 
+    // Белая линия начинается от конца жёлтой
+    const dashedLineStart = clampedYellowEnd.clone();
+    const dashedLineEnd = new THREE.Vector3(xValue, yValue, dashedLineStart.z);
+    const dashedDirection = new THREE.Vector3().subVectors(dashedLineEnd, dashedLineStart).normalize();
+
     // Обновляем позицию и ориентацию белого конуса
     if (dashedArrowRef.current) {
-      dashedArrowRef.current.position.set(xValue, yValue, dashedLineStart.z);
-      dashedArrowRef.current.lookAt(clampedYellowEnd);
-      dashedArrowRef.current.updateMatrix();
+      dashedArrowRef.current.position.copy(dashedLineEnd);
+      dashedArrowRef.current.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0), // Начальное направление вверх
+        dashedDirection.clone().normalize() // Вектор направления белой стрелки
+      );
     }
 
-    // Обновляем геометрию белой линии (без ограничения)
+    // Обновляем геометрию белой пунктирной линии
     const dashedLinePositions = [
-      clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z,
-      xValue, yValue, previousBetEnd.z,
+      dashedLineStart.x, dashedLineStart.y, dashedLineStart.z,
+      dashedLineEnd.x, dashedLineEnd.y, dashedLineEnd.z,
     ];
     if (dashedLine.current?.geometry) {
       dashedLine.current.geometry.setPositions(dashedLinePositions);
