@@ -138,7 +138,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         previousBetEnd={previousBetEnd}
         xValue={xValue}
         yValue={yValue}
-        fixedPreviousBetEnd={fixedPreviousBetEnd}
+        // fixedPreviousBetEnd={fixedPreviousBetEnd}
         dashedLineStart={dashedLineStart}
       />
       <Text
