@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { useUserBalance } from "../pages/BalancePage";
 
 interface BetArrowProps {
-  previousBetEnd: THREE.Vector3; // Конец желтой линии
+  previousBetEnd: THREE.Vector3; // Конец желтой линии (агрегированная ставка)
   userPreviousBet: THREE.Vector3; // Ставка пользователя
   setUserPreviousBet: (value: THREE.Vector3) => void;
   onDragging: (isDragging: boolean) => void;
@@ -21,6 +21,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
                                              userPreviousBet,
                                              setUserPreviousBet,
                                              onDragging,
+                                             onShowConfirmButton,
                                              axisMode,
                                            }) => {
   const [xValue, setXValue] = useState(userPreviousBet.x); // Позиция X
@@ -29,7 +30,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   const { userData } = useUserBalance(); // Получение баланса пользователя
   const userDeposit = userData?.balance || 0; // Баланс по умолчанию 0
-  const maxArrowLength = 5; // Максимальная длина стрелки
+  const maxArrowLength = 5; // Максимальная длина желтой стрелки
 
   // Колбек для обработки перетаскивания из `BetLines`
   const handleDrag = (newPosition: THREE.Vector3) => {
@@ -39,7 +40,10 @@ const BetArrow: React.FC<BetArrowProps> = ({
       setYValue(newPosition.y);
     }
 
-    const distance = new THREE.Vector3().subVectors(newPosition, previousBetEnd).length();
+    const distance = new THREE.Vector3()
+      .subVectors(newPosition, previousBetEnd)
+      .length();
+
     const percentage = Math.min(distance / maxArrowLength, 1);
     const bet = percentage * userDeposit;
 
@@ -53,18 +57,15 @@ const BetArrow: React.FC<BetArrowProps> = ({
       <BetLines
         previousBetEnd={previousBetEnd}
         userPreviousBet={userPreviousBet}
-        maxYellowLength={maxArrowLength}
         onDragging={onDragging}
-        setUserPreviousBet={handleDrag}
+        onShowConfirmButton={onShowConfirmButton} // Передаем onShowConfirmButton в BetLines
+        maxYellowLength={maxArrowLength}
+        handleDrag={handleDrag} // Передача колбека для обработки перетаскивания
       />
 
       {/* Текст депозита */}
       <Text
-        position={[
-          previousBetEnd.x,
-          previousBetEnd.y + 1,
-          previousBetEnd.z,
-        ]}
+        position={[previousBetEnd.x, previousBetEnd.y + 1, previousBetEnd.z]}
         fontSize={0.3}
         color="lightgreen"
         anchorX="center"

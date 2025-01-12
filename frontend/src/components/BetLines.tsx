@@ -6,14 +6,15 @@ import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 
 interface BetLinesProps {
-  previousBetEnd: THREE.Vector3;
-  userPreviousBet: THREE.Vector3;
-  onDragging: (isDragging: boolean) => void;
+  previousBetEnd: THREE.Vector3; // Конец желтой линии
+  userPreviousBet: THREE.Vector3; // Ставка пользователя
+  onDragging: (isDragging: boolean) => void; // Колбек для управления состоянием перетаскивания
   onShowConfirmButton: (
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] }
-  ) => void;
-  maxArrowLength: number; // Максимальная длина стрелки
+  ) => void; // Колбек для отображения кнопки подтверждения
+  maxYellowLength: number; // Максимальная длина желтой стрелки
+  handleDrag: (newPosition: THREE.Vector3) => void; // Колбек для обновления позиции
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
@@ -21,21 +22,20 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              userPreviousBet,
                                              onDragging,
                                              onShowConfirmButton,
-                                             maxArrowLength,
+                                             maxYellowLength,
+                                             handleDrag,
                                            }) => {
   const yellowLine = useRef<Line2 | null>(null);
   const dashedLine = useRef<Line2 | null>(null);
   const sphereRef = useRef<THREE.Mesh>(null);
-  const yellowArrowRef = useRef<THREE.Mesh>(null); // Желтый конус
-  const dashedArrowRef = useRef<THREE.Mesh>(null); // Белый конус
+  const yellowArrowRef = useRef<THREE.Mesh>(null);
+  const dashedArrowRef = useRef<THREE.Mesh>(null);
 
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
 
   const [isDragging, setIsDragging] = useState(false);
-  const [xValue, setXValue] = useState(userPreviousBet.x);
-  const [yValue, setYValue] = useState(userPreviousBet.y);
   const [betAmount, setBetAmount] = useState(0);
 
   useEffect(() => {
@@ -80,7 +80,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (isDragging) {
       onShowConfirmButton(true, {
         amount: betAmount,
-        predicted_vector: [xValue, yValue],
+        predicted_vector: [userPreviousBet.x, userPreviousBet.y],
       });
 
       setIsDragging(false);
@@ -125,18 +125,16 @@ const BetLines: React.FC<BetLinesProps> = ({
     const direction = new THREE.Vector3().subVectors(intersection, previousBetEnd);
     let distance = direction.length();
 
-    if (distance > maxArrowLength) {
-      distance = maxArrowLength;
-      direction.setLength(maxArrowLength);
+    if (distance > maxYellowLength) {
+      distance = maxYellowLength;
+      direction.setLength(maxYellowLength);
     }
 
     const newEnd = previousBetEnd.clone().add(direction);
+    handleDrag(newEnd);
 
-    setXValue(newEnd.x);
-    setYValue(newEnd.y);
-
-    const percentage = distance / maxArrowLength;
-    const bet = percentage * 1000; // Пример расчета суммы ставки
+    const percentage = distance / maxYellowLength;
+    const bet = percentage * 1000; // Пример расчета
     setBetAmount(Math.min(bet, 1000));
   };
 
@@ -161,8 +159,8 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   useFrame(() => {
     const direction = new THREE.Vector3().subVectors(previousBetEnd, new THREE.Vector3(0, 0, 0));
-    if (direction.length() > maxArrowLength) {
-      direction.setLength(maxArrowLength);
+    if (direction.length() > maxYellowLength) {
+      direction.setLength(maxYellowLength);
     }
     const clampedYellowEnd = new THREE.Vector3().addVectors(new THREE.Vector3(0, 0, 0), direction);
 
