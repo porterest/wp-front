@@ -21,8 +21,6 @@ from services.exceptions import NotFoundException, NoSuchUserException
 
 @dataclass
 class UserService(UserServiceInterface):
-
-
     user_repository: UserRepositoryInterface
     block_service: BlockServiceInterface
     swap_service: SwapServiceInterface
@@ -30,6 +28,7 @@ class UserService(UserServiceInterface):
 
     async def distribute_rewards(self, rewards: Rewards) -> None:
         pass
+
     async def ensure_user(self, wallet_address: str) -> None:
         user = await self.user_repository.get_by_wallet(wallet_address)
         if not user:
