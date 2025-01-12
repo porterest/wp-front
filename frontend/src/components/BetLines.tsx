@@ -10,6 +10,7 @@ interface BetLinesProps {
   xValue: number;
   yValue: number;
   dashedLineStart: THREE.Vector3;
+  userPreviousBet: THREE.Vector3; // Новое свойство для белой стрелки
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
@@ -17,15 +18,15 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              xValue,
                                              yValue,
                                              dashedLineStart,
+                                             userPreviousBet,
                                            }) => {
-  const maxYellowLength = 5; // Увеличенная максимальная длина жёлтой стрелки
+  const maxYellowLength = 5; // Максимальная длина жёлтой линии
   const yellowLine = useRef<Line2 | null>(null);
   const dashedLine = useRef<Line2 | null>(null);
   const yellowArrowRef = useRef<THREE.Mesh>(null); // Жёлтый конус
   const dashedArrowRef = useRef<THREE.Mesh>(null); // Белый конус
   const { scene } = useThree();
 
-  // Инициализация линий
   useEffect(() => {
     const yellowLineGeometry = new LineGeometry();
     yellowLineGeometry.setPositions([0, 0, 0, previousBetEnd.x, previousBetEnd.y, previousBetEnd.z]);
@@ -43,7 +44,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     const dashedLineGeometry = new LineGeometry();
     dashedLineGeometry.setPositions([
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-      xValue, yValue, dashedLineStart.z,
+      userPreviousBet.x, userPreviousBet.y, userPreviousBet.z,
     ]);
 
     const dashedLineMaterial = new LineMaterial({
@@ -60,32 +61,25 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (yellowLine.current) scene.remove(yellowLine.current);
       if (dashedLine.current) scene.remove(dashedLine.current);
     };
-  }, [scene, previousBetEnd, xValue, yValue]);
+  }, [scene, previousBetEnd, userPreviousBet]);
 
-  // Обновление линий и конусов
   useFrame(() => {
     // Ограничиваем длину жёлтой линии
-    const yellowDirection = new THREE.Vector3()
-      .subVectors(previousBetEnd, new THREE.Vector3(0, 0, 0))
-      .normalize();
+    const direction = new THREE.Vector3().subVectors(previousBetEnd, new THREE.Vector3(0, 0, 0));
+    const actualLength = direction.length();
 
-    let yellowLength = yellowDirection.length();
-    if (yellowLength > maxYellowLength) {
-      yellowDirection.setLength(maxYellowLength);
-      yellowLength = maxYellowLength;
+    if (actualLength > maxYellowLength) {
+      direction.setLength(maxYellowLength);
     }
 
-    const clampedYellowEnd = new THREE.Vector3().addVectors(
-      new THREE.Vector3(0, 0, 0),
-      yellowDirection.multiplyScalar(yellowLength)
-    );
+    const clampedYellowEnd = new THREE.Vector3().addVectors(new THREE.Vector3(0, 0, 0), direction);
 
     // Обновляем позицию и ориентацию жёлтого конуса
     if (yellowArrowRef.current) {
       yellowArrowRef.current.position.copy(clampedYellowEnd);
       yellowArrowRef.current.quaternion.setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0), // Начальное направление вверх
-        yellowDirection.clone().normalize() // Вектор направления жёлтой стрелки
+        new THREE.Vector3(0, 1, 0), // Вектор по умолчанию (вверх)
+        direction.clone().normalize() // Вектор направления
       );
     }
 
@@ -96,28 +90,27 @@ const BetLines: React.FC<BetLinesProps> = ({
       yellowLine.current.geometry.attributes.position.needsUpdate = true;
     }
 
-    // Белая линия начинается от конца жёлтой
-    const dashedLineStart = clampedYellowEnd.clone();
-    const dashedLineEnd = new THREE.Vector3(xValue, yValue, dashedLineStart.z);
-    const dashedDirection = new THREE.Vector3().subVectors(dashedLineEnd, dashedLineStart).normalize();
-
-    // Обновляем позицию и ориентацию белого конуса
-    if (dashedArrowRef.current) {
-      dashedArrowRef.current.position.copy(dashedLineEnd);
-      dashedArrowRef.current.quaternion.setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0), // Начальное направление вверх
-        dashedDirection.clone().normalize() // Вектор направления белой стрелки
-      );
-    }
-
-    // Обновляем геометрию белой пунктирной линии
+    // Белая линия начинается от конца жёлтой и идёт к `userPreviousBet`
+    const dashedLineEnd = userPreviousBet;
     const dashedLinePositions = [
-      dashedLineStart.x, dashedLineStart.y, dashedLineStart.z,
+      clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z,
       dashedLineEnd.x, dashedLineEnd.y, dashedLineEnd.z,
     ];
     if (dashedLine.current?.geometry) {
       dashedLine.current.geometry.setPositions(dashedLinePositions);
       dashedLine.current.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // Обновляем позицию и ориентацию белого конуса
+    if (dashedArrowRef.current) {
+      dashedArrowRef.current.position.copy(dashedLineEnd);
+      const dashedDirection = new THREE.Vector3()
+        .subVectors(dashedLineEnd, clampedYellowEnd)
+        .normalize();
+      dashedArrowRef.current.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        dashedDirection
+      );
     }
   });
 
