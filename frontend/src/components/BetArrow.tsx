@@ -34,19 +34,24 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   // Колбек для обработки перетаскивания из `BetLines`
   const handleDrag = (newPosition: THREE.Vector3) => {
+    // Обновление позиции на основе выбранной оси
     if (axisMode === "X") {
       setXValue(newPosition.x);
     } else if (axisMode === "Y") {
       setYValue(newPosition.y);
     }
 
+    // Расчет расстояния от начала до новой позиции
     const distance = new THREE.Vector3()
       .subVectors(newPosition, previousBetEnd)
       .length();
 
+    // Процент от максимальной длины стрелки
     const percentage = Math.min(distance / maxArrowLength, 1);
+    // Сумма ставки на основе процента и баланса пользователя
     const bet = percentage * userDeposit;
 
+    // Обновление состояния
     setBetAmount(Math.min(bet, userDeposit));
     setUserPreviousBet(newPosition);
   };
@@ -60,7 +65,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         onDragging={onDragging}
         onShowConfirmButton={onShowConfirmButton} // Передаем onShowConfirmButton в BetLines
         maxYellowLength={maxArrowLength}
-        // handleDrag={handleDrag} // Передача колбека для обработки перетаскивания
+        handleDrag={handleDrag} // Передача колбека для обработки перетаскивания
         axisMode={axisMode}
       />
 

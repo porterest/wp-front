@@ -1,10 +1,9 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
-import { useUserBalance } from "../pages/BalancePage"; // Для получения баланса
 
 interface BetLinesProps {
   previousBetEnd: THREE.Vector3;
@@ -12,10 +11,11 @@ interface BetLinesProps {
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
-    betData?: { amount: number; predicted_vector: number[] },
+    betData?: { amount: number; predicted_vector: number[] }
   ) => void;
   maxYellowLength: number;
   axisMode: "X" | "Y";
+  handleDrag: (newPosition: THREE.Vector3) => void;
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
@@ -25,6 +25,7 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              onShowConfirmButton,
                                              maxYellowLength,
                                              axisMode,
+                                             handleDrag,
                                            }) => {
   const yellowLine = useRef<Line2 | null>(null);
   const dashedLine = useRef<Line2 | null>(null);
@@ -35,13 +36,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
-  const [isDragging, setIsDragging] = useState(false);
-  const [xValue, setXValue] = useState(userPreviousBet.x);
-  const [yValue, setYValue] = useState(userPreviousBet.y);
-  const [betAmount, setBetAmount] = useState(0);
-
-  const { userData } = useUserBalance();
-  const userBalance = userData?.balance || 0;
+  let isDragging = false;
 
   useEffect(() => {
     // Создаем линии
@@ -80,33 +75,10 @@ const BetLines: React.FC<BetLinesProps> = ({
     };
   }, [scene, previousBetEnd, userPreviousBet]);
 
-  const handlePointerUp = () => {
-    if (isDragging) {
-      onShowConfirmButton(true, {
-        amount: betAmount,
-        predicted_vector: [xValue, yValue],
-      });
-      setIsDragging(false);
-      onDragging(false);
-    }
-  };
-
-  const isIntersectingEndpoint = (event: PointerEvent) => {
-    if (!sphereRef.current) return false;
-
-    const mouse = new THREE.Vector2(
-      (event.clientX / gl.domElement.clientWidth) * 2 - 1,
-      -(event.clientY / gl.domElement.clientHeight) * 2 + 1,
-    );
-
-    raycaster.current.setFromCamera(mouse, camera);
-    return raycaster.current.intersectObject(sphereRef.current).length > 0;
-  };
-
   const handlePointerDown = (event: PointerEvent) => {
     if (isIntersectingEndpoint(event)) {
       updateDynamicPlane();
-      setIsDragging(true);
+      isDragging = true;
       onDragging(true);
     }
   };
@@ -116,7 +88,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     const mouse = new THREE.Vector2(
       (event.clientX / gl.domElement.clientWidth) * 2 - 1,
-      -(event.clientY / gl.domElement.clientHeight) * 2 + 1,
+      -(event.clientY / gl.domElement.clientHeight) * 2 + 1
     );
 
     const intersection = new THREE.Vector3();
@@ -132,17 +104,35 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     const newEnd = previousBetEnd.clone().add(direction);
     if (axisMode === "X") {
-      newEnd.y = previousBetEnd.y; // Фиксируем Y
+      newEnd.y = previousBetEnd.y;
     } else if (axisMode === "Y") {
-      newEnd.x = previousBetEnd.x; // Фиксируем X
+      newEnd.x = previousBetEnd.x;
     }
 
-    setXValue(newEnd.x);
-    setYValue(newEnd.y);
+    handleDrag(newEnd);
+  };
 
-    const percentage = distance / maxYellowLength;
-    const bet = percentage * userBalance;
-    setBetAmount(Math.min(bet, userBalance));
+  const handlePointerUp = () => {
+    if (isDragging) {
+      isDragging = false;
+      onDragging(false);
+      onShowConfirmButton(true, {
+        amount: 0, // Тут можно добавить логику расчета ставки
+        predicted_vector: [userPreviousBet.x, userPreviousBet.y],
+      });
+    }
+  };
+
+  const isIntersectingEndpoint = (event: PointerEvent) => {
+    if (!sphereRef.current) return false;
+
+    const mouse = new THREE.Vector2(
+      (event.clientX / gl.domElement.clientWidth) * 2 - 1,
+      -(event.clientY / gl.domElement.clientHeight) * 2 + 1
+    );
+
+    raycaster.current.setFromCamera(mouse, camera);
+    return raycaster.current.intersectObject(sphereRef.current).length > 0;
   };
 
   const updateDynamicPlane = () => {
@@ -161,45 +151,62 @@ const BetLines: React.FC<BetLinesProps> = ({
       canvas.removeEventListener("pointerdown", handlePointerDown);
       canvas.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [gl.domElement, isDragging]);
+  }, [gl.domElement]);
 
   useFrame(() => {
     const clampedYellowEnd = previousBetEnd.clone().add(
-      new THREE.Vector3(xValue - previousBetEnd.x, yValue - previousBetEnd.y, 0).clampLength(0, maxYellowLength),
+      new THREE.Vector3(
+        userPreviousBet.x - previousBetEnd.x,
+        userPreviousBet.y - previousBetEnd.y,
+        0
+      ).clampLength(0, maxYellowLength)
     );
 
-    yellowLine.current?.geometry.setPositions([0, 0, 0, clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z]);
-    yellowLine.current?.geometry.attributes.position.needsUpdate = true;
+    if (yellowLine.current && yellowLine.current.geometry) {
+      yellowLine.current.geometry.setPositions([0, 0, 0, clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z]);
+    }
 
-    dashedLine.current?.geometry.setPositions([
-      clampedYellowEnd.x,
-      clampedYellowEnd.y,
-      clampedYellowEnd.z,
-      userPreviousBet.x,
-      userPreviousBet.y,
-      userPreviousBet.z,
-    ]);
-    dashedLine.current?.geometry.attributes.position.needsUpdate = true;
+    if (dashedLine.current && dashedLine.current.geometry) {
+      dashedLine.current.geometry.setPositions([
+        clampedYellowEnd.x,
+        clampedYellowEnd.y,
+        clampedYellowEnd.z,
+        userPreviousBet.x,
+        userPreviousBet.y,
+        userPreviousBet.z,
+      ]);
+    }
 
-    sphereRef.current?.position.copy(clampedYellowEnd);
+    if (sphereRef.current) {
+      sphereRef.current.position.copy(clampedYellowEnd);
+    }
 
-    yellowArrowRef.current?.position.copy(clampedYellowEnd);
-    yellowArrowRef.current?.lookAt(previousBetEnd);
+    if (yellowArrowRef.current) {
+      yellowArrowRef.current.position.copy(clampedYellowEnd);
+      yellowArrowRef.current.lookAt(previousBetEnd);
+    }
 
-    dashedArrowRef.current?.position.copy(userPreviousBet);
-    dashedArrowRef.current?.lookAt(clampedYellowEnd);
+    if (dashedArrowRef.current) {
+      dashedArrowRef.current.position.copy(userPreviousBet);
+      dashedArrowRef.current.lookAt(clampedYellowEnd);
+    }
   });
 
   return (
     <>
+      {/* Желтая стрелка */}
       <mesh ref={yellowArrowRef}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="yellow" />
       </mesh>
+
+      {/* Белая стрелка */}
       <mesh ref={dashedArrowRef}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="white" />
       </mesh>
+
+      {/* Сфера */}
       <mesh ref={sphereRef}>
         <sphereGeometry args={[0.2, 16, 16]} />
         <meshStandardMaterial color="blue" />
