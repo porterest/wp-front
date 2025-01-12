@@ -1,9 +1,10 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
+import { useScale } from "../context/ScaleContext";
 
 interface BetLinesProps {
   previousBetEnd: THREE.Vector3;
@@ -38,10 +39,27 @@ const BetLines: React.FC<BetLinesProps> = ({
   const plane = useRef(new THREE.Plane());
   let isDragging = false;
 
+  const resrtictVector = (vector: THREE.Vector3, max: number) => {
+    // Calculate the current max coordinate
+    const maxCoordinate = Math.max(
+      Math.abs(vector.x),
+      Math.abs(vector.y),
+      Math.abs(vector.z)
+    );
+
+    // Calculate the scaling factor
+    const scale = max / maxCoordinate;
+
+    // Scale the normalized vector
+    return vector.clone().multiplyScalar(scale);
+  }
+
+
   useEffect(() => {
     // Создаем линии
     const yellowLineGeometry = new LineGeometry();
-    yellowLineGeometry.setPositions([0, 0, 0, previousBetEnd.x, previousBetEnd.y, previousBetEnd.z]);
+    const previousBetToRender = resrtictVector(previousBetEnd, 2.5);
+    yellowLineGeometry.setPositions([0, 0, 0, previousBetToRender.x, previousBetToRender.y, previousBetToRender.z]);
     const yellowLineMaterial = new LineMaterial({
       color: "yellow",
       linewidth: 3,
@@ -51,14 +69,16 @@ const BetLines: React.FC<BetLinesProps> = ({
     yellowLine.current = new Line2(yellowLineGeometry, yellowLineMaterial);
     scene.add(yellowLine.current);
 
+    const betToRender = resrtictVector(userPreviousBet, 5);
+
     const dashedLineGeometry = new LineGeometry();
     dashedLineGeometry.setPositions([
-      previousBetEnd.x,
-      previousBetEnd.y,
-      previousBetEnd.z,
-      userPreviousBet.x,
-      userPreviousBet.y,
-      userPreviousBet.z,
+      previousBetToRender.x,
+      previousBetToRender.y,
+      previousBetToRender.z,
+      betToRender.x,
+      betToRender.y,
+      betToRender.z,
     ]);
     const dashedLineMaterial = new LineMaterial({
       color: "white",
@@ -154,13 +174,8 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [gl.domElement]);
 
   useFrame(() => {
-    const clampedYellowEnd = previousBetEnd.clone().add(
-      new THREE.Vector3(
-        userPreviousBet.x - previousBetEnd.x,
-        userPreviousBet.y - previousBetEnd.y,
-        0
-      ).clampLength(0, maxYellowLength)
-    );
+    const clampedYellowEnd = resrtictVector(previousBetEnd, 2.5);
+    const clampedDashedEnd = resrtictVector(userPreviousBet, 5);
 
     if (yellowLine.current && yellowLine.current.geometry) {
       yellowLine.current.geometry.setPositions([0, 0, 0, clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z]);
@@ -171,24 +186,24 @@ const BetLines: React.FC<BetLinesProps> = ({
         clampedYellowEnd.x,
         clampedYellowEnd.y,
         clampedYellowEnd.z,
-        userPreviousBet.x,
-        userPreviousBet.y,
-        userPreviousBet.z,
+        clampedDashedEnd.x,
+        clampedDashedEnd.y,
+        clampedDashedEnd.z,
       ]);
     }
 
     if (sphereRef.current) {
-      sphereRef.current.position.copy(userPreviousBet);
+      sphereRef.current.position.copy(clampedDashedEnd);
     }
 
     if (yellowArrowRef.current) {
       yellowArrowRef.current.position.copy(clampedYellowEnd);
-      yellowArrowRef.current.lookAt(previousBetEnd);
+      // yellowArrowRef.current.lookAt(previousBetEnd);
     }
 
     if (dashedArrowRef.current) {
-      dashedArrowRef.current.position.copy(userPreviousBet);
-      dashedArrowRef.current.lookAt(clampedYellowEnd);
+      dashedArrowRef.current.position.copy(clampedDashedEnd);
+      // dashedArrowRef.current.lookAt(clampedYellowEnd);
     }
   });
 
