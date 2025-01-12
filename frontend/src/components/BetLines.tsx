@@ -38,7 +38,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const plane = useRef(new THREE.Plane());
   let isDragging = false;
 
-  const resrtictVector = (vector: THREE.Vector3, max: number) => {
+  const restictVector = (vector: THREE.Vector3, max: number) => {
     // Calculate the current max coordinate
     const maxCoordinate = Math.max(
       Math.abs(vector.x),
@@ -46,18 +46,24 @@ const BetLines: React.FC<BetLinesProps> = ({
       Math.abs(vector.z)
     );
 
+    console.log(maxCoordinate);
+
     // Calculate the scaling factor
     const scale = max / maxCoordinate;
+    console.log(scale);
+
+    const a = vector.clone().multiplyScalar(scale);
+    console.log(a);
 
     // Scale the normalized vector
-    return vector.clone().multiplyScalar(scale);
+    return a;
   }
 
 
   useEffect(() => {
     // Создаем линии
     const yellowLineGeometry = new LineGeometry();
-    const previousBetToRender = resrtictVector(previousBetEnd, 2.5);
+    const previousBetToRender = restictVector(previousBetEnd, 2.5);
     yellowLineGeometry.setPositions([0, 0, 0, previousBetToRender.x, previousBetToRender.y, previousBetToRender.z]);
     const yellowLineMaterial = new LineMaterial({
       color: "yellow",
@@ -68,7 +74,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     yellowLine.current = new Line2(yellowLineGeometry, yellowLineMaterial);
     scene.add(yellowLine.current);
 
-    const betToRender = resrtictVector(userPreviousBet, 5);
+    const betToRender = restictVector(userPreviousBet, 5);
 
     const dashedLineGeometry = new LineGeometry();
     dashedLineGeometry.setPositions([
@@ -173,8 +179,8 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [gl.domElement]);
 
   useFrame(() => {
-    const clampedYellowEnd = resrtictVector(previousBetEnd, 2.5);
-    const clampedDashedEnd = resrtictVector(userPreviousBet, 5);
+    const clampedYellowEnd = restictVector(previousBetEnd, 2.5);
+    const clampedDashedEnd = restictVector(userPreviousBet, 5);
     console.log(clampedDashedEnd);
     console.log(clampedDashedEnd);
 
