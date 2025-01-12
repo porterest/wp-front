@@ -183,12 +183,12 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     if (yellowArrowRef.current) {
       yellowArrowRef.current.position.copy(clampedYellowEnd);
-      yellowArrowRef.current.lookAt(previousBetEnd.add(new THREE.Vector3(1, 1, 1)));
+      yellowArrowRef.current.lookAt(previousBetEnd);
     }
 
     if (dashedArrowRef.current) {
       dashedArrowRef.current.position.copy(userPreviousBet);
-      dashedArrowRef.current.lookAt(userPreviousBet.add(new THREE.Vector3(1, 1, 1)));
+      dashedArrowRef.current.lookAt(clampedYellowEnd);
     }
   });
 
