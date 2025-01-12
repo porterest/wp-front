@@ -9,7 +9,6 @@ interface BetLinesProps {
   previousBetEnd: THREE.Vector3;
   xValue: number;
   yValue: number;
-  fetchedData: [number, number] | null;
   fixedPreviousBetEnd: THREE.Vector3;
   dashedLineStart: THREE.Vector3;
 }
@@ -18,7 +17,6 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              previousBetEnd,
                                              xValue,
                                              yValue,
-                                             fetchedData,
                                              fixedPreviousBetEnd,
                                              dashedLineStart,
                                            }) => {
@@ -67,10 +65,6 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Обновление линий и конусов
   useFrame(() => {
-    if (!fetchedData) return;
-
-    const [dataX, dataY] = fetchedData;
-
     // Обновляем позицию и ориентацию жёлтого конуса
     if (yellowArrowRef.current) {
       yellowArrowRef.current.position.set(
@@ -92,7 +86,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     // Обновляем позицию и ориентацию белого конуса
     if (dashedArrowRef.current) {
-      dashedArrowRef.current.position.set(dataX, dataY, dashedLineStart.z);
+      dashedArrowRef.current.position.set(xValue, yValue, dashedLineStart.z);
 
       const direction = new THREE.Vector3()
         .subVectors(
@@ -109,7 +103,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
 
     // Обновляем геометрию жёлтой линии
-    const yellowLinePositions = [0, 0, 0, dataX, dataY, previousBetEnd.z];
+    const yellowLinePositions = [0, 0, 0, previousBetEnd.x, previousBetEnd.y, previousBetEnd.z];
     if (yellowLine.current?.geometry) {
       yellowLine.current.geometry.setPositions(yellowLinePositions);
       yellowLine.current.geometry.attributes.position.needsUpdate = true;
@@ -117,7 +111,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     // Обновляем геометрию пунктирной линии
     const dashedLinePositions = [
-      dataX, dataY, previousBetEnd.z,
+      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
       xValue, yValue, previousBetEnd.z,
     ];
     if (dashedLine.current?.geometry) {
