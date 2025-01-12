@@ -238,7 +238,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
       {/* Сфера */}
       <mesh ref={sphereRef}>
-        <sphereGeometry args={[0.2, 16, 16]} />
+        <sphereGeometry args={[1.0, 16, 16]} />
         <meshStandardMaterial color="blue" />
       </mesh>
     </>
