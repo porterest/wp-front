@@ -94,29 +94,33 @@ class ChainService(
         Генерирует новые блоки и обрабатывает завершённые блоки для всех активных цепочек.
         """
         self.logger.info(f"Начало генерации блоков в {datetime.now()}.")
-        chains = await self.chain_repository.get_all()
-        for chain in chains:
-            if chain.status == ChainStatus.PAUSED:
-                continue
+        try:
+            chains = await self.chain_repository.get_all()
+            for chain in chains:
+                if chain.status == ChainStatus.PAUSED:
+                    continue
 
-            last_block = await self.block_service.get_last_block(chain.id)
+                last_block = await self.block_service.get_last_block(chain.id)
 
-            if last_block:
-                elapsed_time = (datetime.now() - last_block.created_at).seconds + 1
-                self.logger.info(f'elapsed_time {elapsed_time}, block {last_block.id}')
-                if (elapsed_time >= self.block_generation_interval.total_seconds()
-                        and last_block.status == BlockStatus.IN_PROGRESS):
-                    try:
-                        await self._process_completed_block(last_block)
-                    except StopPairProcessingException:
-                        await self._pause_chain(chain)
-                        continue
+                if last_block:
+                    elapsed_time = (datetime.now() - last_block.created_at).seconds + 1
+                    self.logger.info(f'elapsed_time {elapsed_time}, block {last_block.id}')
+                    if (elapsed_time >= self.block_generation_interval.total_seconds()
+                            and last_block.status == BlockStatus.IN_PROGRESS):
+                        try:
+                            await self._process_completed_block(last_block)
+                        except StopPairProcessingException:
+                            await self._pause_chain(chain)
+                            continue
 
-            new_block = await self.block_service.start_new_block(chain.id)
-            update_chain = UpdateChainDTO(
-                current_block=new_block.block_number
-            )
-            await self.chain_repository.update(chain.id, update_chain)
+                new_block = await self.block_service.start_new_block(chain.id)
+                update_chain = UpdateChainDTO(
+                    current_block=new_block.block_number
+                )
+                await self.chain_repository.update(chain.id, update_chain)
+        except Exception:
+            logger.error('Something went wrong during block generation', exc_info=True)
+            raise
 
     async def _process_completed_block(self, block: Block):
         """
