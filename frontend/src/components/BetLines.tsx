@@ -36,7 +36,6 @@ const BetLines: React.FC<BetLinesProps> = ({
   const plane = useRef(new THREE.Plane());
 
   const [isDragging, setIsDragging] = useState(false);
-  const [betAmount, setBetAmount] = useState(0);
 
   useEffect(() => {
     // Создаем желтую линию
@@ -79,7 +78,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const handlePointerUp = () => {
     if (isDragging) {
       onShowConfirmButton(true, {
-        amount: betAmount,
+        amount: 0, // Значение будет рассчитано позже
         predicted_vector: [userPreviousBet.x, userPreviousBet.y],
       });
 
@@ -132,10 +131,6 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     const newEnd = previousBetEnd.clone().add(direction);
     handleDrag(newEnd);
-
-    const percentage = distance / maxYellowLength;
-    const bet = percentage * 1000; // Пример расчета
-    setBetAmount(Math.min(bet, 1000));
   };
 
   const updateDynamicPlane = () => {
@@ -186,9 +181,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
 
     if (sphereRef.current) {
-      const spherePosition = userPreviousBet.length() > 0
-        ? userPreviousBet
-        : clampedYellowEnd;
+      const spherePosition = userPreviousBet.length() > 0 ? userPreviousBet : clampedYellowEnd;
       sphereRef.current.position.copy(spherePosition);
     }
   });
@@ -205,9 +198,9 @@ const BetLines: React.FC<BetLinesProps> = ({
         <meshStandardMaterial color="white" />
       </mesh>
 
-      <mesh ref={sphereRef}>
-        <sphereGeometry args={[0.2, 16, 16]} />
-        <meshStandardMaterial color="blue" />
+      <mesh ref={sphereRef} position={[userPreviousBet.x, userPreviousBet.y, previousBetEnd.z]}>
+        <sphereGeometry args={[1, 16, 16]} />
+        <meshStandardMaterial color="blue" opacity={0} transparent />
       </mesh>
     </>
   );
