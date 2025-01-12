@@ -15,7 +15,7 @@ interface BetLinesProps {
   ) => void; // Колбек для отображения кнопки подтверждения
   maxYellowLength: number; // Максимальная длина желтой стрелки
   handleDrag: (newPosition: THREE.Vector3) => void; // Колбек для обновления позиции
-  axisMode: "X" | "Y"; // Осевой режим
+  axisMode: "X" | "Y"; // Ограничение по выбранной оси
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
@@ -40,7 +40,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    // Создаем линии
+    // Создаем желтую линию
     const yellowLineGeometry = new LineGeometry();
     yellowLineGeometry.setPositions([0, 0, 0, previousBetEnd.x, previousBetEnd.y, previousBetEnd.z]);
     const yellowLineMaterial = new LineMaterial({
@@ -52,6 +52,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     yellowLine.current = new Line2(yellowLineGeometry, yellowLineMaterial);
     scene.add(yellowLine.current);
 
+    // Создаем белую линию
     const dashedLineGeometry = new LineGeometry();
     dashedLineGeometry.setPositions([
       previousBetEnd.x,
@@ -122,20 +123,22 @@ const BetLines: React.FC<BetLinesProps> = ({
     raycaster.current.setFromCamera(mouse, camera);
     raycaster.current.ray.intersectPlane(plane.current, intersection);
 
-    let newEnd = intersection.clone();
+    const direction = new THREE.Vector3().subVectors(intersection, previousBetEnd);
 
     if (axisMode === "X") {
-      newEnd.set(newEnd.x, previousBetEnd.y, previousBetEnd.z);
+      direction.y = 0; // Ограничиваем движение по Y
     } else if (axisMode === "Y") {
-      newEnd.set(previousBetEnd.x, newEnd.y, previousBetEnd.z);
+      direction.x = 0; // Ограничиваем движение по X
     }
 
-    const direction = new THREE.Vector3().subVectors(newEnd, previousBetEnd);
-    if (direction.length() > maxYellowLength) {
+    let distance = direction.length();
+
+    if (distance > maxYellowLength) {
+      distance = maxYellowLength;
       direction.setLength(maxYellowLength);
     }
-    newEnd = previousBetEnd.clone().add(direction);
 
+    const newEnd = previousBetEnd.clone().add(direction);
     handleDrag(newEnd);
   };
 
@@ -186,29 +189,20 @@ const BetLines: React.FC<BetLinesProps> = ({
       dashedLine.current.geometry.attributes.position.needsUpdate = true;
     }
 
-    // Конусы
-    if (yellowArrowRef.current) {
-      yellowArrowRef.current.position.copy(clampedYellowEnd);
-      yellowArrowRef.current.lookAt(0, 0, 0);
-    }
-    if (dashedArrowRef.current) {
-      dashedArrowRef.current.position.copy(userPreviousBet);
-      dashedArrowRef.current.lookAt(clampedYellowEnd);
-    }
-
     if (sphereRef.current) {
-      sphereRef.current.position.copy(userPreviousBet.length() > 0 ? userPreviousBet : clampedYellowEnd);
+      const spherePosition = userPreviousBet.length() > 0 ? userPreviousBet : clampedYellowEnd;
+      sphereRef.current.position.copy(spherePosition);
     }
   });
 
   return (
     <>
-      <mesh ref={yellowArrowRef}>
+      <mesh ref={yellowArrowRef} position={[previousBetEnd.x, previousBetEnd.y, previousBetEnd.z]}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="yellow" />
       </mesh>
 
-      <mesh ref={dashedArrowRef}>
+      <mesh ref={dashedArrowRef} position={[userPreviousBet.x, userPreviousBet.y, userPreviousBet.z]}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="white" />
       </mesh>
