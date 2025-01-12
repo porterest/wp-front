@@ -235,8 +235,9 @@ const BetArrow: React.FC<BetArrowProps> = ({
         }
 
         if (dashedLine.current) {
+          const start = xValue && yValue ? [xValue, yValue] : [data[0], data[1]];
           dashedLine.current.geometry.setPositions([
-            data[0], data[1], previousBetEnd.z,
+            ...start, previousBetEnd.z,
             previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
           ]);
           dashedLine.current.geometry.attributes.position.needsUpdate = true;
@@ -247,7 +248,8 @@ const BetArrow: React.FC<BetArrowProps> = ({
     };
 
     updateLinePosition();
-  }, [pairId, previousBetEnd]);
+  }, [pairId, previousBetEnd, xValue, yValue]);
+
 
   useFrame(() => {
     if (!fetchedData) return; // Проверяем, что данные загружены
