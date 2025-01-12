@@ -12,15 +12,13 @@ interface BetLinesProps {
   dashedLineStart: THREE.Vector3;
 }
 
-
 const BetLines: React.FC<BetLinesProps> = ({
                                              previousBetEnd,
                                              xValue,
                                              yValue,
                                              dashedLineStart,
                                            }) => {
-  const maxYellowLength = 3; // Максимальная длина жёлтой стрелки
-  const maxDashedLength = 4; // Максимальная длина белой пунктирной стрелки
+  const maxYellowLength = 3.5; // Увеличенная максимальная длина желтой стрелки
   const yellowLine = useRef<Line2 | null>(null);
   const dashedLine = useRef<Line2 | null>(null);
   const yellowArrowRef = useRef<THREE.Mesh>(null); // Жёлтый конус
@@ -45,7 +43,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     const dashedLineGeometry = new LineGeometry();
     dashedLineGeometry.setPositions([
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-      xValue, yValue, previousBetEnd.z,
+      xValue, yValue, dashedLineStart.z,
     ]);
 
     const dashedLineMaterial = new LineMaterial({
@@ -85,7 +83,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     // Обновляем позицию и ориентацию жёлтого конуса
     if (yellowArrowRef.current) {
       yellowArrowRef.current.position.copy(clampedYellowEnd);
-      yellowArrowRef.current.lookAt(0, 0, 0);
+      yellowArrowRef.current.lookAt(0, 0, 0); // Конус смотрит в начало стрелки
       yellowArrowRef.current.updateMatrix();
     }
 
@@ -96,33 +94,21 @@ const BetLines: React.FC<BetLinesProps> = ({
       yellowLine.current.geometry.attributes.position.needsUpdate = true;
     }
 
-    // Ограничиваем длину белой линии
-    const whiteDirection = new THREE.Vector3()
-      .subVectors(new THREE.Vector3(xValue, yValue, dashedLineStart.z), clampedYellowEnd)
-      .normalize();
-
-    let whiteLength = whiteDirection.length();
-    if (whiteLength > maxDashedLength) {
-      whiteDirection.setLength(maxDashedLength);
-      whiteLength = maxDashedLength;
-    }
-
-    const clampedWhiteEnd = new THREE.Vector3().addVectors(
-      clampedYellowEnd,
-      whiteDirection.multiplyScalar(whiteLength)
-    );
+    // Белая линия начинается от конца желтой
+    const dashedLineStart = clampedYellowEnd.clone();
+    const dashedLineEnd = new THREE.Vector3(xValue, yValue, dashedLineStart.z);
 
     // Обновляем позицию и ориентацию белого конуса
     if (dashedArrowRef.current) {
-      dashedArrowRef.current.position.copy(clampedWhiteEnd);
-      dashedArrowRef.current.lookAt(clampedYellowEnd);
+      dashedArrowRef.current.position.copy(dashedLineEnd);
+      dashedArrowRef.current.lookAt(dashedLineStart); // Конус смотрит в начало белой линии
       dashedArrowRef.current.updateMatrix();
     }
 
     // Обновляем геометрию белой пунктирной линии
     const dashedLinePositions = [
-      clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z,
-      clampedWhiteEnd.x, clampedWhiteEnd.y, clampedWhiteEnd.z,
+      dashedLineStart.x, dashedLineStart.y, dashedLineStart.z,
+      dashedLineEnd.x, dashedLineEnd.y, dashedLineEnd.z,
     ];
     if (dashedLine.current?.geometry) {
       dashedLine.current.geometry.setPositions(dashedLinePositions);
