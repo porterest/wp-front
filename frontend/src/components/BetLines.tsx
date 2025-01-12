@@ -15,6 +15,7 @@ interface BetLinesProps {
   ) => void; // Колбек для отображения кнопки подтверждения
   maxYellowLength: number; // Максимальная длина желтой стрелки
   handleDrag: (newPosition: THREE.Vector3) => void; // Колбек для обновления позиции
+  axisMode: "X" | "Y"; // Осевой режим
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
@@ -24,6 +25,7 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              onShowConfirmButton,
                                              maxYellowLength,
                                              handleDrag,
+                                             axisMode,
                                            }) => {
   const yellowLine = useRef<Line2 | null>(null);
   const dashedLine = useRef<Line2 | null>(null);
@@ -38,7 +40,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    // Создаем желтую линию
+    // Создаем линии
     const yellowLineGeometry = new LineGeometry();
     yellowLineGeometry.setPositions([0, 0, 0, previousBetEnd.x, previousBetEnd.y, previousBetEnd.z]);
     const yellowLineMaterial = new LineMaterial({
@@ -50,7 +52,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     yellowLine.current = new Line2(yellowLineGeometry, yellowLineMaterial);
     scene.add(yellowLine.current);
 
-    // Создаем белую линию
     const dashedLineGeometry = new LineGeometry();
     dashedLineGeometry.setPositions([
       previousBetEnd.x,
@@ -121,15 +122,20 @@ const BetLines: React.FC<BetLinesProps> = ({
     raycaster.current.setFromCamera(mouse, camera);
     raycaster.current.ray.intersectPlane(plane.current, intersection);
 
-    const direction = new THREE.Vector3().subVectors(intersection, previousBetEnd);
-    let distance = direction.length();
+    let newEnd = intersection.clone();
 
-    if (distance > maxYellowLength) {
-      distance = maxYellowLength;
-      direction.setLength(maxYellowLength);
+    if (axisMode === "X") {
+      newEnd.set(newEnd.x, previousBetEnd.y, previousBetEnd.z);
+    } else if (axisMode === "Y") {
+      newEnd.set(previousBetEnd.x, newEnd.y, previousBetEnd.z);
     }
 
-    const newEnd = previousBetEnd.clone().add(direction);
+    const direction = new THREE.Vector3().subVectors(newEnd, previousBetEnd);
+    if (direction.length() > maxYellowLength) {
+      direction.setLength(maxYellowLength);
+    }
+    newEnd = previousBetEnd.clone().add(direction);
+
     handleDrag(newEnd);
   };
 
@@ -180,9 +186,18 @@ const BetLines: React.FC<BetLinesProps> = ({
       dashedLine.current.geometry.attributes.position.needsUpdate = true;
     }
 
+    // Конусы
+    if (yellowArrowRef.current) {
+      yellowArrowRef.current.position.copy(clampedYellowEnd);
+      yellowArrowRef.current.lookAt(0, 0, 0);
+    }
+    if (dashedArrowRef.current) {
+      dashedArrowRef.current.position.copy(userPreviousBet);
+      dashedArrowRef.current.lookAt(clampedYellowEnd);
+    }
+
     if (sphereRef.current) {
-      const spherePosition = userPreviousBet.length() > 0 ? userPreviousBet : clampedYellowEnd;
-      sphereRef.current.position.copy(spherePosition);
+      sphereRef.current.position.copy(userPreviousBet.length() > 0 ? userPreviousBet : clampedYellowEnd);
     }
   });
 

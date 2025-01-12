@@ -61,6 +61,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         onShowConfirmButton={onShowConfirmButton} // Передаем onShowConfirmButton в BetLines
         maxYellowLength={maxArrowLength}
         handleDrag={handleDrag} // Передача колбека для обработки перетаскивания
+        axisMode={axisMode}
       />
 
       {/* Текст депозита */}
