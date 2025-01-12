@@ -40,6 +40,9 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   const restrictVector = (vector: THREE.Vector3, max: number) => {
     // Calculate the current max coordinate
+    if (vector.x === 0 && vector.y === 0 && vector.z === 0) {
+      return vector;
+    }
     console.log(vector);
     const maxCoordinate = Math.max(
       Math.abs(vector.x),
