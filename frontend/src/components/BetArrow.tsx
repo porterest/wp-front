@@ -177,7 +177,12 @@ const BetArrow: React.FC<BetArrowProps> = ({
       0, 0, 0, // Начало жёлтой линии
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z, // Конец жёлтой линии
     ]);
+    yellowLineGeometry.computeBoundingBox();
+    yellowLineGeometry.computeBoundingSphere();
 
+    console.log("Начало жёлтой линии");
+  console.log(yellowLineGeometry);
+  console.log(previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
     const yellowLineMaterial = new LineMaterial({
       color: "yellow",
       linewidth: 3,
@@ -194,6 +199,14 @@ const BetArrow: React.FC<BetArrowProps> = ({
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z, // Начало пунктирной линии (конец жёлтой линии)
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z, // Временно совпадает с началом
     ]);
+    dashedLineGeometry.computeBoundingBox();
+    dashedLineGeometry.computeBoundingSphere();
+
+
+    console.log('координаты для пунктирной линии');
+    console.log(dashedLineGeometry);
+    console.log(previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
+      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
 
     const dashedLineMaterial = new LineMaterial({
       color: "white",
@@ -228,12 +241,19 @@ const BetArrow: React.FC<BetArrowProps> = ({
         if (yellowLine.current) {
           yellowLine.current.geometry.setPositions([0, 0, 0, data[0], data[1], previousBetEnd.z]);
         }
+        console.log('координаты для желтой линии');
+        console.log(yellowLine);
+        console.log([0, 0, 0, data[0], data[1], previousBetEnd.z]);
 
         if (dashedLine.current) {
           dashedLine.current.geometry.setPositions([
             data[0], data[1], previousBetEnd.z,
             previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
           ]);
+          console.log('координаты для пунктирной линии');
+          console.log(dashedLine);
+          console.log(data[0], data[1], previousBetEnd.z,
+            previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
         }
       } catch (error) {
         console.error("Failed to fetch previous bet end:", error);
@@ -269,7 +289,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
     // Обновляем позицию и ориентацию белого конуса
     if (dashedArrowRef.current) {
-      dashedArrowRef.current.position.set(xValue, yValue, dashedLineStart.z);
+      dashedArrowRef.current.position.set(dataX, dataY, dashedLineStart.z);
 
       const direction = new THREE.Vector3()
         .subVectors(
@@ -289,6 +309,10 @@ const BetArrow: React.FC<BetArrowProps> = ({
     const yellowLinePositions = [0, 0, 0, dataX, dataY, previousBetEnd.z];
     yellowLine.current?.geometry.setPositions(yellowLinePositions);
 
+    console.log('координаты для жёлтой линии');
+    console.log(yellowLinePositions);
+    console.log(0, 0, 0, dataX, dataY, previousBetEnd.z);
+
     // Обновляем геометрию пунктирной линии
     const dashedLinePositions = [
       dataX, dataY, previousBetEnd.z,
@@ -296,6 +320,8 @@ const BetArrow: React.FC<BetArrowProps> = ({
     ];
     console.log('геометрия пунктирной линии');
     console.log(dashedLinePositions);
+    console.log(dataX, dataY, previousBetEnd.z,
+      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
     dashedLine.current?.geometry.setPositions(dashedLinePositions);
   });
 
@@ -325,7 +351,9 @@ const BetArrow: React.FC<BetArrowProps> = ({
     // Обновляем геометрию жёлтой линии
     const yellowLinePositions = [0, 0, 0, dataX, dataY, previousBetEnd.z];
     yellowLine.current?.geometry.setPositions(yellowLinePositions);
-
+    console.log("геометрию жёлтой линии");
+    console.log(yellowLinePositions);
+    console.log(0, 0, 0, dataX, dataY, previousBetEnd.z);
     // Обновляем геометрию пунктирной линии
     const dashedLinePositions = [
       dataX, dataY, previousBetEnd.z,
@@ -373,11 +401,11 @@ const BetArrow: React.FC<BetArrowProps> = ({
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="white" />
       </mesh>
-      {/* Сфера на конце стрелки*/}
-      {/*<mesh ref={endpointRef} position={[xValue, yValue, dashedLineStart.z]}>*/}
-      {/*  <sphereGeometry args={[1, 16, 16]} />*/}
-      {/*  <meshStandardMaterial color="blue" opacity={0} transparent />*/}
-      {/*</mesh>*/}
+       Сфера на конце стрелки
+      <mesh ref={endpointRef} position={[xValue, yValue, dashedLineStart.z]}>
+        <sphereGeometry args={[1, 16, 16]} />
+        <meshStandardMaterial color="blue" opacity={0} transparent />
+      </mesh>
     </>
   );
 };
