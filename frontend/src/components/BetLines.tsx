@@ -17,7 +17,6 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              previousBetEnd,
                                              xValue,
                                              yValue,
-                                             fixedPreviousBetEnd,
                                              dashedLineStart,
                                            }) => {
   const maxArrowLength = 2; // Максимальная длина жёлтой стрелки
