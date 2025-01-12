@@ -7,17 +7,17 @@ import { useFrame, useThree } from '@react-three/fiber';
 
 interface BetLinesProps {
   previousBetEnd: THREE.Vector3;
-  xValue: number;
-  yValue: number;
-  dashedLineStart: THREE.Vector3;
+  // xValue: number;
+  // yValue: number;
+  // dashedLineStart: THREE.Vector3;
   userPreviousBet: THREE.Vector3; // Новое свойство для белой стрелки
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
                                              previousBetEnd,
-                                             xValue,
-                                             yValue,
-                                             dashedLineStart,
+                                             // xValue,
+                                             // yValue,
+                                             // dashedLineStart,
                                              userPreviousBet,
                                            }) => {
   const maxYellowLength = 5; // Максимальная длина жёлтой линии

@@ -136,10 +136,10 @@ const BetArrow: React.FC<BetArrowProps> = ({
     <>
       <BetLines
         previousBetEnd={previousBetEnd}
-        xValue={xValue}
-        yValue={yValue}
+        // xValue={xValue}
+        // yValue={yValue}
         userPreviousBet={userPreviousBet}
-        dashedLineStart={dashedLineStart}
+        // dashedLineStart={dashedLineStart}
       />
       <Text
         position={[
