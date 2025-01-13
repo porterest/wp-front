@@ -70,8 +70,9 @@ const BetLines: React.FC<BetLinesProps> = ({
 
 
   useEffect(() => {
-    const yellowLineGeometry = new LineGeometry();
+    const betToRender = restrictVector(userPreviousBet, 5);
     const previousBetToRender = restrictVector(previousBetEnd, 2.5);
+    const yellowLineGeometry = new LineGeometry();
     yellowLineGeometry.setPositions([
       0,
       0,
@@ -92,7 +93,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     let spherePosition = previousBetToRender.clone();
 
     if (!userPreviousBet.equals(new THREE.Vector3(0, 0, 0))) {
-      const betToRender = restrictVector(userPreviousBet, 5);
+
       const dashedLineGeometry = new LineGeometry();
       dashedLineGeometry.setPositions([
         previousBetToRender.x,
@@ -253,8 +254,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     useFrame(() => {
       if (!isDragging) return;
       const clampedYellowEnd = restrictVector(previousBetEnd, 2.5);
-      const clampedDashedEnd = restrictVector(previousBetEnd, 5);
-      // const clampedDashedEnd = userPreviousBet.clone();
+      // const clampedDashedEnd = restrictVector(previousBetEnd, 5);
+      const clampedDashedEnd = userPreviousBet.clone();
 
       if (yellowLine.current && yellowLine.current.geometry) {
         (yellowLine.current.geometry as LineGeometry).setPositions([
