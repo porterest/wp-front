@@ -115,7 +115,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       direction.setLength(maxYellowLength);
     }
 
-    let newEnd = previousBetEnd.clone().add(direction);
+    const newEnd = previousBetEnd.clone().add(direction);
     if (axisMode === "X") {
       newEnd.y = previousBetEnd.y;
     } else if (axisMode === "Y") {
