@@ -44,6 +44,8 @@ const GamePage: React.FC = () => {
   const loadUserLastBet = async (pair: string) => {
     try {
       const response = await getUserBets();
+      console.log('СЮДАААААА')
+      console.log(response)
       const lastBet = response.bets
         .filter((bet) => bet.pair_name === pair)
         .sort(
