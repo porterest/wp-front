@@ -71,7 +71,6 @@ class UserService(UserServiceInterface):
                             created_at=bet.created_at,
                         )
 
-
     async def get_user_history(self, user_id: UUID) -> UserHistoryResponse:
         user = await self.get_user(user_id=user_id)
         return UserHistoryResponse(

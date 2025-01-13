@@ -10,6 +10,7 @@ from domain.dto.block import CreateBlockDTO, UpdateBlockDTO
 from domain.enums.block_status import BlockStatus
 from domain.models.bet import Bet as BetModel
 from domain.models.block import Block as BlockModel
+from domain.models.pair import Pair as PairModel
 from infrastructure.db.entities import Block, Pair, Chain
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
@@ -25,7 +26,7 @@ class BlockRepository(
     joined_fields: dict[str, Optional[list[str]]] = field(
         default_factory=lambda: {
             'chain': None,
-            'bets': None
+            'bets': ['pair']
         }
     )
 
@@ -155,7 +156,13 @@ class BlockRepository(
                 block_number=entity.block_number,
                 user_id=bet.user_id,
                 created_at=bet.created_at,
-                updated_at=bet.updated_at
+                updated_at=bet.updated_at,
+                pair=PairModel(
+                    id=bet.pair.id,
+                    name=bet.pair.name,
+                    created_at=bet.pair.created_at,
+                    updated_at=bet.pair.updated_at,
+                )
             ) for bet in entity.bets] if entity.bets else [],
             completed_at=entity.completed_at,
             updated_at=entity.updated_at,
