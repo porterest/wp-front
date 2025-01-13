@@ -153,31 +153,28 @@ const BetLines: React.FC<BetLinesProps> = ({
     raycaster.current.setFromCamera(mouse, camera);
     raycaster.current.ray.intersectPlane(plane.current, intersection);
 
+    // Рассчитываем новое направление и ограничиваем длину
     const direction = new THREE.Vector3().subVectors(intersection, previousBetEnd);
     let distance = direction.length();
+    distance = Math.min(distance, maxYellowLength); // Ограничиваем длину
 
-    // Ограничение длины стрелки
-    if (distance > maxYellowLength) {
-      distance = maxYellowLength;
-      direction.setLength(maxYellowLength);
-    }
+    const newEnd = previousBetEnd.clone().add(direction.setLength(distance));
 
-    const newEnd = previousBetEnd.clone().add(direction);
-
-    // Применение ограничений по осям
+    // Ограничиваем движение по оси, если задано
     if (axisMode === "X") {
       newEnd.y = previousBetEnd.y;
     } else if (axisMode === "Y") {
       newEnd.x = previousBetEnd.x;
     }
 
-    // Обновляем конечную точку и вычисляем размер депозита
+    // Обновляем позицию стрелки
     handleDrag(newEnd);
+
+    // Вычисляем депозит и обновляем длину стрелки
     const percentage = distance / maxYellowLength;
     const bet = percentage * userDeposit;
     setBetAmount(Math.min(bet, userDeposit));
 
-    // Рассчитываем новую длину стрелки на основе депозита
     const newLength = calculateLengthFromBet(bet, userDeposit, 5); // 5 — максимальная длина
     userPreviousBet.copy(previousBetEnd.clone().add(direction.setLength(newLength)));
 
