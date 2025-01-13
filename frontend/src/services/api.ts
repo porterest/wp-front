@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import {
+    BetResponse,
     // BackendCandle,
     PairResponse,
     PlaceBetRequest,
@@ -35,6 +36,19 @@ apiClient.interceptors.request.use(
 export async function getUserBets(): Promise<UserBetsResponse> {
     try {
         const response = await apiClient.get<UserBetsResponse>("/user/bets");
+        console.log('ставка юзера');
+        console.log(response);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching user bets:", error);
+        throw error;
+    }
+}
+export async function getLastUserBet(pair_id: string): Promise<BetResponse> {
+    try {
+        const response = await apiClient.post<BetResponse>("/user/last_bet", {
+            pair_id: pair_id,
+        });
         console.log('ставка юзера');
         console.log(response);
         return response.data;

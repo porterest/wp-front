@@ -7,8 +7,8 @@ import Instructions from "../components/Instructions";
 import ConfirmBetButton from "../components/ConfirmBetButton";
 import Timer from "../components/Timer";
 import { CandleDataContext } from "../context/CandleDataContext";
-import { fetchPreviousBetEnd, getUserBets, placeBet } from "../services/api";
-import { PlaceBetRequest } from "../types/apiTypes";
+import { fetchPreviousBetEnd, getLastUserBet, getUserBets, placeBet } from "../services/api";
+import { PairResponse, PlaceBetRequest } from "../types/apiTypes";
 import Scene from "../components/Scene";
 import { ScaleFunctions } from "../types/scale";
 import { PairOption } from "../types/pair";
@@ -41,17 +41,10 @@ const GamePage: React.FC = () => {
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
   const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
 
-  const loadUserLastBet = async (pair: string) => {
+  const loadUserLastBet = async (pair: PairOption) => {
     try {
-      const response = await getUserBets();
+      const lastBet = await getLastUserBet(pair.value);
       console.log('СЮДАААААА')
-      console.log(response)
-      const lastBet = response.bets
-        .filter((bet) => bet.pair_name === pair)
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        )[0];
       console.log("last user Bet:", lastBet);
       const userVector = new THREE.Vector3(
         lastBet.vector[0],
@@ -73,7 +66,7 @@ const GamePage: React.FC = () => {
         const resultVector = new THREE.Vector3(data[0], data[1], 0);
         console.log("res", JSON.stringify(resultVector, null, 2));
         setPreviousBetEnd(resultVector);
-        loadUserLastBet(selectedPair.label);
+        loadUserLastBet(selectedPair);
       });
     }
   }, [selectedPair]);
