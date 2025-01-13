@@ -144,6 +144,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const handlePointerMove = (event: PointerEvent): void => {
     if (!isDragging) return;
 
+    // Определение позиции мыши в координатах WebGL
     const mouse = new THREE.Vector2(
       (event.clientX / gl.domElement.clientWidth) * 2 - 1,
       -(event.clientY / gl.domElement.clientHeight) * 2 + 1
@@ -156,7 +157,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     // Рассчитываем направление и ограничиваем длину
     const direction = new THREE.Vector3().subVectors(intersection, previousBetEnd);
     let distance = direction.length();
-    distance = Math.min(distance, maxYellowLength); // Ограничение по максимальной длине (например, 5)
+    distance = Math.min(distance, maxYellowLength); // Ограничение длины
 
     // Создаём новую конечную точку
     const newEnd = previousBetEnd.clone().add(direction.setLength(distance));
@@ -167,6 +168,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     } else if (axisMode === "Y") {
       newEnd.x = previousBetEnd.x;
     }
+
+    // Вызов handleDrag для обновления внешней логики
+    handleDrag(newEnd);
 
     // Рассчитываем длину стрелки на основе депозита
     const percentage = distance / maxYellowLength;
