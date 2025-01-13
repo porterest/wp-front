@@ -244,8 +244,13 @@ const BetLines: React.FC<BetLinesProps> = ({
       yellowArrowRef.current.position.copy(clampedYellowEnd);
     }
 
+    // if (dashedArrowRef.current) {
+    //   dashedArrowRef.current.position.copy(clampedDashedEnd);
+    // }
     if (dashedArrowRef.current) {
+      // Установка позиции и ориентации белого конуса
       dashedArrowRef.current.position.copy(clampedDashedEnd);
+      dashedArrowRef.current.lookAt(clampedYellowEnd);
     }
   });
 
