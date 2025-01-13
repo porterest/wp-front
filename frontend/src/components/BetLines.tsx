@@ -33,6 +33,8 @@ const BetLines: React.FC<BetLinesProps> = ({
   const yellowArrowRef = useRef<THREE.Mesh>(null);
   const dashedArrowRef = useRef<THREE.Mesh>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [betAmount, setBetAmount] = useState(0);
+  const userDeposit = 1000; // Example deposit, replace with actual value
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
@@ -110,12 +112,14 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     const direction = new THREE.Vector3().subVectors(intersection, previousBetEnd);
     let distance = direction.length();
+
     if (distance > maxYellowLength) {
       distance = maxYellowLength;
       direction.setLength(maxYellowLength);
     }
 
     const newEnd = previousBetEnd.clone().add(direction);
+
     if (axisMode === "X") {
       newEnd.y = previousBetEnd.y;
     } else if (axisMode === "Y") {
@@ -123,6 +127,11 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
 
     handleDrag(newEnd);
+
+    const percentage = distance / maxYellowLength;
+    const bet = percentage * userDeposit;
+
+    setBetAmount(Math.min(bet, userDeposit));
   };
 
   const handlePointerUp = () => {
@@ -130,7 +139,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       setIsDragging(false);
       onDragging(false);
       onShowConfirmButton(true, {
-        amount: 0,
+        amount: betAmount,
         predicted_vector: [userPreviousBet.x, userPreviousBet.y],
       });
     }
