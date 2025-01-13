@@ -250,7 +250,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (dashedArrowRef.current) {
       // Установка позиции и ориентации белого конуса
       dashedArrowRef.current.position.copy(clampedDashedEnd);
-      dashedArrowRef.current.lookAt(clampedYellowEnd);
+      dashedArrowRef.current.lookAt(clampedDashedEnd);
     }
   });
 
