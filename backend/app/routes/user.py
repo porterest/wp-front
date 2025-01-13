@@ -60,7 +60,7 @@ async def get_user_bets(
             detail=f"No user with ID {user_id}",
         )
 
-@router.get('/last_bet')
+@router.post('/last_bet')
 async def get_last_user_bet(
         request: Request,
         pair_id: UUID
