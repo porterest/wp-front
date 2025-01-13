@@ -51,18 +51,22 @@ const BetLines: React.FC<BetLinesProps> = ({
     maxLength: number
   ): number => (betAmount / maxBet) * maxLength;
 
-  const debouncedUpdateLine = debounce((newEnd: THREE.Vector3) => {
+
+// Явно указываем тип для дебаунс-функции
+  const debouncedUpdateLine = debounce((newEnd: unknown) => {
     if (dashedLine.current && dashedLine.current.geometry) {
+      const newEndVector = (newEnd) as THREE.Vector3;
       (dashedLine.current.geometry as LineGeometry).setPositions([
         previousBetEnd.x,
         previousBetEnd.y,
         previousBetEnd.z,
-        newEnd.x,
-        newEnd.y,
-        newEnd.z,
+        newEndVector.x,
+        newEndVector.y,
+        newEndVector.z,
       ]);
     }
   }, 50);
+
 
 
   useEffect(() => {
