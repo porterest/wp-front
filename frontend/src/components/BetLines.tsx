@@ -30,7 +30,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const yellowLine = useRef<Line2 | null>(null);
   const dashedLine = useRef<Line2 | null>(null);
   const sphereRef = useRef<THREE.Mesh>(null);
-  const yellowArrowRef = useRef<THREE.Mesh>(null);
+  const yellowArrowRef = useRef<THREE.Mesh>(null); //агрегированная ставка
   const dashedArrowRef = useRef<THREE.Mesh>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [betAmount, setBetAmount] = useState(0);
@@ -63,6 +63,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     });
 
     yellowLine.current = new Line2(yellowLineGeometry, yellowLineMaterial);
+    console.log('желтая агрегированная ставка юзера')
+    console.log(yellowLine.current);
+    console.log([0, 0, 0, previousBetToRender.x, previousBetToRender.y, previousBetToRender.z]);
     scene.add(yellowLine.current);
 
     const betToRender = restrictVector(userPreviousBet, 5);
@@ -82,6 +85,16 @@ const BetLines: React.FC<BetLinesProps> = ({
     });
 
     dashedLine.current = new Line2(dashedLineGeometry, dashedLineMaterial);
+    console.log('прошлая ставка юзера')
+    console.log(dashedLine.current);
+    console.log([
+      previousBetToRender.x,
+      previousBetToRender.y,
+      previousBetToRender.z,
+      betToRender.x,
+      betToRender.y,
+      betToRender.z,
+    ])
     scene.add(dashedLine.current);
 
     return () => {
