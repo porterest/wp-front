@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2";
@@ -91,8 +91,8 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [scene, previousBetEnd, userPreviousBet]);
 
   useEffect(() => {
-    const minY = useMemo(() => 0.1 * viewport.height, [viewport.height]);
-    const maxY = useMemo(() => 0.9 * viewport.height, [viewport.height]);
+    const minY = 0.1 * viewport.height;
+    const maxY = 0.9 * viewport.height;
 
     const minLine = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints([
@@ -157,7 +157,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     handleDrag(newEnd);
 
-    const percentage = useMemo(() => distance / maxYellowLength, [distance, maxYellowLength]);
+    const percentage = distance / maxYellowLength;
     const bet = percentage * userDeposit;
 
     setBetAmount(Math.min(bet, userDeposit));
