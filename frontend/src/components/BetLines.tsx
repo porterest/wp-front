@@ -217,7 +217,9 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   useFrame(() => {
     const clampedYellowEnd = restrictVector(previousBetEnd, 2.5);
-    const clampedDashedEnd = restrictVector(userPreviousBet, 5);
+    // const clampedDashedEnd = restrictVector(userPreviousBet, 5);
+    const clampedDashedEnd = userPreviousBet; // Отключить ограничение
+
 
     if (yellowLine.current && yellowLine.current.geometry) {
       yellowLine.current.geometry.setPositions([0, 0, 0, clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z]);

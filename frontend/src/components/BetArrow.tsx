@@ -54,6 +54,8 @@ const BetArrow: React.FC<BetArrowProps> = ({
     // Обновление состояния
     setBetAmount(Math.min(bet, userDeposit));
     setUserPreviousBet(newPosition);
+    console.log("Updated userPreviousBet:", userPreviousBet);
+
   };
 
   return (
