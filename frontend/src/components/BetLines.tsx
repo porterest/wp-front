@@ -52,7 +52,59 @@ const BetLines: React.FC<BetLinesProps> = ({
     return vector.clone().multiplyScalar(scale);
   };
 
+  // useEffect(() => {
+  //   const yellowLineGeometry = new LineGeometry();
+  //   const previousBetToRender = restrictVector(previousBetEnd, 2.5);
+  //   yellowLineGeometry.setPositions([0, 0, 0, previousBetToRender.x, previousBetToRender.y, previousBetToRender.z]);
+  //   const yellowLineMaterial = new LineMaterial({
+  //     color: "yellow",
+  //     linewidth: 3,
+  //     resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+  //   });
+  //
+  //   yellowLine.current = new Line2(yellowLineGeometry, yellowLineMaterial);
+  //   console.log('желтая агрегированная ставка')
+  //   console.log(yellowLine.current);
+  //   console.log([0, 0, 0, previousBetToRender.x, previousBetToRender.y, previousBetToRender.z]);
+  //   scene.add(yellowLine.current);
+  //
+  //   const betToRender = restrictVector(userPreviousBet, 5);
+  //   const dashedLineGeometry = new LineGeometry();
+  //   dashedLineGeometry.setPositions([
+  //     previousBetToRender.x,
+  //     previousBetToRender.y,
+  //     previousBetToRender.z,
+  //     betToRender.x,
+  //     betToRender.y,
+  //     betToRender.z,
+  //   ]);
+  //   const dashedLineMaterial = new LineMaterial({
+  //     color: "white",
+  //     linewidth: 3,
+  //     resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+  //   });
+  //
+  //   dashedLine.current = new Line2(dashedLineGeometry, dashedLineMaterial);
+  //   console.log('прошлая ставка юзера')
+  //   console.log(dashedLine.current);
+  //   console.log([
+  //     previousBetToRender.x,
+  //     previousBetToRender.y,
+  //     previousBetToRender.z,
+  //     betToRender.x,
+  //     betToRender.y,
+  //     betToRender.z,
+  //   ])
+  //   scene.add(dashedLine.current);
+  //
+  //   return () => {
+  //     if (yellowLine.current) scene.remove(yellowLine.current);
+  //     if (dashedLine.current) scene.remove(dashedLine.current);
+  //   };
+  // }, [scene, previousBetEnd, userPreviousBet]);
+
   useEffect(() => {
+    // Ограниченная версия previousBetEnd для жёлтой линии
     const yellowLineGeometry = new LineGeometry();
     const previousBetToRender = restrictVector(previousBetEnd, 2.5);
     yellowLineGeometry.setPositions([0, 0, 0, previousBetToRender.x, previousBetToRender.y, previousBetToRender.z]);
@@ -63,45 +115,47 @@ const BetLines: React.FC<BetLinesProps> = ({
     });
 
     yellowLine.current = new Line2(yellowLineGeometry, yellowLineMaterial);
-    console.log('желтая агрегированная ставка юзера')
-    console.log(yellowLine.current);
-    console.log([0, 0, 0, previousBetToRender.x, previousBetToRender.y, previousBetToRender.z]);
     scene.add(yellowLine.current);
 
-    const betToRender = restrictVector(userPreviousBet, 5);
-    const dashedLineGeometry = new LineGeometry();
-    dashedLineGeometry.setPositions([
-      previousBetToRender.x,
-      previousBetToRender.y,
-      previousBetToRender.z,
-      betToRender.x,
-      betToRender.y,
-      betToRender.z,
-    ]);
-    const dashedLineMaterial = new LineMaterial({
-      color: "white",
-      linewidth: 3,
-      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-    });
+    // Позиция для сферы
+    let spherePosition = previousBetToRender.clone();
 
-    dashedLine.current = new Line2(dashedLineGeometry, dashedLineMaterial);
-    console.log('прошлая ставка юзера')
-    console.log(dashedLine.current);
-    console.log([
-      previousBetToRender.x,
-      previousBetToRender.y,
-      previousBetToRender.z,
-      betToRender.x,
-      betToRender.y,
-      betToRender.z,
-    ])
-    scene.add(dashedLine.current);
+    // Логика для белой линии (ставки пользователя)
+    if (!userPreviousBet.equals(new THREE.Vector3(0, 0, 0))) {
+      const betToRender = restrictVector(userPreviousBet, 5);
+      const dashedLineGeometry = new LineGeometry();
+      dashedLineGeometry.setPositions([
+        previousBetToRender.x,
+        previousBetToRender.y,
+        previousBetToRender.z,
+        betToRender.x,
+        betToRender.y,
+        betToRender.z,
+      ]);
+      const dashedLineMaterial = new LineMaterial({
+        color: "white",
+        linewidth: 3,
+        resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+      });
+
+      dashedLine.current = new Line2(dashedLineGeometry, dashedLineMaterial);
+      scene.add(dashedLine.current);
+
+      // Обновляем позицию сферы на конец белой линии
+      spherePosition = betToRender.clone();
+    }
+
+    // Устанавливаем сферу
+    if (sphereRef.current) {
+      sphereRef.current.position.copy(spherePosition);
+    }
 
     return () => {
       if (yellowLine.current) scene.remove(yellowLine.current);
       if (dashedLine.current) scene.remove(dashedLine.current);
     };
   }, [scene, previousBetEnd, userPreviousBet]);
+
 
   useEffect(() => {
     const minY = 0.1 * viewport.height;
