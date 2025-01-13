@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 from uuid import UUID
 
 from domain.dto.user import UpdateUserDTO
+from domain.metaholder.responses import BetResponse
 from domain.metaholder.responses.user import UserBetsResponse, UserHistoryResponse
 from domain.models import User
 from domain.models.reward_model import Rewards
@@ -27,6 +29,9 @@ class UserServiceInterface(ABC):
 
     @abstractmethod
     async def get_user_bets(self, user_id: UUID) -> UserBetsResponse:
+        ...
+    @abstractmethod
+    async def get_last_user_bet(self, user_id: UUID, pair_id: UUID) -> Optional[BetResponse]:
         ...
 
     @abstractmethod
