@@ -183,8 +183,11 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     const intersection = new THREE.Vector3();
     raycaster.current.setFromCamera(mouse, camera);
-    raycaster.current.ray.intersectPlane(plane.current, intersection);
-
+    // raycaster.current.ray.intersectPlane(plane.current, intersection);
+    if (!raycaster.current.ray.intersectPlane(plane.current, intersection)) {
+      console.warn("Пересечение не найдено");
+      return;
+    }
     // Рассчитываем направление и ограничиваем длину
     const direction = new THREE.Vector3().subVectors(intersection, previousBetEnd);
     let distance = direction.length();

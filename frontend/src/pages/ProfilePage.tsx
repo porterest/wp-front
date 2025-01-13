@@ -92,7 +92,7 @@ const ProfilePage: React.FC = () => {
     <div className="flex flex-col items-center justify-start min-h-screen bg-gradient-to-b from-black to-gray-900 text-white p-4 space-y-6">
       {/* Логотип */}
       <div className="mt-6">
-        <img src="/logo.svg" alt="Logo" className="w-40 h-40 shadow-lg" />
+        <img src="/logo.png" alt="Logo" className="w-40 h-40 shadow-lg" />
       </div>
 
       {/* Заголовок страницы */}
