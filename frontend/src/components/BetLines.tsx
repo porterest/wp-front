@@ -99,7 +99,6 @@ const BetLines: React.FC<BetLinesProps> = ({
         new THREE.Vector3(-10, minY, 0),
         new THREE.Vector3(10, minY, 0),
       ]),
-      new THREE.LineBasicMaterial({ color: 0xff0000 })
     );
 
     const maxLine = new THREE.Line(
@@ -107,7 +106,6 @@ const BetLines: React.FC<BetLinesProps> = ({
         new THREE.Vector3(-10, maxY, 0),
         new THREE.Vector3(10, maxY, 0),
       ]),
-      new THREE.LineBasicMaterial({ color: 0x00ff00 })
     );
 
     scene.add(minLine);
@@ -162,6 +160,18 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     setBetAmount(Math.min(bet, userDeposit));
     userPreviousBet.copy(newEnd); // Обновляем положение конечной точки для обновления длины стрелки
+
+    if (dashedLine.current && dashedLine.current.geometry) {
+      dashedLine.current.geometry.setPositions([
+        previousBetEnd.x,
+        previousBetEnd.y,
+        previousBetEnd.z,
+        newEnd.x,
+        newEnd.y,
+        newEnd.z,
+      ]);
+    }
+
   };
 
   const handlePointerUp = () => {
