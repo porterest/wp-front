@@ -39,7 +39,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
 
-  const restrictVector = (vector: THREE.Vector3, max: number) => {
+  const restrictVector = (vector: THREE.Vector3, max: number): THREE.Vector3 => {
     if (vector.x === 0 && vector.y === 0 && vector.z === 0) {
       return vector;
     }
@@ -141,7 +141,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
   };
 
-  const handlePointerMove = (event: PointerEvent) => {
+  const handlePointerMove = (event: PointerEvent): void => {
     if (!isDragging) return;
 
     const mouse = new THREE.Vector2(
@@ -156,6 +156,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     const direction = new THREE.Vector3().subVectors(intersection, previousBetEnd);
     let distance = direction.length();
 
+    // Ограничение длины стрелки
     if (distance > maxYellowLength) {
       distance = maxYellowLength;
       direction.setLength(maxYellowLength);
@@ -163,32 +164,37 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     const newEnd = previousBetEnd.clone().add(direction);
 
+    // Применение ограничений по осям
     if (axisMode === "X") {
       newEnd.y = previousBetEnd.y;
     } else if (axisMode === "Y") {
       newEnd.x = previousBetEnd.x;
     }
 
+    // Обновляем конечную точку и вычисляем размер депозита
     handleDrag(newEnd);
-
     const percentage = distance / maxYellowLength;
     const bet = percentage * userDeposit;
-
     setBetAmount(Math.min(bet, userDeposit));
-    userPreviousBet.copy(newEnd); // Обновляем положение конечной точки для обновления длины стрелки
 
+    // Рассчитываем новую длину стрелки на основе депозита
+    const newLength = calculateLengthFromBet(bet, userDeposit, 5); // 5 — максимальная длина
+    userPreviousBet.copy(previousBetEnd.clone().add(direction.setLength(newLength)));
+
+    // Обновляем геометрию белой линии
     if (dashedLine.current && dashedLine.current.geometry) {
-      dashedLine.current.geometry.setPositions([
+      (dashedLine.current.geometry as LineGeometry).setPositions([
         previousBetEnd.x,
         previousBetEnd.y,
         previousBetEnd.z,
-        newEnd.x,
-        newEnd.y,
-        newEnd.z,
+        userPreviousBet.x,
+        userPreviousBet.y,
+        userPreviousBet.z,
       ]);
     }
-
   };
+
+
 
   const handlePointerUp = () => {
     if (isDragging) {
@@ -233,22 +239,19 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   useFrame(() => {
     const clampedYellowEnd = restrictVector(previousBetEnd, 2.5);
-    const clampedDashedEnd = restrictVector(userPreviousBet, 4);
-    // const clampedDashedEnd = userPreviousBet; // Отключить ограничение
-
+    const clampedDashedEnd = userPreviousBet.clone();
 
     if (yellowLine.current && yellowLine.current.geometry) {
-      yellowLine.current.geometry.setPositions([0, 0, 0, clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z]);
+      (yellowLine.current.geometry as LineGeometry).setPositions([
+        0, 0, 0,
+        clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z
+      ]);
     }
 
     if (dashedLine.current && dashedLine.current.geometry) {
-      dashedLine.current.geometry.setPositions([
-        clampedYellowEnd.x,
-        clampedYellowEnd.y,
-        clampedYellowEnd.z,
-        clampedDashedEnd.x,
-        clampedDashedEnd.y,
-        clampedDashedEnd.z,
+      (dashedLine.current.geometry as LineGeometry).setPositions([
+        clampedYellowEnd.x, clampedYellowEnd.y, clampedYellowEnd.z,
+        clampedDashedEnd.x, clampedDashedEnd.y, clampedDashedEnd.z,
       ]);
     }
 
@@ -256,19 +259,18 @@ const BetLines: React.FC<BetLinesProps> = ({
       sphereRef.current.position.copy(clampedDashedEnd);
     }
 
-    if (yellowArrowRef.current) {
-      yellowArrowRef.current.position.copy(clampedYellowEnd);
-    }
-
-    // if (dashedArrowRef.current) {
-    //   dashedArrowRef.current.position.copy(clampedDashedEnd);
-    // }
     if (dashedArrowRef.current) {
-      // Установка позиции и ориентации белого конуса
       dashedArrowRef.current.position.copy(clampedDashedEnd);
       dashedArrowRef.current.lookAt(clampedDashedEnd);
     }
   });
+
+
+  const calculateLengthFromBet = (betAmount: number, maxBet: number, maxLength: number): number => {
+    return (betAmount / maxBet) * maxLength;
+  };
+
+
 
   return (
     <>
