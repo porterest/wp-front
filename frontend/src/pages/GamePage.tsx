@@ -51,17 +51,13 @@ const GamePage: React.FC = () => {
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         )[0];
       console.log("last user Bet:", lastBet);
-      if (!lastBet) {
-        console.log("mocking lastBet");
-        setUserPreviousBet(new THREE.Vector3(2, 3, 1));
-      } else if (lastBet.vector) {
-        const userVector = new THREE.Vector3(
-          lastBet.vector[0],
-          lastBet.vector[1],
-          0,
-        );
-        setUserPreviousBet(userVector);
-      }
+      const userVector = new THREE.Vector3(
+        lastBet.vector[0],
+        lastBet.vector[1],
+        0,)
+      setUserPreviousBet(userVector);
+      console.log("userVector:", userVector);
+
     } catch (error) {
       console.error("Ошибка загрузки прошлой ставки пользователя:", error);
     }
