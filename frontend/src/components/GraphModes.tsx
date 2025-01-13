@@ -49,6 +49,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
           axisMode={axisMode}
           onDragging={onDragging}
           onShowConfirmButton={onShowConfirmButton}
+          pairId={selectedPair?.value}
         />
       );
     }
@@ -70,6 +71,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
             axisMode={axisMode}
             onDragging={onDragging}
             onShowConfirmButton={onShowConfirmButton}
+            pairId={selectedPair?.value}
           />
         </>
       );
@@ -96,6 +98,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
         axisMode={axisMode}
         onDragging={onDragging}
         onShowConfirmButton={onShowConfirmButton}
+        pairId={selectedPair?.value}
       />
       {renderContent()}
     </>
