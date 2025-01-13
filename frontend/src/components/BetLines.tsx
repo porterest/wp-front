@@ -253,7 +253,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     useFrame(() => {
       if (!isDragging) return;
       const clampedYellowEnd = restrictVector(previousBetEnd, 2.5);
-      const clampedDashedEnd = userPreviousBet.clone();
+      const clampedDashedEnd = restrictVector(previousBetEnd, 5);
+      // const clampedDashedEnd = userPreviousBet.clone();
 
       if (yellowLine.current && yellowLine.current.geometry) {
         (yellowLine.current.geometry as LineGeometry).setPositions([
