@@ -161,6 +161,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     const bet = percentage * userDeposit;
 
     setBetAmount(Math.min(bet, userDeposit));
+    userPreviousBet.copy(newEnd); // Обновляем положение конечной точки для обновления длины стрелки
   };
 
   const handlePointerUp = () => {
