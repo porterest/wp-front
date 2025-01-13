@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 
 from dependencies.services.user import get_user_service
+from domain.metaholder.requests.pair import GetUserLastBetRequest
 from domain.metaholder.responses import BetResponse
 from domain.metaholder.responses.user import UserHistoryResponse, UserBetsResponse, UserInfoResponse
 from routes.helpers import get_user_id_from_request
@@ -63,14 +64,14 @@ async def get_user_bets(
 @router.post('/last_bet')
 async def get_last_user_bet(
         request: Request,
-        pair_id: UUID
+        pair_id: GetUserLastBetRequest
 ) -> Optional[BetResponse]:
     user_id = get_user_id_from_request(request)
 
     users = get_user_service()
 
     try:
-        user_bet = await users.get_last_user_bet(user_id=user_id, pair_id=pair_id)
+        user_bet = await users.get_last_user_bet(user_id=user_id, pair_id=pair_id.pair_id)
         return user_bet
     except NotFoundException:
         logger.error(f"No user with ID {user_id}", exc_info=True)
