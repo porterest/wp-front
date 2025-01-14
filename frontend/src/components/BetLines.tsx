@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
@@ -7,16 +7,14 @@ import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import debounce from "lodash.debounce";
 import { DebouncedFunc } from "lodash";
 
-// Расширяем до "X" | "Y" | "Z"
 interface BetLinesProps {
-  axisMode: "X" | "Y" | "Z";
+  axisMode: "X" | "Y" | "Z"; // Возможность переключать оси
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
     betData?: { amount: number; vector: number[] }
   ) => void;
-  // Макс длина (при желании, если нужно)
-  maxDepositLength: number;
+  maxDepositLength: number; // Максимальная длина вектора
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
@@ -31,38 +29,32 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   const [isDragging, setIsDragging] = useState(false);
 
-  // Храним ВЕСЬ вектор депозита (стрелка от (0,0,0) до depositPosition)
-  // Изначально пусть будет (2,1,3), или (1,0,0) - как вам нужно
-  const [depositPosition, setDepositPosition] = useState(() => new THREE.Vector3(1,0,0));
+  // Состояние для вектора депозита
+  const [depositPosition, setDepositPosition] = useState<THREE.Vector3>(
+    new THREE.Vector3(1, 0, 0) // Изначальное положение
+  );
 
-  // three.js
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
 
-  // BoundingBox для ограничения (при необходимости)
   const boundingBox = new THREE.Box3(
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(7, 7, 7)
+    new THREE.Vector3(0, 0, 0), // Минимальные значения
+    new THREE.Vector3(7, 7, 7)  // Максимальные значения
   );
 
-  // Debounce для обновления линии
-  const debouncedUpdateLine: DebouncedFunc<(pos: THREE.Vector3) => void> = debounce(
+  const debouncedUpdateLine: DebouncedFunc<(pos: unknown) => void> = debounce(
     (pos) => {
+      const newEndVector = (pos) as THREE.Vector3;
       if (!lineRef.current) return;
       const lineGeom = lineRef.current.geometry as LineGeometry;
-      // Линия от (0,0,0) до depositPosition
-      lineGeom.setPositions([
-        0, 0, 0,
-        pos.x, pos.y, pos.z,
-      ]);
+      lineGeom.setPositions([0, 0, 0, newEndVector.x, newEndVector.y, newEndVector.z]);
     },
     30
   );
 
-  // Инициируем линию (единственная стрелка)
+  // Инициализация линии и объектов
   useEffect(() => {
-    // Создаём геометрию
     const lineGeom = new LineGeometry();
     lineGeom.setPositions([0, 0, 0, depositPosition.x, depositPosition.y, depositPosition.z]);
 
@@ -76,7 +68,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     lineRef.current = line2;
     scene.add(line2);
 
-    // Конус на конце
     if (coneRef.current) {
       coneRef.current.position.copy(depositPosition);
       const dir = depositPosition.clone().normalize();
@@ -85,7 +76,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       coneRef.current.setRotationFromQuaternion(quat);
     }
 
-    // Сфера на конце
     if (sphereRef.current) {
       sphereRef.current.position.copy(depositPosition);
     }
@@ -93,24 +83,15 @@ const BetLines: React.FC<BetLinesProps> = ({
     return () => {
       scene.remove(line2);
     };
-  }, [scene]);
+  }, [scene, depositPosition]);
 
-  // При изменении depositPosition обновляем линию, конус, сферу
+  // Обновление линии, конуса, и сферы
   useEffect(() => {
     if (!lineRef.current) return;
 
-    // clampLength, если хотите ограничить максимальную длину
-    if (depositPosition.length() > maxDepositLength) {
-      depositPosition.setLength(maxDepositLength);
-    }
-
-    // Bounding box
     boundingBox.clampPoint(depositPosition, depositPosition);
-
-    // Обновляем линию (debounce)
     debouncedUpdateLine(depositPosition.clone());
 
-    // Поворот и позиция конуса
     if (coneRef.current) {
       coneRef.current.position.copy(depositPosition);
       const dir = depositPosition.clone().normalize();
@@ -119,13 +100,11 @@ const BetLines: React.FC<BetLinesProps> = ({
       coneRef.current.setRotationFromQuaternion(quat);
     }
 
-    // Сферу
     if (sphereRef.current) {
       sphereRef.current.position.copy(depositPosition);
     }
-  }, [depositPosition, maxDepositLength]);
+  }, [depositPosition]);
 
-  // PointerEvents
   const isIntersectingEndpoint = (event: PointerEvent): boolean => {
     if (!sphereRef.current) return false;
     const mouse = new THREE.Vector2(
@@ -161,30 +140,29 @@ const BetLines: React.FC<BetLinesProps> = ({
     const intersection = new THREE.Vector3();
     if (!raycaster.current.ray.intersectPlane(plane.current, intersection)) return;
 
-    // Это абсолютная позиция в пространстве. Нам нужно движение вдоль одной оси.
-    // Берём копию текущего depositPosition и корректируем только нужную ось.
     const newPos = depositPosition.clone();
 
-    if (axisMode === "X") {
-      newPos.x = intersection.x;
-    } else if (axisMode === "Y") {
-      newPos.y = intersection.y;
-    } else if (axisMode === "Z") {
-      newPos.z = intersection.z;
+    // Меняем только текущую ось
+    if (axisMode === "X") newPos.x = intersection.x;
+    if (axisMode === "Y") newPos.y = intersection.y;
+    if (axisMode === "Z") newPos.z = intersection.z;
+
+    // Ограничиваем длину вектора до maxDepositLength
+    if (newPos.length() > maxDepositLength) {
+      newPos.setLength(maxDepositLength);
     }
 
     setDepositPosition(newPos);
   };
+
 
   const handlePointerUp = () => {
     if (isDragging) {
       setIsDragging(false);
       onDragging(false);
 
-      // Считаем депозит как длину
-      const depositAmount = depositPosition.length();
       onShowConfirmButton(true, {
-        amount: depositAmount,
+        amount: depositPosition.length(),
         vector: [depositPosition.x, depositPosition.y, depositPosition.z],
       });
     }
@@ -203,19 +181,15 @@ const BetLines: React.FC<BetLinesProps> = ({
     };
   }, [handlePointerMove]);
 
-  useFrame(() => {
-    // Ничего особого в рендер-цикле
-  });
-
   return (
     <>
-      {/* Конус на конце */}
+      {/* Конус на конце стрелки */}
       <mesh ref={coneRef}>
         <coneGeometry args={[0.1, 0.3, 16]} />
         <meshStandardMaterial color="yellow" />
       </mesh>
 
-      {/* Сфера (drag point) */}
+      {/* Сфера (точка перетаскивания) */}
       <mesh ref={sphereRef} scale={[0.5, 0.5, 0.5]}>
         <sphereGeometry args={[1.0, 16, 16]} />
         <meshStandardMaterial color="blue" opacity={0.5} transparent />
