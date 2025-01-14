@@ -12,7 +12,7 @@ interface BetLinesProps {
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
-    betData?: { amount: number; vector: number[] }
+    betData?: { amount: number; predicted_vector: number[] }
   ) => void;
   maxDepositLength: number; // Максимальная длина вектора
 }
@@ -158,19 +158,18 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   const handlePointerUp = () => {
     if (isDragging) {
-      setIsDragging(false); // Завершаем перетаскивание
-      onDragging(false);    // Уведомляем, что перетаскивание закончено
+      setIsDragging(false);
+      onDragging(false);
 
-      // Считаем депозит как длину вектора
       const depositAmount = depositPosition.length();
 
-      // Вызываем onShowConfirmButton с корректным полем vector
       onShowConfirmButton(true, {
-        amount: depositAmount, // Длина вектора как депозит
-        vector: [depositPosition.x, depositPosition.y, depositPosition.z], // Используем vector
+        amount: depositAmount,
+        predicted_vector: [depositPosition.x, depositPosition.y, depositPosition.z], // Передаём predicted_vector
       });
     }
   };
+
 
 
 
