@@ -15,6 +15,7 @@ interface BetLinesProps {
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
   previousBetEnd: THREE.Vector3; // Добавляем это поле
+  userPreviousBet: THREE.Vector3; // Пользовательская предыдущая ставка
   maxDepositLength: number; // Максимальная длина вектора
 }
 
