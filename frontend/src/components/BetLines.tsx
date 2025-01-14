@@ -45,9 +45,21 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Позиция конца белой линии (изначально userPreviousBet).
   // ВАЖНО: при смене axisMode НЕ сбрасываем, чтобы сохранять состояние.
-  const [betPosition, setBetPosition] = useState<THREE.Vector3>(() =>
+  const fixedTimeValue = 3.5;
+
+  // Начальная позиция белой стрелки
+  const [betPosition, setBetPosition] = useState<THREE.Vector3>(
     userPreviousBet.clone()
   );
+
+  // При маунте фиксируем x
+  useEffect(() => {
+    setBetPosition((prev) => {
+      const clone = prev.clone();
+      clone.x = fixedTimeValue;
+      return clone;
+    });
+  }, []);
 
   // Баланс юзера
   const [userBalance, setUserBalance] = useState(0);
@@ -67,8 +79,9 @@ const BetLines: React.FC<BetLinesProps> = ({
   // THREE
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
-  const plane = useRef(new THREE.Plane());
-
+  const plane = useRef(
+    new THREE.Plane(new THREE.Vector3(1, 0, 0), -fixedTimeValue)
+  );
   // Debounced обновление белой линии
   const debouncedUpdateWhiteLine: DebouncedFunc<(pos: THREE.Vector3) => void> =
     debounce((pos: unknown) => {
