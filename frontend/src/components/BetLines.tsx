@@ -40,7 +40,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const plane = useRef(new THREE.Plane());
 
   // Для белой линии используем отдельную константу
-  const maxWhiteLength = 5;
+  const maxWhiteLength = 7;
 
   const restrictVector = (vector: THREE.Vector3, max: number): THREE.Vector3 => {
     if (vector.length() === 0) return vector;
