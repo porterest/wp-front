@@ -200,13 +200,14 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (!raycaster.current.ray.intersectPlane(plane.current, intersectPt)) {
       return;
     }
+    intersectPt.x = fixedTimeValue;
 
     // direction = intersectPt - previousBetEnd
     const direction = intersectPt.clone().sub(previousBetEnd);
 
     // СОХРАНЯЕМ другие координаты, МЕНЯЕМ только нужную!
     const updatedPos = betPosition.clone(); // Текущее положение
-
+    updatedPos.x = fixedTimeValue
     // Ограничим длину?
     // сначала примем direction, затем скорректируем одну ось
     // и в конце отрежем, если длиннее maxYellowLength
