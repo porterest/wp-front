@@ -16,8 +16,8 @@ interface BetLinesProps {
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
   maxYellowLength: number;
-  // Расширяем axisMode до "X" | "Y" | "Z"
-  axisMode: "X" | "Y" | "Z";
+  // Расширяем axisMode до "Y" | "Z", (X фиксируем и не даём двигать, раз время посередине)
+  axisMode: "Y" | "Z";
   handleDrag: (newPosition: THREE.Vector3) => void;
 }
 
@@ -40,17 +40,28 @@ const BetLines: React.FC<BetLinesProps> = ({
   const [betAmount, setBetAmount] = useState(0);
   const userDeposit = 1000;
 
+  // Фиксированная координата X (имитируем «время» строго по центру сцены)
+  const fixedTimeValue = 3.5;
+
   // Храним ОДИН Vector3 для белого вектора
   const [betPosition, setBetPosition] = useState<THREE.Vector3>(
-    // Клонируем начальный вектор (может быть (0,0,0) или нет)
     userPreviousBet.clone()
   );
+
+  // Устанавливаем изначально X в фиксированное значение
+  useEffect(() => {
+    setBetPosition((prev) => {
+      const clone = prev.clone();
+      clone.x = fixedTimeValue;
+      return clone;
+    });
+  }, []);
 
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
 
-  // Куб для ограничений (при необходимости меняйте размеры)
+  // Куб для ограничений
   const boundingBox = new THREE.Box3(
     new THREE.Vector3(0, 0, 0),
     new THREE.Vector3(7, 7, 7)
@@ -83,12 +94,11 @@ const BetLines: React.FC<BetLinesProps> = ({
     50
   );
 
-  // ======= ИНИЦИАЛИЗАЦИЯ ЛИНИЙ (ЖЁЛТАЯ + БЕЛАЯ) =======
+  // ИНИЦИАЛИЗАЦИЯ ЛИНИЙ (ЖЁЛТАЯ + БЕЛАЯ)
   useEffect(() => {
-    // Жёлтая линия, условно из (0,0,0) в previousBetEnd (либо, как в вашем коде).
+    // Жёлтая линия
     const depositVector = restrictVector(previousBetEnd, maxYellowLength);
 
-    // Создаём геометрию жёлтой линии
     const yellowLineGeometry = new LineGeometry();
     yellowLineGeometry.setPositions([
       0, 0, 0,
@@ -104,7 +114,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     yellowLine.current = new Line2(yellowLineGeometry, yellowLineMaterial);
     scene.add(yellowLine.current);
 
-    // Желтый конус на конце жёлтой линии
+    // Желтый конус
     if (yellowConeRef.current) {
       yellowConeRef.current.position.copy(depositVector);
       const dir = depositVector.clone().normalize();
@@ -131,7 +141,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     dashedLine.current = new Line2(dashedLineGeometry, dashedLineMaterial);
     scene.add(dashedLine.current);
 
-    // Ставим белый конус и сферу (drag point) на начальное положение
+    // Белый конус и сфера (drag point)
     if (whiteConeRef.current) {
       whiteConeRef.current.position.copy(betPosition);
       const dirW = betPosition.clone().sub(previousBetEnd).normalize();
@@ -149,13 +159,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     };
   }, [scene, previousBetEnd, maxYellowLength, betPosition]);
 
-  // ======= ПОМЕТОК: При переключении оси мы НЕ сбрасываем betPosition =======
-  // Достаточно того, что при "pointermove" мы будем менять только выбранную ось,
-  // остальные координаты оставляем. Поэтому в useEffect на axisMode ничего не делаем:
-  // betPosition уже хранит "где вектор стоит".
-
-
-  // ======= ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ =======
+  // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
   const isIntersectingEndpoint = (event: PointerEvent): boolean => {
     if (!sphereRef.current) return false;
     const mouse = new THREE.Vector2(
@@ -171,7 +175,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     plane.current.setFromNormalAndCoplanarPoint(cameraDirection, previousBetEnd);
   };
 
-  // ======= Pointer Events =======
+  // Pointer Events
   const handlePointerDown = (event: PointerEvent) => {
     if (isIntersectingEndpoint(event)) {
       updateDynamicPlane();
@@ -194,39 +198,42 @@ const BetLines: React.FC<BetLinesProps> = ({
       return;
     }
 
-    // Считаем вектор direction и длину
+    // directionWhite - вектор от previousBetEnd до пересечения
     const directionWhite = intersection.clone().sub(previousBetEnd);
     let distanceWhite = directionWhite.length();
     distanceWhite = Math.min(distanceWhite, maxWhiteLength);
 
-    // Это полный вектор от previousBetEnd (по длине не больше maxWhiteLength)
+    // Полный вектор от previousBetEnd
     const newEndWhite = previousBetEnd
       .clone()
       .add(directionWhite.setLength(distanceWhite));
 
-    // Теперь берём текущий betPosition и меняем только одну координату
+    // Текущее betPosition (где стоит белая стрелка)
     const updatedPos = betPosition.clone();
 
-    if (axisMode === "X") {
-      updatedPos.x = newEndWhite.x; // изменяем X
-    } else if (axisMode === "Y") {
-      updatedPos.y = newEndWhite.y; // изменяем Y
+    // Фиксируем ось X, чтобы "время" было в середине
+    updatedPos.x = fixedTimeValue;
+
+    // Позволяем менять только выбранную ось (Y или Z)
+    if (axisMode === "Y") {
+      updatedPos.y = newEndWhite.y;
     } else if (axisMode === "Z") {
-      updatedPos.z = newEndWhite.z; // изменяем Z
+      updatedPos.z = newEndWhite.z;
     }
 
-    // Ограничиваем в пределах куба (только положительные и < 7)
+    // Ограничиваем в пределах куба
     boundingBox.clampPoint(updatedPos, updatedPos);
 
-    // Запоминаем
+    // Обновляем стейт
     setBetPosition(updatedPos);
 
-    // Ставка
+    // Расчёт ставки
+    // Для примера возьмём процент (рассчитываем от длины directionWhite):
     const percentage = distanceWhite / maxWhiteLength;
     const bet = percentage * userDeposit;
     setBetAmount(Math.min(bet, userDeposit));
 
-    // Вызываем handleDrag
+    // handleDrag
     handleDrag(updatedPos);
 
     // Обновляем белую линию (debounce)
@@ -254,12 +261,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
       onShowConfirmButton(true, {
         amount: betAmount,
-        // Можем передать текущее положение
-        predicted_vector: [
-          betPosition.x,
-          betPosition.y,
-          betPosition.z
-        ],
+        predicted_vector: [betPosition.x, betPosition.y, betPosition.z],
       });
     }
   };
@@ -278,24 +280,24 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [gl.domElement, handlePointerMove]);
 
   useFrame(() => {
-    // Здесь ничего не делаем, всё в handlePointerMove
+    // Пусто
   });
 
   return (
     <>
-      {/* Жёлтый конус (не двигается) */}
+      {/* Жёлтый конус (Deposit) */}
       <mesh ref={yellowConeRef}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="yellow" />
       </mesh>
 
-      {/* Белый конус (двигается со своей линией) */}
+      {/* Белый конус (Bet) */}
       <mesh ref={whiteConeRef}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="white" />
       </mesh>
 
-      {/* Сфера (синий drag point) */}
+      {/* Сфера (drag point) */}
       <mesh ref={sphereRef} scale={[0.5, 0.5, 0.5]}>
         <sphereGeometry args={[1.0, 16, 16]} />
         <meshStandardMaterial color="blue" opacity={0.5} transparent />
