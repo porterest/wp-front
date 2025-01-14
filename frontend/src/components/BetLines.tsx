@@ -6,32 +6,22 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import debounce from "lodash.debounce";
 import { DebouncedFunc } from "lodash";
+import { fetchUserBalances } from "../services/api";
 
-// Импорт ручки для получения баланса
-import { fetchUserBalances } from "../api/userInfo";
 // interface UserInfo { user_id: string; balance: number; atRisk: number; }
 
 interface BetLinesProps {
-  // === ЖЁЛТАЯ ЛИНИЯ ===
-  // Агрегированная ставка от (0,0,0) до previousBetEnd (может быть (0,0,0), если ставок не было)
-  previousBetEnd: THREE.Vector3;
-
-  // === БЕЛАЯ ЛИНИЯ ===
-  // От previousBetEnd до userPreviousBet (если у юзера была ставка, иначе userPreviousBet == previousBetEnd)
-  userPreviousBet: THREE.Vector3;
-
-  // Дёргаем, когда начинаем/заканчиваем drag
+  previousBetEnd: THREE.Vector3;   // конец жёлтой линии
+  userPreviousBet: THREE.Vector3;  // конец белой линии (старая ставка) или совпадает с previousBetEnd, если не было
   onDragging: (isDragging: boolean) => void;
-
-  // Показываем кнопку Bet, когда отпустили мышь
   onShowConfirmButton: (
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
-
-  maxYellowLength: number;          // Макс длина агрегированной (жёлтой)
-  handleDrag: (newPosition: THREE.Vector3) => void; // Колбэк для отслеживания
-  axisMode: "X" | "Y";              // Режим оси (или "X", или "Y").
+  maxYellowLength: number;
+  handleDrag: (newPosition: THREE.Vector3) => void;
+  // При axisMode="X" двигаем X, при "Y" двигаем Y, а остальные координаты не трогаем.
+  axisMode: "X" | "Y";
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
@@ -43,66 +33,65 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              handleDrag,
                                              axisMode,
                                            }) => {
-  // ==== REFS на объекты ====
+  // Ссылки на объекты
   const yellowLineRef = useRef<Line2 | null>(null);
   const whiteLineRef = useRef<Line2 | null>(null);
   const sphereRef = useRef<THREE.Mesh>(null);
   const yellowConeRef = useRef<THREE.Mesh>(null);
   const whiteConeRef = useRef<THREE.Mesh>(null);
 
-  // === Состояние для Drag ===
+  // Drag
   const [isDragging, setIsDragging] = useState(false);
 
-  // === Положение конца белой линии (изначально userPreviousBet) ===
-  const [betPosition, setBetPosition] = useState<THREE.Vector3>(() => {
-    return userPreviousBet.clone();
-  });
+  // Позиция конца белой линии (изначально userPreviousBet).
+  // ВАЖНО: при смене axisMode НЕ сбрасываем, чтобы сохранять состояние.
+  const [betPosition, setBetPosition] = useState<THREE.Vector3>(() =>
+    userPreviousBet.clone()
+  );
 
-  // === Баланс юзера (берём из ручки fetchUserBalances) ===
+  // Баланс юзера
   const [userBalance, setUserBalance] = useState(0);
 
+  // Подтянем баланс один раз
   useEffect(() => {
     (async () => {
       try {
-        const userInfo = await fetchUserBalances();
-        setUserBalance(userInfo.balance);
-      } catch (err) {
-        console.error("Failed to fetch user balances:", err);
+        const { balance } = await fetchUserBalances();
+        setUserBalance(balance);
+      } catch (error) {
+        console.error("Failed to fetch user balances:", error);
       }
     })();
   }, []);
 
-  // === THREE STUFF ===
+  // THREE
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
-  // Плоскость, чтобы ловить pointerMove
   const plane = useRef(new THREE.Plane());
 
-  // === Debounced перерисовка белой линии ===
-  const debouncedUpdateWhiteLine: DebouncedFunc<(pos: THREE.Vector3) => void> =
-    debounce((pos: THREE.Vector3) => {
+  // Debounced обновление белой линии
+  const debouncedUpdateWhiteLine: DebouncedFunc<(pos: unknown)=>void> = debounce(
+    (pos: unknown) => {
       if (!whiteLineRef.current || !whiteLineRef.current.geometry) return;
+      const p = pos as THREE.Vector3;
       const geom = whiteLineRef.current.geometry as LineGeometry;
-      // Белая линия: from previousBetEnd to pos
       geom.setPositions([
         previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-        pos.x, pos.y, pos.z,
+        p.x, p.y, p.z,
       ]);
-    }, 30);
+    },
+    30
+  );
 
-  // === Инициализация (жёлтая + белая) при маунте И при обновлении betPosition ===
+  // Инициализация линий, конусов, сферы
   useEffect(() => {
-    // 1) ЖЁЛТАЯ ЛИНИЯ: (0,0,0) → previousBetEnd
+    // === ЖЁЛТАЯ ЛИНИЯ: (0,0,0) → previousBetEnd (с обрезкой по maxYellowLength)
     const depositVec = previousBetEnd.clone();
     if (depositVec.length() > maxYellowLength) {
       depositVec.setLength(maxYellowLength);
     }
-    // Создаём geometry + material
     const yGeom = new LineGeometry();
-    yGeom.setPositions([
-      0, 0, 0,
-      depositVec.x, depositVec.y, depositVec.z
-    ]);
+    yGeom.setPositions([0,0,0, depositVec.x, depositVec.y, depositVec.z]);
     const yMat = new LineMaterial({
       color: "yellow",
       linewidth: 3,
@@ -111,10 +100,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     yellowLineRef.current = new Line2(yGeom, yMat);
     scene.add(yellowLineRef.current);
 
-    // Желтый конус на конце жёлтой линии
+    // Желтый конус
     if (yellowConeRef.current) {
       yellowConeRef.current.position.copy(depositVec);
-      // Поворачиваем конус
       const dir = depositVec.clone().normalize();
       if (dir.length() > 0) {
         const up = new THREE.Vector3(0,1,0);
@@ -123,11 +111,11 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
 
-    // 2) БЕЛАЯ ЛИНИЯ: previousBetEnd → betPosition
+    // === БЕЛАЯ ЛИНИЯ: previousBetEnd → betPosition
     const wGeom = new LineGeometry();
     wGeom.setPositions([
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-      betPosition.x, betPosition.y, betPosition.z
+      betPosition.x,   betPosition.y,   betPosition.z
     ]);
     const wMat = new LineMaterial({
       color: "white",
@@ -137,10 +125,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     whiteLineRef.current = new Line2(wGeom, wMat);
     scene.add(whiteLineRef.current);
 
-    // Белый конус на конце белой линии
+    // Белый конус
     if (whiteConeRef.current) {
       whiteConeRef.current.position.copy(betPosition);
-      // Поворот
       const dirW = betPosition.clone().sub(previousBetEnd).normalize();
       if (dirW.length() > 0) {
         const up = new THREE.Vector3(0,1,0);
@@ -149,19 +136,18 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
 
-    // Сфера (drag point) на betPosition
+    // Сфера (drag point)
     if (sphereRef.current) {
       sphereRef.current.position.copy(betPosition);
     }
 
-    // Очистка при размонтировании
     return () => {
       if (yellowLineRef.current) scene.remove(yellowLineRef.current);
       if (whiteLineRef.current) scene.remove(whiteLineRef.current);
     };
   }, [scene, previousBetEnd, betPosition, maxYellowLength]);
 
-  // === Проверка: кликнули ли по сфере? ===
+  // Проверка клика по сфере
   const isClickOnSphere = (event: PointerEvent): boolean => {
     if (!sphereRef.current) return false;
     const mouse = new THREE.Vector2(
@@ -173,13 +159,13 @@ const BetLines: React.FC<BetLinesProps> = ({
     return hits.length > 0;
   };
 
-  // === Плоскость: динамически ориентируем перпендикулярно взгляду и проходящую через betPosition ===
+  // Обновляем плоскость (перпендикулярна взгляду, проходит через betPosition)
   const updatePlane = () => {
     const camDir = camera.getWorldDirection(new THREE.Vector3());
     plane.current.setFromNormalAndCoplanarPoint(camDir, betPosition);
   };
 
-  // === pointerDown ===
+  // pointerDown
   const handlePointerDown = (e: PointerEvent) => {
     if (isClickOnSphere(e)) {
       setIsDragging(true);
@@ -188,7 +174,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
   };
 
-  // === pointerMove ===
+  // pointerMove
   const handlePointerMove = (e: PointerEvent) => {
     if (!isDragging) return;
 
@@ -198,46 +184,48 @@ const BetLines: React.FC<BetLinesProps> = ({
     );
     raycaster.current.setFromCamera(mouse, camera);
 
-    const pt = new THREE.Vector3();
-    if (!raycaster.current.ray.intersectPlane(plane.current, pt)) {
+    const intersectPt = new THREE.Vector3();
+    if (!raycaster.current.ray.intersectPlane(plane.current, intersectPt)) {
       return;
     }
 
-    // direction = от previousBetEnd до пересечения
-    const direction = pt.clone().sub(previousBetEnd);
+    // direction = intersectPt - previousBetEnd
+    const direction = intersectPt.clone().sub(previousBetEnd);
 
-    // === ограничиваем движение по оси (axisMode) ===
+    // СОХРАНЯЕМ другие координаты, МЕНЯЕМ только нужную!
+    const updatedPos = betPosition.clone(); // Текущее положение
+
+    // Ограничим длину?
+    // сначала примем direction, затем скорректируем одну ось
+    // и в конце отрежем, если длиннее maxYellowLength
+    const partialPos = previousBetEnd.clone().add(direction);
+
+    // Перенесём partialPos в updatedPos, но только для одной координаты
     if (axisMode === "X") {
-      // "X" = двигаем X, оставляем Y,Z?
-      // Или по вашей логике: "X" = двигаем Z?
-      // Допустим, что "X" = двигаем X, тогда:
-      direction.y = 0;
-      direction.z = 0;
-    }
-    else if (axisMode === "Y") {
-      // Меняем только Y
-      direction.x = 0;
-      direction.z = 0;
+      updatedPos.x = partialPos.x; // менять X
+      // y и z оставляем как было
+    } else if (axisMode === "Y") {
+      updatedPos.y = partialPos.y; // менять Y
+      // x и z оставляем как было
     }
 
-    // Ограничиваем длину
-    if (direction.length() > maxYellowLength) {
-      direction.setLength(maxYellowLength);
+    // Теперь ограничим итоговую длину
+    const finalDir = updatedPos.clone().sub(previousBetEnd);
+    if (finalDir.length() > maxYellowLength) {
+      finalDir.setLength(maxYellowLength);
+      updatedPos.copy(previousBetEnd).add(finalDir);
     }
 
-    // Новая конечная точка
-    const newEnd = previousBetEnd.clone().add(direction);
+    setBetPosition(updatedPos);
+    debouncedUpdateWhiteLine(updatedPos);
 
-    setBetPosition(newEnd);
-    debouncedUpdateWhiteLine(newEnd);
-
-    // Двигаем сферу, конус
+    // Сдвигаем сферу + конус
     if (sphereRef.current) {
-      sphereRef.current.position.copy(newEnd);
+      sphereRef.current.position.copy(updatedPos);
     }
     if (whiteConeRef.current) {
-      whiteConeRef.current.position.copy(newEnd);
-      const dirW = newEnd.clone().sub(previousBetEnd).normalize();
+      whiteConeRef.current.position.copy(updatedPos);
+      const dirW = updatedPos.clone().sub(previousBetEnd).normalize();
       if (dirW.length() > 0) {
         const up = new THREE.Vector3(0,1,0);
         const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
@@ -246,30 +234,30 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
 
     // handleDrag
-    handleDrag(newEnd);
+    handleDrag(updatedPos);
   };
 
-  // === pointerUp ===
+  // pointerUp
   const handlePointerUp = () => {
     if (isDragging) {
       setIsDragging(false);
       onDragging(false);
 
-      // Длина белой линии = betPosition - previousBetEnd
+      // Длина белой линии
       const finalDir = betPosition.clone().sub(previousBetEnd);
       const fraction = finalDir.length() / maxYellowLength;
-
-      // Ставка = fraction * userBalance
       const betAmount = fraction * userBalance;
 
       onShowConfirmButton(true, {
         amount: betAmount,
-        predicted_vector: [betPosition.x, betPosition.y, betPosition.z],
+        predicted_vector: [
+          betPosition.x, betPosition.y, betPosition.z
+        ],
       });
     }
   };
 
-  // === Подписка на pointer события ===
+  // Слушатели
   useEffect(() => {
     const canvas = gl.domElement;
     canvas.addEventListener("pointerdown", handlePointerDown);
@@ -284,28 +272,27 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [gl.domElement, handlePointerMove]);
 
   useFrame(() => {
-    // Ничего
+    // пусто
   });
 
   return (
     <>
-      {/* Жёлтый конус (конец агр. ставки) */}
+      {/* Желтый конус (конец агрегированной ставки) */}
       <mesh ref={yellowConeRef}>
-        <coneGeometry args={[0.1,0.3,12]} />
+        <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="yellow" />
       </mesh>
 
       {/* Белый конус (конец личной ставки) */}
       <mesh ref={whiteConeRef}>
-        <coneGeometry args={[0.1,0.3,12]} />
+        <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="white" />
       </mesh>
 
-      {/* Сфера (drag point для белой линии) */}
+      {/* Сфера (drag point) */}
       <mesh ref={sphereRef} scale={[0.5,0.5,0.5]}>
         <sphereGeometry args={[1,16,16]} />
         <meshStandardMaterial color="blue" opacity={0.5} transparent />
-        {/* Вложенная невидимая сфера, чтобы проще было кликать */}
         <mesh position={[0,0,0]}>
           <sphereGeometry args={[2,16,16]} />
           <meshStandardMaterial color="blue" opacity={0} transparent />
