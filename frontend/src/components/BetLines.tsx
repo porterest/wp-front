@@ -20,7 +20,7 @@ interface BetLinesProps {
   ) => void;
   maxYellowLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
-  // При axisMode="X" двигаем X, при "Y" двигаем Y, а остальные координаты не трогаем.
+  // При axisMode="X" двигаем X, при "Y" двигаем Y (а остальные координаты не трогаем).
   axisMode: "X" | "Y";
 }
 
@@ -43,16 +43,17 @@ const BetLines: React.FC<BetLinesProps> = ({
   // Drag
   const [isDragging, setIsDragging] = useState(false);
 
-  // Позиция конца белой линии (изначально userPreviousBet).
-  // ВАЖНО: при смене axisMode НЕ сбрасываем, чтобы сохранять состояние.
+  // Фиксированная координата времени:
   const fixedTimeValue = 3.5;
 
-  // Начальная позиция белой стрелки
+  // Позиция конца белой линии (изначально userPreviousBet).
+  // При смене axisMode НЕ сбрасываем, чтобы сохранять состояние.
   const [betPosition, setBetPosition] = useState<THREE.Vector3>(
     userPreviousBet.clone()
   );
 
-  // При маунте фиксируем x
+  // При маунте фиксируем x = 3.5 (или, если хотите, не делайте этого, если условие — что userPreviousBet может иметь любой x;
+  // но вы писали, что ось времени по центру)
   useEffect(() => {
     setBetPosition((prev) => {
       const clone = prev.clone();
@@ -79,21 +80,25 @@ const BetLines: React.FC<BetLinesProps> = ({
   // THREE
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
-  const plane = useRef(
+
+  // === ВМЕСТО динамической плоскости с camDir, создаём СТАТИЧЕСКУЮ plane: x=3.5
+  // Нормаль: (1, 0, 0), смещение: -3.5
+  // => Любое пересечение с ней вернёт intersection.x ~ 3.5
+  const plane = useRef<THREE.Plane>(
     new THREE.Plane(new THREE.Vector3(1, 0, 0), -fixedTimeValue)
   );
+
   // Debounced обновление белой линии
   const debouncedUpdateWhiteLine: DebouncedFunc<(pos: THREE.Vector3) => void> =
     debounce((pos: unknown) => {
-      const newEndVector = (pos) as THREE.Vector3;
       if (!whiteLineRef.current || !whiteLineRef.current.geometry) return;
       const geom = whiteLineRef.current.geometry as LineGeometry;
+      const posVector = (pos) as THREE.Vector3;
       geom.setPositions([
         previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
-        newEndVector.x, newEndVector.y, newEndVector.z,
+        posVector.x, posVector.y, posVector.z,
       ]);
     }, 30);
-
 
   // Инициализация линий, конусов, сферы
   useEffect(() => {
@@ -153,6 +158,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       sphereRef.current.position.copy(betPosition);
     }
 
+    // Удаляем из сцены при размонтировании
     return () => {
       if (yellowLineRef.current) scene.remove(yellowLineRef.current);
       if (whiteLineRef.current) scene.remove(whiteLineRef.current);
@@ -171,18 +177,12 @@ const BetLines: React.FC<BetLinesProps> = ({
     return hits.length > 0;
   };
 
-  // Обновляем плоскость (перпендикулярна взгляду, проходит через betPosition)
-  const updatePlane = () => {
-    const camDir = camera.getWorldDirection(new THREE.Vector3());
-    plane.current.setFromNormalAndCoplanarPoint(camDir, betPosition);
-  };
-
   // pointerDown
   const handlePointerDown = (e: PointerEvent) => {
     if (isClickOnSphere(e)) {
       setIsDragging(true);
       onDragging(true);
-      updatePlane();
+      // Никакого updatePlane() — плоскость у нас уже статичная: x=3.5
     }
   };
 
@@ -200,29 +200,37 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (!raycaster.current.ray.intersectPlane(plane.current, intersectPt)) {
       return;
     }
+
+    // Плоскость x=3.5 => intersectPt.x уже ~3.5,
+    // но на всякий случай жёстко зафиксируем:
     intersectPt.x = fixedTimeValue;
 
     // direction = intersectPt - previousBetEnd
     const direction = intersectPt.clone().sub(previousBetEnd);
 
-    // СОХРАНЯЕМ другие координаты, МЕНЯЕМ только нужную!
-    const updatedPos = betPosition.clone(); // Текущее положение
-    updatedPos.x = fixedTimeValue
-    // Ограничим длину?
-    // сначала примем direction, затем скорректируем одну ось
-    // и в конце отрежем, если длиннее maxYellowLength
+    // В соответствии с axisMode меняем только нужную ось
+    const updatedPos = betPosition.clone();
+
+    // Сначала делаем updatedPos.x=3.5, чтобы ось времени была посередине:
+    updatedPos.x = fixedTimeValue;
+
+    // partialPos = то, куда бы мы пришли (y,z)
     const partialPos = previousBetEnd.clone().add(direction);
 
-    // Перенесём partialPos в updatedPos, но только для одной координаты
     if (axisMode === "X") {
-      updatedPos.x = partialPos.x; // менять X
-      // y и z оставляем как было
+      // Меняем, к примеру, Z (часто "X" = движение по Z),
+      // либо если вы реально хотели "X" = X, тогда updatedPos.x=partialPos.x,
+      // но вы уже зафиксировали x=3.5, так что "X" часто используют для Z.
+      // Ниже пример: "X" => двигаем z:
+      updatedPos.z = partialPos.z;
+      // y остаётся, какой был
     } else if (axisMode === "Y") {
-      updatedPos.y = partialPos.y; // менять Y
-      // x и z оставляем как было
+      // Меняем Y
+      updatedPos.y = partialPos.y;
+      // z остаётся
     }
 
-    // Теперь ограничим итоговую длину
+    // Ограничим длину
     const finalDir = updatedPos.clone().sub(previousBetEnd);
     if (finalDir.length() > maxYellowLength) {
       finalDir.setLength(maxYellowLength);
@@ -232,7 +240,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     setBetPosition(updatedPos);
     debouncedUpdateWhiteLine(updatedPos);
 
-    // Сдвигаем сферу + конус
+    // Сдвигаем сферу + белый конус
     if (sphereRef.current) {
       sphereRef.current.position.copy(updatedPos);
     }
