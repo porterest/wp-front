@@ -18,7 +18,7 @@ interface BetLinesProps {
   maxYellowLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
   // Чтобы стрелка двигалась только по Y или только по Z
-  axisMode: "Y" | "Z";
+  axisMode: "X" | "Y";
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
@@ -210,7 +210,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       // Z оставляем прежним
     }
     // Если axisMode="Z", двигаемся только по Z
-    else if (axisMode === "Z") {
+    else if (axisMode === "X") {
       updatedPos.z = newEndWhite.z;
       // Y оставляем прежним
     }
