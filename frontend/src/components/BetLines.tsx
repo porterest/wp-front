@@ -158,15 +158,21 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   const handlePointerUp = () => {
     if (isDragging) {
-      setIsDragging(false);
-      onDragging(false);
+      setIsDragging(false); // Завершаем перетаскивание
+      onDragging(false);    // Уведомляем, что перетаскивание закончено
 
+      // Считаем депозит как длину вектора
+      const depositAmount = depositPosition.length();
+
+      // Вызываем onShowConfirmButton с корректным полем vector
       onShowConfirmButton(true, {
-        amount: depositPosition.length(),
-        vector: [depositPosition.x, depositPosition.y, depositPosition.z],
+        amount: depositAmount, // Длина вектора как депозит
+        vector: [depositPosition.x, depositPosition.y, depositPosition.z], // Используем vector
       });
     }
   };
+
+
 
   useEffect(() => {
     const canvas = gl.domElement;
