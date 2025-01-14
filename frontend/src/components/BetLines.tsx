@@ -17,6 +17,7 @@ interface BetLinesProps {
   ) => void;
   maxYellowLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
+  axisMode: "X" | "Y";
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
@@ -26,6 +27,7 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              onShowConfirmButton,
                                              maxYellowLength,
                                              handleDrag,
+                                             axisMode,
                                            }) => {
   const yellowLine = useRef<Line2 | null>(null);
   const dashedLine = useRef<Line2 | null>(null);
@@ -51,7 +53,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       return clone;
     });
   }, []);
-
+  console.log(axisMode)
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
 
