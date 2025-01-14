@@ -6,6 +6,9 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import debounce from "lodash.debounce";
 import { DebouncedFunc } from "lodash";
+import { fetchUserBalances } from "../services/api";
+
+// интерфейс: interface UserInfo { user_id: string; balance: number; atRisk: number; }
 
 interface BetLinesProps {
   previousBetEnd: THREE.Vector3; // Конец желтой линии (Deposit)
@@ -17,7 +20,7 @@ interface BetLinesProps {
   ) => void;
   maxYellowLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
-  // Чтобы стрелка двигалась только по Y или только по Z
+  // axisMode: "X" | "Y", где "X" - движение по Z, "Y" - движение по Y
   axisMode: "X" | "Y";
 }
 
@@ -36,17 +39,33 @@ const BetLines: React.FC<BetLinesProps> = ({
   const yellowConeRef = useRef<THREE.Mesh>(null);
   const whiteConeRef = useRef<THREE.Mesh>(null);
 
+  // Состояние «тянем ли мы сейчас»
   const [isDragging, setIsDragging] = useState(false);
 
-  // Фиксированная ось X = 3.5, чтобы «время» не двигалось
-  const fixedTimeValue = 3.5;
-
-  // Начальная позиция белой стрелки
+  // Храним текущее положение белого вектора
   const [betPosition, setBetPosition] = useState<THREE.Vector3>(
     userPreviousBet.clone()
   );
 
-  // При маунте фиксируем x
+  // Загружаем баланс юзера из ручки
+  const [userBalance, setUserBalance] = useState(0);
+
+  useEffect(() => {
+    async function loadBalance() {
+      try {
+        const userInfo = await fetchUserBalances(); // { balance, user_id, ... }
+        setUserBalance(userInfo.balance);
+      } catch (err) {
+        console.error("Failed to fetch user balance:", err);
+      }
+    }
+    loadBalance();
+  }, []);
+
+  // Фиксированная ось x (чтобы «время» было посередине)
+  const fixedTimeValue = 3.5;
+
+  // При маунте жестко ставим x = 3.5
   useEffect(() => {
     setBetPosition((prev) => {
       const clone = prev.clone();
@@ -58,16 +77,15 @@ const BetLines: React.FC<BetLinesProps> = ({
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
 
-  // Плоскость, параллельная YZ (нормаль = (1,0,0)),
-  // => x ВСЕГДА 3.5 при пересечении
+  // Плоскость, параллельная оси YZ (x = 3.5)
   const plane = useRef(
     new THREE.Plane(new THREE.Vector3(1, 0, 0), -fixedTimeValue)
   );
 
   // Debounced-обновление белой линии
   const debouncedUpdateLine: DebouncedFunc<(v: unknown) => void> = debounce(
-    (v: unknown) => {
-      const newEnd = v as THREE.Vector3;
+    (newEndVector: unknown) => {
+      const newEnd = newEndVector as THREE.Vector3;
       if (dashedLine.current && dashedLine.current.geometry) {
         (dashedLine.current.geometry as LineGeometry).setPositions([
           previousBetEnd.x,
@@ -82,9 +100,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     50
   );
 
-  // Инициализация линий (желтая + белая)
+  // Инициализация линий (желтой и белой)
   useEffect(() => {
-    // === Желтая линия (Deposit) ===
+    // === ЖЕЛТАЯ ЛИНИЯ (Deposit) ===
     const depositVector = previousBetEnd.clone();
     if (depositVector.length() > maxYellowLength) {
       depositVector.setLength(maxYellowLength);
@@ -104,7 +122,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     yellowLine.current = new Line2(yellowLineGeometry, yellowLineMaterial);
     scene.add(yellowLine.current);
 
-    // Желтый конус
+    // Желтый конус (на конце желтой линии)
     if (yellowConeRef.current) {
       yellowConeRef.current.position.copy(depositVector);
       const dir = depositVector.clone().normalize();
@@ -113,7 +131,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       yellowConeRef.current.setRotationFromQuaternion(quat);
     }
 
-    // === Белая линия (User Bet) ===
+    // === БЕЛАЯ ЛИНИЯ (User Bet) ===
     const dashedLineGeometry = new LineGeometry();
     dashedLineGeometry.setPositions([
       previousBetEnd.x,
@@ -143,22 +161,21 @@ const BetLines: React.FC<BetLinesProps> = ({
       sphereRef.current.position.copy(betPosition);
     }
 
+    // Очистка при размонтировании
     return () => {
       if (yellowLine.current) scene.remove(yellowLine.current);
       if (dashedLine.current) scene.remove(dashedLine.current);
     };
   }, [scene, previousBetEnd, maxYellowLength, betPosition]);
 
-  // Проверка клика по сфере
+  // Проверка, попал ли пользователь по сфере (drag point)
   const isIntersectingEndpoint = (event: PointerEvent): boolean => {
     if (!sphereRef.current) return false;
-
     const mouse = new THREE.Vector2(
       (event.clientX / gl.domElement.clientWidth) * 2 - 1,
       -(event.clientY / gl.domElement.clientHeight) * 2 + 1
     );
     raycaster.current.setFromCamera(mouse, camera);
-
     return raycaster.current.intersectObject(sphereRef.current).length > 0;
   };
 
@@ -181,50 +198,49 @@ const BetLines: React.FC<BetLinesProps> = ({
     raycaster.current.setFromCamera(mouse, camera);
 
     const intersection = new THREE.Vector3();
+    // Ищем пересечение с плоскостью x=3.5
     if (!raycaster.current.ray.intersectPlane(plane.current, intersection)) {
       return;
     }
 
-    // intersection.x ДОЛЖНО быть ~3.5 (т.к. плоскость x=3.5)
-    // Чтобы не болталось, фиксируем x точно
+    // Принудительно фиксируем x
     intersection.x = fixedTimeValue;
 
-    // Ограничим длину вектора от previousBetEnd
+    // directionWhite: вектор от previousBetEnd до пересечения
     const directionWhite = intersection.clone().sub(previousBetEnd);
+
+    // Ограничиваем максимум, если user тянет дальше, чем maxYellowLength
     if (directionWhite.length() > maxYellowLength) {
       directionWhite.setLength(maxYellowLength);
     }
 
-    // Получили новую конечную точку
+    // Получаем конечную точку
     const newEndWhite = previousBetEnd.clone().add(directionWhite);
 
-    // Текущее положение (до перетаскивания)
+    // Обновляем координаты betPosition (двигаем только 1 ось)
     const updatedPos = betPosition.clone();
-
-    // Ставим x фиксировано, т.к. "время" посередине
     updatedPos.x = fixedTimeValue;
 
-    // Если у нас axisMode="Y", двигаемся только по Y, оставляем Z, чтобы не было «диагоналей»
+    // Если axisMode="Y", то меняем y (растягиваем/сжимаем стрелку по y),
+    // оставляя z прежним.
     if (axisMode === "Y") {
       updatedPos.y = newEndWhite.y;
-      // Z оставляем прежним
     }
-    // Если axisMode="Z", двигаемся только по Z
+      // Если axisMode="X", то по «традиции» вашего кода двигаем z
+    // (то есть "X" = перемещение по z).
     else if (axisMode === "X") {
       updatedPos.z = newEndWhite.z;
-      // Y оставляем прежним
     }
 
-    // Обновим состояние
     setBetPosition(updatedPos);
+
+    // Обновляем линию (debounce)
     debouncedUpdateLine(updatedPos);
 
-    // Сфера
+    // Двигаем сферу и конус
     if (sphereRef.current) {
       sphereRef.current.position.copy(updatedPos);
     }
-
-    // Поворот белого конуса
     if (whiteConeRef.current) {
       whiteConeRef.current.position.copy(updatedPos);
       const dirW = updatedPos.clone().sub(previousBetEnd).normalize();
@@ -233,7 +249,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       whiteConeRef.current.setRotationFromQuaternion(quatW);
     }
 
-    // Вызываем колбэк
+    // Сообщаем родителю о новых координатах (если нужно)
     handleDrag(updatedPos);
   };
 
@@ -243,15 +259,24 @@ const BetLines: React.FC<BetLinesProps> = ({
       setIsDragging(false);
       onDragging(false);
 
-      // Показать кнопку подтверждения
+      // Когда отпустили мышь, вычислим реальную ставку
+      // (пропорция длины стрелки от maxYellowLength, умноженная на баланс)
+      const finalDirection = betPosition.clone().sub(previousBetEnd);
+      const fraction = finalDirection.length() / maxYellowLength;
+      const betAmount = fraction * userBalance;
+
       onShowConfirmButton(true, {
-        amount: 0, // Здесь можно проставить нужное значение
-        predicted_vector: [betPosition.x, betPosition.y, betPosition.z],
+        amount: betAmount,
+        predicted_vector: [
+          betPosition.x,
+          betPosition.y,
+          betPosition.z,
+        ],
       });
     }
   };
 
-  // Регистрируем обработчики событий мыши
+  // Подвешиваем слушатели мыши
   useEffect(() => {
     const canvas = gl.domElement;
     canvas.addEventListener("pointermove", handlePointerMove);
@@ -271,7 +296,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   return (
     <>
-      {/* Желтый конус (Deposit) */}
+      {/* Желтый конус */}
       <mesh ref={yellowConeRef}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="yellow" />
@@ -285,10 +310,10 @@ const BetLines: React.FC<BetLinesProps> = ({
 
       {/* Сфера (drag point) */}
       <mesh ref={sphereRef} scale={[0.5, 0.5, 0.5]}>
-        <sphereGeometry args={[1.0, 16, 16]} />
+        <sphereGeometry args={[1, 16, 16]} />
         <meshStandardMaterial color="blue" opacity={0.5} transparent />
         <mesh position={[0, 0, 0]}>
-          <sphereGeometry args={[2.0, 16, 16]} />
+          <sphereGeometry args={[2, 16, 16]} />
           <meshStandardMaterial color="blue" opacity={0} transparent />
         </mesh>
       </mesh>
