@@ -91,7 +91,7 @@ class UserRepository(
                 .options(*self.options)
             )
             user = res.unique().scalars().one_or_none()
-        return self.entity_to_model(user)
+        return self.entity_to_model(user) if user else None
 
     async def fund_user(self, user_id: UUID, amount: float) -> None:
         async with self.session_maker() as session:
