@@ -7,9 +7,8 @@ import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import debounce from "lodash.debounce";
 import { DebouncedFunc } from "lodash";
 import { fetchUserBalances } from "../services/api";
-// Допустим, здесь же есть импорт текстовой метки (например, из drei):
-// import { Text } from "@react-three/drei";
 
+// Предположим, что интерфейс BetLinesProps выглядит так:
 interface BetLinesProps {
   previousBetEnd: THREE.Vector3;   // конец жёлтой линии
   userPreviousBet: THREE.Vector3;  // конец белой линии (старая ставка) или совпадает с previousBetEnd, если не было
@@ -21,7 +20,6 @@ interface BetLinesProps {
   maxYellowLength: number;
   maxWhiteLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
-  // При axisMode="X" двигаем X, при "Y" двигаем Y, а остальные координаты не трогаем.
   axisMode: "X" | "Y";
 }
 
@@ -35,15 +33,20 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              handleDrag,
                                              axisMode,
                                            }) => {
+  // Ссылки на объекты
   const yellowLineRef = useRef<Line2 | null>(null);
   const whiteLineRef = useRef<Line2 | null>(null);
   const sphereRef = useRef<THREE.Mesh>(null);
   const yellowConeRef = useRef<THREE.Mesh>(null);
   const whiteConeRef = useRef<THREE.Mesh>(null);
 
+  // Управление перетаскиванием
   const [isDragging, setIsDragging] = useState(false);
+
+  // Баланс пользователя
   const [userBalance, setUserBalance] = useState(0);
 
+  // Подтягиваем баланс один раз
   useEffect(() => {
     (async () => {
       try {
@@ -64,7 +67,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     return depositVec;
   }, [previousBetEnd, maxYellowLength]);
 
-  // начальный betPosition
+  // Изначальная позиция конца белой линии (не допускаем длину > maxWhiteLength)
   const [betPosition, setBetPosition] = useState<THREE.Vector3>(() => {
     const initPos = userPreviousBet.clone();
     const betDir = initPos.clone().sub(clippedDeposit);
@@ -75,13 +78,14 @@ const BetLines: React.FC<BetLinesProps> = ({
     return initPos;
   });
 
+  // Трёховские вещи
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
 
-  // Debounced обновление белой линии
-  const debouncedUpdateWhiteLine: DebouncedFunc<(pos: unknown) => void> =
-    debounce((pos: unknown) => {
+  // Debounced-обновление белой линии
+  const debouncedUpdateWhiteLine: DebouncedFunc<(pos: unknown) => void> = debounce(
+    (pos: unknown) => {
       if (!whiteLineRef.current || !whiteLineRef.current.geometry) return;
       const p = pos as THREE.Vector3;
       const geom = whiteLineRef.current.geometry as LineGeometry;
@@ -93,8 +97,14 @@ const BetLines: React.FC<BetLinesProps> = ({
         p.y,
         p.z,
       ]);
-    }, 30);
+    },
+    30
+  );
 
+  // Сохраняем ссылку на div для лейбла, чтобы не искать его каждый кадр
+  const depositLabelRef = useRef<HTMLDivElement | null>(null);
+
+  // Инициализация жёлтой/белой линии, конусов, сферы, лейбла "Deposit"
   useEffect(() => {
     // === Жёлтая линия
     const yGeom = new LineGeometry();
@@ -147,12 +157,12 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
 
-    // Сфера (drag point)
+    // Сфера
     if (sphereRef.current) {
       sphereRef.current.position.copy(betPosition);
     }
 
-    // === Надпись "Deposit"
+    // === Добавляем надпись "Deposit" на body
     const labelDiv = document.createElement("div");
     labelDiv.innerText = "Deposit";
     labelDiv.style.position = "absolute";
@@ -161,38 +171,31 @@ const BetLines: React.FC<BetLinesProps> = ({
     labelDiv.style.pointerEvents = "none";
     labelDiv.style.transform = "translate(-50%, -50%)";
     document.body.appendChild(labelDiv);
+    depositLabelRef.current = labelDiv;
 
-    // Функция, которая будет каждый кадр обновлять положение подписи
-    const updateLabelPos = () => {
-      const coords = clippedDeposit.clone();
-      coords.project(camera);
-      const x = (coords.x * 0.5 + 0.5) * window.innerWidth;
-      const y = (-coords.y * 0.5 + 0.5) * window.innerHeight;
-      labelDiv.style.left = `${x}px`;
-      labelDiv.style.top = `${y}px`;
-    };
-
-    // Удаляем объекты при размонтаже
+    // Удаляем созданные объекты при размонтаже
     return () => {
       if (yellowLineRef.current) scene.remove(yellowLineRef.current);
       if (whiteLineRef.current) scene.remove(whiteLineRef.current);
-      document.body.removeChild(labelDiv);
+
+      if (depositLabelRef.current) {
+        document.body.removeChild(depositLabelRef.current);
+        depositLabelRef.current = null;
+      }
     };
-  }, [clippedDeposit, betPosition, scene, camera]);
+  }, [clippedDeposit, betPosition, scene]);
 
-  // Вместо onAfterRenderObservable - используем useFrame для обновления подписи
+  // На каждом кадре обновляем позицию лейбла "Deposit"
   useFrame(() => {
-    // Обновляем позицию надписи к каждому кадру
-    // Ищем наш labelDiv (или сохраняем его в ref)
-    const labelDiv = document.querySelector("div:contains('Deposit')");
-    if (!labelDiv) return;
+    if (!depositLabelRef.current) return;
 
+    // Берём координаты clippedDeposit
     const coords = clippedDeposit.clone();
     coords.project(camera);
     const x = (coords.x * 0.5 + 0.5) * window.innerWidth;
     const y = (-coords.y * 0.5 + 0.5) * window.innerHeight;
-    (labelDiv as HTMLDivElement).style.left = `${x}px`;
-    (labelDiv as HTMLDivElement).style.top = `${y}px`;
+    depositLabelRef.current.style.left = `${x}px`;
+    depositLabelRef.current.style.top = `${y}px`;
   });
 
   // Проверка клика по сфере
@@ -207,6 +210,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     return hits.length > 0;
   };
 
+  // Обновляем плоскость (перпендикулярна взгляду, проходит через betPosition)
   const updatePlane = () => {
     const camDir = camera.getWorldDirection(new THREE.Vector3());
     plane.current.setFromNormalAndCoplanarPoint(camDir, betPosition);
@@ -236,7 +240,10 @@ const BetLines: React.FC<BetLinesProps> = ({
       return;
     }
 
+    // direction = intersectPt - clippedDeposit
     const direction = intersectPt.clone().sub(clippedDeposit);
+
+    // Исходим из текущей позиции, но корректируем только X или Y
     const updatedPos = betPosition.clone();
     const partialPos = clippedDeposit.clone().add(direction);
 
@@ -246,6 +253,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       updatedPos.y = partialPos.y;
     }
 
+    // Ограничение по maxWhiteLength
     const finalDir = updatedPos.clone().sub(clippedDeposit);
     if (finalDir.length() > maxWhiteLength) {
       finalDir.setLength(maxWhiteLength);
@@ -255,6 +263,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     setBetPosition(updatedPos);
     debouncedUpdateWhiteLine(updatedPos);
 
+    // Сдвигаем сферу + конус
     if (sphereRef.current) {
       sphereRef.current.position.copy(updatedPos);
     }
@@ -268,6 +277,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
 
+    // handleDrag
     handleDrag(updatedPos);
   };
 
@@ -277,6 +287,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       setIsDragging(false);
       onDragging(false);
 
+      // Считаем длину от previousBetEnd
       const finalDir = betPosition.clone().sub(previousBetEnd);
       const fraction = finalDir.length() / maxWhiteLength;
       const betAmount = fraction * userBalance;
@@ -288,6 +299,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
   };
 
+  // Подписываемся на события мыши
   useEffect(() => {
     const canvas = gl.domElement;
     canvas.addEventListener("pointerdown", handlePointerDown);
@@ -301,20 +313,26 @@ const BetLines: React.FC<BetLinesProps> = ({
     };
   }, [gl.domElement, handlePointerMove]);
 
+  // useFrame, если нужно, но здесь пусто
   useFrame(() => {
-    // пусто
+    // пусто, если нет другого кода
   });
 
   return (
     <>
+      {/* Желтый конус (конец агрегированной ставки) */}
       <mesh ref={yellowConeRef}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="yellow" />
       </mesh>
+
+      {/* Белый конус (конец личной ставки) */}
       <mesh ref={whiteConeRef}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="white" />
       </mesh>
+
+      {/* Сфера (drag point) */}
       <mesh ref={sphereRef} scale={[0.5, 0.5, 0.5]}>
         <sphereGeometry args={[1, 16, 16]} />
         <meshStandardMaterial color="blue" opacity={0.5} transparent />
