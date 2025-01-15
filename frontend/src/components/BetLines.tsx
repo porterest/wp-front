@@ -43,25 +43,6 @@ const BetLines: React.FC<BetLinesProps> = ({
   // Drag
   const [isDragging, setIsDragging] = useState(false);
 
-  // Позиция конца белой линии
-  // ВАЖНО: при смене axisMode НЕ сбрасываем, чтобы сохранять состояние.
-  // Поэтому инициализируем нулями, а затем обновим в useEffect.
-  const [betPosition, setBetPosition] = useState<THREE.Vector3>(
-    () => new THREE.Vector3(0, 0, 0)
-  );
-
-  // Синхронизируем betPosition при изменении userPreviousBet
-  useEffect(() => {
-    const initPos = userPreviousBet.clone();
-    // Обрежем до maxWhiteLength, если нужно
-    const betDir = initPos.clone().sub(previousBetEnd);
-    if (betDir.length() > maxWhiteLength) {
-      betDir.setLength(maxWhiteLength);
-      initPos.copy(previousBetEnd).add(betDir);
-    }
-    setBetPosition(initPos);
-  }, [userPreviousBet, previousBetEnd, maxWhiteLength]);
-
   // Баланс юзера
   const [userBalance, setUserBalance] = useState(0);
 
@@ -77,6 +58,32 @@ const BetLines: React.FC<BetLinesProps> = ({
     })();
   }, []);
 
+  // Вычислим "сжатую" точку жёлтой линии (clippedDeposit) по maxYellowLength
+  const clippedDeposit = React.useMemo(() => {
+    const depositVec = previousBetEnd.clone();
+    if (depositVec.length() > maxYellowLength) {
+      depositVec.setLength(maxYellowLength);
+    }
+    return depositVec;
+  }, [previousBetEnd, maxYellowLength]);
+
+  // Позиция конца белой линии
+  // Изначально userPreviousBet, но ограничена по maxWhiteLength от clippedDeposit
+  const [betPosition, setBetPosition] = useState<THREE.Vector3>(
+    () => new THREE.Vector3(0, 0, 0)
+  );
+
+  // Синхронизируем betPosition при изменении userPreviousBet
+  useEffect(() => {
+    const initPos = userPreviousBet.clone();
+    const betDir = initPos.clone().sub(clippedDeposit);
+    if (betDir.length() > maxWhiteLength) {
+      betDir.setLength(maxWhiteLength);
+      initPos.copy(clippedDeposit).add(betDir);
+    }
+    setBetPosition(initPos);
+  }, [userPreviousBet, clippedDeposit, maxWhiteLength]);
+
   // THREE
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
@@ -89,24 +96,20 @@ const BetLines: React.FC<BetLinesProps> = ({
       const p = pos as THREE.Vector3;
       const geom = whiteLineRef.current.geometry as LineGeometry;
       geom.setPositions([
-        previousBetEnd.x,
-        previousBetEnd.y,
-        previousBetEnd.z,
+        clippedDeposit.x,
+        clippedDeposit.y,
+        clippedDeposit.z,
         p.x,
         p.y,
         p.z,
       ]);
     }, 30);
 
-  // Инициализация линий, конусов, сферы
+  // Инициализация линий, конусов и сферы
   useEffect(() => {
-    // === ЖЁЛТАЯ ЛИНИЯ: (0,0,0) → previousBetEnd (с обрезкой по maxYellowLength)
-    const depositVec = previousBetEnd.clone();
-    if (depositVec.length() > maxYellowLength) {
-      depositVec.setLength(maxYellowLength);
-    }
+    // === ЖЁЛТАЯ ЛИНИЯ: (0,0,0) → clippedDeposit
     const yGeom = new LineGeometry();
-    yGeom.setPositions([0, 0, 0, depositVec.x, depositVec.y, depositVec.z]);
+    yGeom.setPositions([0, 0, 0, clippedDeposit.x, clippedDeposit.y, clippedDeposit.z]);
     const yMat = new LineMaterial({
       color: "yellow",
       linewidth: 3,
@@ -114,14 +117,17 @@ const BetLines: React.FC<BetLinesProps> = ({
     });
     yellowLineRef.current = new Line2(yGeom, yMat);
     scene.add(yellowLineRef.current);
-    console.log("желтая линия");
-    console.log(yellowLineRef.current);
-    console.log([0, 0, 0, depositVec.x, depositVec.y, depositVec.z]);
+    console.log("желтая линия", [
+      0, 0, 0,
+      clippedDeposit.x,
+      clippedDeposit.y,
+      clippedDeposit.z
+    ]);
 
     // Желтый конус
     if (yellowConeRef.current) {
-      yellowConeRef.current.position.copy(depositVec);
-      const dir = depositVec.clone().normalize();
+      yellowConeRef.current.position.copy(clippedDeposit);
+      const dir = clippedDeposit.clone().normalize();
       if (dir.length() > 0) {
         const up = new THREE.Vector3(0, 1, 0);
         const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
@@ -129,28 +135,24 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
 
-    // === БЕЛАЯ ЛИНИЯ: previousBetEnd → betPosition
+    // === БЕЛАЯ ЛИНИЯ: clippedDeposit → betPosition
     const wGeom = new LineGeometry();
     wGeom.setPositions([
-      depositVec.x,
-      depositVec.y,
-      depositVec.z,
+      clippedDeposit.x,
+      clippedDeposit.y,
+      clippedDeposit.z,
       betPosition.x,
       betPosition.y,
       betPosition.z,
     ]);
-    console.log("белая линия");
-    console.log("userPreviousBet");
-    console.log(userPreviousBet);
-    console.log("betPosition");
-    console.log(
-      depositVec.x,
-      depositVec.y,
-      depositVec.z,
+    console.log("белая линия (старт→конец)", [
+      clippedDeposit.x,
+      clippedDeposit.y,
+      clippedDeposit.z,
       betPosition.x,
       betPosition.y,
       betPosition.z
-    );
+    ]);
 
     const wMat = new LineMaterial({
       color: "white",
@@ -163,7 +165,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     // Белый конус
     if (whiteConeRef.current) {
       whiteConeRef.current.position.copy(betPosition);
-      const dirW = betPosition.clone().sub(previousBetEnd).normalize();
+      const dirW = betPosition.clone().sub(clippedDeposit).normalize();
       if (dirW.length() > 0) {
         const up = new THREE.Vector3(0, 1, 0);
         const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
@@ -180,7 +182,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (yellowLineRef.current) scene.remove(yellowLineRef.current);
       if (whiteLineRef.current) scene.remove(whiteLineRef.current);
     };
-  }, [userPreviousBet, previousBetEnd, maxWhiteLength, betPosition, scene]);
+  }, [clippedDeposit, betPosition, scene]);
 
   // Проверка клика по сфере
   const isClickOnSphere = (event: PointerEvent): boolean => {
@@ -224,46 +226,39 @@ const BetLines: React.FC<BetLinesProps> = ({
       return;
     }
 
-    // direction = intersectPt - previousBetEnd
-    const direction = intersectPt.clone().sub(previousBetEnd);
+    // direction = intersectPt - clippedDeposit
+    const direction = intersectPt.clone().sub(clippedDeposit);
 
-    // СОХРАНЯЕМ другие координаты, МЕНЯЕМ только нужную!
-    const updatedPos = betPosition.clone(); // Текущее положение
+    // СОХРАНЯЕМ другие координаты, МЕНЯЕМ только X или Y
+    const updatedPos = betPosition.clone(); // текущее положение
 
-    // Ограничим длину?
-    // сначала примем direction, затем скорректируем одну ось
-    // и в конце отрежем, если длиннее maxYellowLength
-    const partialPos = previousBetEnd.clone().add(direction);
+    // partialPos = clippedDeposit + direction
+    const partialPos = clippedDeposit.clone().add(direction);
 
     if (axisMode === "X") {
-      updatedPos.x = partialPos.x; // менять X
+      updatedPos.x = partialPos.x;
     } else if (axisMode === "Y") {
-      updatedPos.y = partialPos.y; // менять Y
+      updatedPos.y = partialPos.y;
     }
 
-    // Ограничение для жёлтой линии (depositVec)
-    const depositVec = previousBetEnd.clone();
-    if (depositVec.length() > maxYellowLength) {
-      depositVec.setLength(maxYellowLength);
-    }
-
-    // Ограничение для белой линии (betPosition)
-    const finalDir = updatedPos.clone().sub(previousBetEnd);
+    // Ограничиваем белую линию (betPosition) по maxWhiteLength
+    const finalDir = updatedPos.clone().sub(clippedDeposit);
     if (finalDir.length() > maxWhiteLength) {
       finalDir.setLength(maxWhiteLength);
-      updatedPos.copy(previousBetEnd).add(finalDir);
+      updatedPos.copy(clippedDeposit).add(finalDir);
     }
 
+    // Сохраняем
     setBetPosition(updatedPos);
     debouncedUpdateWhiteLine(updatedPos);
 
-    // Сдвигаем сферу + конус
+    // Обновляем объекты
     if (sphereRef.current) {
       sphereRef.current.position.copy(updatedPos);
     }
     if (whiteConeRef.current) {
       whiteConeRef.current.position.copy(updatedPos);
-      const dirW = updatedPos.clone().sub(previousBetEnd).normalize();
+      const dirW = updatedPos.clone().sub(clippedDeposit).normalize();
       if (dirW.length() > 0) {
         const up = new THREE.Vector3(0, 1, 0);
         const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
@@ -282,10 +277,9 @@ const BetLines: React.FC<BetLinesProps> = ({
       onDragging(false);
 
       // Длина белой линии
-      const finalDir = betPosition.clone().sub(previousBetEnd);
+      const finalDir = betPosition.clone().sub(clippedDeposit);
       const fraction = finalDir.length() / maxWhiteLength;
-      // <--- делаем ставку пропорционально именно maxWhiteLength,
-      //      т.к. теперь это максимум для белой линии
+      // делаем ставку пропорционально maxWhiteLength
       const betAmount = fraction * userBalance;
 
       onShowConfirmButton(true, {
