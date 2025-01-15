@@ -4,15 +4,17 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import func
-
 from abstractions.repositories.block import BlockRepositoryInterface
+from abstractions.repositories.chain import ChainRepositoryInterface
+from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.bet import BetServiceInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
+from domain.dto.bet import CreateBetDTO
 from domain.dto.block import UpdateBlockDTO, CreateBlockDTO
-from domain.models.block import Block
+from domain.enums import BetStatus
 from domain.enums.block_status import BlockStatus
+from domain.models.block import Block
 from infrastructure.db.repositories.exceptions import NotFoundException as RepositoryNotFoundException
 from services.exceptions import NotFoundException
 
@@ -24,6 +26,8 @@ class BlockService(BlockServiceInterface):
     block_repository: BlockRepositoryInterface
     bet_service: BetServiceInterface
     aggregate_bets_service: AggregateBetsServiceInterface
+    chain_repository: ChainRepositoryInterface
+    user_repository: UserRepositoryInterface
 
     async def create(self, create_dto):
         await self.block_repository.create(create_dto)
@@ -42,6 +46,7 @@ class BlockService(BlockServiceInterface):
     async def get_last_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
         last_block = await self.block_repository.get_last_block_by_pair_id(pair_id)
         return last_block
+
     async def get_last_completed_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
         last_block = await self.block_repository.get_last_completed_block_by_pair_id(pair_id)
         return last_block
@@ -96,8 +101,22 @@ class BlockService(BlockServiceInterface):
             )
         )
         block.status = BlockStatus.COMPLETED
-        block.completed_at = func.now()
+        block.completed_at = datetime.now()
         await self.block_repository.update(block_id, update_block)
+
+        chain = await self.chain_repository.get(block.chain_id)
+        for bet in block.bets:
+            user = await self.user_repository.get(bet.user_id)
+            if user.balance > bet.amount:
+                new_bet = CreateBetDTO(
+                    user_id=bet.user_id,
+                    pair_id=chain.pair_id,
+                    amount=bet.amount,
+                    block_id=block_id,
+                    vector=bet.vector,
+                    status=BetStatus.PENDING
+                )
+                await self.bet_service.create_bet(new_bet)
 
     async def get_block(self, block_id: UUID) -> Block:
         try:
