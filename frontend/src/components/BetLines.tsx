@@ -117,12 +117,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     });
     yellowLineRef.current = new Line2(yGeom, yMat);
     scene.add(yellowLineRef.current);
-    console.log("желтая линия", [
-      0, 0, 0,
-      clippedDeposit.x,
-      clippedDeposit.y,
-      clippedDeposit.z
-    ]);
 
     // Желтый конус
     if (yellowConeRef.current) {
@@ -145,15 +139,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       betPosition.y,
       betPosition.z,
     ]);
-    console.log("белая линия (старт→конец)", [
-      clippedDeposit.x,
-      clippedDeposit.y,
-      clippedDeposit.z,
-      betPosition.x,
-      betPosition.y,
-      betPosition.z
-    ]);
-
     const wMat = new LineMaterial({
       color: "white",
       linewidth: 3,
@@ -276,10 +261,9 @@ const BetLines: React.FC<BetLinesProps> = ({
       setIsDragging(false);
       onDragging(false);
 
-      // Длина белой линии
-      const finalDir = betPosition.clone().sub(clippedDeposit);
+      // Длина белой линии - вернём, как было, от previousBetEnd
+      const finalDir = betPosition.clone().sub(previousBetEnd);
       const fraction = finalDir.length() / maxWhiteLength;
-      // делаем ставку пропорционально maxWhiteLength
       const betAmount = fraction * userBalance;
 
       onShowConfirmButton(true, {
