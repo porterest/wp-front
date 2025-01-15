@@ -19,6 +19,7 @@ interface BetLinesProps {
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
   maxYellowLength: number;
+  maxWhiteLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
   // При axisMode="X" двигаем X, при "Y" двигаем Y, а остальные координаты не трогаем.
   axisMode: "X" | "Y";
@@ -30,6 +31,7 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              onDragging,
                                              onShowConfirmButton,
                                              maxYellowLength,
+                                             maxWhiteLength,
                                              handleDrag,
                                              axisMode,
                                            }) => {
@@ -45,10 +47,17 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Позиция конца белой линии (изначально userPreviousBet).
   // ВАЖНО: при смене axisMode НЕ сбрасываем, чтобы сохранять состояние.
-  const [betPosition, setBetPosition] = useState<THREE.Vector3>(() =>
-    userPreviousBet.clone()
-  );
-
+  // Изначальная позиция конца белой линии
+  const [betPosition, setBetPosition] = useState<THREE.Vector3>(() => {
+    const initPos = userPreviousBet.clone();
+    // Обрежем до maxWhiteLength, если нужно
+    const betDir = initPos.clone().sub(previousBetEnd);
+    if (betDir.length() > maxWhiteLength) {
+      betDir.setLength(maxWhiteLength);
+      initPos.copy(previousBetEnd).add(betDir);
+    }
+    return initPos;
+  });
   // Баланс юзера
   const [userBalance, setUserBalance] = useState(0);
 
@@ -213,12 +222,19 @@ const BetLines: React.FC<BetLinesProps> = ({
       // x и z оставляем как было
     }
 
-    // Теперь ограничим итоговую длину
+    // Ограничение для жёлтой линии (depositVec)
+    const depositVec = previousBetEnd.clone();
+    if (depositVec.length() > maxYellowLength) {
+      depositVec.setLength(maxYellowLength);
+    }
+
+// Ограничение для белой линии (betPosition)
     const finalDir = updatedPos.clone().sub(previousBetEnd);
-    if (finalDir.length() > maxYellowLength) {
-      finalDir.setLength(maxYellowLength);
+    if (finalDir.length() > maxWhiteLength) {
+      finalDir.setLength(maxWhiteLength);
       updatedPos.copy(previousBetEnd).add(finalDir);
     }
+
 
     setBetPosition(updatedPos);
     debouncedUpdateWhiteLine(updatedPos);
@@ -249,14 +265,14 @@ const BetLines: React.FC<BetLinesProps> = ({
 
       // Длина белой линии
       const finalDir = betPosition.clone().sub(previousBetEnd);
-      const fraction = finalDir.length() / maxYellowLength;
+      const fraction = finalDir.length() / maxWhiteLength;
+      // <--- делаем ставку пропорционально именно maxWhiteLength,
+      //      т.к. теперь это максимум для белой линии
       const betAmount = fraction * userBalance;
 
       onShowConfirmButton(true, {
         amount: betAmount,
-        predicted_vector: [
-          betPosition.x, betPosition.y, betPosition.z
-        ],
+        predicted_vector: [betPosition.x, betPosition.y, betPosition.z],
       });
     }
   };
