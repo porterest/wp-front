@@ -197,8 +197,9 @@ export async function fetchPreviousBetEnd(pairId: string): Promise<number[]> {
  */
 export async function fetchCandles(pairId: string): Promise<CandleData[]> {
     try {
+        const n = 5;
         const response = await apiClient.get<BackendCandle[]>("/candles", {
-            params: { pair_id: pairId },
+            params: { pair_id: pairId, n: n },
         });
 
         console.log('свечи');
