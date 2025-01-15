@@ -74,7 +74,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
       {/* Текст депозита */}
       <Text
-        position={[previousBetEnd.x, previousBetEnd.y + 1, previousBetEnd.z]}
+        position={[previousBetEnd.x , previousBetEnd.y + 1, previousBetEnd.z]}
         fontSize={0.3}
         color="lightgreen"
         anchorX="center"

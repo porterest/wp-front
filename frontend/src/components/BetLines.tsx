@@ -69,27 +69,20 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Позиция конца белой линии
   // Изначально userPreviousBet, но ограничена по maxWhiteLength от clippedDeposit
-  // Сразу корректно инициализируем белую линию (без "обратной" отрисовки)
-  const [betPosition, setBetPosition] = useState<THREE.Vector3>(() => {
+  const [betPosition, setBetPosition] = useState<THREE.Vector3>(
+    () => new THREE.Vector3(0, 0, 0)
+  );
+
+  // Синхронизируем betPosition при изменении userPreviousBet
+  useEffect(() => {
     const initPos = userPreviousBet.clone();
     const betDir = initPos.clone().sub(clippedDeposit);
     if (betDir.length() > maxWhiteLength) {
       betDir.setLength(maxWhiteLength);
       initPos.copy(clippedDeposit).add(betDir);
     }
-    return initPos;
-  });
-
-  // // Синхронизируем betPosition при изменении userPreviousBet
-  // useEffect(() => {
-  //   const initPos = userPreviousBet.clone();
-  //   const betDir = initPos.clone().sub(clippedDeposit);
-  //   if (betDir.length() > maxWhiteLength) {
-  //     betDir.setLength(maxWhiteLength);
-  //     initPos.copy(clippedDeposit).add(betDir);
-  //   }
-  //   setBetPosition(initPos);
-  // }, [userPreviousBet, clippedDeposit, maxWhiteLength]);
+    setBetPosition(initPos);
+  }, [userPreviousBet, clippedDeposit, maxWhiteLength]);
 
   // THREE
   const { gl, camera, scene } = useThree();
@@ -240,7 +233,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       updatedPos.copy(clippedDeposit).add(finalDir);
     }
 
-
     // Сохраняем
     setBetPosition(updatedPos);
     debouncedUpdateWhiteLine(updatedPos);
@@ -270,7 +262,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       onDragging(false);
 
       // Длина белой линии - вернём, как было, от previousBetEnd
-      const finalDir = betPosition.clone().sub(clippedDeposit);
+      const finalDir = betPosition.clone().sub(previousBetEnd);
       const fraction = finalDir.length() / maxWhiteLength;
       const betAmount = fraction * userBalance;
 
