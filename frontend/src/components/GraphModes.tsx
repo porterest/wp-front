@@ -6,7 +6,6 @@ import GradientPlanes from "./GradientPlanes";
 import Axes from "./Axes";
 import { PairOption } from "../types/pair";
 import { CandleData } from "../types/candles";
-import { Html } from "@react-three/drei";
 
 interface GraphModesProps {
   currentMode: number; // Текущий режим отображения графика
