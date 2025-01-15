@@ -16,6 +16,7 @@ from domain.dto.block import UpdateBlockDTO, CreateBlockDTO
 from domain.enums import BetStatus
 from domain.enums.block_status import BlockStatus
 from domain.models.block import Block
+from domain.models.reward_model import Rewards
 from infrastructure.db.repositories.exceptions import NotFoundException as RepositoryNotFoundException
 from services.exceptions import NotFoundException
 
@@ -106,25 +107,38 @@ class BlockService(BlockServiceInterface):
         block.completed_at = datetime.now()
         await self.block_repository.update(block_id, update_block)
 
+    async def process_completed_block(self, block: Block, rewards: Rewards) -> None:
         chain = await self.chain_repository.get(block.chain_id)
+        rewards_by_user_id = {
+            reward.user_id: reward.reward for reward in rewards.user_rewards
+        }
         for bet in block.bets:
+            # todo: refactor to Bet/User service?
             update_dto = UpdateBetDTO(
                 status=BetStatus.RESOLVED
             )
             await self.bet_repository.update(obj_id=bet.id, obj=update_dto)
 
-            user = await self.user_repository.get(bet.user_id)
-            if user.balance > bet.amount:
+            new_bet_amount = bet.amount + rewards_by_user_id[bet.user_id]
+            if new_bet_amount > 0:
                 new_bet = CreateBetDTO(
                     user_id=bet.user_id,
                     pair_id=chain.pair_id,
-                    amount=bet.amount,
-                    block_id=block_id,
+                    amount=new_bet_amount,
+                    block_id=block.id,
                     vector=bet.vector,
                     status=BetStatus.PENDING
                 )
                 logger.info(f'Повторная ставка: {new_bet}')
                 await self.bet_service.create_bet(new_bet)
+            elif new_bet_amount < 0:
+                await self.user_repository.fund_user(
+                    user_id=bet.user_id,
+                    amount=new_bet_amount,
+                )
+                logger.info(f'User {bet.user_id} was charged for {new_bet_amount} cause of inaccurate bet')
+            else:
+                logger.info(f'User {bet.user_id} is very happy about being not charged for his fail')
 
     async def get_block(self, block_id: UUID) -> Block:
         try:

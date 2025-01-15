@@ -2,10 +2,10 @@ import logging
 from dataclasses import dataclass
 from uuid import UUID
 
-from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.repositories.chain import ChainRepositoryInterface
 from abstractions.services.app_wallet import AppWalletServiceInterface
 from abstractions.services.assets_management import AssetsManagementServiceInterface
+from abstractions.services.block import BlockServiceInterface
 from abstractions.services.dex import DexServiceInterface
 from abstractions.services.liquidity_management import LiquidityManagerInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
@@ -31,7 +31,7 @@ class OrchestratorService(OrchestratorServiceInterface):
     reward_service: RewardDistributionServiceInterface
     user_service: UserServiceInterface
     swap_service: SwapServiceInterface
-    block_repository: BlockRepositoryInterface
+    block_service: BlockServiceInterface
     app_wallet_service: AppWalletServiceInterface
     chain_repository: ChainRepositoryInterface
 
@@ -140,7 +140,10 @@ class OrchestratorService(OrchestratorServiceInterface):
         logger.info(f"Liquidity managed result")
 
         # 9. Распределение наград
-        await self.user_service.distribute_rewards(rewards)
+        await self.block_service.process_completed_block(
+            block=block,
+            rewards=rewards,
+        )
 
         return OrchestratorResult(
             liquidity_action=liquidity_action,

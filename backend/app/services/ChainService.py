@@ -23,6 +23,7 @@ from services.exceptions import NotFoundException, StopPairProcessingException
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class ChainService(
     ChainServiceInterface,
@@ -85,7 +86,7 @@ class ChainService(
             return
 
         if interrupted_block.status == BlockStatus.COMPLETED:
-            raise BaseException(f'Last block ({interrupted_block.id}) in interrupted chain {chain_id} is completed')
+            raise BaseException(f'Last block ({interrupted_block.id}) in interrupted chain {chain_id} is completed')  # noqa
 
         await self.block_service.handle_interrupted_block(interrupted_block.id)
 
