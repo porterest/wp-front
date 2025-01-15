@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter
 
 from dependencies.services.candle import get_candle_service
@@ -10,7 +12,7 @@ router = APIRouter(
 
 
 @router.get('')
-async def get_candles(pair_id: str, n: int) -> list[Candle]:
+async def get_candles(pair_id: str, n: int) -> Optional[list[Candle]]:
     service = get_candle_service()
     blocks = await service.get_n_last_blocks_by_pair_id(pair_id=pair_id, n=n)
 
@@ -18,6 +20,8 @@ async def get_candles(pair_id: str, n: int) -> list[Candle]:
     for block in blocks:
         volume = sum([bet.amount for bet in block.bets])
         bet_prices = [bet.vector[0] for bet in block.bets]
+        if bet_prices == 0 and volume == 0:
+            return
         low_price = min(bet_prices)
         high_price = max(bet_prices)
 
