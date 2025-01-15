@@ -4,13 +4,14 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+from abstractions.repositories.bet import BetRepositoryInterface
 from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.repositories.chain import ChainRepositoryInterface
 from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.bet import BetServiceInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
-from domain.dto.bet import CreateBetDTO
+from domain.dto.bet import CreateBetDTO, UpdateBetDTO
 from domain.dto.block import UpdateBlockDTO, CreateBlockDTO
 from domain.enums import BetStatus
 from domain.enums.block_status import BlockStatus
@@ -28,6 +29,7 @@ class BlockService(BlockServiceInterface):
     aggregate_bets_service: AggregateBetsServiceInterface
     chain_repository: ChainRepositoryInterface
     user_repository: UserRepositoryInterface
+    bet_repository: BetRepositoryInterface
 
     async def create(self, create_dto):
         await self.block_repository.create(create_dto)
@@ -106,6 +108,11 @@ class BlockService(BlockServiceInterface):
 
         chain = await self.chain_repository.get(block.chain_id)
         for bet in block.bets:
+            update_dto = UpdateBetDTO(
+                status=BetStatus.RESOLVED
+            )
+            await self.bet_repository.update(obj_id=bet.id, obj=update_dto)
+
             user = await self.user_repository.get(bet.user_id)
             if user.balance > bet.amount:
                 new_bet = CreateBetDTO(

@@ -111,10 +111,16 @@ class BlockRepository(
                 .where(Pair.id == pair_id)
             )).scalars().one()
 
+            logger.info("ебаная пара")
+            logger.info(pair)
+
             chain = (await session.execute(
                 select(Chain)
                 .where(Chain.pair_id == pair.id)
             )).scalars().one()
+
+            logger.info("ебаный чейн")
+            logger.info(chain)
 
             res = await session.execute(
                 select(self.entity)
@@ -125,6 +131,9 @@ class BlockRepository(
             )
 
             block = res.unique().scalars().one_or_none()
+            logger.info('ебаный блок')
+            logger.info(block)
+
         return self.entity_to_model(block) if block else None
 
 
