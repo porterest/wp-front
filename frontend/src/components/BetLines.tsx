@@ -276,7 +276,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       const finalDir = betPosition.clone().sub(previousBetEnd);
       console.log("finalDir")
       console.log(finalDir)
-      const fraction = finalDir.length() / maxYellowLength;
+      const fraction = finalDir.length() / maxWhiteLength;
       console.log("fraction")
       console.log(fraction)
       const betAmount = fraction * userBalance;
