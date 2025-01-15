@@ -130,6 +130,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       betPosition.x,   betPosition.y,   betPosition.z
     ]);
     console.log("белая линия")
+    console.log(userPreviousBet);
     console.log(depositVec.x, depositVec.y, depositVec.z,
       betPosition.x,   betPosition.y,   betPosition.z)
 
