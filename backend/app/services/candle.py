@@ -1,11 +1,11 @@
-from typing import List
+from dataclasses import dataclass
 from uuid import UUID
 
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.candle import CandleServiceInterface
-from domain.metaholder.responses.candle import Candle
 
 
+@dataclass
 class CandleService(CandleServiceInterface):
     block_service: BlockServiceInterface
 
