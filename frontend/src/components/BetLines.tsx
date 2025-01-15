@@ -20,6 +20,7 @@ interface BetLinesProps {
   maxWhiteLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
   axisMode: "X" | "Y";
+  setBetAmount: (newAmount: number) => void;
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
@@ -31,6 +32,7 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              maxWhiteLength,
                                              handleDrag,
                                              axisMode,
+                                             setBetAmount,
                                            }) => {
   // Ссылки на объекты
   const yellowLineRef = useRef<Line2 | null>(null);
@@ -272,6 +274,8 @@ const BetLines: React.FC<BetLinesProps> = ({
       console.log("finalDir:", finalDir);
       console.log("fraction:", fraction);
       console.log("betAmount:", betAmount);
+
+      setBetAmount(betAmount);
 
       onShowConfirmButton(true, {
         amount: betAmount,

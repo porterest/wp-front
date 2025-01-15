@@ -70,6 +70,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         maxWhiteLength={maxArrowLength + 0.8}
         handleDrag={handleDrag} // Передача колбека для обработки перетаскивания
         axisMode={axisMode}
+        setBetAmount={setBetAmount}
       />
 
       {/* Текст депозита */}
