@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 from apscheduler.schedulers.base import BaseScheduler
+from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 from abstractions.repositories.chain import ChainRepositoryInterface
@@ -47,15 +48,16 @@ class ChainService(
         Запускает процесс генерации блоков каждые 10 минут.
         """
         await self._start_chains()
+        self.scheduler.start()
+        self._add_generation_job()
+        self.logger.info("Сервис генерации блоков запущен.")
+
+    def _add_generation_job(self):
         self.scheduler.add_job(
             self._generate_new_blocks,
-            trigger=IntervalTrigger(seconds=self.block_generation_interval.seconds),
-            id="block_generation",
-            replace_existing=True,
+            trigger=DateTrigger(run_date=datetime.now() + timedelta(seconds=self.block_generation_interval.seconds)),
             misfire_grace_time=None,  # noqa
         )
-        self.scheduler.start()
-        self.logger.info("Сервис генерации блоков запущен.")
 
     async def _start_chains(self):
         """
@@ -119,6 +121,7 @@ class ChainService(
                     current_block=new_block.block_number
                 )
                 await self.chain_repository.update(chain.id, update_chain)
+                self._add_generation_job()
         except Exception:
             logger.error('Something went wrong during block generation', exc_info=True)
             raise
