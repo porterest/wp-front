@@ -78,6 +78,7 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   const denormalizeY = useCallback(
     (sceneValue: number) => {
       const graphHeight = 5; // Такой же, как в normalizeY
+      console.log(sceneValue, graphHeight, maxPrice, minPrice);
       return (sceneValue / graphHeight) * (maxPrice - minPrice) + minPrice;
     },
     [minPrice, maxPrice]
