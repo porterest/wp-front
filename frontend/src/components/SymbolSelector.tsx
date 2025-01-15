@@ -127,7 +127,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
               : "bg-[rgba(0,255,255,0.2)] text-white"
           }`}
         >
-          X-axis
+          Z-axis
         </button>
         <button
           onClick={() => handleAxisModeChange("Y")}

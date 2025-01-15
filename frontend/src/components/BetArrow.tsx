@@ -30,7 +30,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   const { userData } = useUserBalance(); // Получение баланса пользователя
   const userDeposit = userData?.balance || 0; // Баланс по умолчанию 0
-  const maxArrowLength = 5; // Максимальная длина желтой стрелки
+  const maxArrowLength = 2.5; // Максимальная длина желтой стрелки
 
   // Колбек для обработки перетаскивания из `BetLines`
   const handleDrag = (newPosition: THREE.Vector3) => {

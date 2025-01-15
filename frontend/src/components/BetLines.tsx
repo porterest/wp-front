@@ -117,6 +117,10 @@ const BetLines: React.FC<BetLinesProps> = ({
       previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
       betPosition.x,   betPosition.y,   betPosition.z
     ]);
+
+    console.log(previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
+      betPosition.x,   betPosition.y,   betPosition.z)
+
     const wMat = new LineMaterial({
       color: "white",
       linewidth: 3,
