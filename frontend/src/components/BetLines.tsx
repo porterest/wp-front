@@ -69,9 +69,20 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Позиция конца белой линии
   // Изначально userPreviousBet, но ограничена по maxWhiteLength от clippedDeposit
-  const [betPosition, setBetPosition] = useState<THREE.Vector3>(
-    () => new THREE.Vector3(0, 0, 0)
-  );
+  // const [betPosition, setBetPosition] = useState<THREE.Vector3>(
+  //   () => new THREE.Vector3(0, 0, 0)
+  // );
+  const [betPosition, setBetPosition] = useState(() => userPreviousBet.clone());
+
+  useEffect(() => {
+    const initPos = userPreviousBet.clone();
+    const betDir = initPos.clone().sub(clippedDeposit);
+    if (betDir.length() > maxWhiteLength) {
+      betDir.setLength(maxWhiteLength);
+      initPos.copy(clippedDeposit).add(betDir);
+    }
+    setBetPosition(initPos);
+  }, [userPreviousBet, clippedDeposit, maxWhiteLength]);
 
   // Синхронизируем betPosition при изменении userPreviousBet
   useEffect(() => {
@@ -263,9 +274,13 @@ const BetLines: React.FC<BetLinesProps> = ({
 
       // Длина белой линии - вернём, как было, от previousBetEnd
       const finalDir = betPosition.clone().sub(previousBetEnd);
-      const fraction = finalDir.length() / maxWhiteLength;
+      console.log("finalDir")
+      console.log(finalDir)
+      const fraction = finalDir.length() / maxYellowLength;
+      console.log("fraction")
+      console.log(fraction)
       const betAmount = fraction * userBalance;
-
+      console.log("betAmount", betAmount);
       onShowConfirmButton(true, {
         amount: betAmount,
         predicted_vector: [betPosition.x, betPosition.y, betPosition.z],
