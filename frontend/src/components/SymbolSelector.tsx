@@ -108,7 +108,6 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
             }),
           }}
         />
-        {selectedPair && <p>Выбранная пара: {selectedPair.label}</p>}
       </div>
 
       {/* Кнопки переключения режима */}
@@ -116,7 +115,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
         onClick={handleGlobalModeSwitch}
         className="mt-2 px-3 py-2 w-full bg-cyan-400 text-white font-bold text-sm rounded-md shadow-lg hover:bg-cyan-500 transition"
       >
-        Переключить режим ({globalMode})
+        Switch mode ({globalMode})
       </button>
       <div className="mt-2 flex justify-between">
         <button
@@ -127,7 +126,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
               : "bg-[rgba(0,255,255,0.2)] text-white"
           }`}
         >
-          Ось X
+          X-axis
         </button>
         <button
           onClick={() => handleAxisModeChange("Y")}
@@ -137,7 +136,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
               : "bg-[rgba(0,255,255,0.2)] text-white"
           }`}
         >
-          Ось Y
+          Y-axis
         </button>
       </div>
     </div>
