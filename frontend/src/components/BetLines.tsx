@@ -8,7 +8,6 @@ import debounce from "lodash.debounce";
 import { DebouncedFunc } from "lodash";
 import { fetchUserBalances } from "../services/api";
 
-// Предположим, что интерфейс BetLinesProps выглядит так:
 interface BetLinesProps {
   previousBetEnd: THREE.Vector3;   // конец жёлтой линии
   userPreviousBet: THREE.Vector3;  // конец белой линии (старая ставка) или совпадает с previousBetEnd, если не было
@@ -20,6 +19,7 @@ interface BetLinesProps {
   maxYellowLength: number;
   maxWhiteLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
+  // При axisMode="X" двигаем X, при "Y" двигаем Y, а остальные координаты не трогаем.
   axisMode: "X" | "Y";
 }
 
@@ -40,13 +40,13 @@ const BetLines: React.FC<BetLinesProps> = ({
   const yellowConeRef = useRef<THREE.Mesh>(null);
   const whiteConeRef = useRef<THREE.Mesh>(null);
 
-  // Управление перетаскиванием
+  // Drag
   const [isDragging, setIsDragging] = useState(false);
 
-  // Баланс пользователя
+  // Баланс юзера
   const [userBalance, setUserBalance] = useState(0);
 
-  // Подтягиваем баланс один раз
+  // Подтянем баланс один раз
   useEffect(() => {
     (async () => {
       try {
@@ -58,7 +58,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     })();
   }, []);
 
-  // "сжатая" жёлтая линия
+  // Вычислим "сжатую" точку жёлтой линии (clippedDeposit) по maxYellowLength
   const clippedDeposit = React.useMemo(() => {
     const depositVec = previousBetEnd.clone();
     if (depositVec.length() > maxYellowLength) {
@@ -67,7 +67,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     return depositVec;
   }, [previousBetEnd, maxYellowLength]);
 
-  // Изначальная позиция конца белой линии (не допускаем длину > maxWhiteLength)
+  // Позиция конца белой линии
+  // Изначально userPreviousBet, но ограничена по maxWhiteLength от clippedDeposit
+  // Сразу корректно инициализируем белую линию (без "обратной" отрисовки)
   const [betPosition, setBetPosition] = useState<THREE.Vector3>(() => {
     const initPos = userPreviousBet.clone();
     const betDir = initPos.clone().sub(clippedDeposit);
@@ -78,14 +80,25 @@ const BetLines: React.FC<BetLinesProps> = ({
     return initPos;
   });
 
-  // Трёховские вещи
+  // // Синхронизируем betPosition при изменении userPreviousBet
+  // useEffect(() => {
+  //   const initPos = userPreviousBet.clone();
+  //   const betDir = initPos.clone().sub(clippedDeposit);
+  //   if (betDir.length() > maxWhiteLength) {
+  //     betDir.setLength(maxWhiteLength);
+  //     initPos.copy(clippedDeposit).add(betDir);
+  //   }
+  //   setBetPosition(initPos);
+  // }, [userPreviousBet, clippedDeposit, maxWhiteLength]);
+
+  // THREE
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
 
-  // Debounced-обновление белой линии
-  const debouncedUpdateWhiteLine: DebouncedFunc<(pos: unknown) => void> = debounce(
-    (pos: unknown) => {
+  // Debounced обновление белой линии
+  const debouncedUpdateWhiteLine: DebouncedFunc<(pos: unknown) => void> =
+    debounce((pos: unknown) => {
       if (!whiteLineRef.current || !whiteLineRef.current.geometry) return;
       const p = pos as THREE.Vector3;
       const geom = whiteLineRef.current.geometry as LineGeometry;
@@ -97,16 +110,11 @@ const BetLines: React.FC<BetLinesProps> = ({
         p.y,
         p.z,
       ]);
-    },
-    30
-  );
+    }, 30);
 
-  // Сохраняем ссылку на div для лейбла, чтобы не искать его каждый кадр
-  const depositLabelRef = useRef<HTMLDivElement | null>(null);
-
-  // Инициализация жёлтой/белой линии, конусов, сферы, лейбла "Deposit"
+  // Инициализация линий, конусов и сферы
   useEffect(() => {
-    // === Жёлтая линия
+    // === ЖЁЛТАЯ ЛИНИЯ: (0,0,0) → clippedDeposit
     const yGeom = new LineGeometry();
     yGeom.setPositions([0, 0, 0, clippedDeposit.x, clippedDeposit.y, clippedDeposit.z]);
     const yMat = new LineMaterial({
@@ -128,7 +136,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
 
-    // === Белая линия
+    // === БЕЛАЯ ЛИНИЯ: clippedDeposit → betPosition
     const wGeom = new LineGeometry();
     wGeom.setPositions([
       clippedDeposit.x,
@@ -157,46 +165,16 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
 
-    // Сфера
+    // Сфера (drag point)
     if (sphereRef.current) {
       sphereRef.current.position.copy(betPosition);
     }
 
-    // === Добавляем надпись "Deposit" на body
-    const labelDiv = document.createElement("div");
-    labelDiv.innerText = "Deposit";
-    labelDiv.style.position = "absolute";
-    labelDiv.style.color = "white";
-    labelDiv.style.fontWeight = "bold";
-    labelDiv.style.pointerEvents = "none";
-    labelDiv.style.transform = "translate(-50%, -50%)";
-    document.body.appendChild(labelDiv);
-    depositLabelRef.current = labelDiv;
-
-    // Удаляем созданные объекты при размонтаже
     return () => {
       if (yellowLineRef.current) scene.remove(yellowLineRef.current);
       if (whiteLineRef.current) scene.remove(whiteLineRef.current);
-
-      if (depositLabelRef.current) {
-        document.body.removeChild(depositLabelRef.current);
-        depositLabelRef.current = null;
-      }
     };
   }, [clippedDeposit, betPosition, scene]);
-
-  // На каждом кадре обновляем позицию лейбла "Deposit"
-  useFrame(() => {
-    if (!depositLabelRef.current) return;
-
-    // Берём координаты clippedDeposit
-    const coords = clippedDeposit.clone();
-    coords.project(camera);
-    const x = (coords.x * 0.5 + 0.5) * window.innerWidth;
-    const y = (-coords.y * 0.5 + 0.5) * window.innerHeight;
-    depositLabelRef.current.style.left = `${x}px`;
-    depositLabelRef.current.style.top = `${y}px`;
-  });
 
   // Проверка клика по сфере
   const isClickOnSphere = (event: PointerEvent): boolean => {
@@ -243,8 +221,10 @@ const BetLines: React.FC<BetLinesProps> = ({
     // direction = intersectPt - clippedDeposit
     const direction = intersectPt.clone().sub(clippedDeposit);
 
-    // Исходим из текущей позиции, но корректируем только X или Y
-    const updatedPos = betPosition.clone();
+    // СОХРАНЯЕМ другие координаты, МЕНЯЕМ только X или Y
+    const updatedPos = betPosition.clone(); // текущее положение
+
+    // partialPos = clippedDeposit + direction
     const partialPos = clippedDeposit.clone().add(direction);
 
     if (axisMode === "X") {
@@ -253,17 +233,19 @@ const BetLines: React.FC<BetLinesProps> = ({
       updatedPos.y = partialPos.y;
     }
 
-    // Ограничение по maxWhiteLength
+    // Ограничиваем белую линию (betPosition) по maxWhiteLength
     const finalDir = updatedPos.clone().sub(clippedDeposit);
     if (finalDir.length() > maxWhiteLength) {
       finalDir.setLength(maxWhiteLength);
       updatedPos.copy(clippedDeposit).add(finalDir);
     }
 
+
+    // Сохраняем
     setBetPosition(updatedPos);
     debouncedUpdateWhiteLine(updatedPos);
 
-    // Сдвигаем сферу + конус
+    // Обновляем объекты
     if (sphereRef.current) {
       sphereRef.current.position.copy(updatedPos);
     }
@@ -287,9 +269,9 @@ const BetLines: React.FC<BetLinesProps> = ({
       setIsDragging(false);
       onDragging(false);
 
-      // Считаем длину от previousBetEnd
+      // Длина белой линии - вернём, как было, от previousBetEnd
       const finalDir = betPosition.clone().sub(previousBetEnd);
-      const fraction = finalDir.length() / maxWhiteLength;
+      const fraction = 1 - finalDir.length() / maxWhiteLength;
       const betAmount = fraction * userBalance;
 
       onShowConfirmButton(true, {
@@ -299,7 +281,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
   };
 
-  // Подписываемся на события мыши
+  // Слушатели
   useEffect(() => {
     const canvas = gl.domElement;
     canvas.addEventListener("pointerdown", handlePointerDown);
@@ -313,9 +295,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     };
   }, [gl.domElement, handlePointerMove]);
 
-  // useFrame, если нужно, но здесь пусто
   useFrame(() => {
-    // пусто, если нет другого кода
+    // пусто
   });
 
   return (
@@ -346,7 +327,6 @@ const BetLines: React.FC<BetLinesProps> = ({
 };
 
 export default BetLines;
-
 
 //
 // //тут стрелка отлично удлиняется и укорачивается, состояния между осями сохраняются короче все кайф, но стрелка прилеплена к плоскости
