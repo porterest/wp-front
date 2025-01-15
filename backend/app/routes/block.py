@@ -12,6 +12,8 @@ router = APIRouter(
 )
 
 logger = logging.getLogger(__name__)
+
+
 @router.get('/last_vector')
 async def get_last_vector(pair_id: UUID) -> Tuple[float, float]:
     service = get_block_service()
