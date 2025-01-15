@@ -270,8 +270,8 @@ const BetLines: React.FC<BetLinesProps> = ({
       onDragging(false);
 
       // Длина белой линии - вернём, как было, от previousBetEnd
-      const finalDir = betPosition.clone().sub(previousBetEnd);
-      const fraction = 1 - finalDir.length() / maxWhiteLength;
+      const finalDir = betPosition.clone().sub(clippedDeposit);
+      const fraction = finalDir.length() / maxWhiteLength;
       const betAmount = fraction * userBalance;
 
       onShowConfirmButton(true, {
