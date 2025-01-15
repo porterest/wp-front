@@ -265,6 +265,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
       console.log("previousBet", previousBetEnd);
       console.log("betPos", betPosition);
+      console.log("betPos.length", betPosition.length());
       console.log("max white", maxWhiteLength);
 
       // Для суммы ставки используем реальный previousBetEnd (не clipped)
