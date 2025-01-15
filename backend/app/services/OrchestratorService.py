@@ -43,7 +43,7 @@ class OrchestratorService(OrchestratorServiceInterface):
         :param block_id: ID текущего блока.
         """
         # Stage 1: calculations
-        block = await self.block_repository.get(block_id)
+        block = await self.block_service.get_block(block_id)
         chain = await self.chain_repository.get(block.chain_id)
         # 1. Получение агрегированной ставки
         aggregated_bets = await self.aggregate_bets_service.aggregate_bets(block.id)
