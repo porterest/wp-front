@@ -108,6 +108,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     });
     yellowLineRef.current = new Line2(yGeom, yMat);
     scene.add(yellowLineRef.current);
+    console.log("желтая линия")
+    console.log(yellowLineRef.current)
+    console.log([0,0,0, depositVec.x, depositVec.y, depositVec.z])
 
     // Желтый конус
     if (yellowConeRef.current) {
@@ -126,7 +129,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       depositVec.x, depositVec.y, depositVec.z,
       betPosition.x,   betPosition.y,   betPosition.z
     ]);
-
+    console.log("белая линия")
     console.log(depositVec.x, depositVec.y, depositVec.z,
       betPosition.x,   betPosition.y,   betPosition.z)
 
