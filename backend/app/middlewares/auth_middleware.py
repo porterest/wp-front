@@ -28,7 +28,6 @@ async def check_for_auth(
 
     access_token = request.headers['Authorization'].replace('Bearer ', '')
 
-
     auth_service = get_auth_service()
     try:
         if access_token != 'abc':
