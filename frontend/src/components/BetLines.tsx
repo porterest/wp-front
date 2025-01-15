@@ -80,17 +80,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     return initPos;
   });
 
-  // // Синхронизируем betPosition при изменении userPreviousBet
-  // useEffect(() => {
-  //   const initPos = userPreviousBet.clone();
-  //   const betDir = initPos.clone().sub(clippedDeposit);
-  //   if (betDir.length() > maxWhiteLength) {
-  //     betDir.setLength(maxWhiteLength);
-  //     initPos.copy(clippedDeposit).add(betDir);
-  //   }
-  //   setBetPosition(initPos);
-  // }, [userPreviousBet, clippedDeposit, maxWhiteLength]);
-
   // THREE
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
@@ -239,7 +228,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       finalDir.setLength(maxWhiteLength);
       updatedPos.copy(clippedDeposit).add(finalDir);
     }
-
 
     // Сохраняем
     setBetPosition(updatedPos);
