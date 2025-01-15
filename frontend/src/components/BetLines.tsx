@@ -69,16 +69,20 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Позиция конца белой линии
   // Изначально userPreviousBet, но ограничена по maxWhiteLength от clippedDeposit
-  // Сразу корректно инициализируем белую линию (без "обратной" отрисовки)
-  const [betPosition, setBetPosition] = useState<THREE.Vector3>(() => {
+  const [betPosition, setBetPosition] = useState<THREE.Vector3>(
+    () => new THREE.Vector3(0, 0, 0)
+  );
+
+  // Синхронизируем betPosition при изменении userPreviousBet
+  useEffect(() => {
     const initPos = userPreviousBet.clone();
     const betDir = initPos.clone().sub(clippedDeposit);
     if (betDir.length() > maxWhiteLength) {
       betDir.setLength(maxWhiteLength);
       initPos.copy(clippedDeposit).add(betDir);
     }
-    return initPos;
-  });
+    setBetPosition(initPos);
+  }, [userPreviousBet, clippedDeposit, maxWhiteLength]);
 
   // THREE
   const { gl, camera, scene } = useThree();
