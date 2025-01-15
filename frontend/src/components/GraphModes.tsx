@@ -79,14 +79,6 @@ const GraphModes: React.FC<GraphModesProps> = ({
     return null;
   };
 
-  if (!data || data.length === 0) {
-    return (
-      <Html>
-        <div>No data available to render the graph.</div>
-      </Html>
-    );
-  }
-
   return (
     <>
       <GradientPlanes />
