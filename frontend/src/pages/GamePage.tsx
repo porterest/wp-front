@@ -61,8 +61,7 @@ const GamePage: React.FC = () => {
   useEffect(() => {
     if (selectedPair) {
       fetchPreviousBetEnd(selectedPair.value).then((data: number[]) => {
-        console.log("ЖОПА");
-        console.log(selectedPair.value);
+        console.log("агрегированный вектор");
         const resultVector = new THREE.Vector3(data[0], data[1], 0);
         console.log("res", JSON.stringify(resultVector, null, 2));
         setPreviousBetEnd(resultVector);

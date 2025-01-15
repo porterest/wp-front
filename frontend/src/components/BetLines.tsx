@@ -114,11 +114,11 @@ const BetLines: React.FC<BetLinesProps> = ({
     // === БЕЛАЯ ЛИНИЯ: previousBetEnd → betPosition
     const wGeom = new LineGeometry();
     wGeom.setPositions([
-      previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
+      depositVec.x, depositVec.y, depositVec.z,
       betPosition.x,   betPosition.y,   betPosition.z
     ]);
 
-    console.log(previousBetEnd.x, previousBetEnd.y, previousBetEnd.z,
+    console.log(depositVec.x, depositVec.y, depositVec.z,
       betPosition.x,   betPosition.y,   betPosition.z)
 
     const wMat = new LineMaterial({
