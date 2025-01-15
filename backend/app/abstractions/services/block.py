@@ -4,6 +4,7 @@ from uuid import UUID
 
 from domain.dto.block import CreateBlockDTO
 from domain.models.block import Block
+from domain.models.reward_model import Rewards
 
 
 class BlockServiceInterface(ABC):
@@ -40,6 +41,7 @@ class BlockServiceInterface(ABC):
         Возвращает последний блок в системе по имени пары.
         """
         ...
+
     @abstractmethod
     async def get_last_completed_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
         """
@@ -63,6 +65,10 @@ class BlockServiceInterface(ABC):
         """
         Помечает блок как завершённый.
         """
+        ...
+
+    @abstractmethod
+    async def process_completed_block(self, block: Block, rewards: Rewards) -> None:
         ...
 
     @abstractmethod

@@ -1,11 +1,11 @@
 import logging
 from typing import Optional
-from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 
 from dependencies.services.user import get_user_service
+from domain.enums import BetStatus
 from domain.metaholder.requests.pair import GetUserLastBetRequest
 from domain.metaholder.responses import BetResponse
 from domain.metaholder.responses.user import UserHistoryResponse, UserBetsResponse, UserInfoResponse
@@ -34,7 +34,7 @@ async def get_user_info(
         return UserInfoResponse(
             user_id=user.id,
             balance=user.balance,
-            at_risk=sum([x.amount for x in user.bets]),
+            at_risk=sum([x.amount for x in user.bets if x.status == BetStatus.PENDING]),
         )
     except NotFoundException:
         logger.error(f"No user with ID {user_id}", exc_info=True)
@@ -60,6 +60,7 @@ async def get_user_bets(
             status_code=404,
             detail=f"No user with ID {user_id}",
         )
+
 
 @router.post('/last_bet')
 async def get_last_user_bet(

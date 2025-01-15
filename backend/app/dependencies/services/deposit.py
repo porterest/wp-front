@@ -3,7 +3,6 @@ from dependencies import get_scheduler
 from dependencies.repositories.deposit import get_deposit_repository
 from dependencies.repositories.pair import get_pair_repository
 from dependencies.repositories.transaction import get_transaction_repository
-from dependencies.services.app_wallet.provider import get_app_wallet_provider
 from dependencies.services.app_wallet.service import get_app_wallet_service
 from dependencies.services.dex import get_dex_service
 from dependencies.services.ton.client import get_ton_client

@@ -93,8 +93,8 @@ class UserRepository(
             user = res.unique().scalars().one_or_none()
         return self.entity_to_model(user) if user else None
 
-    async def fund_user(self, user_id: UUID, amount: float) -> None:
+    async def fund_user(self, user_id: UUID, amount: float) -> None:  # amount could be < 0
         async with self.session_maker() as session:
             user = await session.get(self.entity, user_id)
 
-            user.balance += amount
+            user.balance += amount  # todo: freeze user account if there is not enough money to pay the charge
