@@ -197,66 +197,66 @@ export async function fetchPreviousBetEnd(pairId: string): Promise<number[]> {
  */
 export async function fetchCandles(pairId: string): Promise<CandleData[]> {
     try {
-        const n = 5;
-        const response = await apiClient.get<BackendCandle[]>("/candles", {
-            params: { pair_id: pairId, n: n },
-        });
+        // const n = 5;
+        // const response = await apiClient.get<BackendCandle[]>("/candles", {
+        //     params: { pair_id: pairId, n: n },
+        // });
 
         console.log('свечи');
         console.log(pairId);
 
         // Преобразуем данные в формат CandleData
-        return response.data.map((candle: BackendCandle) => ({
-            open: candle.opening_price,
-            close: candle.closing_price,
-            high: candle.high_price,
-            low: candle.low_price,
-            volume: candle.volume,
-            block_number: candle.block_number,
-        })) as CandleData[]; // Приводим к типу CandleData
+        // return response.data.map((candle: BackendCandle) => ({
+        //     open: candle.opening_price,
+        //     close: candle.closing_price,
+        //     high: candle.high_price,
+        //     low: candle.low_price,
+        //     volume: candle.volume,
+        //     block_number: candle.block_number,
+        // })) as CandleData[]; // Приводим к типу CandleData
 
-        // return [
-        //     {
-        //         open: 10,
-        //         close: 5,
-        //         high: 15,
-        //         low: 2,
-        //         volume: 5,
-        //         block_number: 1
-        //     },
-        //     {
-        //         open: 5,
-        //         close: 7,
-        //         high: 10,
-        //         low: 2,
-        //         volume: 7,
-        //         block_number: 2
-        //     },
-        //     {
-        //         open: 7,
-        //         close: 12,
-        //         high: 17,
-        //         low: 4,
-        //         volume: 3,
-        //         block_number: 3
-        //     },
-        //     {
-        //         open: 12,
-        //         close: 18,
-        //         high: 18,
-        //         low: 10,
-        //         volume: 2,
-        //         block_number: 4
-        //     },
-        //     {
-        //         open: 18,
-        //         close: 10,
-        //         high: 19,
-        //         low: 8,
-        //         volume: 9,
-        //         block_number: 5
-        //     },
-        // ];
+        return [
+            {
+                open: 10,
+                close: 5,
+                high: 15,
+                low: 2,
+                volume: 5,
+                block_number: 1
+            },
+            {
+                open: 5,
+                close: 7,
+                high: 10,
+                low: 2,
+                volume: 7,
+                block_number: 2
+            },
+            {
+                open: 7,
+                close: 12,
+                high: 17,
+                low: 4,
+                volume: 3,
+                block_number: 3
+            },
+            {
+                open: 12,
+                close: 18,
+                high: 18,
+                low: 10,
+                volume: 2,
+                block_number: 4
+            },
+            {
+                open: 18,
+                close: 10,
+                high: 19,
+                low: 8,
+                volume: 9,
+                block_number: 5
+            },
+        ];
     } catch (error) {
         console.error("Ошибка при запросе данных свечей:", error);
         throw error;
