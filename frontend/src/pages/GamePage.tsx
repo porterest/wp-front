@@ -135,9 +135,6 @@ const GamePage: React.FC = () => {
   ) => {
     // Если данные не готовы, ждем и пробуем снова
     if (!betData || !selectedPair || !scaleFunctions) {
-      console.log(
-        "Waiting for selectedPair or scaleFunctions to be defined...",
-      );
       setTimeout(() => handleShowConfirmButton(show, betData), 100);
       return;
     }
@@ -153,9 +150,13 @@ const GamePage: React.FC = () => {
 
       const [sceneX, sceneY] = betData.predicted_vector;
 
+      console.log(sceneY);
+
       // Преобразуем координаты
       const absoluteVolumeChange = denormalizeX(sceneX, data.length);
       const absolutePriceChange = denormalizeY(sceneY);
+
+      console.log(absolutePriceChange);
 
       const betRequest: PlaceBetRequest = {
         pair_id: selectedPair.value,
