@@ -116,6 +116,7 @@ class BlockService(BlockServiceInterface):
                     vector=bet.vector,
                     status=BetStatus.PENDING
                 )
+                logger.info(f'Повторная ставка: {new_bet}')
                 await self.bet_service.create_bet(new_bet)
 
     async def get_block(self, block_id: UUID) -> Block:
