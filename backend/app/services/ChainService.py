@@ -149,7 +149,7 @@ class ChainService(
         for chain in chains:
             await self._stop_chain(chain)
 
-        self.scheduler.remove_job("block_generation")
+        # self.scheduler.remove_job("block_generation")
         self.scheduler.shutdown()
         self.logger.info("Сервис генерации блоков остановлен.")
 

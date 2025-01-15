@@ -80,7 +80,6 @@ class BlockRepository(
         return [self.entity_to_model(block) for block in blocks] if blocks else None
 
     async def get_last_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
-        logger.info(pair_id)
         async with self.session_maker() as session:
             pair = (await session.execute(
                 select(Pair)

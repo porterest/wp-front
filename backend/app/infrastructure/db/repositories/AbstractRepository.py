@@ -109,7 +109,6 @@ class AbstractSQLAlchemyRepository[Entity, Model, CreateDTO, UpdateDTO](
                 await session.delete(obj)
 
     async def get_all(self, limit: int = 100, offset: int = 0, joined: bool = True) -> list[Model]:
-        logger.info(type(self))
         async with self.session_maker() as session:
             if joined:
                 if self.options:
