@@ -44,13 +44,13 @@ const GamePage: React.FC = () => {
   const loadUserLastBet = async (pair: PairOption) => {
     try {
       const lastBet = await getLastUserBet(pair.value);
-      console.log('СЮДАААААА')
-      console.log("last user Bet:", lastBet);
+      console.log("last user Bet:", lastBet.vector);
       const userVector = new THREE.Vector3(
         lastBet.vector[0],
         lastBet.vector[1],
         0,)
       setUserPreviousBet(userVector);
+      console.log("забрали с бека вектор:", userVector);
       console.log("userVector:", userVector);
 
     } catch (error) {
