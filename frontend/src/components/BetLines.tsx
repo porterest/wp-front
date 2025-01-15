@@ -131,7 +131,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     ]);
     console.log("белая линия")
     console.log("userPreviousBet");
-    console.log(userPreviousBet);
+    console.log(userPreviousBet); //вот тут тоже нули
     console.log("betPosition");
     console.log(depositVec.x, depositVec.y, depositVec.z,
       betPosition.x,   betPosition.y,   betPosition.z) // тут betPosition 0
@@ -164,7 +164,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (yellowLineRef.current) scene.remove(yellowLineRef.current);
       if (whiteLineRef.current) scene.remove(whiteLineRef.current);
     };
-  }, [scene, previousBetEnd, betPosition, maxYellowLength]);
+  }, [userPreviousBet, previousBetEnd, maxWhiteLength]);  //[userPreviousBet, previousBetEnd, maxWhiteLength]
 
   // Проверка клика по сфере
   const isClickOnSphere = (event: PointerEvent): boolean => {
