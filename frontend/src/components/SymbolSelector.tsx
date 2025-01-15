@@ -47,6 +47,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
 
   const handlePairChange = (selectedOption: PairOption | null) => {
     setSelectedPair(selectedOption);
+    console.log(selectedPair);
     if (selectedOption) {
       setSymbol(selectedOption);
       onSymbolChange(selectedOption);
