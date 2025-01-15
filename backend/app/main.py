@@ -18,6 +18,7 @@ from routes import (
     chain_router,
     deposit_router,
     auth_router,
+    candle_router,
 )
 from settings import settings
 
@@ -75,6 +76,7 @@ app.include_router(user_router)
 app.include_router(chain_router)
 app.include_router(deposit_router)
 app.include_router(auth_router)
+app.include_router(candle_router)
 
 
 def custom_openapi():
