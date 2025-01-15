@@ -268,10 +268,10 @@ const BetLines: React.FC<BetLinesProps> = ({
       console.log("max white", maxWhiteLength);
 
       // Для суммы ставки используем реальный previousBetEnd (не clipped)
-      const finalDir = betPosition.clone().sub(previousBetEnd);
-      const fraction = Math.min(1, finalDir.length() / maxWhiteLength);
+      // const finalDir = betPosition.clone().sub(previousBetEnd);
+      const fraction = Math.min(1, betPosition.length() / maxWhiteLength);
       const betAmount = fraction * userBalance;
-      console.log("finalDir:", finalDir);
+      // console.log("finalDir:", );
       console.log("fraction:", fraction);
       console.log("betAmount:", betAmount);
 
