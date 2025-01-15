@@ -18,6 +18,7 @@ from domain.enums.chain_status import ChainStatus
 from domain.metaholder.responses.block_state import BlockStateResponse
 from domain.models.block import Block
 from domain.models.chain import Chain
+from domain.models.reward_model import Rewards
 from infrastructure.db.entities import BlockStatus
 from services import SingletonMeta
 from services.exceptions import NotFoundException, StopPairProcessingException
@@ -111,12 +112,21 @@ class ChainService(
                     if (elapsed_time >= self.block_generation_interval.total_seconds()
                             and last_block.status == BlockStatus.IN_PROGRESS):
                         try:
-                            await self._process_completed_block(last_block)
+                            rewards = await self._process_completed_block(last_block)
                         except StopPairProcessingException:
                             await self._pause_chain(chain)
                             continue
+                    else:
+                        logger.error(f"Fuck! Chain {chain.id} integrity is broken")
+                        continue
 
                 new_block = await self.block_service.start_new_block(chain.id)
+                if last_block:
+                    await self.block_service.process_completed_block(
+                        block=last_block,
+                        new_block_id=new_block.id,
+                        rewards=rewards,  # noqa
+                    )
                 update_chain = UpdateChainDTO(
                     current_block=new_block.block_number
                 )
@@ -126,19 +136,20 @@ class ChainService(
             logger.error('Something went wrong during block generation', exc_info=True)
             raise
 
-    async def _process_completed_block(self, block: Block):
+    async def _process_completed_block(self, block: Block) -> Rewards:
         """
         Обрабатывает завершённый блок, распределяет результаты и обновляет данные.
         """
         self.logger.info(f"Обработка завершённого блока {block.block_number}.")
         await self.block_service.complete_block(block.id)
         try:
-            await self.orchestrator_service.process_block(block_id=block.id)
+            result = await self.orchestrator_service.process_block(block_id=block.id)
         except StopPairProcessingException:
             logger.error('Stopping pair')
             raise
 
         self.logger.info(f"Завершённый блок {block.block_number} успешно обработан.")
+        return result.rewards
 
     async def stop_block_generation(self):
         """

@@ -139,11 +139,11 @@ class OrchestratorService(OrchestratorServiceInterface):
         await self.dex_service.perform_liquidity_action(liquidity_action=liquidity_action)
         logger.info(f"Liquidity managed result")
 
-        # 9. Распределение наград
-        await self.block_service.process_completed_block(
-            block=block,
-            rewards=rewards,
-        )
+        # # 9. Распределение наград
+        # await self.block_service.process_completed_block(
+        #     block=block,
+        #     rewards=rewards,
+        # )
 
         return OrchestratorResult(
             liquidity_action=liquidity_action,
