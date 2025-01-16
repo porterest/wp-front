@@ -201,87 +201,143 @@ const BetLines: React.FC<BetLinesProps> = ({
       updatePlane();
     }
   };
+  //
+  // // pointerMove
+  // const handlePointerMove = (e: PointerEvent) => {
+  //   // Если объект не перетаскивается, выходим из функции
+  //   if (!isDragging) return;
+  //
+  //   // Преобразуем координаты мыши в нормализованные координаты [-1, 1]
+  //   const mouse = new THREE.Vector2(
+  //     (e.clientX / gl.domElement.clientWidth) * 2 - 1, // Приводим X в диапазон [-1, 1]
+  //     -(e.clientY / gl.domElement.clientHeight) * 2 + 1 // Приводим Y в диапазон [-1, 1] и инвертируем
+  //   );
+  //
+  //   // Устанавливаем луч (raycaster) для вычисления пересечения с плоскостью
+  //   raycaster.current.setFromCamera(mouse, camera);
+  //
+  //   // Точка пересечения луча и плоскости (если есть пересечение)
+  //   const intersectPt = new THREE.Vector3();
+  //   if (!raycaster.current.ray.intersectPlane(plane.current, intersectPt)) {
+  //     // Если пересечения нет, выходим из функции
+  //     return;
+  //   }
+  //   console.log("intersectPt - Позиция в трёхмерном пространстве, куда указывает курсор мыши")
+  //   console.log(intersectPt)
+  //
+  //   // Рассчитываем направление от точки агрегации (aggregatorClipped) до точки пересечения
+  //   const direction = intersectPt.clone().sub(aggregatorClipped);
+  //   console.log("direction - Куда нужно двигать и На сколько двигать (величина смещения).")
+  //   console.log(direction)
+  //
+  //   // Копируем текущее положение ставки (betPosition), чтобы сохранить другие координаты
+  //   const updatedPos = betPosition.clone();
+  //   console.log("updatedPos - текущее положение ставки (betPosition), чтобы сохранить другие координаты");
+  //   console.log(updatedPos);
+  //   // Рассчитываем новое положение, добавляя направление к точке агрегации
+  //   const partialPos = aggregatorClipped.clone().add(direction);
+  //   console.log("partialPos - новое положение, добавляя направление к точке агрегации")
+  //   console.log(partialPos)
+  //
+  //   // Ограничиваем движение только по одной оси (X или Y), в зависимости от режима
+  //   if (axisMode === "X") {
+  //     updatedPos.x = partialPos.x; // Обновляем только X
+  //   } else if (axisMode === "Y") {
+  //     updatedPos.y = partialPos.y; // Обновляем только Y
+  //   }
+  //
+  //   // Ограничиваем длину белой линии (finalDir) до максимальной длины maxWhiteLength
+  //   const finalDir = updatedPos.clone().sub(aggregatorClipped); // Вектор от агрегации до позиции ставки
+  //   if (finalDir.length() > maxWhiteLength) {
+  //     // Если длина превышает maxWhiteLength, ограничиваем её
+  //     finalDir.setLength(maxWhiteLength); // Устанавливаем длину вектора равной maxWhiteLength
+  //     updatedPos.copy(aggregatorClipped).add(finalDir); // Пересчитываем конечную позицию
+  //   }
+  //   console.log("finalDir - Ограничиваем длину белой линии (finalDir) до максимальной длины maxWhiteLength")
+  //   console.log(finalDir)
+  //   // Обновляем состояние с новой позицией ставки
+  //   setBetPosition(updatedPos);
+  //   console.log("updatedPos - ограниченная линия");
+  //   console.log(updatedPos);
+  //   // Обновляем визуальное представление белой линии с задержкой
+  //   debouncedUpdateWhiteLine(updatedPos);
+  //
+  //   // Перемещаем сферу на новую позицию
+  //   if (sphereRef.current) {
+  //     sphereRef.current.position.copy(updatedPos);
+  //   }
+  //
+  //   // Обновляем белый конус (стрелку), указывающий на новую позицию ставки
+  //   if (whiteConeRef.current) {
+  //     whiteConeRef.current.position.copy(updatedPos); // Перемещаем конус
+  //     const dirW = updatedPos.clone().sub(aggregatorClipped).normalize(); // Направление от агрегации
+  //     if (dirW.length() > 0) {
+  //       // Если длина направления больше нуля, обновляем ориентацию конуса
+  //       const up = new THREE.Vector3(0, 1, 0); // Ось вверх (по умолчанию)
+  //       const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW); // Кватернион для вращения
+  //       whiteConeRef.current.setRotationFromQuaternion(quatW); // Устанавливаем поворот конуса
+  //     }
+  //   }
+  //
+  //   // Вызываем обработчик handleDrag с новой позицией ставки
+  //   handleDrag(updatedPos);
+  // };
 
-  // pointerMove
   const handlePointerMove = (e: PointerEvent) => {
-    // Если объект не перетаскивается, выходим из функции
     if (!isDragging) return;
 
-    // Преобразуем координаты мыши в нормализованные координаты [-1, 1]
     const mouse = new THREE.Vector2(
-      (e.clientX / gl.domElement.clientWidth) * 2 - 1, // Приводим X в диапазон [-1, 1]
-      -(e.clientY / gl.domElement.clientHeight) * 2 + 1 // Приводим Y в диапазон [-1, 1] и инвертируем
+      (e.clientX / gl.domElement.clientWidth) * 2 - 1,
+      -(e.clientY / gl.domElement.clientHeight) * 2 + 1
     );
-
-    // Устанавливаем луч (raycaster) для вычисления пересечения с плоскостью
     raycaster.current.setFromCamera(mouse, camera);
 
-    // Точка пересечения луча и плоскости (если есть пересечение)
     const intersectPt = new THREE.Vector3();
     if (!raycaster.current.ray.intersectPlane(plane.current, intersectPt)) {
-      // Если пересечения нет, выходим из функции
       return;
     }
-    console.log("intersectPt - Позиция в трёхмерном пространстве, куда указывает курсор мыши")
-    console.log(intersectPt)
 
-    // Рассчитываем направление от точки агрегации (aggregatorClipped) до точки пересечения
     const direction = intersectPt.clone().sub(aggregatorClipped);
-    console.log("direction - Куда нужно двигать и На сколько двигать (величина смещения).")
-    console.log(direction)
-
-    // Копируем текущее положение ставки (betPosition), чтобы сохранить другие координаты
     const updatedPos = betPosition.clone();
-    console.log("updatedPos - текущее положение ставки (betPosition), чтобы сохранить другие координаты");
-    console.log(updatedPos);
-    // Рассчитываем новое положение, добавляя направление к точке агрегации
     const partialPos = aggregatorClipped.clone().add(direction);
-    console.log("partialPos - новое положение, добавляя направление к точке агрегации")
-    console.log(partialPos)
 
-    // Ограничиваем движение только по одной оси (X или Y), в зависимости от режима
     if (axisMode === "X") {
-      updatedPos.x = partialPos.x; // Обновляем только X
+      updatedPos.x = partialPos.x;
     } else if (axisMode === "Y") {
-      updatedPos.y = partialPos.y; // Обновляем только Y
+      updatedPos.y = partialPos.y;
     }
 
-    // Ограничиваем длину белой линии (finalDir) до максимальной длины maxWhiteLength
-    const finalDir = updatedPos.clone().sub(aggregatorClipped); // Вектор от агрегации до позиции ставки
+    const finalDir = updatedPos.clone().sub(aggregatorClipped);
     if (finalDir.length() > maxWhiteLength) {
-      // Если длина превышает maxWhiteLength, ограничиваем её
-      finalDir.setLength(maxWhiteLength); // Устанавливаем длину вектора равной maxWhiteLength
-      updatedPos.copy(aggregatorClipped).add(finalDir); // Пересчитываем конечную позицию
+      finalDir.setLength(maxWhiteLength); // Ограничиваем длину
+      updatedPos.copy(aggregatorClipped).add(finalDir); // Пересчитываем позицию
     }
-    console.log("finalDir - Ограничиваем длину белой линии (finalDir) до максимальной длины maxWhiteLength")
-    console.log(finalDir)
-    // Обновляем состояние с новой позицией ставки
+
+    // Логируем для проверки
+    console.log("FinalDir (after limit):", finalDir);
+    console.log("UpdatedPos (after applying FinalDir):", updatedPos);
+
+    // Обновляем состояние
     setBetPosition(updatedPos);
-    console.log("updatedPos - ограниченная линия");
-    console.log(updatedPos);
-    // Обновляем визуальное представление белой линии с задержкой
     debouncedUpdateWhiteLine(updatedPos);
 
-    // Перемещаем сферу на новую позицию
     if (sphereRef.current) {
       sphereRef.current.position.copy(updatedPos);
     }
 
-    // Обновляем белый конус (стрелку), указывающий на новую позицию ставки
     if (whiteConeRef.current) {
-      whiteConeRef.current.position.copy(updatedPos); // Перемещаем конус
-      const dirW = updatedPos.clone().sub(aggregatorClipped).normalize(); // Направление от агрегации
+      whiteConeRef.current.position.copy(updatedPos);
+      const dirW = updatedPos.clone().sub(aggregatorClipped).normalize();
       if (dirW.length() > 0) {
-        // Если длина направления больше нуля, обновляем ориентацию конуса
-        const up = new THREE.Vector3(0, 1, 0); // Ось вверх (по умолчанию)
-        const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW); // Кватернион для вращения
-        whiteConeRef.current.setRotationFromQuaternion(quatW); // Устанавливаем поворот конуса
+        const up = new THREE.Vector3(0, 1, 0);
+        const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
+        whiteConeRef.current.setRotationFromQuaternion(quatW);
       }
     }
 
-    // Вызываем обработчик handleDrag с новой позицией ставки
     handleDrag(updatedPos);
   };
+
 
   const handlePointerUp = () => {
     // Если мы завершили перетаскивание
