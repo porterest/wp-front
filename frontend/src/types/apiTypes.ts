@@ -2,7 +2,7 @@
 import { UUID } from "node:crypto";
 
 export interface BetResponse {
-  bet_id: UUID;
+  id: UUID;
   amount: number;
   vector: BetVector; // Можно уточнить тип, если известно
   pair_name: string;

@@ -3,7 +3,7 @@ import { useTonConnectUI } from "@tonconnect/ui-react"; // Для работы �
 import { getUserBets, getUserHistory } from "../services/api"; // Импорт функций для выполнения запросов к API
 import { BetResponse, TransactionResponse } from "../types/apiTypes"; // Типы данных для типизации ответов API
 import { cancelBet } from "../services/api";
-// import {UUID} from "node:crypto";
+import { UUID } from "node:crypto";
 
 const ProfilePage: React.FC = () => {
   // Статические данные (адреса депозита и вознаграждений)
@@ -72,13 +72,12 @@ const ProfilePage: React.FC = () => {
 
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
 
-  const handleCancelBet = async (betId: BetResponse) => {
+  const handleCancelBet = async (betId: UUID) => {
     if (!window.confirm("Вы уверены, что хотите отменить ставку?")) return;
-    console.log("betid is canceling", betId);
     setIsCanceling(true);
     try {
-      await cancelBet(betId.bet_id.toString());
-      setBets((prevBets) => prevBets.filter((bet) => bet.bet_id !== betId.bet_id));
+      await cancelBet(betId.toString());
+      setBets((prevBets) => prevBets.filter((bet) => bet.id !== betId));
       alert("Ставка успешно отменена.");
     } catch (error) {
       console.error("Ошибка при отмене ставки:", error);
@@ -164,7 +163,7 @@ const ProfilePage: React.FC = () => {
           // Если активна вкладка ставок, отображаем список ставок
           <ul>
             {bets.map((bet) => (
-              <li key={bet.bet_id} className="p-2 border-b border-gray-700">
+              <li key={bet.id} className="p-2 border-b border-gray-700">
                 <p>
                   <strong>Pair:</strong> {bet.pair_name}
                 </p>
@@ -182,7 +181,7 @@ const ProfilePage: React.FC = () => {
                 {/*  Отменить*/}
                 {/*</button>*/}
                 <button
-                  onClick={() => handleCancelBet(bet)}
+                  onClick={() => handleCancelBet(bet.id)}
                   disabled={isCanceling}
                   className={`w-full py-2 ${isCanceling ? "bg-gray-500 cursor-not-allowed" : "bg-red-600 hover:bg-red-500"} text-white font-bold rounded-md transition-colors duration-300 mt-2`}
                 >
