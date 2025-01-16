@@ -82,6 +82,7 @@ export async function placeBet(data: PlaceBetRequest): Promise<void> {
 
 export async function cancelBet(betId: string) {
     try {
+        console.log("betid to cancel", betId);
         const response = await apiClient.post(`/bets/cancel`, { bet_id: betId });
         if (response.status === 200) {
             alert("Ставка успешно отменена.");
