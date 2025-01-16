@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2";
@@ -9,12 +9,12 @@ import { DebouncedFunc } from "lodash";
 import { fetchUserBalances } from "../services/api";
 
 interface BetLinesProps {
-  previousBetEnd: THREE.Vector3;   // конец жёлтой линии
-  userPreviousBet: THREE.Vector3;  // конец белой линии (старая ставка) или совпадает с previousBetEnd, если не было
+  previousBetEnd: THREE.Vector3; // конец жёлтой линии
+  userPreviousBet: THREE.Vector3; // конец белой линии (старая ставка) или совпадает с previousBetEnd, если не было
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
-    betData?: { amount: number; predicted_vector: number[] }
+    betData?: { amount: number; predicted_vector: number[] },
   ) => void;
   maxYellowLength: number;
   maxWhiteLength: number;
@@ -24,16 +24,16 @@ interface BetLinesProps {
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
-                                             previousBetEnd,
-                                             userPreviousBet,
-                                             onDragging,
-                                             onShowConfirmButton,
-                                             maxYellowLength,
-                                             maxWhiteLength,
-                                             handleDrag,
-                                             axisMode,
-                                             setBetAmount,
-                                           }) => {
+  previousBetEnd,
+  userPreviousBet,
+  onDragging,
+  onShowConfirmButton,
+  maxYellowLength,
+  maxWhiteLength,
+  handleDrag,
+  axisMode,
+  setBetAmount,
+}) => {
   // Ссылки на объекты
   const yellowLineRef = useRef<Line2 | null>(null);
   const whiteLineRef = useRef<Line2 | null>(null);
@@ -68,8 +68,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     return depositVec;
   }, [previousBetEnd, maxYellowLength]);
 
-  console.log("aggregatorClipped - Это начало белой линии, конец жёлтой линии")
-  console.log(aggregatorClipped)
+  console.log("aggregatorClipped - Это начало белой линии, конец жёлтой линии");
+  console.log(aggregatorClipped);
   // Позиция конца белой линии
   const [betPosition, setBetPosition] = useState(() => userPreviousBet.clone());
 
@@ -94,6 +94,8 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (!whiteLineRef.current || !whiteLineRef.current.geometry) return;
       const p = pos as THREE.Vector3;
       const geom = whiteLineRef.current.geometry as LineGeometry;
+      console.log("geom - Debounced обновление белой линии");
+      console.log(geom);
       geom.setPositions([
         aggregatorClipped.x,
         aggregatorClipped.y,
@@ -102,6 +104,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         p.y,
         p.z,
       ]);
+      console.log(geom);
     }, 30);
 
   // Инициализация линий, конусов и сферы
@@ -180,7 +183,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (!sphereRef.current) return false;
     const mouse = new THREE.Vector2(
       (event.clientX / gl.domElement.clientWidth) * 2 - 1,
-      -(event.clientY / gl.domElement.clientHeight) * 2 + 1
+      -(event.clientY / gl.domElement.clientHeight) * 2 + 1,
     );
     raycaster.current.setFromCamera(mouse, camera);
     const hits = raycaster.current.intersectObject(sphereRef.current);
@@ -288,7 +291,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     const mouse = new THREE.Vector2(
       (e.clientX / gl.domElement.clientWidth) * 2 - 1,
-      -(e.clientY / gl.domElement.clientHeight) * 2 + 1
+      -(e.clientY / gl.domElement.clientHeight) * 2 + 1,
     );
     raycaster.current.setFromCamera(mouse, camera);
 
@@ -307,7 +310,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       updatedPos.y = partialPos.y;
     }
 
-
     const finalDir = updatedPos.clone().sub(aggregatorClipped);
     console.log("Before finalDir limit:", finalDir);
     console.log("Before finalDir limit, length:", finalDir.length());
@@ -320,21 +322,29 @@ const BetLines: React.FC<BetLinesProps> = ({
       updatedPos.copy(aggregatorClipped).add(finalDir); // Применяем ограничение
       console.log("UpdatedPos after applying limited finalDir:", updatedPos);
 
+
+      const fraction = finalDir.length() / maxWhiteLength;
+      setBetAmount(userBalance * fraction);
+
       // Проверка длины updatedPos
-      const calculatedLength = updatedPos.clone().sub(aggregatorClipped).length();
+      const calculatedLength = updatedPos
+        .clone()
+        .sub(aggregatorClipped)
+        .length();
       console.log("Calculated Length of updatedPos:", calculatedLength);
 
-      const normalizedFinalDir = finalDir.clone().normalize().multiplyScalar(maxWhiteLength);
+      const normalizedFinalDir = finalDir
+        .clone()
+        .normalize()
+        .multiplyScalar(maxWhiteLength);
       console.log("normalizedFinalDir:", normalizedFinalDir);
       updatedPos.copy(aggregatorClipped).add(normalizedFinalDir);
       console.log("UpdatedPos after applying limited:", updatedPos);
-
 
       if (calculatedLength > maxWhiteLength) {
         console.error("Error: updatedPos exceeds maxWhiteLength");
       }
     }
-
 
     // Обновляем состояние
     setBetPosition(updatedPos);
@@ -357,7 +367,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     handleDrag(updatedPos);
   };
 
-
   const handlePointerUp = () => {
     // Если мы завершили перетаскивание
     if (isDragging) {
@@ -372,11 +381,12 @@ const BetLines: React.FC<BetLinesProps> = ({
       console.log("max white", maxWhiteLength); // Максимальная длина белой линии
 
       // Рассчитываем долю ставки относительно максимальной длины
-      const fraction = Math.min(1, betPosition.length() / maxWhiteLength); // Ограничиваем долю в пределах [0, 1]
+      // const fraction = Math.min(1, betPosition.length() / maxWhiteLength); // Ограничиваем долю в пределах [0, 1]
+      const fraction = Math.min(1, betPosition.clone().sub(aggregatorClipped).length() / maxWhiteLength);
 
-      console.log("betPosition.length()", "maxWhiteLength")
-      console.log(betPosition.length(), maxWhiteLength)
-      console.log(betPosition.length()/ maxWhiteLength)
+      console.log("betPosition.length()", "maxWhiteLength");
+      console.log(betPosition.length(), maxWhiteLength);
+      console.log(betPosition.length() / maxWhiteLength);
       // Рассчитываем сумму ставки как долю от общего баланса
       const betAmount = fraction * userBalance;
 
@@ -394,7 +404,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       });
     }
   };
-
 
   // Слушатели
   useEffect(() => {
@@ -445,7 +454,6 @@ export default BetLines;
 
 //
 // //тут стрелка отлично удлиняется и укорачивается, состояния между осями сохраняются короче все кайф, но стрелка прилеплена к плоскости
-
 
 //
 // import React, { useRef, useEffect, useState } from "react";
@@ -749,7 +757,6 @@ export default BetLines;
 // export default BetLines;
 
 // тут все слегка по пизде но зато стрелка не прилипает к плоскости (фото тг)
-
 
 // import React, { useRef, useEffect, useState } from "react";
 // import { useFrame, useThree } from "@react-three/fiber";
