@@ -68,7 +68,7 @@ class BlockServiceInterface(ABC):
         ...
 
     @abstractmethod
-    async def process_completed_block(self, block: Block, rewards: Rewards) -> None:
+    async def process_completed_block(self, block: Block, rewards: Rewards, new_block_id: UUID) -> None:
         ...
 
     @abstractmethod

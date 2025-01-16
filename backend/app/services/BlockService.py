@@ -107,7 +107,7 @@ class BlockService(BlockServiceInterface):
         block.completed_at = datetime.now()
         await self.block_repository.update(block_id, update_block)
 
-    async def process_completed_block(self, block: Block, rewards: Rewards) -> None:
+    async def process_completed_block(self, block: Block, rewards: Rewards, new_block_id: UUID) -> None:
         chain = await self.chain_repository.get(block.chain_id)
         rewards_by_user_id = {
             reward.user_id: reward.reward for reward in rewards.user_rewards
@@ -125,7 +125,7 @@ class BlockService(BlockServiceInterface):
                     user_id=bet.user_id,
                     pair_id=chain.pair_id,
                     amount=new_bet_amount,
-                    block_id=block.id,
+                    block_id=new_block_id,
                     vector=bet.vector,
                     status=BetStatus.PENDING
                 )
