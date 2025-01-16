@@ -77,7 +77,7 @@ const ProfilePage: React.FC = () => {
 
     setIsCanceling(true);
     try {
-      await cancelBet(betId);
+      await cancelBet(betId.toString());
       setBets((prevBets) => prevBets.filter((bet) => bet.bet_id !== betId));
       alert("Ставка успешно отменена.");
     } catch (error) {
@@ -175,6 +175,7 @@ const ProfilePage: React.FC = () => {
                   <strong>Created At:</strong>{" "}
                   {new Date(bet.created_at).toLocaleString()}
                 </p>
+                <p>{bet.bet_id}</p>
                 {/*<button*/}
                 {/*    onClick={() => handleCancelBet(bet.bet_id)}*/}
                 {/*    className="w-full py-2 bg-red-600 text-white font-bold rounded-md hover:bg-red-500 transition-colors duration-300 mt-2"*/}
