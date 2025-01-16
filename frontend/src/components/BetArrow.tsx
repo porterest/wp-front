@@ -42,9 +42,18 @@ const BetArrow: React.FC<BetArrowProps> = ({
     }
 
     // Расчет расстояния от начала до новой позиции
+    // const distance = new THREE.Vector3()
+    //   .subVectors(newPosition, previousBetEnd)
+    //   .length();
+
+    const aggregatorClipped = previousBetEnd.clone();
+    if (aggregatorClipped.length() > maxArrowLength) {
+      aggregatorClipped.setLength(maxArrowLength);
+    }
     const distance = new THREE.Vector3()
-      .subVectors(newPosition, previousBetEnd)
+      .subVectors(newPosition, aggregatorClipped)
       .length();
+
 
     // Процент от максимальной длины стрелки
     const percentage = Math.min(distance / maxArrowLength, 1);
