@@ -3,7 +3,7 @@ import { useTonConnectUI } from "@tonconnect/ui-react"; // Для работы �
 import { getUserBets, getUserHistory } from "../services/api"; // Импорт функций для выполнения запросов к API
 import { BetResponse, TransactionResponse } from "../types/apiTypes"; // Типы данных для типизации ответов API
 import { cancelBet } from "../services/api";
-import {UUID} from "node:crypto";
+// import {UUID} from "node:crypto";
 
 const ProfilePage: React.FC = () => {
   // Статические данные (адреса депозита и вознаграждений)
