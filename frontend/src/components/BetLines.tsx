@@ -299,6 +299,9 @@ const BetLines: React.FC<BetLinesProps> = ({
       // Рассчитываем долю ставки относительно максимальной длины
       const fraction = Math.min(1, betPosition.length() / maxWhiteLength); // Ограничиваем долю в пределах [0, 1]
 
+      console.log("betPosition.length()", "maxWhiteLength")
+      console.log(betPosition.length(), maxWhiteLength)
+      console.log(betPosition.length()/ maxWhiteLength)
       // Рассчитываем сумму ставки как долю от общего баланса
       const betAmount = fraction * userBalance;
 
