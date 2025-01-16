@@ -307,15 +307,19 @@ const BetLines: React.FC<BetLinesProps> = ({
       updatedPos.y = partialPos.y;
     }
 
-    const finalDir = updatedPos.clone().sub(aggregatorClipped);
-    if (finalDir.length() > maxWhiteLength) {
-      finalDir.setLength(maxWhiteLength); // Ограничиваем длину
-      updatedPos.copy(aggregatorClipped).add(finalDir); // Пересчитываем позицию
-    }
 
-    // Логируем для проверки
-    console.log("FinalDir (after limit):", finalDir);
-    console.log("UpdatedPos (after applying FinalDir):", updatedPos);
+    const finalDir = updatedPos.clone().sub(aggregatorClipped);
+    console.log("Before finalDir limit, finalDir:", finalDir);
+    console.log("Before finalDir limit, length:", finalDir.length());
+
+    if (finalDir.length() > maxWhiteLength) {
+      finalDir.setLength(maxWhiteLength);
+      console.log("After finalDir limit, finalDir:", finalDir);
+      console.log("After finalDir limit, length:", finalDir.length());
+
+      updatedPos.copy(aggregatorClipped).add(finalDir);
+      console.log("UpdatedPos after applying limited finalDir:", updatedPos);
+    }
 
     // Обновляем состояние
     setBetPosition(updatedPos);
