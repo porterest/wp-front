@@ -309,17 +309,32 @@ const BetLines: React.FC<BetLinesProps> = ({
 
 
     const finalDir = updatedPos.clone().sub(aggregatorClipped);
-    console.log("Before finalDir limit, finalDir:", finalDir);
+    console.log("Before finalDir limit:", finalDir);
     console.log("Before finalDir limit, length:", finalDir.length());
 
     if (finalDir.length() > maxWhiteLength) {
       finalDir.setLength(maxWhiteLength);
-      console.log("After finalDir limit, finalDir:", finalDir);
+      console.log("After finalDir limit:", finalDir);
       console.log("After finalDir limit, length:", finalDir.length());
 
-      updatedPos.copy(aggregatorClipped).add(finalDir);
+      updatedPos.copy(aggregatorClipped).add(finalDir); // Применяем ограничение
       console.log("UpdatedPos after applying limited finalDir:", updatedPos);
+
+      // Проверка длины updatedPos
+      const calculatedLength = updatedPos.clone().sub(aggregatorClipped).length();
+      console.log("Calculated Length of updatedPos:", calculatedLength);
+
+      const normalizedFinalDir = finalDir.clone().normalize().multiplyScalar(maxWhiteLength);
+      console.log("normalizedFinalDir:", normalizedFinalDir);
+      updatedPos.copy(aggregatorClipped).add(normalizedFinalDir);
+      console.log("UpdatedPos after applying limited:", updatedPos);
+
+
+      if (calculatedLength > maxWhiteLength) {
+        console.error("Error: updatedPos exceeds maxWhiteLength");
+      }
     }
+
 
     // Обновляем состояние
     setBetPosition(updatedPos);
