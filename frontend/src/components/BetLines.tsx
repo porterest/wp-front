@@ -202,88 +202,117 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // pointerMove
   const handlePointerMove = (e: PointerEvent) => {
+    // Если объект не перетаскивается, выходим из функции
     if (!isDragging) return;
 
+    // Преобразуем координаты мыши в нормализованные координаты [-1, 1]
     const mouse = new THREE.Vector2(
-      (e.clientX / gl.domElement.clientWidth) * 2 - 1,
-      -(e.clientY / gl.domElement.clientHeight) * 2 + 1
+      (e.clientX / gl.domElement.clientWidth) * 2 - 1, // Приводим X в диапазон [-1, 1]
+      -(e.clientY / gl.domElement.clientHeight) * 2 + 1 // Приводим Y в диапазон [-1, 1] и инвертируем
     );
+
+    // Устанавливаем луч (raycaster) для вычисления пересечения с плоскостью
     raycaster.current.setFromCamera(mouse, camera);
 
+    // Точка пересечения луча и плоскости (если есть пересечение)
     const intersectPt = new THREE.Vector3();
     if (!raycaster.current.ray.intersectPlane(plane.current, intersectPt)) {
+      // Если пересечения нет, выходим из функции
       return;
     }
 
-    // direction = intersectPt - aggregatorClipped
+    // Рассчитываем направление от точки агрегации (aggregatorClipped) до точки пересечения
     const direction = intersectPt.clone().sub(aggregatorClipped);
+    console.log("direction - направление от точки агрегации (aggregatorClipped) до точки пересечения")
+    console.log(direction)
 
-    // СОХРАНЯЕМ другие координаты, МЕНЯЕМ только X или Y
-    const updatedPos = betPosition.clone(); // текущее положение
+    // Копируем текущее положение ставки (betPosition), чтобы сохранить другие координаты
+    const updatedPos = betPosition.clone();
+    console.log("updatedPos - текущее положение ставки (betPosition), чтобы сохранить другие координаты");
+    console.log(updatedPos);
+    // Рассчитываем новое положение, добавляя направление к точке агрегации
     const partialPos = aggregatorClipped.clone().add(direction);
+    console.log("partialPos - новое положение, добавляя направление к точке агрегации")
+    console.log(partialPos)
 
+    // Ограничиваем движение только по одной оси (X или Y), в зависимости от режима
     if (axisMode === "X") {
-      updatedPos.x = partialPos.x;
+      updatedPos.x = partialPos.x; // Обновляем только X
     } else if (axisMode === "Y") {
-      updatedPos.y = partialPos.y;
+      updatedPos.y = partialPos.y; // Обновляем только Y
     }
 
-    // Ограничиваем белую линию (betPosition) по maxWhiteLength
-    const finalDir = updatedPos.clone().sub(aggregatorClipped);
+    // Ограничиваем длину белой линии (finalDir) до максимальной длины maxWhiteLength
+    const finalDir = updatedPos.clone().sub(aggregatorClipped); // Вектор от агрегации до позиции ставки
     if (finalDir.length() > maxWhiteLength) {
-      finalDir.setLength(maxWhiteLength);
-      updatedPos.copy(aggregatorClipped).add(finalDir);
+      // Если длина превышает maxWhiteLength, ограничиваем её
+      finalDir.setLength(maxWhiteLength); // Устанавливаем длину вектора равной maxWhiteLength
+      updatedPos.copy(aggregatorClipped).add(finalDir); // Пересчитываем конечную позицию
     }
-
-    // Сохраняем
+    console.log("finalDir - Ограничиваем длину белой линии (finalDir) до максимальной длины maxWhiteLength")
+    console.log(finalDir)
+    // Обновляем состояние с новой позицией ставки
     setBetPosition(updatedPos);
+    console.log("updatedPos - Обновляем состояние с новой позицией ставки");
+    console.log(updatedPos);
+    // Обновляем визуальное представление белой линии с задержкой
     debouncedUpdateWhiteLine(updatedPos);
 
-    // Обновляем объекты
+    // Перемещаем сферу на новую позицию
     if (sphereRef.current) {
       sphereRef.current.position.copy(updatedPos);
     }
+
+    // Обновляем белый конус (стрелку), указывающий на новую позицию ставки
     if (whiteConeRef.current) {
-      whiteConeRef.current.position.copy(updatedPos);
-      const dirW = updatedPos.clone().sub(aggregatorClipped).normalize();
+      whiteConeRef.current.position.copy(updatedPos); // Перемещаем конус
+      const dirW = updatedPos.clone().sub(aggregatorClipped).normalize(); // Направление от агрегации
       if (dirW.length() > 0) {
-        const up = new THREE.Vector3(0, 1, 0);
-        const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
-        whiteConeRef.current.setRotationFromQuaternion(quatW);
+        // Если длина направления больше нуля, обновляем ориентацию конуса
+        const up = new THREE.Vector3(0, 1, 0); // Ось вверх (по умолчанию)
+        const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW); // Кватернион для вращения
+        whiteConeRef.current.setRotationFromQuaternion(quatW); // Устанавливаем поворот конуса
       }
     }
 
-    // handleDrag
+    // Вызываем обработчик handleDrag с новой позицией ставки
     handleDrag(updatedPos);
   };
 
-  // pointerUp
   const handlePointerUp = () => {
+    // Если мы завершили перетаскивание
     if (isDragging) {
+      // Обновляем состояние перетаскивания
       setIsDragging(false);
       onDragging(false);
 
-      console.log("previousBet", previousBetEnd);
-      console.log("betPos", betPosition);
-      console.log("betPos.length", betPosition.length());
-      console.log("max white", maxWhiteLength);
+      // Логируем важные параметры для дебага
+      console.log("previousBet", previousBetEnd); // Позиция предыдущей ставки
+      console.log("betPos", betPosition); // Текущая позиция ставки
+      console.log("betPos.length", betPosition.length()); // Длина вектора от начала координат
+      console.log("max white", maxWhiteLength); // Максимальная длина белой линии
 
-      // Для суммы ставки используем реальный previousBetEnd (не clipped)
-      // const finalDir = betPosition.clone().sub(previousBetEnd);
-      const fraction = Math.min(1, betPosition.length() / maxWhiteLength);
+      // Рассчитываем долю ставки относительно максимальной длины
+      const fraction = Math.min(1, betPosition.length() / maxWhiteLength); // Ограничиваем долю в пределах [0, 1]
+
+      // Рассчитываем сумму ставки как долю от общего баланса
       const betAmount = fraction * userBalance;
-      // console.log("finalDir:", );
-      console.log("fraction:", fraction);
-      console.log("betAmount:", betAmount);
 
+      // Логируем значения для проверки
+      console.log("fraction:", fraction); // Доля относительно maxWhiteLength
+      console.log("betAmount:", betAmount); // Итоговая сумма ставки
+
+      // Обновляем состояние суммы ставки
       setBetAmount(betAmount);
 
+      // Показываем кнопку подтверждения с данными ставки
       onShowConfirmButton(true, {
-        amount: betAmount,
-        predicted_vector: [betPosition.x, betPosition.y, betPosition.z],
+        amount: betAmount, // Сумма ставки
+        predicted_vector: [betPosition.x, betPosition.y, betPosition.z], // Предсказанный вектор
       });
     }
   };
+
 
   // Слушатели
   useEffect(() => {
