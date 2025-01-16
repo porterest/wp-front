@@ -68,6 +68,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     return depositVec;
   }, [previousBetEnd, maxYellowLength]);
 
+  console.log("aggregatorClipped - Это начало белой линии, конец жёлтой линии")
+  console.log(aggregatorClipped)
   // Позиция конца белой линии
   const [betPosition, setBetPosition] = useState(() => userPreviousBet.clone());
 
@@ -220,10 +222,12 @@ const BetLines: React.FC<BetLinesProps> = ({
       // Если пересечения нет, выходим из функции
       return;
     }
+    console.log("intersectPt - Позиция в трёхмерном пространстве, куда указывает курсор мыши")
+    console.log(intersectPt)
 
     // Рассчитываем направление от точки агрегации (aggregatorClipped) до точки пересечения
     const direction = intersectPt.clone().sub(aggregatorClipped);
-    console.log("direction - направление от точки агрегации (aggregatorClipped) до точки пересечения")
+    console.log("direction - Куда нужно двигать и На сколько двигать (величина смещения).")
     console.log(direction)
 
     // Копируем текущее положение ставки (betPosition), чтобы сохранить другие координаты
@@ -253,7 +257,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     console.log(finalDir)
     // Обновляем состояние с новой позицией ставки
     setBetPosition(updatedPos);
-    console.log("updatedPos - Обновляем состояние с новой позицией ставки");
+    console.log("updatedPos - ограниченная линия");
     console.log(updatedPos);
     // Обновляем визуальное представление белой линии с задержкой
     debouncedUpdateWhiteLine(updatedPos);
@@ -299,8 +303,8 @@ const BetLines: React.FC<BetLinesProps> = ({
       const betAmount = fraction * userBalance;
 
       // Логируем значения для проверки
-      console.log("fraction:", fraction); // Доля относительно maxWhiteLength
-      console.log("betAmount:", betAmount); // Итоговая сумма ставки
+      console.log("fraction - Доля относительно maxWhiteLength:", fraction); // Доля относительно maxWhiteLength
+      console.log("betAmount: - Итоговая сумма ставки", betAmount); // Итоговая сумма ставки
 
       // Обновляем состояние суммы ставки
       setBetAmount(betAmount);
