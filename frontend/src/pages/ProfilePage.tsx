@@ -72,13 +72,13 @@ const ProfilePage: React.FC = () => {
 
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
 
-  const handleCancelBet = async (betId: UUID) => {
+  const handleCancelBet = async (betId: BetResponse) => {
     if (!window.confirm("Вы уверены, что хотите отменить ставку?")) return;
-
+    console.log("betid is canceling", betId);
     setIsCanceling(true);
     try {
-      await cancelBet(betId.toString());
-      setBets((prevBets) => prevBets.filter((bet) => bet.bet_id !== betId));
+      await cancelBet(betId.bet_id.toString());
+      setBets((prevBets) => prevBets.filter((bet) => bet.bet_id !== betId.bet_id));
       alert("Ставка успешно отменена.");
     } catch (error) {
       console.error("Ошибка при отмене ставки:", error);
@@ -175,7 +175,6 @@ const ProfilePage: React.FC = () => {
                   <strong>Created At:</strong>{" "}
                   {new Date(bet.created_at).toLocaleString()}
                 </p>
-                <p> bet id: {bet.bet_id}</p>
                 {/*<button*/}
                 {/*    onClick={() => handleCancelBet(bet.bet_id)}*/}
                 {/*    className="w-full py-2 bg-red-600 text-white font-bold rounded-md hover:bg-red-500 transition-colors duration-300 mt-2"*/}
@@ -183,7 +182,7 @@ const ProfilePage: React.FC = () => {
                 {/*  Отменить*/}
                 {/*</button>*/}
                 <button
-                  onClick={() => handleCancelBet(bet.bet_id)}
+                  onClick={() => handleCancelBet(bet)}
                   disabled={isCanceling}
                   className={`w-full py-2 ${isCanceling ? "bg-gray-500 cursor-not-allowed" : "bg-red-600 hover:bg-red-500"} text-white font-bold rounded-md transition-colors duration-300 mt-2`}
                 >
