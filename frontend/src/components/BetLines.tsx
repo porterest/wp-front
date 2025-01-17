@@ -88,6 +88,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     setBetPosition(initPos);
     setIsInitialized(true);
     console.log('установили позицию белой линии можно рисовать')
+    console.log(initPos);
   }, [userPreviousBet, aggregatorClipped, maxWhiteLength]);
 
 
