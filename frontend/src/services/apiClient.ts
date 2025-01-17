@@ -1,5 +1,4 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-import { InternalAxiosRequestConfig } from "axios";
 
 // Типы для функций
 type RefreshTokenFunction = () => Promise<string>; // Возвращает новый токен
