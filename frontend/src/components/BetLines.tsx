@@ -173,7 +173,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   // === БЕЛАЯ ЛИНИЯ: aggregatorClipped → betPosition
   useEffect(() => {
     // Проверяем, что все данные готовы
-    if ( !betPosition || !aggregatorClipped) return;
+    // if ( !betPosition || !aggregatorClipped) return;
 
     console.log("3 - Создание белой линии с корректным началом и концом");
     console.log(betPosition, aggregatorClipped);
