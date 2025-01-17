@@ -49,8 +49,8 @@ export async function getLastUserBet(pair_id: string): Promise<BetResponse> {
         const response = await apiClient.post<BetResponse>("/user/last_bet", {
             pair_id: pair_id,
         });
-        console.log('ставка юзера');
-        console.log(response);
+        console.log('1 ставка юзера');
+        console.log(response.data.vector);
         return response.data;
     } catch (error) {
         console.error("Error fetching user bets:", error);
