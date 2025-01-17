@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import * as THREE from "three";
 import GraphModes from "../components/GraphModes";
 import Legend from "../components/Legend";
@@ -152,49 +152,24 @@ const GamePage: React.FC = () => {
     console.log("showConfirmButton state changed:", showConfirmButton);
   }, [showConfirmButton]);
 
-  const ensureDocumentIsScrollable = () => {
-    const isScrollable =
-      document.documentElement.scrollHeight > window.innerHeight;
-    if (!isScrollable) {
-      document.documentElement.style.setProperty(
-        "height",
-        "calc(100vh + 1px)",
-        "important"
-      );
-    }
-  };
-
-  // Функция предотвращения "схлопывания" при скролле вниз
-  const preventCollapse = () => {
-    if (window.scrollY === 0) {
-      window.scrollTo(0, 1);
-    }
-  };
-  const scrollableElementRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // Обеспечиваем, чтобы документ был скроллируемым
-    window.addEventListener("load", ensureDocumentIsScrollable);
+    // Отключение скроллинга на уровне body
+    document.body.style.overflow = "hidden"; // Отключение скроллинга
+    document.body.style.position = "fixed"; // Фиксируем тело страницы
+    document.body.style.width = "100%";
 
-    // Привязываем обработчик к элементу с прокруткой
-    const scrollableElement = scrollableElementRef.current;
-    if (scrollableElement) {
-      scrollableElement.addEventListener("touchstart", preventCollapse);
-    }
-
-    // Очищаем обработчики при размонтировании компонента
     return () => {
-      window.removeEventListener("load", ensureDocumentIsScrollable);
-      if (scrollableElement) {
-        scrollableElement.removeEventListener("touchstart", preventCollapse);
-      }
+      // Возвращаем стили обратно при размонтировании компонента
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
     };
   }, []);
 
   return (
     <div
       className="relative w-screen h-screen overflow-hidden touch-none"
-      ref={scrollableElementRef} // Привязка рефа для скроллируемого элемента
     >
       {showInstructions && (
         <Instructions onClose={() => setShowInstructions(false)} />
