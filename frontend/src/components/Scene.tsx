@@ -10,6 +10,7 @@ interface SceneProps {
   orbitControlsEnabled: boolean;
   data: CandleData[];
   onScaleReady: (scaleFunctions: ScaleFunctions) => void;
+  style?: React.CSSProperties;
 }
 
 const Scene: React.FC<SceneProps> = ({ children, orbitControlsEnabled, data, onScaleReady }) => {

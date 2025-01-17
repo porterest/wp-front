@@ -153,20 +153,21 @@ const GamePage: React.FC = () => {
   }, [showConfirmButton]);
 
   useEffect(() => {
-    const disableScroll = () => {
-      window.scrollTo(0, 0);
-    };
+    // Отключение скроллинга на уровне body
+    document.body.style.overflow = "hidden";
 
-    window.addEventListener("scroll", disableScroll);
-
+    // Восстановление скроллинга при размонтировании компонента
     return () => {
-      window.removeEventListener("scroll", disableScroll);
+      document.body.style.overflow = "auto";
     };
   }, []);
 
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden touch-none">
+    <div
+      className="relative w-screen h-screen overflow-hidden touch-none"
+      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0 }}
+    >
       {showInstructions && (
         <Instructions onClose={() => setShowInstructions(false)} />
       )}
@@ -220,5 +221,4 @@ const GamePage: React.FC = () => {
     </div>
   );
 };
-
 export default GamePage;
