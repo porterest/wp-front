@@ -155,8 +155,13 @@ const GamePage: React.FC = () => {
 
   useEffect(() => {
     if (window.Telegram) {
-      Telegram.WebApp.ready();
-      Telegram.WebApp.expand();
+      const tg = window.Telegram.WebApp;
+
+      // Уведомляем Telegram, что приложение готово
+      tg.ready();
+
+      // Разворачиваем приложение на полный экран
+      tg.expand();
     }
   }, []);
 
