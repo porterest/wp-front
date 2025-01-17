@@ -185,10 +185,10 @@ const BetLines: React.FC<BetLinesProps> = ({
   // === БЕЛАЯ ЛИНИЯ: aggregatorClipped → betPosition
   useEffect(() => {
     // Проверяем, что все данные готовы
-    if (!isInitialized || !betPosition || !aggregatorClipped) return;
+    if (!isUserBetReady || !betPosition || !aggregatorClipped) return;
 
     console.log("3 - Создание белой линии с корректным началом и концом");
-    console.log(isInitialized, betPosition, aggregatorClipped);
+    console.log(isUserBetReady, betPosition, aggregatorClipped);
 
     // === Создаём белую линию: aggregatorClipped → betPosition
     const wGeom = new LineGeometry();
@@ -216,7 +216,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         scene.remove(whiteLineRef.current);
       }
     };
-  }, [isInitialized, betPosition, aggregatorClipped, scene]);
+  }, [isUserBetReady, betPosition, aggregatorClipped, scene]);
 
   // Проверка клика по сфере
   const isClickOnSphere = (event: PointerEvent): boolean => {
