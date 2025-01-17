@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import GraphModes from "../components/GraphModes";
 import Legend from "../components/Legend";
@@ -152,27 +152,55 @@ const GamePage: React.FC = () => {
     console.log("showConfirmButton state changed:", showConfirmButton);
   }, [showConfirmButton]);
 
-  useEffect(() => {
-    // Отключение скроллинга на уровне body
-    document.body.style.overflow = "hidden";
+  const ensureDocumentIsScrollable = () => {
+    const isScrollable =
+      document.documentElement.scrollHeight > window.innerHeight;
+    if (!isScrollable) {
+      document.documentElement.style.setProperty(
+        "height",
+        "calc(100vh + 1px)",
+        "important"
+      );
+    }
+  };
 
-    // Восстановление скроллинга при размонтировании компонента
+  // Функция предотвращения "схлопывания" при скролле вниз
+  const preventCollapse = () => {
+    if (window.scrollY === 0) {
+      window.scrollTo(0, 1);
+    }
+  };
+  const scrollableElementRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Обеспечиваем, чтобы документ был скроллируемым
+    window.addEventListener("load", ensureDocumentIsScrollable);
+
+    // Привязываем обработчик к элементу с прокруткой
+    const scrollableElement = scrollableElementRef.current;
+    if (scrollableElement) {
+      scrollableElement.addEventListener("touchstart", preventCollapse);
+    }
+
+    // Очищаем обработчики при размонтировании компонента
     return () => {
-      document.body.style.overflow = "auto";
+      window.removeEventListener("load", ensureDocumentIsScrollable);
+      if (scrollableElement) {
+        scrollableElement.removeEventListener("touchstart", preventCollapse);
+      }
     };
   }, []);
-
 
   return (
     <div
       className="relative w-screen h-screen overflow-hidden touch-none"
+      ref={scrollableElementRef} // Привязка рефа для скроллируемого элемента
     >
       {showInstructions && (
         <Instructions onClose={() => setShowInstructions(false)} />
       )}
       <Timer
-        onTimerEnd={() => {
-        }}
+        onTimerEnd={() => {}}
         className="absolute top-[50px] left-1/2 transform -translate-x-1/2 z-10"
       />
       <div className="relative top-[5px] left-1/2 transform -translate-x-1/2 z-10">
@@ -190,11 +218,6 @@ const GamePage: React.FC = () => {
           }}
         />
       </div>
-      <script src="https://telegram.org/js/telegram-web-app.js">
-        window.Telegram.WebApp.ready()
-        window.Telegram.WebApp.expand()
-        window.Telegram.WebApp.disableVerticalSwipes()
-      </script>
       <Scene
         orbitControlsEnabled={orbitControlsEnabled}
         data={data}
@@ -224,7 +247,7 @@ const GamePage: React.FC = () => {
         </div>
       )}
     </div>
-
   );
 };
+
 export default GamePage;
