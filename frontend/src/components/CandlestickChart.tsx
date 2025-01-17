@@ -44,13 +44,13 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
         const shadowY = (normalizedHigh + normalizedLow) / 2;
 
         // Используем индекс для нормализации оси X
-        const positionX = normalizeX(index, data.length);
-        const positionZ = normalizeZ(candle.volume, maxVolume);
+        const positionZ = normalizeX(index, data.length);
+        const positionX = normalizeZ(candle.volume, maxVolume);
 
         return (
           <group key={index}>
             {/* Тело свечи */}
-            <mesh position={[bodyY, positionX, positionZ]}>
+            <mesh position={[positionX, bodyY, positionZ]}>
               <boxGeometry args={[0.5, bodyHeight, 0.5]} />
               <meshStandardMaterial
                 color={color}
@@ -60,7 +60,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
             </mesh>
 
             {/* Тень свечи */}
-            <mesh position={[shadowY, positionX, positionZ]}>
+            <mesh position={[positionX, shadowY, positionZ]}>
               <boxGeometry args={[0.1, shadowHeight, 0.1]} />
               <meshStandardMaterial
                 color={color}
