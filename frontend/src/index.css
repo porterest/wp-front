@@ -24,22 +24,4 @@ html, body {
   width: 100%;
 }
 
-#root {
-  height: 100%;
-  width: 100%;
-  overflow: hidden; /* Убираем скроллинг для React-контейнера */
-}
-
-canvas {
-  display: block;
-  max-height: 100%;
-  max-width: 100%;
-}
-
-.scrollable-element {
-  overflow: hidden;
-  max-height: 100%;
-  max-width: 100%;
-}
-
 
