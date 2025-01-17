@@ -76,15 +76,19 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Рассчитываем начальное значение `betPosition`
   useEffect(() => {
+    console.log("Рассчитываем начальную позицию betPosition");
     const initPos = userPreviousBet.clone();
     const betDir = initPos.clone().sub(aggregatorClipped);
+
     if (betDir.length() > maxWhiteLength) {
       betDir.setLength(maxWhiteLength);
       initPos.copy(aggregatorClipped).add(betDir);
     }
+
     setBetPosition(initPos);
-    setIsInitialized(true); // Помечаем, что данные готовы
+    setIsInitialized(true);
   }, [userPreviousBet, aggregatorClipped, maxWhiteLength]);
+
 
   // THREE
   const { gl, camera, scene } = useThree();
@@ -143,9 +147,12 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     // === БЕЛАЯ ЛИНИЯ: aggregatorClipped → betPosition
     useEffect(() => {
-      if (!isInitialized || !betPosition) return;
+      // Проверяем, что все данные готовы
+      if (!isInitialized || !betPosition || !aggregatorClipped) return;
 
-      // === БЕЛАЯ ЛИНИЯ: aggregatorClipped → betPosition
+      console.log("Создание белой линии с корректным началом и концом");
+
+      // === Создаём белую линию: aggregatorClipped → betPosition
       const wGeom = new LineGeometry();
       wGeom.setPositions([
         aggregatorClipped.x,
@@ -155,18 +162,23 @@ const BetLines: React.FC<BetLinesProps> = ({
         betPosition.y,
         betPosition.z,
       ]);
+
       const wMat = new LineMaterial({
         color: "white",
         linewidth: 3,
         resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
       });
+
       whiteLineRef.current = new Line2(wGeom, wMat);
       scene.add(whiteLineRef.current);
 
       return () => {
-        if (whiteLineRef.current) scene.remove(whiteLineRef.current);
+        if (whiteLineRef.current) {
+          console.log("Удаление белой линии");
+          scene.remove(whiteLineRef.current);
+        }
       };
-    }, [aggregatorClipped, betPosition, isInitialized, scene]);
+    }, [isInitialized, betPosition, aggregatorClipped, scene]);
 
     // Белый конус
     if (whiteConeRef.current) {
