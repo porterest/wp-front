@@ -72,16 +72,34 @@ const BetLines: React.FC<BetLinesProps> = ({
   console.log(aggregatorClipped);
   // Позиция конца белой линии
   const [betPosition, setBetPosition] = useState(() => userPreviousBet.clone());
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Рассчитываем начальное значение `betPosition`
   useEffect(() => {
+    // Проверяем, что userPreviousBet не равен нулевому вектору
+    if (userPreviousBet.x === 0 && userPreviousBet.y === 0) {
+      console.log(userPreviousBet)
+      console.warn("userPreviousBet равен нулям, хук не выполнится");
+      return;
+    }
+
+    console.log("Рассчитываем начальную позицию betPosition");
+    console.log(userPreviousBet)
     const initPos = userPreviousBet.clone();
     const betDir = initPos.clone().sub(aggregatorClipped);
+
     if (betDir.length() > maxWhiteLength) {
       betDir.setLength(maxWhiteLength);
       initPos.copy(aggregatorClipped).add(betDir);
     }
+
     setBetPosition(initPos);
+    setIsInitialized(true);
+    console.log('2 установили позицию белой линии можно рисовать');
+    console.log(initPos);
   }, [userPreviousBet, aggregatorClipped, maxWhiteLength]);
+
+
 
   // THREE
   const { gl, camera, scene } = useThree();
@@ -94,6 +112,8 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (!whiteLineRef.current || !whiteLineRef.current.geometry) return;
       const p = pos as THREE.Vector3;
       const geom = whiteLineRef.current.geometry as LineGeometry;
+      console.log("geom - Debounced обновление белой линии");
+      console.log(geom);
       geom.setPositions([
         aggregatorClipped.x,
         aggregatorClipped.y,
@@ -102,6 +122,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         p.y,
         p.z,
       ]);
+      console.log(geom);
     }, 30);
 
   // Инициализация линий, конусов и сферы
@@ -135,24 +156,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
 
-    // === БЕЛАЯ ЛИНИЯ: aggregatorClipped → betPosition
-    const wGeom = new LineGeometry();
-    wGeom.setPositions([
-      aggregatorClipped.x,
-      aggregatorClipped.y,
-      aggregatorClipped.z,
-      betPosition.x,
-      betPosition.y,
-      betPosition.z,
-    ]);
-    const wMat = new LineMaterial({
-      color: "white",
-      linewidth: 3,
-      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-    });
-    whiteLineRef.current = new Line2(wGeom, wMat);
-    scene.add(whiteLineRef.current);
-
     // Белый конус
     if (whiteConeRef.current) {
       whiteConeRef.current.position.copy(betPosition);
@@ -174,6 +177,42 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (whiteLineRef.current) scene.remove(whiteLineRef.current);
     };
   }, [aggregatorClipped, betPosition, scene]);
+
+  // === БЕЛАЯ ЛИНИЯ: aggregatorClipped → betPosition
+  useEffect(() => {
+    // Проверяем, что все данные готовы
+    if (!isInitialized || !betPosition || !aggregatorClipped) return;
+
+    console.log("3 - Создание белой линии с корректным началом и концом");
+    console.log(isInitialized, betPosition, aggregatorClipped);
+
+    // === Создаём белую линию: aggregatorClipped → betPosition
+    const wGeom = new LineGeometry();
+    wGeom.setPositions([
+      aggregatorClipped.x,
+      aggregatorClipped.y,
+      aggregatorClipped.z,
+      betPosition.x,
+      betPosition.y,
+      betPosition.z,
+    ]);
+
+    const wMat = new LineMaterial({
+      color: "white",
+      linewidth: 3,
+      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+    });
+
+    whiteLineRef.current = new Line2(wGeom, wMat);
+    scene.add(whiteLineRef.current);
+
+    return () => {
+      if (whiteLineRef.current) {
+        console.log("Удаление белой линии");
+        scene.remove(whiteLineRef.current);
+      }
+    };
+  }, [isInitialized, betPosition, aggregatorClipped, scene]);
 
   // Проверка клика по сфере
   const isClickOnSphere = (event: PointerEvent): boolean => {
@@ -201,87 +240,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       updatePlane();
     }
   };
-  //
-  // // pointerMove
-  // const handlePointerMove = (e: PointerEvent) => {
-  //   // Если объект не перетаскивается, выходим из функции
-  //   if (!isDragging) return;
-  //
-  //   // Преобразуем координаты мыши в нормализованные координаты [-1, 1]
-  //   const mouse = new THREE.Vector2(
-  //     (e.clientX / gl.domElement.clientWidth) * 2 - 1, // Приводим X в диапазон [-1, 1]
-  //     -(e.clientY / gl.domElement.clientHeight) * 2 + 1 // Приводим Y в диапазон [-1, 1] и инвертируем
-  //   );
-  //
-  //   // Устанавливаем луч (raycaster) для вычисления пересечения с плоскостью
-  //   raycaster.current.setFromCamera(mouse, camera);
-  //
-  //   // Точка пересечения луча и плоскости (если есть пересечение)
-  //   const intersectPt = new THREE.Vector3();
-  //   if (!raycaster.current.ray.intersectPlane(plane.current, intersectPt)) {
-  //     // Если пересечения нет, выходим из функции
-  //     return;
-  //   }
-  //   console.log("intersectPt - Позиция в трёхмерном пространстве, куда указывает курсор мыши")
-  //   console.log(intersectPt)
-  //
-  //   // Рассчитываем направление от точки агрегации (aggregatorClipped) до точки пересечения
-  //   const direction = intersectPt.clone().sub(aggregatorClipped);
-  //   console.log("direction - Куда нужно двигать и На сколько двигать (величина смещения).")
-  //   console.log(direction)
-  //
-  //   // Копируем текущее положение ставки (betPosition), чтобы сохранить другие координаты
-  //   const updatedPos = betPosition.clone();
-  //   console.log("updatedPos - текущее положение ставки (betPosition), чтобы сохранить другие координаты");
-  //   console.log(updatedPos);
-  //   // Рассчитываем новое положение, добавляя направление к точке агрегации
-  //   const partialPos = aggregatorClipped.clone().add(direction);
-  //   console.log("partialPos - новое положение, добавляя направление к точке агрегации")
-  //   console.log(partialPos)
-  //
-  //   // Ограничиваем движение только по одной оси (X или Y), в зависимости от режима
-  //   if (axisMode === "X") {
-  //     updatedPos.x = partialPos.x; // Обновляем только X
-  //   } else if (axisMode === "Y") {
-  //     updatedPos.y = partialPos.y; // Обновляем только Y
-  //   }
-  //
-  //   // Ограничиваем длину белой линии (finalDir) до максимальной длины maxWhiteLength
-  //   const finalDir = updatedPos.clone().sub(aggregatorClipped); // Вектор от агрегации до позиции ставки
-  //   if (finalDir.length() > maxWhiteLength) {
-  //     // Если длина превышает maxWhiteLength, ограничиваем её
-  //     finalDir.setLength(maxWhiteLength); // Устанавливаем длину вектора равной maxWhiteLength
-  //     updatedPos.copy(aggregatorClipped).add(finalDir); // Пересчитываем конечную позицию
-  //   }
-  //   console.log("finalDir - Ограничиваем длину белой линии (finalDir) до максимальной длины maxWhiteLength")
-  //   console.log(finalDir)
-  //   // Обновляем состояние с новой позицией ставки
-  //   setBetPosition(updatedPos);
-  //   console.log("updatedPos - ограниченная линия");
-  //   console.log(updatedPos);
-  //   // Обновляем визуальное представление белой линии с задержкой
-  //   debouncedUpdateWhiteLine(updatedPos);
-  //
-  //   // Перемещаем сферу на новую позицию
-  //   if (sphereRef.current) {
-  //     sphereRef.current.position.copy(updatedPos);
-  //   }
-  //
-  //   // Обновляем белый конус (стрелку), указывающий на новую позицию ставки
-  //   if (whiteConeRef.current) {
-  //     whiteConeRef.current.position.copy(updatedPos); // Перемещаем конус
-  //     const dirW = updatedPos.clone().sub(aggregatorClipped).normalize(); // Направление от агрегации
-  //     if (dirW.length() > 0) {
-  //       // Если длина направления больше нуля, обновляем ориентацию конуса
-  //       const up = new THREE.Vector3(0, 1, 0); // Ось вверх (по умолчанию)
-  //       const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW); // Кватернион для вращения
-  //       whiteConeRef.current.setRotationFromQuaternion(quatW); // Устанавливаем поворот конуса
-  //     }
-  //   }
-  //
-  //   // Вызываем обработчик handleDrag с новой позицией ставки
-  //   handleDrag(updatedPos);
-  // };
 
   const handlePointerMove = (e: PointerEvent) => {
     if (!isDragging) return;
@@ -448,3 +406,4 @@ const BetLines: React.FC<BetLinesProps> = ({
 };
 
 export default BetLines;
+
