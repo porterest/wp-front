@@ -9,22 +9,18 @@ interface CandlestickChartProps {
 
 const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) => {
   const { normalizeX, normalizeY, normalizeZ } = useScale();
-  // console.log("CandlestickChart rerendered");
 
   if (!data || data.length === 0) {
-    // console.warn("No data to render in CandlestickChart!");
     return null;
   }
 
   // Определяем максимальный объем для нормализации Z-координаты
   const maxVolume = Math.max(...data.map((candle) => candle.volume));
 
-  // Определяем цвет свечи
   const getColor = (isBullish: boolean): string => {
     return isBullish ? "#32CD32" : "#ff4f4f"; // Зеленый для роста, красный для падения
   };
 
-  // Устанавливаем прозрачность в зависимости от режима
   const getOpacity = (): number => {
     return mode === "Both" ? 0.5 : 1;
   };
@@ -32,19 +28,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
   return (
     <group>
       {data.map((candle, index) => {
-        // console.log("Rendering candle", {
-        //   index,
-        //   open: candle.open,
-        //   close: candle.close,
-        //   high: candle.high,
-        //   low: candle.low,
-        //   volume: candle.volume,
-        // });
-
         const isBullish = candle.close > candle.open;
         const color = getColor(isBullish);
 
-        // Нормализация по осям
+        // Нормализация данных
         const normalizedOpen = normalizeY(candle.open);
         const normalizedClose = normalizeY(candle.close);
         const normalizedHigh = normalizeY(candle.high);
@@ -56,15 +43,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
         const shadowHeight = normalizedHigh - normalizedLow;
         const shadowY = (normalizedHigh + normalizedLow) / 2;
 
-        const positionX = normalizeX(index, data.length);
-        const positionZ = normalizeZ(candle.volume, maxVolume);
-
-        // console.log("Normalized values", {
-        //   index,
-        //   normalizedX: positionX,
-        //   normalizedY: { open: normalizedOpen, close: normalizedClose },
-        //   normalizedZ: positionZ,
-        // });
+        // Используем `index` для `normalizeX`, чтобы соблюсти сигнатуру
+        const positionX = normalizeX(index, data.length); // Привязка к индексу
+        const positionZ = normalizeZ(candle.volume, maxVolume); // Привязка к объему
 
         return (
           <group key={index}>
@@ -93,7 +74,6 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
     </group>
   );
 }, (prevProps, nextProps) => {
-  // Оптимизация: проверяем, изменились ли данные или режим
   return (
     JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data) &&
     prevProps.mode === nextProps.mode

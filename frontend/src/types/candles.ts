@@ -7,6 +7,7 @@ export interface CandleData {
   low: number;
   volume: number;
   block_number: number;
+  timestamp: number;
 }
 
 export interface CandleDataContextValue {

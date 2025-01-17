@@ -154,21 +154,6 @@ const GamePage: React.FC = () => {
 
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.Telegram?.WebApp) {
-      const tg = window.Telegram.WebApp;
-
-      // Уведомляем Telegram, что приложение готово
-      tg.ready();
-
-      // Разворачиваем приложение на полный экран
-      tg.expand();
-    } else {
-      console.error("Telegram WebApp API не найден. Проверьте окружение.");
-    }
-  }, []);
-
-
-  useEffect(() => {
     // Отключение скроллинга на уровне body
     document.body.style.overflow = "hidden"; // Отключение скроллинга
     document.body.style.position = "fixed"; // Фиксируем тело страницы
