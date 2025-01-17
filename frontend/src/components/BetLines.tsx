@@ -76,7 +76,15 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Рассчитываем начальное значение `betPosition`
   useEffect(() => {
+    // Проверяем, что userPreviousBet не равен нулевому вектору
+    if (userPreviousBet.x === 0 && userPreviousBet.y === 0) {
+      console.log(userPreviousBet)
+      console.warn("userPreviousBet равен нулям, хук не выполнится");
+      return;
+    }
+
     console.log("Рассчитываем начальную позицию betPosition");
+    console.log(userPreviousBet)
     const initPos = userPreviousBet.clone();
     const betDir = initPos.clone().sub(aggregatorClipped);
 
@@ -87,9 +95,10 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     setBetPosition(initPos);
     setIsInitialized(true);
-    console.log('установили позицию белой линии можно рисовать')
+    console.log('установили позицию белой линии можно рисовать');
     console.log(initPos);
   }, [userPreviousBet, aggregatorClipped, maxWhiteLength]);
+
 
 
   // THREE
