@@ -166,13 +166,13 @@ const GamePage: React.FC = () => {
   return (
     <div
       className="relative w-screen h-screen overflow-hidden touch-none"
-      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0 }}
     >
       {showInstructions && (
         <Instructions onClose={() => setShowInstructions(false)} />
       )}
       <Timer
-        onTimerEnd={() => {}}
+        onTimerEnd={() => {
+        }}
         className="absolute top-[50px] left-1/2 transform -translate-x-1/2 z-10"
       />
       <div className="relative top-[5px] left-1/2 transform -translate-x-1/2 z-10">
@@ -190,6 +190,11 @@ const GamePage: React.FC = () => {
           }}
         />
       </div>
+      <script src="https://telegram.org/js/telegram-web-app.js">
+        window.Telegram.WebApp.ready()
+        window.Telegram.WebApp.expand()
+        window.Telegram.WebApp.disableVerticalSwipes()
+      </script>
       <Scene
         orbitControlsEnabled={orbitControlsEnabled}
         data={data}
@@ -219,6 +224,7 @@ const GamePage: React.FC = () => {
         </div>
       )}
     </div>
+
   );
 };
 export default GamePage;

@@ -146,42 +146,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
 
-    // === БЕЛАЯ ЛИНИЯ: aggregatorClipped → betPosition
-    useEffect(() => {
-      // Проверяем, что все данные готовы
-      if (!isInitialized || !betPosition || !aggregatorClipped) return;
-
-      console.log("Создание белой линии с корректным началом и концом");
-      console.log(isInitialized, betPosition, aggregatorClipped);
-
-      // === Создаём белую линию: aggregatorClipped → betPosition
-      const wGeom = new LineGeometry();
-      wGeom.setPositions([
-        aggregatorClipped.x,
-        aggregatorClipped.y,
-        aggregatorClipped.z,
-        betPosition.x,
-        betPosition.y,
-        betPosition.z,
-      ]);
-
-      const wMat = new LineMaterial({
-        color: "white",
-        linewidth: 3,
-        resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-      });
-
-      whiteLineRef.current = new Line2(wGeom, wMat);
-      scene.add(whiteLineRef.current);
-
-      return () => {
-        if (whiteLineRef.current) {
-          console.log("Удаление белой линии");
-          scene.remove(whiteLineRef.current);
-        }
-      };
-    }, [isInitialized, betPosition, aggregatorClipped, scene]);
-
     // Белый конус
     if (whiteConeRef.current) {
       whiteConeRef.current.position.copy(betPosition);
@@ -203,6 +167,42 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (whiteLineRef.current) scene.remove(whiteLineRef.current);
     };
   }, [aggregatorClipped, betPosition, scene]);
+
+  // === БЕЛАЯ ЛИНИЯ: aggregatorClipped → betPosition
+  useEffect(() => {
+    // Проверяем, что все данные готовы
+    if (!isInitialized || !betPosition || !aggregatorClipped) return;
+
+    console.log("Создание белой линии с корректным началом и концом");
+    console.log(isInitialized, betPosition, aggregatorClipped);
+
+    // === Создаём белую линию: aggregatorClipped → betPosition
+    const wGeom = new LineGeometry();
+    wGeom.setPositions([
+      aggregatorClipped.x,
+      aggregatorClipped.y,
+      aggregatorClipped.z,
+      betPosition.x,
+      betPosition.y,
+      betPosition.z,
+    ]);
+
+    const wMat = new LineMaterial({
+      color: "white",
+      linewidth: 3,
+      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+    });
+
+    whiteLineRef.current = new Line2(wGeom, wMat);
+    scene.add(whiteLineRef.current);
+
+    return () => {
+      if (whiteLineRef.current) {
+        console.log("Удаление белой линии");
+        scene.remove(whiteLineRef.current);
+      }
+    };
+  }, [isInitialized, betPosition, aggregatorClipped, scene]);
 
   // Проверка клика по сфере
   const isClickOnSphere = (event: PointerEvent): boolean => {
