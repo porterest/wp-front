@@ -93,8 +93,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     console.log(initPos);
   }, [userPreviousBet, aggregatorClipped, maxWhiteLength]);
 
-
-
   // THREE
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
@@ -175,15 +173,19 @@ const BetLines: React.FC<BetLinesProps> = ({
   // === БЕЛАЯ ЛИНИЯ: aggregatorClipped → betPosition
   useEffect(() => {
     // Проверяем, что все данные готовы
-    if ( !betPosition || !aggregatorClipped) return;
+    // if ( !betPosition || !aggregatorClipped) return;
 
     console.log("3 - Создание белой линии с корректным началом и концом");
     console.log(betPosition, aggregatorClipped);
 
     if (betPosition.x === 0 && betPosition.y === 0) {
+      console.log('не делаем')
+      console.log(betPosition)
       return;
     }
     else {
+      console.log('делаем')
+      console.log(betPosition)
       // === Создаём белую линию: aggregatorClipped → betPosition
       const wGeom = new LineGeometry();
       wGeom.setPositions([
