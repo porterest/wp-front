@@ -24,16 +24,16 @@ interface BetLinesProps {
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
-  previousBetEnd,
-  userPreviousBet,
-  onDragging,
-  onShowConfirmButton,
-  maxYellowLength,
-  maxWhiteLength,
-  handleDrag,
-  axisMode,
-  setBetAmount,
-}) => {
+                                             previousBetEnd,
+                                             userPreviousBet,
+                                             onDragging,
+                                             onShowConfirmButton,
+                                             maxYellowLength,
+                                             maxWhiteLength,
+                                             handleDrag,
+                                             axisMode,
+                                             setBetAmount,
+                                           }) => {
   // Ссылки на объекты
   const yellowLineRef = useRef<Line2 | null>(null);
   const whiteLineRef = useRef<Line2 | null>(null);
@@ -47,6 +47,9 @@ const BetLines: React.FC<BetLinesProps> = ({
   // Баланс юзера
   const [userBalance, setUserBalance] = useState(0);
 
+  // Флаг, что данные готовы, и мы можем рисовать белую линию
+  const [isReadyToDraw, setIsReadyToDraw] = useState(false);
+
   // Подтянем баланс один раз
   useEffect(() => {
     (async () => {
@@ -59,7 +62,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     })();
   }, []);
 
-  // aggregatorClipped: визуально ограниченный вектор депозита (для желтой линии).
+  // aggregatorClipped: визуально ограниченный вектор депозита (для желтой линии)
   const aggregatorClipped = React.useMemo(() => {
     const depositVec = previousBetEnd.clone();
     if (depositVec.length() > maxYellowLength) {
@@ -68,18 +71,18 @@ const BetLines: React.FC<BetLinesProps> = ({
     return depositVec;
   }, [previousBetEnd, maxYellowLength]);
 
-  console.log("aggregatorClipped - Это начало белой линии, конец жёлтой линии");
-  console.log(aggregatorClipped);
   // Позиция конца белой линии
-  const [betPosition, setBetPosition] = useState(() => userPreviousBet.clone());
-  // const isUserBetReady = userPreviousBet.x !== 0 || userPreviousBet.y !== 0;
+  const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(null);
 
-  // Рассчитываем начальное значение `betPosition`
+  // При первом рендере считаем, где будет белая линия
   useEffect(() => {
+    // Если userPreviousBet равен (0,0,0), возможно, данных ещё нет
+    // или просто никакой предыдущей ставки не было
+    if (!userPreviousBet || userPreviousBet.length() === 0) {
+      return;
+    }
 
-    console.log("Рассчитываем начальную позицию betPosition");
-    console.log(userPreviousBet);
-
+    // Инициализируем позицию
     const initPos = userPreviousBet.clone();
     const betDir = initPos.clone().sub(aggregatorClipped);
 
@@ -89,8 +92,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
 
     setBetPosition(initPos);
-    console.log("2 установили позицию белой линии можно рисовать");
-    console.log(initPos);
+    // После установки корректной позиции говорим, что готовы рисовать
+    setIsReadyToDraw(true);
   }, [userPreviousBet, aggregatorClipped, maxWhiteLength]);
 
   // THREE
@@ -104,8 +107,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (!whiteLineRef.current || !whiteLineRef.current.geometry) return;
       const p = pos as THREE.Vector3;
       const geom = whiteLineRef.current.geometry as LineGeometry;
-      console.log("geom - Debounced обновление белой линии");
-      console.log(geom);
       geom.setPositions([
         aggregatorClipped.x,
         aggregatorClipped.y,
@@ -114,12 +115,11 @@ const BetLines: React.FC<BetLinesProps> = ({
         p.y,
         p.z,
       ]);
-      console.log(geom);
     }, 30);
 
-  // Инициализация линий, конусов и сферы
+  // Инициализация желтой линии и её объектов
   useEffect(() => {
-    // === ЖЁЛТАЯ ЛИНИЯ: (0,0,0) → aggregatorClipped
+    // Жёлтая линия: (0,0,0) → aggregatorClipped
     const yGeom = new LineGeometry();
     yGeom.setPositions([
       0,
@@ -137,7 +137,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     yellowLineRef.current = new Line2(yGeom, yMat);
     scene.add(yellowLineRef.current);
 
-    // Желтый конус (на aggregatorClipped, но надпись Deposit - на previousBetEnd)
+    // Желтый конус
     if (yellowConeRef.current) {
       yellowConeRef.current.position.copy(aggregatorClipped);
       const dir = aggregatorClipped.clone().normalize();
@@ -148,7 +148,40 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
 
-    // Белый конус
+    return () => {
+      if (yellowLineRef.current) scene.remove(yellowLineRef.current);
+    };
+  }, [aggregatorClipped, scene]);
+
+  // Рендер белой линии: aggregatorClipped → betPosition
+  useEffect(() => {
+    // Не рисуем, если не готовы
+    if (!isReadyToDraw || !betPosition) return;
+
+    // Если даже в это время betPosition нулевая, пропускаем
+    if (betPosition.length() === 0) return;
+
+    // Создаём белую линию
+    const wGeom = new LineGeometry();
+    wGeom.setPositions([
+      aggregatorClipped.x,
+      aggregatorClipped.y,
+      aggregatorClipped.z,
+      betPosition.x,
+      betPosition.y,
+      betPosition.z,
+    ]);
+
+    const wMat = new LineMaterial({
+      color: "white",
+      linewidth: 3,
+      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+    });
+
+    whiteLineRef.current = new Line2(wGeom, wMat);
+    scene.add(whiteLineRef.current);
+
+    // Конусы и сфера (drag point)
     if (whiteConeRef.current) {
       whiteConeRef.current.position.copy(betPosition);
       const dirW = betPosition.clone().sub(aggregatorClipped).normalize();
@@ -158,62 +191,16 @@ const BetLines: React.FC<BetLinesProps> = ({
         whiteConeRef.current.setRotationFromQuaternion(quatW);
       }
     }
-
-    // Сфера (drag point)
     if (sphereRef.current) {
       sphereRef.current.position.copy(betPosition);
     }
 
     return () => {
-      if (yellowLineRef.current) scene.remove(yellowLineRef.current);
-      if (whiteLineRef.current) scene.remove(whiteLineRef.current);
-    };
-  }, [aggregatorClipped, betPosition, scene]);
-
-  // === БЕЛАЯ ЛИНИЯ: aggregatorClipped → betPosition
-  useEffect(() => {
-    // Проверяем, что все данные готовы
-    // if ( !betPosition || !aggregatorClipped) return;
-
-    console.log("3 - Создание белой линии с корректным началом и концом");
-    console.log(betPosition, aggregatorClipped);
-
-    if (betPosition.x === 0 && betPosition.y === 0) {
-      console.log('не делаем')
-      console.log(betPosition)
-      return;
-    }
-    else {
-      console.log('делаем')
-      console.log(betPosition)
-      // === Создаём белую линию: aggregatorClipped → betPosition
-      const wGeom = new LineGeometry();
-      wGeom.setPositions([
-        aggregatorClipped.x,
-        aggregatorClipped.y,
-        aggregatorClipped.z,
-        betPosition.x,
-        betPosition.y,
-        betPosition.z,
-      ]);
-
-      const wMat = new LineMaterial({
-        color: "white",
-        linewidth: 3,
-        resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-      });
-
-      whiteLineRef.current = new Line2(wGeom, wMat);
-      scene.add(whiteLineRef.current);
-
-    }
-    return () => {
       if (whiteLineRef.current) {
-        console.log("Удаление белой линии");
         scene.remove(whiteLineRef.current);
       }
     };
-  }, [ betPosition, aggregatorClipped, scene]);
+  }, [isReadyToDraw, betPosition, aggregatorClipped, scene]);
 
   // Проверка клика по сфере
   const isClickOnSphere = (event: PointerEvent): boolean => {
@@ -229,6 +216,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Обновляем плоскость (перпендикулярна взгляду, проходит через betPosition)
   const updatePlane = () => {
+    if (!betPosition) return;
     const camDir = camera.getWorldDirection(new THREE.Vector3());
     plane.current.setFromNormalAndCoplanarPoint(camDir, betPosition);
   };
@@ -243,7 +231,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   };
 
   const handlePointerMove = (e: PointerEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || !betPosition) return;
 
     const mouse = new THREE.Vector2(
       (e.clientX / gl.domElement.clientWidth) * 2 - 1,
@@ -267,42 +255,19 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
 
     const finalDir = updatedPos.clone().sub(aggregatorClipped);
-    console.log("Before finalDir limit:", finalDir);
-    console.log("Before finalDir limit, length:", finalDir.length());
-
     if (finalDir.length() > maxWhiteLength) {
       finalDir.setLength(maxWhiteLength);
-      console.log("After finalDir limit:", finalDir);
-      console.log("After finalDir limit, length:", finalDir.length());
-
-      updatedPos.copy(aggregatorClipped).add(finalDir); // Применяем ограничение
-      console.log("UpdatedPos after applying limited finalDir:", updatedPos);
-
+      updatedPos.copy(aggregatorClipped).add(finalDir);
 
       const fraction = finalDir.length() / maxWhiteLength;
       setBetAmount(userBalance * fraction);
 
-      // Проверка длины updatedPos
-      const calculatedLength = updatedPos
-        .clone()
-        .sub(aggregatorClipped)
-        .length();
-      console.log("Calculated Length of updatedPos:", calculatedLength);
-
-      const normalizedFinalDir = finalDir
-        .clone()
-        .normalize()
-        .multiplyScalar(maxWhiteLength);
-      console.log("normalizedFinalDir:", normalizedFinalDir);
-      updatedPos.copy(aggregatorClipped).add(normalizedFinalDir);
-      console.log("UpdatedPos after applying limited:", updatedPos);
-
+      const calculatedLength = updatedPos.clone().sub(aggregatorClipped).length();
       if (calculatedLength > maxWhiteLength) {
         console.error("Error: updatedPos exceeds maxWhiteLength");
       }
     }
 
-    // Обновляем состояние
     setBetPosition(updatedPos);
     debouncedUpdateWhiteLine(updatedPos);
 
@@ -324,39 +289,21 @@ const BetLines: React.FC<BetLinesProps> = ({
   };
 
   const handlePointerUp = () => {
-    // Если мы завершили перетаскивание
     if (isDragging) {
-      // Обновляем состояние перетаскивания
       setIsDragging(false);
       onDragging(false);
 
-      // Логируем важные параметры для дебага
-      console.log("previousBet", previousBetEnd); // Позиция предыдущей ставки
-      console.log("betPos", betPosition); // Текущая позиция ставки
-      console.log("betPos.length", betPosition.length()); // Длина вектора от начала координат
-      console.log("max white", maxWhiteLength); // Максимальная длина белой линии
-
-      // Рассчитываем долю ставки относительно максимальной длины
-      // const fraction = Math.min(1, betPosition.length() / maxWhiteLength); // Ограничиваем долю в пределах [0, 1]
-      const fraction = Math.min(1, betPosition.clone().sub(aggregatorClipped).length() / maxWhiteLength);
-
-      console.log("betPosition.length()", "maxWhiteLength");
-      console.log(betPosition.length(), maxWhiteLength);
-      console.log(betPosition.length() / maxWhiteLength);
-      // Рассчитываем сумму ставки как долю от общего баланса
+      if (!betPosition) return;
+      const fraction = Math.min(
+        1,
+        betPosition.clone().sub(aggregatorClipped).length() / maxWhiteLength,
+      );
       const betAmount = fraction * userBalance;
-
-      // Логируем значения для проверки
-      console.log("fraction - Доля относительно maxWhiteLength:", fraction); // Доля относительно maxWhiteLength
-      console.log("betAmount: - Итоговая сумма ставки", betAmount); // Итоговая сумма ставки
-
-      // Обновляем состояние суммы ставки
       setBetAmount(betAmount);
 
-      // Показываем кнопку подтверждения с данными ставки
       onShowConfirmButton(true, {
-        amount: betAmount, // Сумма ставки
-        predicted_vector: [betPosition.x, betPosition.y, betPosition.z], // Предсказанный вектор
+        amount: betAmount,
+        predicted_vector: [betPosition.x, betPosition.y, betPosition.z],
       });
     }
   };
@@ -373,7 +320,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       canvas.removeEventListener("pointermove", handlePointerMove);
       canvas.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [gl.domElement, handlePointerMove]);
+  }, [gl.domElement, handlePointerMove, betPosition]);
 
   useFrame(() => {
     // пусто
@@ -407,4 +354,3 @@ const BetLines: React.FC<BetLinesProps> = ({
 };
 
 export default BetLines;
-
