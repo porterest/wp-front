@@ -72,19 +72,24 @@ const BetLines: React.FC<BetLinesProps> = ({
   console.log(aggregatorClipped);
   // Позиция конца белой линии
   const [betPosition, setBetPosition] = useState(() => userPreviousBet.clone());
-  const [isInitialized, setIsInitialized] = useState(false);
+  const isUserBetReady = userPreviousBet.x !== 0 || userPreviousBet.y !== 0;
+
+  if (!isUserBetReady) {
+    console.log("Ожидаем данные для userPreviousBet");
+    return null; // Пока не пришли корректные данные, компонент ничего не рендерит
+  }
 
   // Рассчитываем начальное значение `betPosition`
   useEffect(() => {
-    // Проверяем, что userPreviousBet не равен нулевому вектору
-    if (userPreviousBet.x === 0 && userPreviousBet.y === 0) {
-      console.log(userPreviousBet)
-      console.warn("userPreviousBet равен нулям, хук не выполнится");
+    // Выполняем хук только если данные готовы
+    if (!isUserBetReady) {
+      console.log("userPreviousBet ещё не готов, хук не выполняется");
       return;
     }
 
     console.log("Рассчитываем начальную позицию betPosition");
-    console.log(userPreviousBet)
+    console.log(userPreviousBet);
+
     const initPos = userPreviousBet.clone();
     const betDir = initPos.clone().sub(aggregatorClipped);
 
@@ -94,10 +99,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
 
     setBetPosition(initPos);
-    setIsInitialized(true);
-    console.log('2 установили позицию белой линии можно рисовать');
+    console.log("2 установили позицию белой линии можно рисовать");
     console.log(initPos);
-  }, [userPreviousBet, aggregatorClipped, maxWhiteLength]);
+  }, [isUserBetReady, userPreviousBet, aggregatorClipped, maxWhiteLength]);
 
 
 
