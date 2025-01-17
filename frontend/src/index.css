@@ -16,16 +16,30 @@ code {
     monospace;
 }
 
-body.no-scroll {
-  overflow: hidden; /* Полностью отключает прокрутку */
-  touch-action: none; /* Отключает жесты на мобильных устройствах */
-}
-
-/* index.css */
 html, body {
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Отключение скроллинга */
-  height: 100%; /* Устанавливаем фиксированную высоту */
+  overflow: hidden; /* Отключаем прокрутку */
+  height: 100%; /* Фиксируем высоту */
+  width: 100%;
 }
+
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Убираем скроллинг для React-контейнера */
+}
+
+canvas {
+  display: block;
+  max-height: 100%;
+  max-width: 100%;
+}
+
+.scrollable-element {
+  overflow: hidden;
+  max-height: 100%;
+  max-width: 100%;
+}
+
 

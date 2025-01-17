@@ -154,6 +154,13 @@ const GamePage: React.FC = () => {
 
 
   useEffect(() => {
+    if (window.Telegram) {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
+    }
+  }, []);
+
+  useEffect(() => {
     // Отключение скроллинга на уровне body
     document.body.style.overflow = "hidden"; // Отключение скроллинга
     document.body.style.position = "fixed"; // Фиксируем тело страницы
@@ -166,6 +173,19 @@ const GamePage: React.FC = () => {
       document.body.style.width = "";
     };
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      window.scrollTo(0, 0);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
 
   return (
     <div
