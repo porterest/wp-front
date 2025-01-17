@@ -14,8 +14,11 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
     return null;
   }
 
+  // Сортируем данные по предполагаемой временной шкале (если её нет, просто оставляем порядок)
+  const sortedData = [...data].sort((a, b) => (a.volume - b.volume)); // Замените сортировку на логику по времени, если появится поле.
+
   // Определяем максимальный объем для нормализации Z-координаты
-  const maxVolume = Math.max(...data.map((candle) => candle.volume));
+  const maxVolume = Math.max(...sortedData.map((candle) => candle.volume));
 
   const getColor = (isBullish: boolean): string => {
     return isBullish ? "#32CD32" : "#ff4f4f"; // Зеленый для роста, красный для падения
@@ -27,11 +30,11 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
 
   return (
     <group>
-      {data.map((candle, index) => {
+      {sortedData.map((candle, index) => {
         const isBullish = candle.close > candle.open;
         const color = getColor(isBullish);
 
-        // Нормализация данных
+        // Нормализация значений
         const normalizedOpen = normalizeY(candle.open);
         const normalizedClose = normalizeY(candle.close);
         const normalizedHigh = normalizeY(candle.high);
@@ -43,8 +46,8 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
         const shadowHeight = normalizedHigh - normalizedLow;
         const shadowY = (normalizedHigh + normalizedLow) / 2;
 
-        // Используем индекс для нормализации оси X
-        const positionX = normalizeX(index, data.length);
+        // Используем индекс из отсортированных данных для нормализации оси времени
+        const positionX = normalizeX(index, sortedData.length);
         const positionZ = normalizeZ(candle.volume, maxVolume);
 
         return (
