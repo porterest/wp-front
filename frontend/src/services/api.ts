@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import {
     BetResponse,
     // BackendCandle,
@@ -10,27 +10,19 @@ import {
 import { BetStatusResponse, TimeResponse } from "../types/apiTypes";
 import { UserInfo } from "../types/user";
 import { CandleData } from "../types/candles";
+import { apiClient } from "./apiClient";
 
-// Базовый URL для API
-const BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || "https://abchaaa.duckdns.org";
+// // Базовый URL для API
+// const BASE_URL =
+//   process.env.REACT_APP_API_BASE_URL || "https://abchaaa.duckdns.org";
 
-// Создаем экземпляр axios
-export const apiClient = axios.create({
-    baseURL: BASE_URL,
-});
+// // Создаем экземпляр axios
+// export const apiClient = axios.create({
+//     baseURL: BASE_URL,
+// });
 
 // Перехватчик для автоматической установки токена
-apiClient.interceptors.request.use(
-  (config) => {
-      const token = localStorage.getItem("authToken");
-      if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-  },
-  (error) => Promise.reject(error),
-);
+
 
 // Получение ставок пользователя
 export async function getUserBets(): Promise<UserBetsResponse> {

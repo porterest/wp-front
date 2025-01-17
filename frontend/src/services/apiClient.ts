@@ -52,8 +52,11 @@ setAuthHeader();
  */
 
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    setAuthHeader(); // Обновляем заголовок перед каждым запросом
+  (config) => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => Promise.reject(error),
