@@ -31,7 +31,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
         const isBullish = candle.close > candle.open;
         const color = getColor(isBullish);
 
-        // Нормализация значений
+        // Нормализация данных
         const normalizedOpen = normalizeY(candle.open);
         const normalizedClose = normalizeY(candle.close);
         const normalizedHigh = normalizeY(candle.high);
@@ -43,7 +43,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
         const shadowHeight = normalizedHigh - normalizedLow;
         const shadowY = (normalizedHigh + normalizedLow) / 2;
 
-        // Используем индекс для X (или timestamp, если есть)
+        // Используем индекс для нормализации оси X
         const positionX = normalizeX(index, data.length);
         const positionZ = normalizeZ(candle.volume, maxVolume);
 
@@ -74,7 +74,6 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
     </group>
   );
 }, (prevProps, nextProps) => {
-  // Оптимизация: проверяем, изменились ли данные или режим
   return (
     JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data) &&
     prevProps.mode === nextProps.mode
