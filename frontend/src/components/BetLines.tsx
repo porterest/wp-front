@@ -87,6 +87,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     setBetPosition(initPos);
     setIsInitialized(true);
+    console.log('установили позицию белой линии можно рисовать')
   }, [userPreviousBet, aggregatorClipped, maxWhiteLength]);
 
 
@@ -151,6 +152,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (!isInitialized || !betPosition || !aggregatorClipped) return;
 
       console.log("Создание белой линии с корректным началом и концом");
+      console.log(isInitialized, betPosition, aggregatorClipped);
 
       // === Создаём белую линию: aggregatorClipped → betPosition
       const wGeom = new LineGeometry();
