@@ -179,9 +179,13 @@ const BetLines: React.FC<BetLinesProps> = ({
     console.log(betPosition, aggregatorClipped);
 
     if (betPosition.x === 0 && betPosition.y === 0) {
+      console.log('не делаем')
+      console.log(betPosition)
       return;
     }
     else {
+      console.log('делаем')
+      console.log(betPosition)
       // === Создаём белую линию: aggregatorClipped → betPosition
       const wGeom = new LineGeometry();
       wGeom.setPositions([
@@ -403,4 +407,3 @@ const BetLines: React.FC<BetLinesProps> = ({
 };
 
 export default BetLines;
-
