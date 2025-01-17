@@ -72,20 +72,10 @@ const BetLines: React.FC<BetLinesProps> = ({
   console.log(aggregatorClipped);
   // Позиция конца белой линии
   const [betPosition, setBetPosition] = useState(() => userPreviousBet.clone());
-  const isUserBetReady = userPreviousBet.x !== 0 || userPreviousBet.y !== 0;
-
-  if (!isUserBetReady) {
-    console.log("Ожидаем данные для userPreviousBet");
-    return null; // Пока не пришли корректные данные, компонент ничего не рендерит
-  }
+  // const isUserBetReady = userPreviousBet.x !== 0 || userPreviousBet.y !== 0;
 
   // Рассчитываем начальное значение `betPosition`
   useEffect(() => {
-    // Выполняем хук только если данные готовы
-    if (!isUserBetReady) {
-      console.log("userPreviousBet ещё не готов, хук не выполняется");
-      return;
-    }
 
     console.log("Рассчитываем начальную позицию betPosition");
     console.log(userPreviousBet);
@@ -101,7 +91,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     setBetPosition(initPos);
     console.log("2 установили позицию белой линии можно рисовать");
     console.log(initPos);
-  }, [isUserBetReady, userPreviousBet, aggregatorClipped, maxWhiteLength]);
+  }, [userPreviousBet, aggregatorClipped, maxWhiteLength]);
 
 
 
@@ -185,38 +175,43 @@ const BetLines: React.FC<BetLinesProps> = ({
   // === БЕЛАЯ ЛИНИЯ: aggregatorClipped → betPosition
   useEffect(() => {
     // Проверяем, что все данные готовы
-    if (!isUserBetReady || !betPosition || !aggregatorClipped) return;
+    if ( !betPosition || !aggregatorClipped) return;
 
     console.log("3 - Создание белой линии с корректным началом и концом");
-    console.log(isUserBetReady, betPosition, aggregatorClipped);
+    console.log(betPosition, aggregatorClipped);
 
-    // === Создаём белую линию: aggregatorClipped → betPosition
-    const wGeom = new LineGeometry();
-    wGeom.setPositions([
-      aggregatorClipped.x,
-      aggregatorClipped.y,
-      aggregatorClipped.z,
-      betPosition.x,
-      betPosition.y,
-      betPosition.z,
-    ]);
+    if (betPosition.x === 0 && betPosition.y === 0) {
+      return;
+    }
+    else {
+      // === Создаём белую линию: aggregatorClipped → betPosition
+      const wGeom = new LineGeometry();
+      wGeom.setPositions([
+        aggregatorClipped.x,
+        aggregatorClipped.y,
+        aggregatorClipped.z,
+        betPosition.x,
+        betPosition.y,
+        betPosition.z,
+      ]);
 
-    const wMat = new LineMaterial({
-      color: "white",
-      linewidth: 3,
-      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-    });
+      const wMat = new LineMaterial({
+        color: "white",
+        linewidth: 3,
+        resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+      });
 
-    whiteLineRef.current = new Line2(wGeom, wMat);
-    scene.add(whiteLineRef.current);
+      whiteLineRef.current = new Line2(wGeom, wMat);
+      scene.add(whiteLineRef.current);
 
+    }
     return () => {
       if (whiteLineRef.current) {
         console.log("Удаление белой линии");
         scene.remove(whiteLineRef.current);
       }
     };
-  }, [isUserBetReady, betPosition, aggregatorClipped, scene]);
+  }, [ betPosition, aggregatorClipped, scene]);
 
   // Проверка клика по сфере
   const isClickOnSphere = (event: PointerEvent): boolean => {
