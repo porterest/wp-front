@@ -41,6 +41,7 @@ const GamePage: React.FC = () => {
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
   const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
 
+
   const loadUserLastBet = async (pair: PairOption) => {
     try {
       const lastBet = await getLastUserBet(pair.value);
@@ -48,11 +49,11 @@ const GamePage: React.FC = () => {
       const userVector = new THREE.Vector3(
         lastBet.vector[0],
         lastBet.vector[1],
-        0,)
+        0,
+      );
       setUserPreviousBet(userVector);
       console.log("забрали с бека вектор:", userVector);
       console.log("userVector:", userVector);
-
     } catch (error) {
       console.error("Ошибка загрузки прошлой ставки пользователя:", error);
     }
@@ -78,55 +79,9 @@ const GamePage: React.FC = () => {
     console.log("data changed", data);
   }, [data]);
 
-  // useEffect(() => {
-  //   console.log('mode changed', currentMode);
-  // }, [currentMode]);
-
   useEffect(() => {
     console.log("scales changed", scaleFunctions);
   }, [scaleFunctions]);
-
-  // const handleShowConfirmButton = async (
-  //   show: boolean,
-  //   betData?: { amount: number; predicted_vector: number[] },
-  // ) => {
-  //   console.log("betData exists:", !!betData);
-  //   console.log("selectedPair exists:", !!selectedPair);
-  //   console.log("scaleFunctions exists:", !!scaleFunctions);
-  //
-  //   if (betData && selectedPair && scaleFunctions) {
-  //     console.log(`betData: ${JSON.stringify(betData)}, selectedPair: ${JSON.stringify(selectedPair)}, scaleFunctions: ${JSON.stringify(scaleFunctions)}`);
-  //     try {
-  //       const { denormalizeX, denormalizeY } = scaleFunctions;
-  //
-  //       // Внутренние координаты из сцены
-  //       const [sceneX, sceneY] = betData.predicted_vector;
-  //
-  //       // Преобразуем в абсолютные значения
-  //       const absoluteVolumeChange = denormalizeX(sceneX, data.length);
-  //       const absolutePriceChange = denormalizeY(sceneY);
-  //
-  //       const betRequest: PlaceBetRequest = {
-  //         pair_id: selectedPair.value,
-  //         amount: betData.amount,
-  //         predicted_vector: [absoluteVolumeChange, absolutePriceChange],
-  //       };
-  //       console.log("scaleFunctions:", scaleFunctions ? "defined" : "null");
-  //
-  //       console.log("Calculated bet request:", betRequest);
-  //
-  //       setShowConfirmButton(true);
-  //       console.log("showConfirmButton set to true");
-  //       console.log('TRUUUUUUUUUE')
-  //       setCurrentBet(betRequest);
-  //     } catch (error) {
-  //       console.error("Ошибка при расчёте ставки:", error);
-  //       setShowConfirmButton(false);
-  //     }
-  //   } else {
-  //     setShowConfirmButton(false);
-  //   }
-  // };
 
   const handleShowConfirmButton = async (
     show: boolean,
@@ -197,37 +152,18 @@ const GamePage: React.FC = () => {
     console.log("showConfirmButton state changed:", showConfirmButton);
   }, [showConfirmButton]);
 
-  // useEffect(() => {
-  //   console.log("Scale functions:", scaleFunctions);
-  //   console.log("Data:", data);
-  //
-  //   if (scaleFunctions && data && data.length > 0 && [2, 3].includes(currentMode) ) {
-  //     const { denormalizeX } = scaleFunctions;
-  //
+  useEffect(() => {
+    const disableScroll = () => {
+      window.scrollTo(0, 0);
+    };
 
-  // // Вычисляем границы графика
-  // const minX = denormalizeX(0, data.length);
-  // const maxX = denormalizeX(data.length - 1, data.length);
-  //
-  // const minY = Math.min(...data.map((candle) => candle.low));
-  // const maxY = Math.max(...data.map((candle) => candle.high));
-  //
-  // // console.log("Graph boundaries:");
-  // console.log(`X-axis: from ${minX} to ${maxX}`);
-  // console.log(`Y-axis: from ${minY} to ${maxY}`);
-  // console.log(`Center: (${(minX + maxX) / 2}, ${(minY + maxY) / 2})`);
-  //
-  //     // Логируем каждую свечу
-  //     data.forEach((candle, index) => {
-  //       const normalizedX = denormalizeX(index, data.length);
-  //       console.log(`Candle ${index}:`);
-  //       console.log(`  X: ${normalizedX}`);
-  //       console.log(`  Open: ${candle.open}, Close: ${candle.close}`);
-  //       console.log(`  High: ${candle.high}, Low: ${candle.low}`);
-  //     });
-  //   }
-  // }, [scaleFunctions, data, currentMode]);
-  //
+    window.addEventListener("scroll", disableScroll);
+
+    return () => {
+      window.removeEventListener("scroll", disableScroll);
+    };
+  }, []);
+
 
   return (
     <div className="relative w-screen h-screen overflow-hidden touch-none">
@@ -270,7 +206,6 @@ const GamePage: React.FC = () => {
           userPreviousBet={userPreviousBet}
           setUserPreviousBet={setUserPreviousBet}
           onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
-          // onShowConfirmButton={handleShowConfirmButton}
           onShowConfirmButton={(show, betData) => {
             console.log("onShowConfirmButton called with:", show, betData);
             handleShowConfirmButton(show, betData);
