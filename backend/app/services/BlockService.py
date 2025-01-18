@@ -131,14 +131,8 @@ class BlockService(BlockServiceInterface):
                 )
                 logger.info(f'Повторная ставка: {new_bet}')
                 await self.bet_service.create_bet(new_bet)
-            elif new_bet_amount < 0:
-                await self.user_repository.fund_user(
-                    user_id=bet.user_id,
-                    amount=new_bet_amount,
-                )
-                logger.info(f'User {bet.user_id} was charged for {new_bet_amount} cause of inaccurate bet')
             else:
-                logger.info(f'User {bet.user_id} is very happy about being not charged for his fail')
+                logger.error(f"Somehow new_bet_amount <= 0 for {bet.id}")
 
     async def get_block(self, block_id: UUID) -> Block:
         try:

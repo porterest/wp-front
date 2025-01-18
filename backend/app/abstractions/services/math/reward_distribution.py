@@ -15,14 +15,7 @@ class RewardDistributionServiceInterface(ABC):
         """
         ...
 
-    @abstractmethod
-    def determine_reward_pool(self, total_stake: float) -> float:
-        """
-        Определяет пул вознаграждений исходя из общего депозита и множителя выигрыша.
-        :param total_stake: Общая сумма ставок всех пользователей.
-        :return: Размер пула вознаграждений.
-        """
-        ...
+
 
     @abstractmethod
     async def calculate_rewards(self, prediction: Prediction) -> Rewards:

@@ -17,16 +17,10 @@ class LiquidityManagerInterface(ABC):
         # Решение на основе совокупных данных
 
     @abstractmethod
-    def decide_liquidity_action(
+    async def decide_liquidity_action(
             self,
-            inner_token_state: Annotated[float, 'inner token needed'],
-            other_token_state: Annotated[float, 'other pool token needed'],
-            pool_trade_intensity: Annotated[float, 'pool trade intensity score'],
-            pool_state: Annotated[PoolState, 'current pool state'],
-            calculated_swap: Annotated[CalculatedSwap, 'calculated swap of the current block'],
-            swaps_volume_score: Annotated[float, 'how hard it is to move price'],
-            bets_count: Annotated[int, 'bets count within the block'],
-            bets_volume: Annotated[float, 'bets volume within the block'],
+            current_pool_state: dict,
+            predicted_price: float,
     ) -> LiquidityAction:
         """
         Логика принятия решения по управлению ликвидностью.

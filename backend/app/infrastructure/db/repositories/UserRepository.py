@@ -97,4 +97,4 @@ class UserRepository(
         async with self.session_maker() as session:
             user = await session.get(self.entity, user_id)
 
-            user.balance += amount  # todo: freeze user account if there is not enough money to pay the charge
+            user.balance += amount

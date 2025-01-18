@@ -41,3 +41,8 @@ class DexServiceInterface(ABC):
             app_wallet_id: UUID,
     ) -> TonTransaction:
         ...
+    @abstractmethod
+    async def mint_token(self, amount: int):
+        ...
+
+

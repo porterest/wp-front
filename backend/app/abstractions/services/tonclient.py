@@ -1,7 +1,7 @@
 import base64
 import hashlib
 from abc import ABC, abstractmethod
-from typing import Annotated
+from typing import Annotated, Tuple, Dict
 
 from pytoniq_core import Address, Cell, Builder
 
@@ -55,6 +55,9 @@ class TonClientInterface(ABC):
         ...
 
     async def burn_tokens(self, amount: int):
+        ...
+
+    async def get_current_pool_state(self) -> Dict:
         ...
 
 

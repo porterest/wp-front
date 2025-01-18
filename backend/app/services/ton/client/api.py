@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from typing import Tuple
 
 from httpx import AsyncClient
 from pydantic import SecretStr
@@ -39,6 +40,9 @@ class TonApiClient(TonClientInterface):
 
         response = TonApiPublicKeyResponse.model_validate(response.json())
         return response.public_key
+
+    async def get_current_pool_state(self) -> Tuple[float, float]:
+        ... #todo: pool_state
 
 # import logging
 # from dataclasses import dataclass

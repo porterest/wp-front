@@ -70,3 +70,7 @@ class MockDexService(DexServiceInterface):  # todo: mock
     async def perform_liquidity_action(self, liquidity_action: LiquidityAction) -> None:
         # Simulate performing a liquidity action
         logger.info(f"Performed liquidity action: {liquidity_action}")
+
+    async def mint_token(self, amount: int):
+        ...
+    #todo: минт
