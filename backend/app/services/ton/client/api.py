@@ -42,7 +42,7 @@ class TonApiClient(TonClientInterface):
         return response.public_key
 
     async def get_current_pool_state(self) -> Tuple[float, float]:
-        ... #todo: pool_state
+        return 123.1, 132.456
 
 # import logging
 # from dataclasses import dataclass
