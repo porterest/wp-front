@@ -115,7 +115,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         p.z,
       ]);
       console.log(geom);
-    }, 30);
+    }, 15);
 
   // Инициализация линий, конусов и сферы
   useEffect(() => {
