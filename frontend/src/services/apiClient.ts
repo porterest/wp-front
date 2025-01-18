@@ -78,14 +78,15 @@ apiClient.interceptors.response.use(
     };
 
     console.log('before if')
+    console.log("error.response?.status", "originalRequest._retry","refreshTokenFunction")
+    console.log(error.response?.status, originalRequest._retry, refreshTokenFunction)
     // Если токен истек (401) и запрос не был повторен ранее
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
       refreshTokenFunction
     ) {
-      console.log("error.response?.status", "originalRequest._retry","refreshTokenFunction")
-      console.log(error.response?.status, originalRequest._retry, refreshTokenFunction)
+
       originalRequest._retry = true;
 
       try {
