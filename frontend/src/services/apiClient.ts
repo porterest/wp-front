@@ -62,6 +62,7 @@ apiClient.interceptors.response.use(
     // @ts-expect-error
     const statusCode = error.toJSON().status;
     console.log(statusCode);
+    console.log(error.response);
 
     const originalRequest = error.config as AxiosRequestConfig & {
       _retry?: boolean;
