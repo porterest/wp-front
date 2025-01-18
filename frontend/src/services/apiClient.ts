@@ -1,7 +1,9 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-import { useAuth } from "../context/AuthContext";
+// import { useAuth } from "../context/AuthContext";
 
-const { logout } = useAuth();
+// const { logout } = useAuth();
+
+const logout = async () => {};
 
 const BASE_URL =
   process.env.REACT_APP_API_BASE_URL || "https://abchaaa.duckdns.org";
