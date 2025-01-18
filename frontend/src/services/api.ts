@@ -1,9 +1,9 @@
 import { AxiosError } from "axios";
 import {
-    BetResponse,
+    BetResponse, CheckProofResponse,
     // BackendCandle,
     PairResponse,
-    PlaceBetRequest,
+    PlaceBetRequest, TonProofPayloadResponse,
     UserBetsResponse,
     UserHistoryResponse
 } from "../types/apiTypes";
@@ -11,6 +11,7 @@ import { BetStatusResponse, TimeResponse } from "../types/apiTypes";
 import { UserInfo } from "../types/user";
 import { CandleData } from "../types/candles";
 import { apiClient } from "./apiClient";
+import { ProofData } from "../types/tonProof";
 
 // // Базовый URL для API
 // const BASE_URL =
@@ -23,6 +24,25 @@ import { apiClient } from "./apiClient";
 
 // Перехватчик для автоматической установки токена
 
+export async function getPayload(): Promise<TonProofPayloadResponse> {
+    try {
+        const response = await apiClient.get<TonProofPayloadResponse>('/auth/payload');
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching payload:", error);
+        throw error;
+    }
+}
+
+export async function verifyPayload(proof: ProofData): Promise<CheckProofResponse> {
+    try {
+        const response = await apiClient.post<CheckProofResponse>('/auth/verify_payload', proof);
+        return response.data;
+    } catch (error) {
+        console.error("Error verifying payload:", error);
+        throw error;
+    }
+}
 
 // Получение ставок пользователя
 export async function getUserBets(): Promise<UserBetsResponse> {

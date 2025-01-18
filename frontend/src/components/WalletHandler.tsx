@@ -4,15 +4,33 @@ import {
   useTonConnectUI,
   useIsConnectionRestored,
 } from "@tonconnect/ui-react";
-import { useAuth } from "../context/AuthContext";
+// import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { ProofData } from "../types/tonProof";
+import { verifyPayload } from "../services/api";
 
 const WalletHandler: React.FC = () => {
-  const { loginWithProof } = useAuth();
+  // const { loginWithProof } = useAuth();
   const [tonConnectUI] = useTonConnectUI();
   // const wallet = useTonWallet();
   const isConnectionRestored = useIsConnectionRestored();
   const navigate = useNavigate();
+
+  const loginWithProof = async (proofData: ProofData) => {
+    try {
+      const { accessToken, refreshToken } = await verifyPayload(proofData);
+
+      // Сохраняем токены
+      localStorage.setItem("authToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+
+      // setUser(loggedInUser);
+      // setIsAuthenticated(true);
+    } catch (error) {
+      console.error("[AuthContext]: Login with proof failed:", error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     if (!isConnectionRestored) return;
@@ -49,7 +67,7 @@ const WalletHandler: React.FC = () => {
         } catch (error) {
           console.error("Login with proof failed:", error);
           alert("Authentication failed. Please try again.");
-          tonConnectUI.disconnect();
+          await tonConnectUI.disconnect();
         }
       } else {
         console.warn("No valid tonProof in wallet");

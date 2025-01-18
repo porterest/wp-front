@@ -1,28 +1,28 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
 // Типы для функций
-type RefreshTokenFunction = () => Promise<string>; // Возвращает новый токен
-type LogoutFunction = () => void;
+// type RefreshTokenFunction = () => Promise<string>; // Возвращает новый токен
+// type LogoutFunction = () => void;
 
 // Локальные переменные для токенов
-let refreshTokenFunction: RefreshTokenFunction | null = null;
-let logoutFunction: LogoutFunction | null = null;
+// let refreshTokenFunction: RefreshTokenFunction | null = null;
+// let logoutFunction: LogoutFunction | null = null;
 
 /**
  * Устанавливает функцию для обновления токенов.
  * @param fn - Функция, которая обновляет токен
  */
-export function setRefreshTokenFunction(fn: RefreshTokenFunction): void {
-  refreshTokenFunction = fn;
-}
-
-/**
- * Устанавливает функцию для выполнения выхода из системы.
- * @param fn - Функция, которая выполняет выход из системы
- */
-export function setLogoutFunction(fn: LogoutFunction): void {
-  logoutFunction = fn;
-}
+// export function setRefreshTokenFunction(fn: RefreshTokenFunction): void {
+//   refreshTokenFunction = fn;
+// }
+//
+// /**
+//  * Устанавливает функцию для выполнения выхода из системы.
+//  * @param fn - Функция, которая выполняет выход из системы
+//  */
+// export function setLogoutFunction(fn: LogoutFunction): void {
+//   logoutFunction = fn;
+// }
 
 // Определяем базовый URL с учетом окружения
 const BASE_URL =
@@ -81,20 +81,20 @@ apiClient.interceptors.response.use(
 
     console.log('before if')
     console.log("error.response?.status", "originalRequest._retry","refreshTokenFunction")
-    console.log(error, originalRequest._retry, refreshTokenFunction)
+    // console.log(error, originalRequest._retry, refreshTokenFunction)
     // Если токен истек (401) и запрос не был повторен ранее
     if (
       error.response?.status === 401 &&
-      !originalRequest._retry &&
-      refreshTokenFunction
+      !originalRequest._retry // &&
+      // refreshTokenFunction
     ) {
 
       originalRequest._retry = true;
 
       try {
         console.log("[API]: Refreshing token...");
-        const newToken = await refreshTokenFunction(); // Получаем новый токен
-        localStorage.setItem("authToken", newToken); // Сохраняем в localStorage
+        // const newToken = await refreshTokenFunction(); // Получаем новый токен
+        // localStorage.setItem("authToken", newToken); // Сохраняем в localStorage
         setAuthHeader(); // Устанавливаем новый токен в заголовок
 
         return apiClient(originalRequest); // Повторяем запрос с новым токеном
@@ -102,10 +102,10 @@ apiClient.interceptors.response.use(
         console.error("[API ERROR]: Failed to refresh token:", refreshError);
 
         // Если обновление токенов не удалось, выполняем разлогинивание
-        if (logoutFunction) {
-          console.warn("[API]: Logging out due to failed token refresh.");
-          logoutFunction();
-        }
+        // if (logoutFunction) {
+        //   console.warn("[API]: Logging out due to failed token refresh.");
+        //   logoutFunction();
+        // }
         return Promise.reject(refreshError);
       }
     }
