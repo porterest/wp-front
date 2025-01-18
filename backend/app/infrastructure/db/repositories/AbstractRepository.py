@@ -13,6 +13,7 @@ from infrastructure.db.repositories.exceptions import NotFoundException
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class AbstractSQLAlchemyRepository[Entity, Model, CreateDTO, UpdateDTO](
     CRUDRepositoryInterface[Model, CreateDTO, UpdateDTO]
