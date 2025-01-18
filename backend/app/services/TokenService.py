@@ -46,6 +46,8 @@ class TokenService(TokenServiceInterface):
             'exp': datetime.now() + timedelta(seconds=self.jwt_settings.access_expire),
         }
 
+        logger.error(access_claims['exp'])
+
         refresh_claims = {
             'sub': wallet_address,
             'payload': payload,
