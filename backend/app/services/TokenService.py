@@ -67,6 +67,14 @@ class TokenService(TokenServiceInterface):
         if 'aud' not in claims:
             claims["aud"] = self.jwt_settings.audience
 
+        exp = claims['exp']
+        if isinstance(exp, datetime):
+            logger.error(exp)
+        elif isinstance(exp, int):
+            logger.error(datetime.fromtimestamp(exp))
+        else:
+            logger.error(type(exp))
+
         token = encode(
             payload=claims,
             key=self.jwt_settings.secret_key.get_secret_value(),
