@@ -74,7 +74,12 @@ class TokenService(TokenServiceInterface):
         )
 
         logger.error(f"token created, {token}, {claims}")
-        decoded = decode(token, key=self.jwt_settings.secret_key.get_secret_value(), algorithms=["HS256"])
+        decoded = decode(
+            token,
+            key=self.jwt_settings.secret_key.get_secret_value(),
+            algorithms=["HS256"],
+            verify=False,
+        )
         logger.error(decoded)
 
         return token
