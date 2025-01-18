@@ -1,4 +1,4 @@
-import React, { createContext, useContext} from "react";
+import React, { createContext, useContext } from "react";
 import { ProofData } from "../types/tonProof";
 import { verifyPayload } from "../services/api";
 import { useTonConnectUI } from "@tonconnect/ui-react";
