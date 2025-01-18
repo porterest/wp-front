@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from "react";
-import Select, { StylesConfig } from "react-select";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
+import Select, { StylesConfig } from "react-select";
 import { PairOption } from "../types/pair";
 
 interface SymbolSelectorProps {
