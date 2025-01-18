@@ -87,6 +87,7 @@ class TokenService(TokenServiceInterface):
                     "verify_exp": True
                 },
             )
+            logger.error(f"token exp is {claims.get('exp')}, token is {token}")
 
             return claims
         except ExpiredSignatureJWTError as ex:
