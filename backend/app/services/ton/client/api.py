@@ -41,8 +41,8 @@ class TonApiClient(TonClientInterface):
         response = TonApiPublicKeyResponse.model_validate(response.json())
         return response.public_key
 
-    async def get_current_pool_state(self) -> Tuple[float, float]:
-        return 123.1, 132.456
+    async def get_current_pool_state(self) -> dict[str, float]:
+        return {'X': 123.1, 'TON': 132.456}
 
 # import logging
 # from dataclasses import dataclass
