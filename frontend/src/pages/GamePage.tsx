@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useCallback } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import * as THREE from "three";
 import GraphModes from "../components/GraphModes";
 import Legend from "../components/Legend";
@@ -23,16 +23,16 @@ const GamePage: React.FC = () => {
   const { data } = context;
 
   const [orbitControlsEnabled, setOrbitControlsEnabled] = useState(true);
-  const [currentMode] = useState(1);
-  const [axisMode] = useState<"X" | "Y">("X");
+  const [currentMode, setCurrentMode] = useState(1);
+  const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
   const [previousBetEnd, setPreviousBetEnd] = useState<THREE.Vector3>(
-    new THREE.Vector3(0, 0, 0)
+    new THREE.Vector3(0, 0, 0),
   );
   const [userPreviousBet, setUserPreviousBet] = useState<THREE.Vector3>(
-    new THREE.Vector3(0, 0, 0)
+    new THREE.Vector3(0, 0, 0),
   );
   const [scaleFunctions, setScaleFunctions] = useState<ScaleFunctions | null>(
-    null
+    null,
   );
   const [showConfirmButton, setShowConfirmButton] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
@@ -46,7 +46,7 @@ const GamePage: React.FC = () => {
       const userVector = new THREE.Vector3(
         lastBet.vector[0],
         lastBet.vector[1],
-        0
+        0,
       );
       setUserPreviousBet(userVector);
     } catch (error) {
@@ -63,7 +63,7 @@ const GamePage: React.FC = () => {
           const resultVector = new THREE.Vector3(
             prevBetData[0],
             prevBetData[1],
-            0
+            0,
           );
           setPreviousBetEnd(resultVector);
           // Загрузка последней ставки пользователя параллельно
@@ -93,7 +93,7 @@ const GamePage: React.FC = () => {
   const handleShowConfirmButton = useCallback(
     async (
       show: boolean,
-      betData?: { amount: number; predicted_vector: number[] }
+      betData?: { amount: number; predicted_vector: number[] },
     ) => {
       if (!betData || !selectedPair || !scaleFunctions) {
         console.warn("Ожидание необходимых данных для расчета ставки.");
@@ -116,7 +116,7 @@ const GamePage: React.FC = () => {
         setShowConfirmButton(false);
       }
     },
-    [data, scaleFunctions, selectedPair]
+    [data, scaleFunctions, selectedPair],
   );
 
   const handleConfirmBet = useCallback(async () => {
@@ -158,6 +158,26 @@ const GamePage: React.FC = () => {
             console.log("Symbol changed in GamePage:", pair);
             setSelectedPair(pair);
           }}
+          onSwitchMode={(mode: "Candles" | "Axes" | "Both") => {
+            console.log("Switch mode:", mode);
+            let modeToSet = 1;
+            switch (mode) {
+              case "Axes":
+                modeToSet = 1;
+                break;
+              case "Candles":
+                modeToSet = 2;
+                break;
+              case "Both":
+                modeToSet = 3;
+                break;
+            }
+            setCurrentMode(modeToSet);
+          }}
+          onAxisModeChange={(axis: "X" | "Y") => {
+            console.log("AxisModeChange:", axis);
+            setAxisMode(axis);
+          }}
         />
       </div>
       <Scene
@@ -176,9 +196,7 @@ const GamePage: React.FC = () => {
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
           setUserPreviousBet={setUserPreviousBet}
-          onDragging={(isDragging) =>
-            setOrbitControlsEnabled(!isDragging)
-          }
+          onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
           onShowConfirmButton={(show, betData) => {
             console.log("onShowConfirmButton called with:", show, betData);
             handleShowConfirmButton(show, betData);
