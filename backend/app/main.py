@@ -56,6 +56,9 @@ async def validation_exception_handler(
     content = {'status_code': 422, 'message': exc_str, 'data': None}
     return JSONResponse(content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
+# FastAPI.middleware is a decorator to add function-based middlewares,
+# but I guess it's quite ugly in terms of architecture - outers shouldn't be coupled with inners (right?)
+app.middleware('http')(check_for_auth)
 
 app.add_middleware(
     CORSMiddleware,
@@ -64,10 +67,6 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
-
-# FastAPI.middleware is a decorator to add function-based middlewares,
-# but I guess it's quite ugly in terms of architecture - outers shouldn't be coupled with inners (right?)
-app.middleware('http')(check_for_auth)
 
 app.include_router(bet_router)
 app.include_router(block_router)
