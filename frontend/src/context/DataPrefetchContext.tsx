@@ -1,16 +1,16 @@
 import React, { createContext, useContext, useState } from "react";
 import { PairOption } from "../types/pair";
-import { TimeResponse } from "../types/apiTypes";
 
 interface PrefetchedData {
   pairs?: PairOption[];
-  time?: TimeResponse;
+  time?: number;
 }
 
 interface DataPrefetchContextValue {
   data: PrefetchedData;
-  setData: (data: PrefetchedData) => void;
+  setData: React.Dispatch<React.SetStateAction<PrefetchedData>>;
 }
+
 
 const DataPrefetchContext = createContext<DataPrefetchContextValue | undefined>(undefined);
 

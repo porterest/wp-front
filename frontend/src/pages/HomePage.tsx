@@ -5,7 +5,6 @@ import {
   useTonConnectUI,
   useTonWallet,
 } from "@tonconnect/ui-react";
-// import { useTonConnectManager } from "../hooks/useTonConnectManager";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
 import { fetchTime, getPairs, getPayload } from "../services/api";
 
@@ -28,7 +27,7 @@ const HomePage: React.FC = () => {
           value: pair.pair_id,
           label: pair.name,
         }));
-        setData({ pairs, time: timeResponse });
+        setData({ pairs, time: timeResponse.remaining_time_in_block });
       } catch (error) {
         console.error("Ошибка при предзагрузке данных:", error);
       }
