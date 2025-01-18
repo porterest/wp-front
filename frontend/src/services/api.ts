@@ -13,17 +13,6 @@ import { CandleData } from "../types/candles";
 import { apiClient } from "./apiClient";
 import { ProofData } from "../types/tonProof";
 
-// // Базовый URL для API
-// const BASE_URL =
-//   process.env.REACT_APP_API_BASE_URL || "https://abchaaa.duckdns.org";
-
-// // Создаем экземпляр axios
-// export const apiClient = axios.create({
-//     baseURL: BASE_URL,
-// });
-
-// Перехватчик для автоматической установки токена
-
 export async function getPayload(): Promise<TonProofPayloadResponse> {
     try {
         const response = await apiClient.get<TonProofPayloadResponse>('/auth/payload');

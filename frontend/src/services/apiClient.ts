@@ -1,39 +1,17 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
-// Типы для функций
-// type RefreshTokenFunction = () => Promise<string>; // Возвращает новый токен
-// type LogoutFunction = () => void;
+const logout = () => {
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("refreshToken");
+};
 
-// Локальные переменные для токенов
-// let refreshTokenFunction: RefreshTokenFunction | null = null;
-// let logoutFunction: LogoutFunction | null = null;
-
-/**
- * Устанавливает функцию для обновления токенов.
- * @param fn - Функция, которая обновляет токен
- */
-// export function setRefreshTokenFunction(fn: RefreshTokenFunction): void {
-//   refreshTokenFunction = fn;
-// }
-//
-// /**
-//  * Устанавливает функцию для выполнения выхода из системы.
-//  * @param fn - Функция, которая выполняет выход из системы
-//  */
-// export function setLogoutFunction(fn: LogoutFunction): void {
-//   logoutFunction = fn;
-// }
-
-// Определяем базовый URL с учетом окружения
 const BASE_URL =
   process.env.REACT_APP_API_BASE_URL || "https://abchaaa.duckdns.org";
 
-// Создаем экземпляр axios
 export const apiClient = axios.create({
   baseURL: BASE_URL,
 });
 
-// Устанавливаем заголовок Authorization из localStorage
 function setAuthHeader() {
   const token = localStorage.getItem("authToken");
   if (token) {
@@ -43,12 +21,24 @@ function setAuthHeader() {
   }
 }
 
-// Устанавливаем токен при инициализации
 setAuthHeader();
 
-/**
- * Перехватчик запросов (request interceptor)
- */
+interface RefreshedTokens {
+  accessToken: string,
+  refreshToken: string,
+}
+
+async function refreshTokens() {
+  const refreshToken = localStorage.getItem("refreshToken");
+  const response = await apiClient.post<RefreshedTokens>('/auth/refresh/', {}, {
+    headers: {
+      'X-Refresh-Token': refreshToken,
+    },
+  });
+  localStorage.setItem("authToken", response.data.accessToken);
+  localStorage.setItem("refreshToken", response.data.refreshToken);
+  setAuthHeader();
+}
 
 apiClient.interceptors.request.use(
   (config) => {
@@ -61,55 +51,36 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-
-/**
- * Перехватчик ответов (response interceptor)
- */
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    console.log("[API SUCCESS]:", response.config.url, response); // Лог успешного ответа
-    return response;
+    console.log("[API SUCCESS]:", response.config.url, response);
+    return response; // Return the successful response
   },
   async (error: AxiosError) => {
-    console.error("[API ERROR]:", error.config?.url, error); // Лог ошибки
-
-    console.log(error.response)
+    console.error("[API ERROR]:", error.config?.url, error);
 
     const originalRequest = error.config as AxiosRequestConfig & {
       _retry?: boolean;
     };
 
-    console.log('before if')
-    console.log("error.response?.status", "originalRequest._retry","refreshTokenFunction")
-    // console.log(error, originalRequest._retry, refreshTokenFunction)
-    // Если токен истек (401) и запрос не был повторен ранее
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry // &&
-      // refreshTokenFunction
-    ) {
-
+    // Check for 401 Unauthorized and ensure we haven't retried this request yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         console.log("[API]: Refreshing token...");
-        // const newToken = await refreshTokenFunction(); // Получаем новый токен
-        // localStorage.setItem("authToken", newToken); // Сохраняем в localStorage
-        setAuthHeader(); // Устанавливаем новый токен в заголовок
-
-        return apiClient(originalRequest); // Повторяем запрос с новым токеном
+        await refreshTokens();
+        return apiClient(originalRequest);
       } catch (refreshError) {
         console.error("[API ERROR]: Failed to refresh token:", refreshError);
 
-        // Если обновление токенов не удалось, выполняем разлогинивание
-        // if (logoutFunction) {
-        //   console.warn("[API]: Logging out due to failed token refresh.");
-        //   logoutFunction();
-        // }
+        // Log the user out if the token refresh fails
+        console.warn("[API]: Logging out due to failed token refresh.");
+        logout();
         return Promise.reject(refreshError);
       }
     }
 
-    return Promise.reject(error); // Пропускаем ошибку дальше
-  },
+    return Promise.reject(error); // Pass other errors through
+  }
 );
