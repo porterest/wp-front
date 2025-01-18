@@ -12,17 +12,17 @@ let logoutFunction: LogoutFunction | null = null;
  * Устанавливает функцию для обновления токенов.
  * @param fn - Функция, которая обновляет токен
  */
-export function setRefreshTokenFunction(fn: RefreshTokenFunction): void {
-  refreshTokenFunction = fn;
-}
-
-/**
- * Устанавливает функцию для выполнения выхода из системы.
- * @param fn - Функция, которая выполняет выход из системы
- */
-export function setLogoutFunction(fn: LogoutFunction): void {
-  logoutFunction = fn;
-}
+// export function setRefreshTokenFunction(fn: RefreshTokenFunction): void {
+//   refreshTokenFunction = fn;
+// }
+//
+// /**
+//  * Устанавливает функцию для выполнения выхода из системы.
+//  * @param fn - Функция, которая выполняет выход из системы
+//  */
+// export function setLogoutFunction(fn: LogoutFunction): void {
+//   logoutFunction = fn;
+// }
 
 // Определяем базовый URL с учетом окружения
 const BASE_URL =

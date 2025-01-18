@@ -6,7 +6,7 @@ import {
   useTonWallet,
 } from "@tonconnect/ui-react";
 // import { useTonConnectManager } from "../hooks/useTonConnectManager";
-import { TonProofService } from "../services/TonProofService";
+import { getPayload } from "../services/api";
 
 const HomePage: React.FC = () => {
   // const { wallet, openTonConnectModal } = useTonConnectManager();
@@ -41,13 +41,13 @@ const HomePage: React.FC = () => {
         await requestStorageAccess();
 
         // Получаем tonProofPayload с бэкенда
-        const tonProofPayload = await TonProofService.getTonProofPayload();
+        const tonProofPayload = await getPayload();
 
         if (tonProofPayload) {
           // Готовим параметры подключения с tonProof
           tonConnectUI.setConnectRequestParameters({
             state: "ready",
-            value: { tonProof: tonProofPayload },
+            value: { tonProof: tonProofPayload.payload },
           });
         } else {
           // Если proof не найден, убираем загрузку
@@ -104,6 +104,9 @@ const HomePage: React.FC = () => {
     if (tonWallet) {
       navigate("/game");
       return;
+    }
+    else {
+      await tonConnectUI.openModal();
     }
 
     try {

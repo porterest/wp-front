@@ -1,6 +1,21 @@
 // Тип для ответа с /user/bets
 import { UUID } from "node:crypto";
 
+export interface TonProofPayloadResponse {
+  payload: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+}
+
+export interface CheckProofResponse {
+  accessToken: string,
+  refreshToken: string,
+  user: User
+}
+
 export interface BetResponse {
   id: UUID;
   amount: number;

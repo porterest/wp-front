@@ -12,14 +12,14 @@ import GamePage from "./pages/GamePage";
 import ProfilePage from "./pages/ProfilePage";
 import Layout from "./components/Layout";
 import { CandleDataProvider } from "./context/CandleDataContext";
-import { AuthProvider } from "./context/AuthContext";
+// import { AuthProvider } from "./context/AuthContext";
 import WalletHandler from "./components/WalletHandler";
 // import { SceneProvider } from "./components/SceneProvider";
 
 const App: React.FC = () => {
   return (
     <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/porterest/wp-front/refs/heads/main/frontend/public/tonconnect-manifest.json">
-      <AuthProvider>
+      {/*<AuthProvider>*/}
         <UserBalanceProvider>
             <CandleDataProvider>
               <Router>
@@ -36,7 +36,7 @@ const App: React.FC = () => {
               </Router>
             </CandleDataProvider>
         </UserBalanceProvider>
-      </AuthProvider>
+      {/*</AuthProvider>*/}
     </TonConnectUIProvider>
   );
 };
