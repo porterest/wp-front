@@ -57,7 +57,7 @@ class TonClientInterface(ABC):
     async def burn_tokens(self, amount: int):
         ...
 
-    async def get_current_pool_state(self) -> Dict:
+    async def get_current_pool_state(self) -> dict[str, float]:
         ...
 
 
