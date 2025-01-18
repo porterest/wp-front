@@ -14,8 +14,6 @@ import Layout from "./components/Layout";
 import { CandleDataProvider } from "./context/CandleDataContext";
 import { DataPrefetchProvider } from "./context/DataPrefetchContext"; // Добавлено
 import WalletHandler from "./components/WalletHandler";
-import SymbolSelector from "./components/SymbolSelector";
-import Timer from "./components/Timer";
 
 const App: React.FC = () => {
   return (
@@ -25,15 +23,13 @@ const App: React.FC = () => {
           <DataPrefetchProvider> {/* Оборачиваем в DataPrefetchProvider */}
             <Router>
               <Layout>
-                <Timer onTimerEnd={() => console.log("Timer ended")} />
-                <SymbolSelector onSymbolChange={(pair) => console.log("Symbol selected:", pair)} />
-                  <Routes>
-                    <Route path="/" element={<Navigate to="/home" />} />
-                    <Route path="/home" element={<HomePage />} />
-                    <Route path="/balance" element={<BalancePage />} />
-                    <Route path="/game" element={<GamePage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                  </Routes>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/home" />} />
+                  <Route path="/home" element={<HomePage />} />
+                  <Route path="/balance" element={<BalancePage />} />
+                  <Route path="/game" element={<GamePage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                </Routes>
               </Layout>
               <WalletHandler />
             </Router>
