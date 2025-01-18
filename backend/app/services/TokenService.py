@@ -23,7 +23,8 @@ class TokenService(TokenServiceInterface):
 
     def validate_token(self, token: str) -> bool:
         try:
-            self.get_token_payload(token)
+            claims = self.get_token_payload(token)
+            logger.error(f"validating {claims.get('exp')}")
             return True
         except ExpiredSignatureJWTError:
             logger.error("Token has expired: %s", token)
@@ -45,6 +46,8 @@ class TokenService(TokenServiceInterface):
             'payload': payload,
             'exp': datetime.now() + timedelta(seconds=self.jwt_settings.access_expire),
         }
+
+        logger.error(f"creating {access_claims['exp']}")
 
         refresh_claims = {
             'sub': wallet_address,
@@ -70,6 +73,15 @@ class TokenService(TokenServiceInterface):
             algorithm="HS256"
         )
 
+        logger.error(f"token created, {token}, {claims}")
+        decoded = decode(
+            token,
+            key=self.jwt_settings.secret_key.get_secret_value(),
+            algorithms=["HS256"],
+            verify=False,
+        )
+        logger.error(decoded)
+
         return token
 
     def get_token_payload(self, token: str) -> dict:
@@ -84,6 +96,7 @@ class TokenService(TokenServiceInterface):
                     "verify_exp": True
                 },
             )
+            logger.error(f"token exp is {claims.get('exp')}, token is {token}")
 
             return claims
         except ExpiredSignatureJWTError as ex:
