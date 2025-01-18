@@ -1,7 +1,7 @@
 import React, { createContext, useContext } from "react";
 import { ProofData } from "../types/tonProof";
 import { verifyPayload } from "../services/api";
-import { useTonConnectUI } from "@tonconnect/ui-react";
+// import { useTonConnectUI } from "@tonconnect/ui-react";
 
 interface AuthContextValue {
   loginWithProof: (proofData: ProofData) => Promise<void>;
@@ -13,12 +13,12 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                                                                         children,
                                                                       }) => {
-  const tonConnectUI = useTonConnectUI()[0];
+  // const tonConnectUI = useTonConnectUI()[0];
 
   const logout = async () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("refreshToken");
-    await tonConnectUI.disconnect();
+    // await tonConnectUI.disconnect();
   };
 
   const loginWithProof = async (proofData: ProofData) => {
