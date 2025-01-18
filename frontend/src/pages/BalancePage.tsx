@@ -10,6 +10,7 @@ interface UserBalanceContextProps {
   userData: UserInfo | null;
   loading: boolean;
   error: string | null;
+  reload: () => Promise<void>;
   // Если reloadUserData не используется, можно закомментировать или удалить ее:
   // reloadUserData: () => void;
 }
@@ -21,7 +22,7 @@ export const UserBalanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadUserData = async () => {
+  const reload = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -36,11 +37,11 @@ export const UserBalanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   useEffect(() => {
-    loadUserData();
+    reload();
   }, []);
 
   return (
-    <UserBalanceContext.Provider value={{ userData, loading, error }}>
+    <UserBalanceContext.Provider value={{ userData, loading, error, reload }}>
       {children}
     </UserBalanceContext.Provider>
   );
@@ -57,10 +58,14 @@ export const useUserBalance = () => {
 // ===== Компонент BalancePage =====
 
 const BalancePage: React.FC = () => {
-  const { userData, loading, error } = useUserBalance();
+  const { userData, loading, error, reload } = useUserBalance();
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const tonConnectUI = useTonConnectUI()[0];
   const navigate = useNavigate();
+
+  useEffect(() => {
+    reload();
+  }, []);
 
   // Обработчик копирования адреса кошелька
   const handleCopyAddress = useCallback(async () => {
