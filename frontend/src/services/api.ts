@@ -36,7 +36,7 @@ export async function getPayload(): Promise<TonProofPayloadResponse> {
 
 export async function verifyPayload(proof: ProofData): Promise<CheckProofResponse> {
     try {
-        const response = await apiClient.post<CheckProofResponse>('/auth/verify_payload');
+        const response = await apiClient.post<CheckProofResponse>('/auth/verify_payload', proof);
         return response.data;
     } catch (error) {
         console.error("Error verifying payload:", error);
