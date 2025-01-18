@@ -58,6 +58,10 @@ apiClient.interceptors.response.use(
   },
   async (error: AxiosError) => {
     console.error("[API ERROR]:", error.config?.url, error);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    const statusCode = error.toJSON().status;
+    console.log(statusCode);
 
     const originalRequest = error.config as AxiosRequestConfig & {
       _retry?: boolean;
@@ -70,7 +74,7 @@ apiClient.interceptors.response.use(
       try {
         console.log("[API]: Refreshing token...");
         await refreshTokens();
-        return apiClient(originalRequest);
+        return await apiClient(originalRequest);
       } catch (refreshError) {
         console.error("[API ERROR]: Failed to refresh token:", refreshError);
 
