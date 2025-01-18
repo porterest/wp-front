@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
+import { TimeResponse } from "../types/apiTypes";
 
 interface TimerProps {
   onTimerEnd: () => void; // Callback при завершении таймера
@@ -7,20 +8,19 @@ interface TimerProps {
 }
 
 const Timer: React.FC<TimerProps> = ({ onTimerEnd, className = "" }) => {
-  const { data, setData } = useDataPrefetch(); // Используем контекст
+  const { data, setData } = useDataPrefetch();
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Синхронизация времени и запуск таймера
   const syncAndStartTimer = useCallback(async () => {
     try {
-      const timeData = data.time; // Берем `time` из контекста
+      const timeData = data.time as TimeResponse;
       if (!timeData) {
         console.warn("Время не найдено в контексте");
         return;
       }
 
-      const remainingTime = parseInt(timeData) * 1000; // перевод в миллисекунды
+      const remainingTime = timeData.remaining_time_in_block * 1000; // Используем оставшееся время в миллисекундах
       console.log("Remaining time:", remainingTime);
 
       if (remainingTime === 0) {
@@ -33,8 +33,11 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd, className = "" }) => {
 
       // Обновляем `time` в контексте
       setData({
-        ...data, // сохраняем остальные поля из контекста
-        time: (remainingTime / 1000).toString(), // Преобразуем в строку для соответствия интерфейсу
+        ...data,
+        time: {
+          ...timeData,
+          remaining_time_in_block: Math.max(0, remainingTime / 1000), // Обновляем только оставшееся время
+        },
       });
     } catch (error) {
       console.error("Ошибка синхронизации времени в Timer:", error);
@@ -45,7 +48,6 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd, className = "" }) => {
     syncAndStartTimer();
   }, [syncAndStartTimer]);
 
-  // Обновляем оставшееся время каждую секунду
   useEffect(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -62,7 +64,6 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd, className = "" }) => {
     };
   }, []);
 
-  // Обрабатываем событие завершения таймера
   useEffect(() => {
     if (timeLeft === 0) {
       onTimerEnd();
@@ -70,7 +71,6 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd, className = "" }) => {
     }
   }, [timeLeft, onTimerEnd, syncAndStartTimer]);
 
-  // Форматируем оставшееся время в "мин:сек"
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
