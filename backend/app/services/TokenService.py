@@ -23,8 +23,7 @@ class TokenService(TokenServiceInterface):
 
     def validate_token(self, token: str) -> bool:
         try:
-            claims = self.get_token_payload(token)
-            logger.error(f"validating {claims.get('exp')}")
+            self.get_token_payload(token)
             return True
         except ExpiredSignatureJWTError:
             logger.error("Token has expired: %s", token)
@@ -67,28 +66,11 @@ class TokenService(TokenServiceInterface):
         if 'aud' not in claims:
             claims["aud"] = self.jwt_settings.audience
 
-        exp = claims['exp']
-        if isinstance(exp, datetime):
-            logger.error(exp)
-        elif isinstance(exp, int):
-            logger.error(datetime.fromtimestamp(exp))
-        else:
-            logger.error(type(exp))
-
         token = encode(
             payload=claims,
             key=self.jwt_settings.secret_key.get_secret_value(),
             algorithm="HS256"
         )
-
-        logger.error(f"token created, {token}, {claims}")
-        decoded = decode(
-            token,
-            key=self.jwt_settings.secret_key.get_secret_value(),
-            algorithms=["HS256"],
-            options={'verify_aud': False},
-        )
-        logger.error(decoded)
 
         return token
 
@@ -104,7 +86,6 @@ class TokenService(TokenServiceInterface):
                     "verify_exp": True
                 },
             )
-            logger.error(f"token exp is {claims.get('exp')}, token is {token}")
 
             return claims
         except ExpiredSignatureJWTError as ex:
