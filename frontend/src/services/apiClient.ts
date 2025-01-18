@@ -30,7 +30,7 @@ interface RefreshedTokens {
 
 async function refreshTokens() {
   const refreshToken = localStorage.getItem("refreshToken");
-  const response = await apiClient.post<RefreshedTokens>('/auth/refresh/', {}, {
+  const response = await apiClient.post<RefreshedTokens>('/auth/refresh', {}, {
     headers: {
       'X-Refresh-Token': refreshToken,
     },
@@ -58,12 +58,6 @@ apiClient.interceptors.response.use(
   },
   async (error: AxiosError) => {
     console.error("[API ERROR]:", error.config?.url, error);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    const statusCode = error.toJSON().status;
-    console.log(statusCode);
-    console.log(error.response);
-
     const originalRequest = error.config as AxiosRequestConfig & {
       _retry?: boolean;
     };
