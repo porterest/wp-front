@@ -73,6 +73,9 @@ class TokenService(TokenServiceInterface):
             algorithm="HS256"
         )
 
+        decoded = decode(token, key=self.jwt_settings.secret_key, algorithm="HS256")
+        logger.error(decoded)
+
         return token
 
     def get_token_payload(self, token: str) -> dict:
