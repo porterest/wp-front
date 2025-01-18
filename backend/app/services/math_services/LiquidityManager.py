@@ -58,3 +58,9 @@ class LiquidityManager(LiquidityManagerInterface):
                 )
             }
         )
+
+    async def calculate_tokens_deficit_or_surplus(self, current_state: dict, target_state: dict) -> dict:
+        """
+        Рассчитывает дефицит или профицит токенов.
+        """
+        ...
