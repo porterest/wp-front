@@ -1,32 +1,27 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  // useTonWallet,
-  TonConnectButton,
-  useTonConnectUI,
-} from "@tonconnect/ui-react";
-// import { apiClient } from "../services/apiClient";
+import { TonConnectButton, useTonConnectUI } from "@tonconnect/ui-react";
 import { check_user_deposit, fetchUserBalances } from "../services/api";
-import { UserInfo } from "../types/user"; // Используем для запросов к бэкенду
+import { UserInfo } from "../types/user";
 
+// ===== Контекст для балансов пользователя =====
 
 interface UserBalanceContextProps {
   userData: UserInfo | null;
   loading: boolean;
   error: string | null;
-  reloadUserData: () => void;
+  // Если reloadUserData не используется, можно закомментировать или удалить ее:
+  // reloadUserData: () => void;
 }
 
-// Контекст
 const UserBalanceContext = createContext<UserBalanceContextProps | undefined>(undefined);
 
-// Провайдер контекста
 export const UserBalanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [userData, setUserData] = useState<UserInfo | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -38,20 +33,19 @@ export const UserBalanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadUserData();
-  }, []);
+  }, [loadUserData]);
 
   return (
-    <UserBalanceContext.Provider value={{ userData, loading, error, reloadUserData: loadUserData }}>
+    <UserBalanceContext.Provider value={{ userData, loading, error }}>
       {children}
     </UserBalanceContext.Provider>
   );
 };
 
-// Хук для использования контекста
 export const useUserBalance = () => {
   const context = useContext(UserBalanceContext);
   if (!context) {
@@ -60,60 +54,25 @@ export const useUserBalance = () => {
   return context;
 };
 
+// ===== Компонент BalancePage =====
+
 const BalancePage: React.FC = () => {
-  const [tonConnectUI] = useTonConnectUI(); // TonConnect API
-  const [userData, setUserData] = useState<UserInfo | null>(null); // Состояние для данных пользователя
-  const [loading, setLoading] = useState(false); // Состояние загрузки
-  const [error, setError] = useState<string | null>(null); // Состояние ошибок
-  const [menuOpen, setMenuOpen] = useState(false); // Состояние выпадающего меню
+  const { userData, loading, error } = useUserBalance();
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const tonConnectUI = useTonConnectUI()[0];
+  const navigate = useNavigate();
 
-  /**
-   * Загружаем данные балансов пользователя с бэкенда
-   */
-// Функция для получения данных о балансе пользователя
-  const loadUserData = async () => {
-    console.log("HEEEEY");
-    setLoading(true);
-    setError(null);
-
-    console.log("loading set to true");
-
-    try {
-      console.log("fetching user data");
-      const data = await fetchUserBalances();
-      console.log("жопа");
-      setUserData(data); // Обновляем данные пользователя
-    } catch (err) {
-      console.error("Error fetching user balances:", err);
-      setError("Failed to load user data. Please try again."); // Устанавливаем сообщение об ошибке
-    } finally {
-      console.log("setting loading to false");
-      setLoading(false); // Завершаем загрузку
-    }
-  };
-
-  // Загружаем данные при монтировании компонента
-  useEffect(() => {
-    loadUserData();
-  }, []);
-  /**
-   * Копирование адреса кошелька с отправкой запроса на бэкенд
-   */
-  const handleCopyAddress = async () => {
+  // Обработчик копирования адреса кошелька
+  const handleCopyAddress = useCallback(async () => {
     if (!tonConnectUI.wallet) {
       console.error("Wallet is not connected.");
       return;
     }
-
     try {
       const walletAddress = tonConnectUI.wallet.account.address;
-
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        // Копирование адреса в буфер обмена
         await navigator.clipboard.writeText(walletAddress);
         alert("Wallet address copied to clipboard!");
-
-        // Отправка запроса на бэкенд
         await check_user_deposit();
       } else {
         console.error("Clipboard API not supported");
@@ -121,36 +80,21 @@ const BalancePage: React.FC = () => {
     } catch (error) {
       console.error("Failed to copy address or send request:", error);
     }
-  };
+  }, [tonConnectUI]);
 
-
-  /**
-   * Отключение кошелька
-   */
-  const navigate = useNavigate();
-  const handleDisconnect = async () => {
+  // Обработчик отключения кошелька
+  const handleDisconnect = useCallback(async () => {
     try {
-      await tonConnectUI.disconnect(); // Отключаем кошелек
+      await tonConnectUI.disconnect();
       console.log("Wallet disconnected successfully");
     } catch (error) {
       console.error("Error during wallet disconnection:", error);
     }
-    setMenuOpen(false); // Закрываем меню
+    setMenuOpen(false);
     navigate("/home");
-  };
+  }, [tonConnectUI, navigate]);
 
-  let content;
-
-  if (loading) {
-    content = <p className="text-gray-500">Loading risk data...</p>;
-  } else if (error) {
-    content = <p className="text-red-500">{error}</p>;
-  } else if (userData) {
-    content = <p className="text-xl font-extrabold">{userData.atRisk} WPT</p>;
-  } else {
-    content = <p className="text-gray-500">No risk data available.</p>;
-  }
-
+  // Функция для рендера баланса кошелька
   const renderWalletBalance = () => {
     if (loading) {
       return <p>Loading balances...</p>;
@@ -172,6 +116,7 @@ const BalancePage: React.FC = () => {
     }
     return <p>No balance data available.</p>;
   };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-6 space-y-8">
       {/* Шапка */}
@@ -181,7 +126,7 @@ const BalancePage: React.FC = () => {
           Track your assets and manage your risks efficiently.
         </p>
 
-        {/* Кнопка подключения */}
+        {/* Кнопка подключения или отображение кошелька */}
         <div className="flex justify-center items-center">
           {!tonConnectUI.wallet ? (
             <div className="flex justify-center">
@@ -189,7 +134,6 @@ const BalancePage: React.FC = () => {
             </div>
           ) : (
             <div className="relative inline-block">
-              {/* Адрес кошелька */}
               <button
                 onClick={() => setMenuOpen((prev) => !prev)}
                 className="rounded-lg px-4 py-2 bg-teal-500 text-white font-semibold shadow-md hover:bg-teal-600 transition-all duration-300 flex items-center"
@@ -197,8 +141,6 @@ const BalancePage: React.FC = () => {
                 {tonConnectUI.wallet.account.address.slice(0, 6)}...
                 {tonConnectUI.wallet.account.address.slice(-4)}
               </button>
-
-              {/* Меню */}
               {menuOpen && (
                 <div className="absolute mt-2 right-0 bg-gray-800 text-white text-sm rounded shadow-lg p-2">
                   <button
@@ -229,7 +171,15 @@ const BalancePage: React.FC = () => {
       {/* Секция рисков */}
       <div className="w-full max-w-md bg-gradient-to-br from-teal-500 to-green-600 p-6 rounded-xl shadow-lg">
         <h2 className="text-lg font-semibold mb-4">At Risk</h2>
-        {content}
+        {loading ? (
+          <p className="text-gray-500">Loading risk data...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : userData ? (
+          <p className="text-xl font-extrabold">{userData.atRisk} WPT</p>
+        ) : (
+          <p className="text-gray-500">No risk data available.</p>
+        )}
       </div>
 
       {/* Навигация */}

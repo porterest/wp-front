@@ -73,6 +73,8 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     console.error("[API ERROR]:", error.config?.url, error); // Лог ошибки
 
+    console.log(error.response)
+
     const originalRequest = error.config as AxiosRequestConfig & {
       _retry?: boolean;
     };
