@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from uuid import uuid4
 
 from jwt import (
@@ -35,7 +35,7 @@ class TokenService(TokenServiceInterface):
     def create_payload_token(self, ttl: int = 600) -> str:
         claims = {
             "sub": str(uuid4()),
-            "exp": datetime.now() + timedelta(seconds=ttl),  # payload ttl is not the same as general jwt ttl
+            "exp": datetime.now(tz=UTC) + timedelta(seconds=ttl),  # payload ttl is not the same as general jwt ttl
         }
 
         return self.create_token(**claims)
@@ -44,7 +44,7 @@ class TokenService(TokenServiceInterface):
         access_claims = {
             'sub': wallet_address,
             'payload': payload,
-            'exp': datetime.now() + timedelta(seconds=self.jwt_settings.access_expire),
+            'exp': datetime.now(tz=UTC) + timedelta(seconds=self.jwt_settings.access_expire),
         }
 
         logger.error(f"creating {access_claims['exp']}")
@@ -52,7 +52,7 @@ class TokenService(TokenServiceInterface):
         refresh_claims = {
             'sub': wallet_address,
             'payload': payload,
-            'exp': datetime.now() + timedelta(seconds=self.jwt_settings.refresh_expire),
+            'exp': datetime.now(tz=UTC) + timedelta(seconds=self.jwt_settings.refresh_expire),
         }
 
         return AuthTokens(
