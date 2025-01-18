@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState } from "react";
 import { PairOption } from "../types/pair";
+import { TimeResponse } from "../types/apiTypes";
 
 interface PrefetchedData {
   pairs?: PairOption[];
-  time?: string;
+  time?: TimeResponse;
 }
 
 interface DataPrefetchContextValue {

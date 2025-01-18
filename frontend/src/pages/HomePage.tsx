@@ -6,7 +6,8 @@ import {
   useTonWallet,
 } from "@tonconnect/ui-react";
 // import { useTonConnectManager } from "../hooks/useTonConnectManager";
-import { getPayload } from "../services/api";
+import { fetchTime, getPairs, getPayload } from "../services/api";
+import { useDataPrefetch } from "../context/DataPrefetchContext";
 
 const HomePage: React.FC = () => {
   // const { wallet, openTonConnectModal } = useTonConnectManager();
@@ -17,6 +18,24 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { setData } = useDataPrefetch();
+
+  useEffect(() => {
+    const prefetchData = async () => {
+      try {
+        const [pairsResponse, timeResponse] = await Promise.all([getPairs(), fetchTime()]);
+        const pairs = pairsResponse.map((pair) => ({
+          value: pair.pair_id,
+          label: pair.name,
+        }));
+        setData({ pairs, time: timeResponse });
+      } catch (error) {
+        console.error("Ошибка при предзагрузке данных:", error);
+      }
+    };
+
+    prefetchData();
+  }, [setData]);
   // Проверка, если кошелек подключен, запускаем авторизацию
   useEffect(() => {
     // Устанавливаем состояние загрузки
