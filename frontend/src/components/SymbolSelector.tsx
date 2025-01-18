@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
-import Select from "react-select";
+import React, { useContext, useEffect, useState, useCallback, useMemo } from "react";
+import Select, { StylesConfig } from "react-select";
 import { CandleDataContext } from "../context/CandleDataContext";
 import { PairResponse } from "../types/apiTypes";
 import { getPairs } from "../services/api";
@@ -17,44 +17,79 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
                                                          onSymbolChange,
                                                        }) => {
   const context = useContext(CandleDataContext);
-  const [globalMode, setGlobalMode] = useState<"Candles" | "Axes" | "Both">("Axes");
-  const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
-  const [options, setOptions] = useState<PairOption[]>([]);
-  const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
-
   if (!context) {
     throw new Error("CandleDataContext must be used within a CandleDataProvider");
   }
 
   const { setSymbol } = context;
+  const [globalMode, setGlobalMode] = useState<"Candles" | "Axes" | "Both">("Axes");
+  const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
+  const [options, setOptions] = useState<PairOption[]>([]);
 
-  useEffect(() => {
-    const fetchPairs = async () => {
-      try {
-        const data: PairResponse[] = await getPairs();
-        const fetchedOptions = data.map((pair: PairResponse) => ({
-          value: pair.pair_id,
-          label: pair.name,
-        }));
-        setOptions(fetchedOptions);
-      } catch (error) {
-        console.error("Ошибка при получении пар:", error);
-      }
-    };
+  // Типизация стилей для Select
+  const selectStyles: StylesConfig<PairOption, false> = useMemo(
+    () => ({
+      control: (base) => ({
+        ...base,
+        background: "rgba(0, 0, 0, 0.5)",
+        border: "1px solid rgba(0, 255, 255, 0.6)",
+        borderRadius: "8px",
+        color: "white",
+        fontSize: "12px",
+      }),
+      menu: (base) => ({
+        ...base,
+        background: "rgba(0, 0, 0, 0.9)",
+        color: "white",
+        borderRadius: "8px",
+      }),
+      option: (base, { isFocused, isSelected }) => ({
+        ...base,
+        background: isSelected
+          ? "rgba(128, 0, 128, 0.5)"
+          : isFocused
+            ? "rgba(128, 0, 128, 0.3)"
+            : "transparent",
+        color: "white",
+        cursor: "pointer",
+      }),
+      singleValue: (base) => ({
+        ...base,
+        color: "white",
+      }),
+    }),
+    []
+  );
 
-    fetchPairs();
+  // Асинхронная загрузка пар
+  const fetchPairs = useCallback(async () => {
+    try {
+      const data: PairResponse[] = await getPairs();
+      const fetchedOptions = data.map((pair) => ({
+        value: pair.pair_id,
+        label: pair.name,
+      }));
+      setOptions(fetchedOptions);
+    } catch (error) {
+      console.error("Ошибка при получении пар:", error);
+    }
   }, []);
 
-  const handlePairChange = (selectedOption: PairOption | null) => {
-    setSelectedPair(selectedOption);
-    console.log(selectedPair);
-    if (selectedOption) {
-      setSymbol(selectedOption);
-      onSymbolChange(selectedOption);
-    }
-  };
+  useEffect(() => {
+    fetchPairs();
+  }, [fetchPairs]);
 
-  const handleGlobalModeSwitch = () => {
+  const handlePairChange = useCallback(
+    (selectedOption: PairOption | null) => {
+      if (selectedOption) {
+        setSymbol(selectedOption);
+        onSymbolChange(selectedOption);
+      }
+    },
+    [setSymbol, onSymbolChange]
+  );
+
+  const handleGlobalModeSwitch = useCallback(() => {
     const nextMode =
       globalMode === "Axes"
         ? "Candles"
@@ -63,52 +98,30 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
           : "Axes";
     setGlobalMode(nextMode);
     onSwitchMode(nextMode);
-  };
+  }, [globalMode, onSwitchMode]);
 
-  const handleAxisModeChange = (mode: "X" | "Y") => {
-    setAxisMode(mode);
-    onAxisModeChange(mode);
-  };
+  const handleAxisModeChange = useCallback(
+    (mode: "X" | "Y") => {
+      setAxisMode(mode);
+      onAxisModeChange(mode);
+    },
+    [onAxisModeChange]
+  );
 
   return (
     <div className="relative w-[180px] p-2 rounded-lg bg-[rgba(0,255,255,0.2)] text-white shadow-md">
       {/* Выпадающий список для выбора валютной пары */}
       <div>
-        <Select
-          options={options}
-          onChange={handlePairChange}
-          placeholder="Select Pair"
-          styles={{
-            control: (base) => ({
-              ...base,
-              background: "rgba(0, 0, 0, 0.5)",
-              border: "1px solid rgba(0, 255, 255, 0.6)",
-              borderRadius: "8px",
-              color: "white",
-              fontSize: "12px",
-            }),
-            menu: (base) => ({
-              ...base,
-              background: "rgba(0, 0, 0, 0.9)",
-              color: "white",
-              borderRadius: "8px",
-            }),
-            option: (base, { isFocused, isSelected }) => ({
-              ...base,
-              background: isSelected
-                ? "rgba(128, 0, 128, 0.5)"
-                : isFocused
-                  ? "rgba(128, 0, 128, 0.3)"
-                  : "transparent",
-              color: "white",
-              cursor: "pointer",
-            }),
-            singleValue: (base) => ({
-              ...base,
-              color: "white",
-            }),
-          }}
-        />
+        {options.length === 0 ? (
+          <div className="text-gray-400 text-sm">Загрузка...</div>
+        ) : (
+          <Select
+            options={options}
+            onChange={handlePairChange}
+            placeholder="Select Pair"
+            styles={selectStyles}
+          />
+        )}
       </div>
 
       {/* Кнопки переключения режима */}
