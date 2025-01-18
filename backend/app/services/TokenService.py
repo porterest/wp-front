@@ -78,7 +78,7 @@ class TokenService(TokenServiceInterface):
             token,
             key=self.jwt_settings.secret_key.get_secret_value(),
             algorithms=["HS256"],
-            verify=False,
+            options={'verify_aud': False},
         )
         logger.error(decoded)
 
