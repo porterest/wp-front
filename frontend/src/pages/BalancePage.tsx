@@ -21,7 +21,7 @@ export const UserBalanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadUserData = useCallback(async () => {
+  const loadUserData = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -33,11 +33,11 @@ export const UserBalanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     loadUserData();
-  }, [loadUserData]);
+  }, []);
 
   return (
     <UserBalanceContext.Provider value={{ userData, loading, error }}>
