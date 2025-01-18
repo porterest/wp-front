@@ -23,8 +23,8 @@ const GamePage: React.FC = () => {
   const { data } = context;
 
   const [orbitControlsEnabled, setOrbitControlsEnabled] = useState(true);
-  const [currentMode, setCurrentMode] = useState(1);
-  const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
+  const [currentMode] = useState(1);
+  const [axisMode] = useState<"X" | "Y">("X");
   const [previousBetEnd, setPreviousBetEnd] = useState<THREE.Vector3>(
     new THREE.Vector3(0, 0, 0)
   );
@@ -154,10 +154,6 @@ const GamePage: React.FC = () => {
       </div>
       <div className="absolute top-[100px] right-[20px] z-10">
         <SymbolSelector
-          onSwitchMode={(mode) =>
-            setCurrentMode(mode === "Axes" ? 1 : mode === "Candles" ? 2 : 3)
-          }
-          onAxisModeChange={setAxisMode}
           onSymbolChange={(pair) => {
             console.log("Symbol changed in GamePage:", pair);
             setSelectedPair(pair);
