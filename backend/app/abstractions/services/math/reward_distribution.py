@@ -15,8 +15,6 @@ class RewardDistributionServiceInterface(ABC):
         """
         ...
 
-
-
     @abstractmethod
     async def calculate_rewards(self, prediction: Prediction) -> Rewards:
         """

@@ -65,7 +65,6 @@ class OrchestratorService(OrchestratorServiceInterface):
         )
 
         # 3. Распределение наград
-
         rewards = await self.reward_service.calculate_rewards(prediction_dto)
         logger.info(f"Rewards: {rewards}")
 

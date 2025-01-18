@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -6,7 +7,7 @@ from domain.models.prediction import Prediction
 from domain.models.reward_model import Rewards
 from domain.models.user_prediction import UserPrediction
 from domain.models.user_reward import UserReward
-import asyncio
+
 
 @dataclass
 class RewardDistributionService(RewardDistributionServiceInterface):
@@ -46,14 +47,17 @@ class RewardDistributionService(RewardDistributionServiceInterface):
             total_accuracy += accuracy * user_prediction.stake
 
         if total_accuracy == 0:
-            raise ValueError("Нет достаточной точности для распределения наград.")
+            return Rewards(
+                total_reward_pool=0,
+                user_rewards=[],
+            )
 
         # Расчет наград
         rewards = []
         for user_prediction in prediction.user_predictions:
             user_id = user_prediction.user_id
             user_reward_share = user_accuracies[user_id] * user_prediction.stake
-            user_reward = user_reward_share * self.base_multiplier #+ self.FIXED_REWARD
+            user_reward = user_reward_share * self.base_multiplier  # + self.FIXED_REWARD
             rewards.append(
                 UserReward(
                     user_id=user_id,
@@ -63,6 +67,7 @@ class RewardDistributionService(RewardDistributionServiceInterface):
             )
 
         return Rewards(total_reward_pool=sum(r.reward for r in rewards), user_rewards=rewards)
+
 
 if __name__ == "__main__":
     async def main():
@@ -102,6 +107,7 @@ if __name__ == "__main__":
         # Вывод наград для каждого пользователя
         for user_reward in result.user_rewards:
             print(f"Пользователь {user_reward.user_id} получает награду: {user_reward.reward:.2f}")
+
 
     # Запуск асинхронной функции
     asyncio.run(main())
