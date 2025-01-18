@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
 import { TimeResponse } from "../types/apiTypes";
 
@@ -20,6 +20,8 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd, className = "" }) => {
         console.warn("Время не найдено в контексте");
         return;
       }
+      console.log("timeData");
+      console.log(timeData);
 
       const remainingTime = timeData.remaining_time_in_block * 1000; // переводим в миллисекунды
       console.log("Remaining time (ms):", remainingTime);
@@ -37,11 +39,6 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd, className = "" }) => {
         ...prevData, // Сохраняем остальные данные
         time: remainingTime / 1000, // Обновляем только время
       }));
-
-
-
-
-
     } catch (error) {
       console.error("Ошибка синхронизации времени в Timer:", error);
     }

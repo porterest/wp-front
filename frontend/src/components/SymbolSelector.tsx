@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useEffect, useState } from "react";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
 import Select, { StylesConfig } from "react-select";
 import { PairOption } from "../types/pair";
@@ -14,13 +14,14 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
                                                          onAxisModeChange,
                                                          onSymbolChange,
                                                        }) => {
-  const { data } = useDataPrefetch(); // Получаем объект data из контекста
-  const pairs = data.pairs || []; // Извлекаем пары или используем пустой массив
-
-  const [globalMode, setGlobalMode] = useState<"Candles" | "Axes" | "Both">("Axes");
+  const { data, setData } = useDataPrefetch();
+  const pairs = data.pairs || []; // Получаем пары из контекста
+  const [globalMode, setGlobalMode] = useState<"Candles" | "Axes" | "Both">(
+    "Axes"
+  );
   const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
 
-  // Стили для компонента Select
+  // Стили для select
   const selectStyles: StylesConfig<PairOption, false> = useMemo(
     () => ({
       control: (base) => ({
@@ -55,17 +56,18 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     []
   );
 
-  // Обработчик изменения валютной пары
+  // Обработчик выбора пары
   const handlePairChange = useCallback(
     (selectedOption: PairOption | null) => {
       if (selectedOption) {
         onSymbolChange(selectedOption);
+        setData((prev) => ({ ...prev, selectedPair: selectedOption }));
       }
     },
-    [onSymbolChange]
+    [onSymbolChange, setData]
   );
 
-  // Обработчик переключения глобального режима
+  // Обработчик переключения режима
   const handleGlobalModeSwitch = useCallback(() => {
     const nextMode =
       globalMode === "Axes"
@@ -77,7 +79,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     onSwitchMode(nextMode);
   }, [globalMode, onSwitchMode]);
 
-  // Обработчик переключения режима оси
+  // Обработчик переключения оси
   const handleAxisModeChange = useCallback(
     (mode: "X" | "Y") => {
       setAxisMode(mode);
@@ -85,6 +87,10 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     },
     [onAxisModeChange]
   );
+
+  useEffect(() => {
+    console.log("Selected pairs from context:", pairs);
+  }, [pairs]);
 
   return (
     <div className="relative w-[180px] p-2 rounded-lg bg-[rgba(0,255,255,0.2)] text-white shadow-md">
@@ -110,7 +116,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
         Switch mode ({globalMode})
       </button>
 
-      {/* Кнопки переключения оси */}
+      {/* Кнопки переключения осей */}
       <div className="mt-2 flex justify-between">
         <button
           onClick={() => handleAxisModeChange("X")}
