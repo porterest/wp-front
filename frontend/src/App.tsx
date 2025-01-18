@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage";
 import Layout from "./components/Layout";
 import { CandleDataProvider } from "./context/CandleDataContext";
 import { AuthProvider } from "./context/AuthContext";
+import { DataPrefetchProvider } from "./context/DataPrefetchContext"; // Добавлено
 import WalletHandler from "./components/WalletHandler";
 
 const App: React.FC = () => {
@@ -20,7 +21,8 @@ const App: React.FC = () => {
     <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/porterest/wp-front/refs/heads/main/frontend/public/tonconnect-manifest.json">
       <AuthProvider>
         <UserBalanceProvider>
-            <CandleDataProvider>
+          <CandleDataProvider>
+            <DataPrefetchProvider>
               <Router>
                 <Layout>
                   <Routes>
@@ -33,7 +35,8 @@ const App: React.FC = () => {
                 </Layout>
                 <WalletHandler />
               </Router>
-            </CandleDataProvider>
+            </DataPrefetchProvider>
+          </CandleDataProvider>
         </UserBalanceProvider>
       </AuthProvider>
     </TonConnectUIProvider>

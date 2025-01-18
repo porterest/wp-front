@@ -25,8 +25,10 @@ export const DataPrefetchProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
 export const useDataPrefetch = () => {
   const context = useContext(DataPrefetchContext);
+  console.log("Current context value:", context);
   if (!context) {
     throw new Error("useDataPrefetch must be used within a DataPrefetchProvider");
   }
   return context;
 };
+

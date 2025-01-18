@@ -6,8 +6,8 @@ import {
   useTonWallet,
 } from "@tonconnect/ui-react";
 // import { useTonConnectManager } from "../hooks/useTonConnectManager";
-import { fetchTime, getPairs, getPayload } from "../services/api";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
+import { fetchTime, getPairs, getPayload } from "../services/api";
 
 const HomePage: React.FC = () => {
   // const { wallet, openTonConnectModal } = useTonConnectManager();
