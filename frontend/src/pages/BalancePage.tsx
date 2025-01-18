@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { TonConnectButton, useTonConnectUI } from "@tonconnect/ui-react";
 import { check_user_deposit, fetchUserBalances } from "../services/api";
 import { UserInfo } from "../types/user";
+import { useAuth } from "../context/AuthContext";
 
 // ===== Контекст для балансов пользователя =====
 
@@ -62,6 +63,7 @@ const BalancePage: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const tonConnectUI = useTonConnectUI()[0];
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     reload();
@@ -89,12 +91,7 @@ const BalancePage: React.FC = () => {
 
   // Обработчик отключения кошелька
   const handleDisconnect = useCallback(async () => {
-    try {
-      await tonConnectUI.disconnect();
-      console.log("Wallet disconnected successfully");
-    } catch (error) {
-      console.error("Error during wallet disconnection:", error);
-    }
+    logout();
     setMenuOpen(false);
     navigate("/home");
   }, [tonConnectUI, navigate]);
