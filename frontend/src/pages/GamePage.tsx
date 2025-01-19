@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import * as THREE from "three";
 import GraphModes from "../components/GraphModes";
 import Legend from "../components/Legend";
@@ -6,21 +6,21 @@ import SymbolSelector from "../components/SymbolSelector";
 import Instructions from "../components/Instructions";
 import ConfirmBetButton from "../components/ConfirmBetButton";
 import Timer from "../components/Timer";
-import { CandleDataContext } from "../context/CandleDataContext";
 import { fetchPreviousBetEnd, getLastUserBet, placeBet } from "../services/api";
 import { PlaceBetRequest } from "../types/apiTypes";
 import Scene from "../components/Scene";
 import { ScaleFunctions } from "../types/scale";
 import { PairOption } from "../types/pair";
+import { useDataPrefetch } from "../context/DataPrefetchContext";
 
 const GamePage: React.FC = () => {
-  const context = useContext(CandleDataContext);
+  const context = useDataPrefetch();
   if (!context) {
     throw new Error(
       "CandleDataContext must be used within a CandleDataProvider",
     );
   }
-  const { data } = context;
+  const { data, setData } = useDataPrefetch();
 
   const [orbitControlsEnabled, setOrbitControlsEnabled] = useState(true);
   const [currentMode, setCurrentMode] = useState(1);
@@ -102,7 +102,7 @@ const GamePage: React.FC = () => {
       try {
         const { denormalizeX, denormalizeY } = scaleFunctions;
         const [sceneX, sceneY] = betData.predicted_vector;
-        const absoluteVolumeChange = denormalizeX(sceneX, data.length);
+        const absoluteVolumeChange = denormalizeX(sceneX, data.candles?.length || 0);
         const absolutePriceChange = denormalizeY(sceneY);
         const betRequest: PlaceBetRequest = {
           pair_id: selectedPair.value,
@@ -157,6 +157,7 @@ const GamePage: React.FC = () => {
           onSymbolChange={(pair) => {
             console.log("Symbol changed in GamePage:", pair);
             setSelectedPair(pair);
+            setData((prev) => ({ ...prev, selectedPair: pair })); // Сохранение выбранной пары в контексте
           }}
           onSwitchMode={(mode: "Candles" | "Axes" | "Both") => {
             console.log("Switch mode:", mode);
@@ -182,7 +183,7 @@ const GamePage: React.FC = () => {
       </div>
       <Scene
         orbitControlsEnabled={orbitControlsEnabled}
-        data={data}
+        data={data.candles || []}
         onScaleReady={(scales) => {
           console.log("Scales from Scene:", scales);
           setScaleFunctions(scales);
@@ -192,7 +193,7 @@ const GamePage: React.FC = () => {
           axisMode={axisMode}
           currentMode={currentMode}
           selectedPair={selectedPair}
-          data={data}
+          data={data.candles || []}
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
           setUserPreviousBet={setUserPreviousBet}

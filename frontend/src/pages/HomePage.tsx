@@ -22,11 +22,24 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const prefetchData = async () => {
       try {
-        const [pairsResponse, timeResponse] = await Promise.all([getPairs(), fetchTime()]);
+        const [pairsResponse, timeResponse] = await Promise.all([
+          getPairs(),
+          fetchTime(),
+        ]);
+
         const pairs = pairsResponse.map((pair) => ({
           value: pair.pair_id,
           label: pair.name,
         }));
+
+        if (timeResponse.remaining_time_in_block === 0) {
+          console.log(
+            "Получено 0 для remaining_time_in_block, повторный запрос через 5 секунд..."
+          );
+          setTimeout(prefetchData, 5000); // Повторяем запрос через 5 секунд
+          return;
+        }
+
         setData({ pairs, time: timeResponse.remaining_time_in_block });
       } catch (error) {
         console.error("Ошибка при предзагрузке данных:", error);
@@ -35,6 +48,8 @@ const HomePage: React.FC = () => {
 
     prefetchData();
   }, [setData]);
+
+
   // Проверка, если кошелек подключен, запускаем авторизацию
   useEffect(() => {
     // Устанавливаем состояние загрузки
