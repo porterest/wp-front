@@ -85,7 +85,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
       {/* Текст депозита */}
       <Text
-        position={[1, 5.1, 1]}
+        position={[0, 5.1, 1]}
         fontSize={0.3}
         color="lightgreen"
         anchorX="center"
