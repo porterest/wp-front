@@ -62,6 +62,18 @@ export const DataPrefetchProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [data.selectedPair]);
 
+  console.log({
+    data,
+      setData,
+      fetchCandlesForPair,
+      setSelectedPair,
+  });
+  console.log({
+    data,
+      setData,
+      fetchCandlesForPair,
+      setSelectedPair,
+  });
 
   return (
     <DataPrefetchContext.Provider

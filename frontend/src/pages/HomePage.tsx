@@ -20,33 +20,52 @@ const HomePage: React.FC = () => {
   const { setData } = useDataPrefetch();
 
   useEffect(() => {
-    const prefetchData = async () => {
+    const fetchPairs = async (): Promise<void> => {
       try {
-        const [pairsResponse, timeResponse] = await Promise.all([
-          getPairs(),
-          fetchTime(),
-        ]);
+        const pairsResponse = await getPairs();
+
+        if (!pairsResponse || !Array.isArray(pairsResponse)) {
+          console.warn("Данные пар невалидны, повторный запрос через 5 секунд...");
+          setTimeout(fetchPairs, 5000); // Повторяем запрос через 5 секунд
+          return;
+        }
 
         const pairs = pairsResponse.map((pair) => ({
           value: pair.pair_id,
           label: pair.name,
         }));
-
-        if (timeResponse.remaining_time_in_block === 0) {
-          console.log(
-            "Получено 0 для remaining_time_in_block, повторный запрос через 5 секунд..."
-          );
-          setTimeout(prefetchData, 5000); // Повторяем запрос через 5 секунд
-          return;
-        }
-
-        setData({ pairs, time: timeResponse.remaining_time_in_block });
+        console.log("pairs", pairs);
+        setData((prev) => ({ ...prev, pairs })); // Обновляем только пары
       } catch (error) {
-        console.error("Ошибка при предзагрузке данных:", error);
+        console.error("Ошибка при загрузке пар:", error);
+        setTimeout(fetchPairs, 5000); // Повторяем запрос через 5 секунд
       }
     };
 
-    prefetchData();
+    const fetchTimeData = async (): Promise<void> => {
+      try {
+        const timeResponse = await fetchTime();
+
+        if (!timeResponse || timeResponse.remaining_time_in_block === 0) {
+          console.warn("Данные времени невалидны, повторный запрос через 5 секунд...");
+          setTimeout(fetchTimeData, 5000); // Повторяем запрос через 5 секунд
+          return;
+        }
+        console.log("time", timeResponse);
+        setData((prev) => ({ ...prev, time: timeResponse.remaining_time_in_block })); // Обновляем только время
+      } catch (error) {
+        console.error("Ошибка при загрузке времени:", error);
+        setTimeout(fetchTimeData, 5000); // Повторяем запрос через 5 секунд
+      }
+    };
+
+    // Функция для параллельного запуска обоих запросов
+    const fetchData = (): void => {
+      fetchPairs();
+      fetchTimeData();
+    };
+
+    fetchData(); // Запускаем первый цикл запросов
   }, [setData]);
 
 

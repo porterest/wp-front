@@ -140,6 +140,14 @@ const GamePage: React.FC = () => {
     console.log("showConfirmButton state changed:", showConfirmButton);
   }, [showConfirmButton]);
 
+  useEffect(() => {
+    const hasVisited = localStorage.getItem("hasVisitedGamePage");
+    if (!hasVisited) {
+      setShowInstructions(true); // Показываем инструкцию
+      localStorage.setItem("hasVisitedGamePage", "true"); // Отмечаем, что уже показывали
+    }
+  }, []);
+
   return (
     <div className="relative w-screen h-screen overflow-hidden touch-none">
       {showInstructions && (
