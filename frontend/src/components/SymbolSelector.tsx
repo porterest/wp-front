@@ -15,13 +15,14 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
                                                          onSymbolChange,
                                                        }) => {
   const { data, setData } = useDataPrefetch();
-  const pairs = data.pairs || []; // Получаем пары из контекста
+  const pairs = data.pairs || []; // Пары из контекста
   const [globalMode, setGlobalMode] = useState<"Candles" | "Axes" | "Both">(
     "Axes"
   );
   const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
+  const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
 
-  // Стили для select
+  // Стили для компонента select
   const selectStyles: StylesConfig<PairOption, false> = useMemo(
     () => ({
       control: (base) => ({
@@ -56,15 +57,16 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     []
   );
 
-  // Обработчик выбора пары
+  // Обработчик изменения выбранной пары
   const handlePairChange = useCallback(
     (selectedOption: PairOption | null) => {
+      setSelectedPair(selectedOption); // Локальное состояние
       if (selectedOption) {
-        onSymbolChange(selectedOption);
-        setData((prev) => ({ ...prev, selectedPair: selectedOption }));
+        setData((prev) => ({ ...prev, selectedPair: selectedOption })); // Обновляем в контексте
+        onSymbolChange(selectedOption); // Вызываем callback
       }
     },
-    [onSymbolChange, setData]
+    [setData, onSymbolChange]
   );
 
   // Обработчик переключения режима
@@ -79,7 +81,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     onSwitchMode(nextMode);
   }, [globalMode, onSwitchMode]);
 
-  // Обработчик переключения оси
+  // Обработчик изменения оси
   const handleAxisModeChange = useCallback(
     (mode: "X" | "Y") => {
       setAxisMode(mode);
@@ -88,9 +90,17 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     [onAxisModeChange]
   );
 
+  // Логирование выбранных пар для отладки
   useEffect(() => {
     console.log("Selected pairs from context:", pairs);
   }, [pairs]);
+
+  // Эффект для синхронизации локального состояния `selectedPair` с данными из контекста
+  useEffect(() => {
+    if (data.selectedPair) {
+      setSelectedPair(data.selectedPair);
+    }
+  }, [data.selectedPair]);
 
   return (
     <div className="relative w-[180px] p-2 rounded-lg bg-[rgba(0,255,255,0.2)] text-white shadow-md">
@@ -101,6 +111,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
         ) : (
           <Select
             options={pairs}
+            value={selectedPair}
             onChange={handlePairChange}
             placeholder="Select Pair"
             styles={selectStyles}
