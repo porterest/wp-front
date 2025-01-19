@@ -23,8 +23,13 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd, className = "" }) => {
       console.log("timeData");
       console.log(timeData);
 
-      const remainingTime = timeData.remaining_time_in_block * 1000; // переводим в миллисекунды
-      console.log("Remaining time (ms):", remainingTime);
+      if (typeof timeData !== "number" || timeData <= 0) {
+        console.warn("Некорректное значение времени:", timeData);
+        return;
+      }
+
+      const remainingTime = timeData * 1000; // переводим в миллисекунды
+      // console.log("Remaining time (ms):", remainingTime);
 
       if (remainingTime <= 0) {
         console.log("Получено 0, ждём 5 секунд и повторяем запрос...");
