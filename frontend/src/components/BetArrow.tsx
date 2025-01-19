@@ -70,6 +70,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
   return (
     <>
       {/* Компонент BetLines */}
+
       <BetLines
         previousBetEnd={previousBetEnd}
         userPreviousBet={userPreviousBet}
@@ -80,6 +81,10 @@ const BetArrow: React.FC<BetArrowProps> = ({
         handleDrag={handleDrag} // Передача колбека для обработки перетаскивания
         axisMode={axisMode}
         setBetAmount={setBetAmount}
+      onUpdateUserPreviousBet={(newPosition) => {
+      console.log("Обновление userPreviousBet:", newPosition);
+      setUserPreviousBet(newPosition); // Нормализованная позиция
+    }}
       />
 
       {/* Текст депозита */}
