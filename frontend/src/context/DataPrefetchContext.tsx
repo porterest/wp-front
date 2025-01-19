@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { fetchCandles } from "../services/api";
 import { PairOption } from "../types/pair";
 import { CandleData } from "../types/candles";
@@ -36,6 +36,8 @@ export const DataPrefetchProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       const candles = await fetchCandles(pairId);
       setData((prev) => ({ ...prev, candles, isLoading: false }));
+      console.log("data.candles")
+      console.log(data.candles)
     } catch (err) {
       console.error(`Ошибка при загрузке данных для пары ${pairId}:`, err);
       setData((prev) => ({
@@ -53,6 +55,13 @@ export const DataPrefetchProvider: React.FC<{ children: React.ReactNode }> = ({ 
       fetchCandlesForPair(pair.value);
     }
   };
+
+  useEffect(() => {
+    if (data.selectedPair?.value) {
+      fetchCandlesForPair(data.selectedPair.value);
+    }
+  }, [data.selectedPair]);
+
 
   return (
     <DataPrefetchContext.Provider
