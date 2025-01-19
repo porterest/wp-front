@@ -89,7 +89,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
       {/* Текст депозита */}
       <Text
-        position={[previousBetEnd.x , previousBetEnd.y + 1, previousBetEnd.z]}
+        position={[previousBetEnd.x , previousBetEnd.y, previousBetEnd.z]}
         fontSize={0.3}
         color="lightgreen"
         anchorX="center"
@@ -98,6 +98,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         Deposit: ${userDeposit.toFixed(2)}
       </Text>
 
+      console.log([previousBetEnd.x , previousBetEnd.y + 1, previousBetEnd.z])
       {/* Текст ставки */}
       <Text
         position={[xValue + 0.5, yValue + 1, previousBetEnd.z + 0.5]}
