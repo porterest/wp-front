@@ -1,85 +1,55 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
-import { TimeResponse } from "../types/apiTypes";
 
 interface TimerProps {
   onTimerEnd: () => void; // Callback при завершении таймера
   className?: string; // Дополнительный класс для стилизации
 }
 
-const Timer: React.FC<TimerProps> = ({ onTimerEnd, className = "" }) => {
-  const { data, setData } = useDataPrefetch();
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+const Timer: React.FC<TimerProps> = ({ onTimerEnd }) => {
+  const { data } = useDataPrefetch();
+  const [timeLeft, setTimeLeft] = useState<number | null>(null); // Оставшееся время
 
-  // Синхронизация времени
-  const syncAndStartTimer = useCallback(async () => {
+  const syncAndStartTimer = async () => {
     try {
-      const timeData = data.time as TimeResponse | undefined;
-      if (!timeData) {
-        console.warn("Время не найдено в контексте");
-        return;
-      }
-      console.log("timeData");
-      console.log(timeData);
+      console.log("Starting timer");
 
-      if (typeof timeData !== "number" || timeData <= 0) {
-        console.warn("Некорректное значение времени:", timeData);
-        return;
-      }
-
-      const remainingTime = timeData * 1000; // переводим в миллисекунды
-      // console.log("Remaining time (ms):", remainingTime);
+      // Получаем время из контекста
+      const remainingTime = (data.time || 0) * 1000; // В миллисекундах
+      console.log("remaining time", remainingTime);
 
       if (remainingTime <= 0) {
         console.log("Получено 0, ждём 5 секунд и повторяем запрос...");
-        setTimeout(syncAndStartTimer, 5000);
-        return;
+        setTimeout(syncAndStartTimer, 5000); // Подождать 5 секунд и повторно вызвать
+        return; // Завершаем текущий вызов, чтобы не устанавливать 0 в timeLeft
       }
 
       setTimeLeft(remainingTime);
-
-      // Обновляем контекст с оставшимся временем
-      setData((prevData) => ({
-        ...prevData, // Сохраняем остальные данные
-        time: remainingTime / 1000, // Обновляем только время
-      }));
     } catch (error) {
       console.error("Ошибка синхронизации времени в Timer:", error);
     }
-  }, [data, setData]);
+  };
 
-  // Инициализация таймера
   useEffect(() => {
+    // Первый запуск таймера при монтировании компонента
     syncAndStartTimer();
-  }, [syncAndStartTimer]);
+  }, [data.time]); // Зависимость от времени в контексте
 
-  // Обновление оставшегося времени каждую секунду
-  useEffect(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    intervalRef.current = setInterval(() => {
-      setTimeLeft((prev) => (prev !== null ? Math.max(prev - 1000, 0) : null));
-    }, 1000);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, []);
-
-  // Обработка завершения таймера
   useEffect(() => {
     if (timeLeft === 0) {
       onTimerEnd();
-      syncAndStartTimer();
+      syncAndStartTimer(); // Сразу запрашиваем новое время
     }
-  }, [timeLeft, onTimerEnd, syncAndStartTimer]);
+  }, [timeLeft]); // Отслеживаем изменения timeLeft
 
-  // Форматирование времени
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => (prev !== null ? Math.max(prev - 1000, 0) : null));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -88,9 +58,7 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd, className = "" }) => {
   };
 
   return (
-    <div
-      className={`w-full p-2 bg-gradient-to-r from-[#40E0D0] to-[#8A2BE2] text-white rounded-b-md text-center ${className}`}
-    >
+    <div className="p-2 bg-gradient-to-r from-[#40E0D0] to-[#8A2BE2] text-white rounded-b-md text-center">
       {timeLeft !== null ? (
         <p>Время до конца блока: {formatTime(timeLeft)}</p>
       ) : (
