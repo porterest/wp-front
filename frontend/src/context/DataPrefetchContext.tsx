@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { fetchCandles } from "../services/api";
 import { PairOption } from "../types/pair";
 import { CandleData } from "../types/candles";
