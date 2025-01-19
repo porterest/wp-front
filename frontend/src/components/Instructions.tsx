@@ -26,8 +26,10 @@ const Instructions: React.FC<InstructionsProps> = ({ onClose }) => (
       </ol>
       <p className="mt-4 font-semibold">Как сделать ставку?</p>
       <ul className="list-disc list-inside text-left mt-2 space-y-1">
-        <li>Потяните синюю сферу для выбора направления и величины ставки.</li>
+        <li>Потяните черную сферу для выбора направления и величины ставки.</li>
+        <li>Переключайте моды чтобы менять оси движения.</li>
         <li>Для точности поворачивайте график.</li>
+        <li>Не забудьте подтвердить ставку с помощью кнопки Confirm Bet.</li>
       </ul>
       <p className="mt-4 font-semibold">Дополнительные возможности:</p>
       <ul className="list-disc list-inside text-left mt-2 space-y-1">
