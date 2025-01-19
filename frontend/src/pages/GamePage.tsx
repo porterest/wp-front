@@ -131,9 +131,9 @@ const GamePage: React.FC = () => {
   }, [currentBet]);
 
   const legendItems = [
-    { color: "5e00f5", label: "X-axis: Time Progress" },
-    { color: "blue", label: "Y-axis: Ton Price" },
-    { color: "cyan", label: "Z-axis: Number of Transactions" },
+    { color: "#5e00f5", label: "X: Time Progress" },
+    { color: "blue", label: "Y: Ton Price" },
+    { color: "cyan", label: "Z: Number of Transactions" },
   ];
 
   useEffect(() => {
