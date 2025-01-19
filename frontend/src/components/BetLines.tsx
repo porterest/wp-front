@@ -21,7 +21,6 @@ interface BetLinesProps {
   handleDrag: (newPosition: THREE.Vector3) => void;
   axisMode: "X" | "Y";
   setBetAmount: (newAmount: number) => void;
-  onUpdateUserPreviousBet: (newPosition: THREE.Vector3) => void;
 }
 
 const BetLines: React.FC<BetLinesProps> = ({
@@ -34,7 +33,6 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              handleDrag,
                                              axisMode,
                                              setBetAmount,
-                                             onUpdateUserPreviousBet
                                            }) => {
   // Ссылки на объекты
   const yellowLineRef = useRef<Line2 | null>(null);
@@ -360,7 +358,6 @@ const BetLines: React.FC<BetLinesProps> = ({
         amount: betAmount, // Сумма ставки
         predicted_vector: [betPosition.x, betPosition.y, betPosition.z], // Предсказанный вектор
       });
-      onUpdateUserPreviousBet(betPosition.clone());
     }
   };
 
