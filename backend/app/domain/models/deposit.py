@@ -18,5 +18,5 @@ class DepositEntry(BaseModel):
     app_wallet_id: UUID
     user_id: UUID
     status: DepositEntryStatus
-    amount: Optional[float]
-    tx_id: Optional[str]
+    amount: Optional[float] = None
+    tx_id: Optional[UUID] = None

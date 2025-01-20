@@ -50,18 +50,6 @@ class DepositService(
             for transaction in transactions:
                 user = await self.user_service.get_user_by_wallet(transaction.from_address)
                 if user:
-                    deposit = DepositEntryCreateDTO(
-                        app_wallet_id=wallet.id,
-                        user_id=user.id,
-                        status=DepositEntryStatus.FUNDED,
-                        amount=transaction.amount,
-                        tx_id=transaction.tx_id
-                    )
-                    logger.info("deposit")
-                    logger.info(deposit)
-                    await self.deposit_repository.create(deposit)
-                    await self.user_service.deposit_funded(deposit.id)
-
                     dto = CreateTransactionDTO(
                         user_id=user.id,
                         type=TransactionType.EXTERNAL_DEPOSIT,
@@ -75,3 +63,14 @@ class DepositService(
 
                     await self.transaction_repository.create(dto)
 
+                    deposit = DepositEntryCreateDTO(
+                        app_wallet_id=wallet.id,
+                        user_id=user.id,
+                        status=DepositEntryStatus.FUNDED,
+                        amount=transaction.amount,
+                        tx_id=dto.id,
+                    )
+                    logger.info("deposit")
+                    logger.info(deposit)
+                    await self.deposit_repository.create(deposit)
+                    await self.user_service.deposit_funded(deposit.id)
