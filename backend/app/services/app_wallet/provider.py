@@ -28,9 +28,9 @@ class AppWalletProvider(AppWalletProviderInterface):
     async def get_available_inner_token_amount(self) -> float:
         return 10  # todo: mock
 
-    async def get_deposit_wallet(self) -> str:
+    async def get_deposit_wallet(self) -> AppWallet:
         wallet = await self.wallet_repository.get(self.deposit_wallet_id)
-        return wallet.address
+        return wallet
 
     async def get_withdraw_wallet(self) -> AppWallet:
         wallet = await self.wallet_repository.get(self.withdraw_wallet_id)
