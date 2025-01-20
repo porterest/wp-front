@@ -5,6 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.exc import NoResultFound
+from pytoniq_core import Address
 
 from abstractions.repositories.deposit import DepositRepositoryInterface
 from abstractions.repositories.user import UserRepositoryInterface
@@ -40,8 +41,9 @@ class UserService(UserServiceInterface):
     async def ensure_user(self, wallet_address: str) -> None:
         user = await self.user_repository.get_by_wallet(wallet_address)
         if not user:
+            address = Address(wallet_address)
             dto = CreateUserDTO(
-                wallet_address=wallet_address,
+                wallet_address=address.to_str(is_user_friendly=False),
                 last_activity=datetime.now(),
             )
 
