@@ -53,6 +53,7 @@ class ChainService(
         await self._start_chains()
         self.scheduler.start()
         self._add_generation_job()
+        self._add_transaction_check_job()
         self.logger.info("Сервис генерации блоков запущен.")
 
     def _add_generation_job(self):
