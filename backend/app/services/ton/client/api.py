@@ -85,11 +85,11 @@ class TonApiClient(TonClientInterface):
             logger.error(f"Failed to fetch {app_wallet_address} public key via API")
             raise PublicKeyCannotBeFetchedException()
 
-        response_data = TonApiPublicKeyResponse.model_validate(response.json())
+        # response_data = TonApiPublicKeyResponse.model_validate(response.json())
 
         transactions = []  # Список для хранения объектов TonTransaction
 
-        for transaction in response_data.transactions:
+        for transaction in response.transactions:
             if transaction.success and not transaction.aborted and transaction.in_msg:
                 for value in transaction.in_msg.value_extra:
                     transactions.append(TonTransaction(
@@ -103,8 +103,8 @@ class TonApiClient(TonClientInterface):
                     ))
 
         # Обновление последнего lt после обработки транзакций
-        if response_data.transactions:
-            new_last_lt = response_data.transactions[-1].lt
+        if response.transactions:
+            new_last_lt = response.transactions[-1].lt
             self._save_last_lt(new_last_lt)  # Сохраняем обновленный last_lt в файл
 
         return transactions
