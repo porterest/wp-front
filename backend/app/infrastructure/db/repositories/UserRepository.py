@@ -98,6 +98,7 @@ class UserRepository(
     async def fund_user(self, user_id: UUID, amount: float) -> None:  # amount could be < 0
         async with self.session_maker() as session:
             user = await session.get(self.entity, user_id)
+            logger.info(f"user is {user}")
 
             user.balance += amount
             logger.info('добавили денег')
