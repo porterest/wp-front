@@ -113,7 +113,7 @@ class ChainService(
         """
         Генерирует новые блоки и обрабатывает завершённые блоки для всех активных цепочек.
         """
-        self.logger.info(f"Начало генерации блоков в {datetime.now()}.")
+        # self.logger.info(f"Начало генерации блоков в {datetime.now()}.")
         try:
             chains = await self.chain_repository.get_all()
             for chain in chains:
@@ -124,7 +124,7 @@ class ChainService(
 
                 if last_block:
                     elapsed_time = (datetime.now() - last_block.created_at).seconds + 1
-                    self.logger.info(f'elapsed_time {elapsed_time}, block {last_block.id}, status {last_block.status}')
+                    # self.logger.info(f'elapsed_time {elapsed_time}, block {last_block.id}, status {last_block.status}')
                     if (elapsed_time >= self.block_generation_interval.total_seconds()
                             and last_block.status == BlockStatus.IN_PROGRESS):
                         try:
@@ -133,7 +133,7 @@ class ChainService(
                             await self._pause_chain(chain)
                             continue
                     else:
-                        logger.error(f"Fuck! Chain {chain.id} integrity is broken")
+                        # logger.error(f"Fuck! Chain {chain.id} integrity is broken")
                         continue
 
                 new_block = await self.block_service.start_new_block(chain.id)
@@ -149,14 +149,14 @@ class ChainService(
                 await self.chain_repository.update(chain.id, update_chain)
                 self._add_generation_job()
         except Exception:
-            logger.error('Something went wrong during block generation', exc_info=True)
+            # logger.error('Something went wrong during block generation', exc_info=True)
             raise
 
     async def _process_completed_block(self, block: Block) -> Rewards:
         """
         Обрабатывает завершённый блок, распределяет результаты и обновляет данные.
         """
-        self.logger.info(f"Обработка завершённого блока {block.block_number}.")
+        # self.logger.info(f"Обработка завершённого блока {block.block_number}.")
         await self.block_service.complete_block(block.id)
         try:
             result = await self.orchestrator_service.process_block(block_id=block.id)
@@ -164,7 +164,7 @@ class ChainService(
             logger.error('Stopping pair')
             raise
 
-        self.logger.info(f"Завершённый блок {block.block_number} успешно обработан.")
+        # self.logger.info(f"Завершённый блок {block.block_number} успешно обработан.")
         return result.rewards
 
     async def stop_block_generation(self):
@@ -178,13 +178,13 @@ class ChainService(
 
         # self.scheduler.remove_job("block_generation")
         self.scheduler.shutdown()
-        self.logger.info("Сервис генерации блоков остановлен.")
+        # self.logger.info("Сервис генерации блоков остановлен.")
 
     async def _stop_chain(self, chain: Chain):
         current_block = await self.block_service.get_last_block(chain.id)
-        self.logger.info(f'{current_block}, мяу мяу')
+        # self.logger.info(f'{current_block}, мяу мяу')
         await self.block_service.handle_interrupted_block(current_block.id)
-        self.logger.info('хендл мяу')
+        # self.logger.info('хендл мяу')
 
     async def get_current_block_state(self, pair_id: UUID) -> BlockStateResponse:
         """
@@ -195,13 +195,13 @@ class ChainService(
             elapsed_time = (datetime.now() - last_block.created_at).total_seconds()
             remaining_time = max(0.0, self.block_generation_interval.total_seconds() - elapsed_time)
 
-            self.logger.info(
-                f"Текущее состояние блока: "
-                f"Номер блока {last_block.block_number}, "
-                f"Статус {last_block.status}, "
-                f"Оставшееся время: {remaining_time} сек. "
-                f"(elapsed {elapsed_time}, interval {self.block_generation_interval.seconds - elapsed_time})"
-            )
+            # self.logger.info(
+            #     f"Текущее состояние блока: "
+            #     f"Номер блока {last_block.block_number}, "
+            #     f"Статус {last_block.status}, "
+            #     f"Оставшееся время: {remaining_time} сек. "
+            #     f"(elapsed {elapsed_time}, interval {self.block_generation_interval.seconds - elapsed_time})"
+            # )
 
             return BlockStateResponse(
                 block_id=last_block.id,
@@ -211,7 +211,7 @@ class ChainService(
             )
 
         except NotFoundException:
-            self.logger.error("Блок для пары не найден", exc_info=True)
+            # self.logger.error("Блок для пары не найден", exc_info=True)
             raise
 
     async def get_by_pair_id(self, pair_id: UUID) -> Chain:
