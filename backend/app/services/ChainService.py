@@ -68,7 +68,8 @@ class ChainService(
     def _add_transaction_check_job(self):
         logger.info('start transaction check')
         self.scheduler.add_job(
-            self.deposit_service.check_users_transactions,
+            # self.deposit_service.check_users_transactions,
+            lambda: logger.info("i'm here)))"),
             trigger=IntervalTrigger(self.transaction_check_interval.seconds),
             misfire_grace_time=None,  # noqa
             id="transaction_check",
