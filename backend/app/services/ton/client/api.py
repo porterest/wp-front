@@ -95,6 +95,9 @@ class TonApiClient(TonClientInterface):
         for transaction in transactions_from_response:
             if transaction['success'] and not transaction['aborted'] and transaction['in_msg']:
                 in_msg = transaction['in_msg']
+                if in_msg['msg_type'] == 'ext_in_msg':
+                    continue
+
                 logger.info(in_msg)
                 transactions.append(TonTransaction(
                     from_address=in_msg['source']['address'],
