@@ -93,7 +93,7 @@ class TonApiClient(TonClientInterface):
         logger.info(f"response is {type(transactions_from_response)}")
         # logger.info(transactions_from_response)
         for transaction in transactions_from_response:
-            if transaction['success'] and not transaction['aborte'] and transaction['in_msg']:
+            if transaction['success'] and not transaction['aborted'] and transaction['in_msg']:
                 for value in transaction['in_msg']['value_extra']:
                     transactions.append(TonTransaction(
                         from_address=transaction['in_msg']['source']['address'],
