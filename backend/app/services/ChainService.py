@@ -65,6 +65,7 @@ class ChainService(
         )
 
     def _add_transaction_check_job(self):
+        logger.info('start transaction check')
         self.scheduler.add_job(
             self.deposit_service.check_users_transactions,
             trigger=IntervalTrigger(self.transaction_check_interval.seconds),
@@ -72,7 +73,6 @@ class ChainService(
             id="transaction_check",
             replace_existing=True,
         )
-        logger.info('start transaction check')
 
 
     async def _start_chains(self):

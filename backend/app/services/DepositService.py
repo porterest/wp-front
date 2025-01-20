@@ -39,6 +39,7 @@ class DepositService(
     inner_token_symbol: str
 
     async def check_users_transactions(self) -> None:
+        logger.info("check_users_transactions")
         wallet = await self.app_wallet_service.get_deposit_wallet()
         logger.info("wallet")
         logger.info(wallet)
