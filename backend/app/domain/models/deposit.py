@@ -1,6 +1,7 @@
 import typing
 from dataclasses import dataclass
 from typing import Optional
+from uuid import UUID
 
 from domain.enums.deposit import DepositEntryStatus
 from domain.models import AppWallet
@@ -14,8 +15,8 @@ if typing.TYPE_CHECKING:
 
 @dataclass(kw_only=True)
 class DepositEntry(BaseModel):
+    app_wallet_id: UUID
+    user_id: UUID
     status: DepositEntryStatus
-
-    app_wallet: 'AppWallet'
-    user: 'User'
-    transaction: 'Transaction'
+    amount: Optional[float]
+    tx_id: Optional[str]

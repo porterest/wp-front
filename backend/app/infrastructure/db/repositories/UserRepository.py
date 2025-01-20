@@ -1,3 +1,4 @@
+import logging
 from dataclasses import field, dataclass
 from typing import Optional
 from uuid import UUID
@@ -13,6 +14,7 @@ from domain.models.user import User as UserModel
 from infrastructure.db.entities import User, Bet
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class UserRepository(
@@ -98,3 +100,4 @@ class UserRepository(
             user = await session.get(self.entity, user_id)
 
             user.balance += amount
+            logger.info('добавили денег')

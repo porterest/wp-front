@@ -5,12 +5,12 @@ from uuid import UUID
 from domain.models import AppWallet
 from domain.models.swap import CalculatedSwap
 
-
 AppWalletWithPrivateData = TypeVar(
     'AppWalletWithPrivateData',
     lambda x: x.private_key is not None,
     lambda x: isinstance(x, AppWallet),
 )
+
 
 class AppWalletServiceInterface(ABC):
     @abstractmethod
@@ -19,6 +19,9 @@ class AppWalletServiceInterface(ABC):
 
     @abstractmethod
     async def get_deposit_wallet_id(self) -> UUID:
+        ...
+    @abstractmethod
+    async def get_deposit_wallet(self) -> AppWallet:
         ...
 
     @abstractmethod

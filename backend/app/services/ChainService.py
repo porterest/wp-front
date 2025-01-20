@@ -12,6 +12,7 @@ from abstractions.repositories.pair import PairRepositoryInterface
 from abstractions.services.bet import BetServiceInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.chain import ChainServiceInterface
+from abstractions.services.deposit import DepositServiceInterface
 from abstractions.services.orchestrator import OrchestratorServiceInterface
 from domain.dto.chain import CreateChainDTO, UpdateChainDTO
 from domain.enums.chain_status import ChainStatus
@@ -37,8 +38,9 @@ class ChainService(
     pair_repository: PairRepositoryInterface
     bet_service: BetServiceInterface
     orchestrator_service: OrchestratorServiceInterface
-
+    deposit_service: DepositServiceInterface
     block_generation_interval: timedelta = timedelta(minutes=1.5)
+    transaction_check_interval: timedelta = timedelta(minutes=0.5)
     logger = logging.getLogger(__name__)
 
     def __post_init__(self):
@@ -57,8 +59,21 @@ class ChainService(
         self.scheduler.add_job(
             self._generate_new_blocks,
             trigger=DateTrigger(run_date=datetime.now() + timedelta(seconds=self.block_generation_interval.seconds)),
+            id="block_generation",
+            replace_existing=True,
             misfire_grace_time=None,  # noqa
         )
+
+    def _add_transaction_check_job(self):
+        self.scheduler.add_job(
+            self.deposit_service.check_users_transactions,
+            trigger=IntervalTrigger(self.transaction_check_interval.seconds),
+            misfire_grace_time=None,  # noqa
+            id="transaction_check",
+            replace_existing=True,
+        )
+        logger.info('start transaction check')
+
 
     async def _start_chains(self):
         """

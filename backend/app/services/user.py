@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
@@ -8,6 +9,7 @@ from sqlalchemy.exc import NoResultFound
 from abstractions.repositories.deposit import DepositRepositoryInterface
 from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.block import BlockServiceInterface
+from abstractions.services.currency import CurrencyServiceInterface
 from abstractions.services.swap import SwapServiceInterface
 from abstractions.services.user import UserServiceInterface
 from domain.dto.user import UpdateUserDTO, CreateUserDTO
@@ -20,6 +22,7 @@ from domain.models.reward_model import Rewards
 from domain.models.user import BettingActivity
 from services.exceptions import NotFoundException, NoSuchUserException
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class UserService(UserServiceInterface):
@@ -27,6 +30,7 @@ class UserService(UserServiceInterface):
     block_service: BlockServiceInterface
     swap_service: SwapServiceInterface
     deposit_repository: DepositRepositoryInterface
+    currency_service: CurrencyServiceInterface
 
     async def distribute_rewards(self, rewards: Rewards) -> None:
         for reward in rewards.user_rewards:
@@ -132,5 +136,7 @@ class UserService(UserServiceInterface):
     async def deposit_funded(self, deposit_id: UUID) -> None:
         deposit = await self.deposit_repository.get(deposit_id)
         if deposit.status == DepositEntryStatus.FUNDED:
-            await self.swap_service.swap_deposit(deposit.id)
-            await self.user_repository.fund_user(deposit.user.id, deposit.transaction.amount)
+            convert = await self.currency_service.convert_ton_to_inner_token(deposit.amount)
+            logger.info("convert")
+            logger.info(convert)
+            await self.user_repository.fund_user(deposit.user_id, convert)

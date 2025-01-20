@@ -36,6 +36,9 @@ class AppWalletService(AppWalletServiceInterface):
     async def get_deposit_address(self) -> Annotated[str, 'Address']:
         wallet = await self.provider.get_deposit_wallet()
         return wallet.address
+    async def get_deposit_wallet(self) -> AppWallet:
+        wallet = await self.provider.get_deposit_wallet()
+        return wallet
 
     async def get_deposit_wallet_id(self) -> UUID:
         wallet = await self.provider.get_deposit_wallet()

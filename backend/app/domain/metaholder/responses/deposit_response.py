@@ -1,4 +1,4 @@
-from domain.models.base import BaseModel
+from pydantic import BaseModel
 
 
 class DepositResponse(BaseModel):

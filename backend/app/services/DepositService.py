@@ -1,4 +1,6 @@
+import logging
 from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID
 
 from apscheduler.schedulers.base import BaseScheduler
@@ -17,7 +19,9 @@ from domain.enums import TransactionType
 from domain.enums.deposit import DepositEntryStatus
 from domain.metaholder.responses.deposit_response import DepositResponse
 from domain.ton.transaction import TonTransactionStatus
+from settings import settings
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class DepositService(
@@ -34,66 +38,38 @@ class DepositService(
 
     inner_token_symbol: str
 
-    async def check_user_transactions(self) -> list[DepositResponse]:
-        ...
-
-    async def start_deposit_process(self, user_id: UUID) -> None:
-        app_wallet_id = await self.app_wallet_service.get_deposit_wallet_id()
-        user = await self.user_service.get_user(user_id)
-        dto = DepositEntryCreateDTO(
-            user_id=user.id,
-            app_wallet_id=app_wallet_id,
-        )
-        await self.deposit_repository.create(dto)
-        self.scheduler.add_job(
-            self.check_for_incoming_transaction,
-            args=(dto.id,),
-            trigger='interval',
-            seconds=30,
-            id=f'deposit-{user.wallet_address}',
-            max_instances=1,
-        )
-
-    async def check_for_incoming_transaction(self, deposit_id: UUID) -> None:
-        deposit = await self.deposit_repository.get(deposit_id)
-
-        transactions = await self.ton_client.get_transactions(deposit.app_wallet.address)
+    async def check_users_transactions(self) -> None:
+        wallet = await self.app_wallet_service.get_deposit_wallet()
+        logger.info("wallet")
+        logger.info(wallet)
+        transactions = await self.ton_client.get_transactions(wallet.address)
+        logger.info("transactions")
+        logger.info(transactions)
         for transaction in transactions:
-            if transaction.from_address == deposit.user.wallet_address:
-                if transaction.status == TonTransactionStatus.PENDING:
-                    # create Transaction entity
-                    dto = CreateTransactionDTO(
-                        user_id=deposit.user.id,
-                        type=TransactionType.EXTERNAL_DEPOSIT,
-                        amount=transaction.amount,
-                        sender=transaction.from_address,
-                        recipient=transaction.to_address,
-                        tx_id=transaction.tx_id,
-                    )
+            user = await self.user_service.get_user_by_wallet(transaction.from_address)
+            if user:
+                deposit = DepositEntryCreateDTO(
+                    app_wallet_id=wallet.id,
+                    user_id=user.id,
+                    status=DepositEntryStatus.FUNDED,
+                    amount=transaction.amount,
+                    tx_id=transaction.tx_id
+                )
+                logger.info("deposit")
+                logger.info(deposit)
+                await self.deposit_repository.create(deposit)
+                await self.user_service.deposit_funded(deposit.id)
 
-                    await self.transaction_repository.create(dto)
+                dto = CreateTransactionDTO(
+                    user_id=user.id,
+                    type=TransactionType.EXTERNAL_DEPOSIT,
+                    amount=transaction.amount,
+                    sender=transaction.from_address,
+                    recipient=transaction.to_address,
+                    tx_id=transaction.tx_id,
+                )
+                logger.info("Transaction")
+                logger.info(dto)
 
-                    # update Deposit entity with actual tx data
-                    dto = DepositEntryUpdateDTO(
-                        status=DepositEntryStatus.FUNDED,
-                        amount=transaction.amount,
-                        tx_id=transaction.tx_id,
-                    )
+                await self.transaction_repository.create(dto)
 
-                    await self.deposit_repository.update(deposit_id, dto)
-
-                    pair = await self.pair_repository.get_pair_by_tokens(
-                        token1=self.inner_token_symbol,
-                        token2=transaction.token,
-                    )
-
-                    # performing a swap from TON/USDT/etc. for inner token
-                    await self.dex_service.perform_swap(
-                        amount=transaction.amount,
-                        target_token=f"not {self.inner_token_symbol}",  # todo: mock
-                        app_wallet_id=await self.app_wallet_service.get_deposit_wallet_id(),
-                        pool_address=pair.contract_address,
-                    )
-
-                    # funding a user after successful swap
-                    await self.user_service.deposit_funded(deposit_id)
