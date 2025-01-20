@@ -111,7 +111,7 @@ class TonApiClient(TonClientInterface):
 
         # Обновление последнего lt после обработки транзакций
         if transactions_from_response:
-            new_last_lt = response.transactions[0].lt
+            new_last_lt = transactions_from_response[0].lt
             self._save_last_lt(new_last_lt)  # Сохраняем обновленный last_lt в файл
 
         return transactions
