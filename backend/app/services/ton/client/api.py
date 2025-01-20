@@ -85,22 +85,24 @@ class TonApiClient(TonClientInterface):
             logger.error(f"Failed to fetch {app_wallet_address} public key via API")
             raise PublicKeyCannotBeFetchedException()
 
+        transactions_from_response = response.json()
+
         # response_data = TonApiPublicKeyResponse.model_validate(response.json())
 
         transactions = []  # Список для хранения объектов TonTransaction
         logger.info("response")
         logger.info(response)
-        for transaction in response.transactions:
-            if transaction.success and not transaction.aborted and transaction.in_msg:
-                for value in transaction.in_msg.value_extra:
+        for transaction in transactions_from_response:
+            if transaction['success'] and not transaction['aborte'] and transaction['in_msg']:
+                for value in transaction['in_msg']['value_extra']:
                     transactions.append(TonTransaction(
-                        from_address=transaction.in_msg.source['address'],
+                        from_address=transaction['in_msg']['source']['address'],
                         to_address=app_wallet_address,
-                        amount=int(transaction.in_msg.value),
+                        amount=int(transaction['in_msg']['value']),
                         token=value['preview']['symbol'] if 'preview' in value else "Unknown",
-                        sent_at=datetime.fromtimestamp(transaction.utime),
+                        sent_at=datetime.fromtimestamp(transaction['utime']),
                         status=TonTransactionStatus.COMPLETED,
-                        tx_id=transaction.hash
+                        tx_id=transaction['hash']
                     ))
 
         # Обновление последнего lt после обработки транзакций
