@@ -105,4 +105,4 @@ class UserRepository(
 
         async with self.session_maker() as session:
             user = await session.get(self.entity, user_id)
-            logger.info(user)
+            logger.info(user.balance)
