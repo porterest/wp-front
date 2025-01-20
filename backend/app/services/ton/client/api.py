@@ -94,16 +94,16 @@ class TonApiClient(TonClientInterface):
         # logger.info(transactions_from_response)
         for transaction in transactions_from_response:
             if transaction['success'] and not transaction['aborted'] and transaction['in_msg']:
-                for value in transaction['in_msg']['value_extra']:
-                    transactions.append(TonTransaction(
-                        from_address=transaction['in_msg']['source']['address'],
-                        to_address=app_wallet_address,
-                        amount=int(transaction['in_msg']['value']),
-                        token=value['preview']['symbol'] if 'preview' in value else "Unknown",
-                        sent_at=datetime.fromtimestamp(transaction['utime']),
-                        status=TonTransactionStatus.COMPLETED,
-                        tx_id=transaction['hash']
-                    ))
+                in_msg = transaction['in_msg']
+                transactions.append(TonTransaction(
+                    from_address=in_msg['source']['address'],
+                    to_address=app_wallet_address,
+                    amount=int(in_msg['value']),
+                    token='TON',
+                    sent_at=datetime.fromtimestamp(transaction['utime']),
+                    status=TonTransactionStatus.COMPLETED,
+                    tx_id=transaction['hash']
+                ))
 
         # Обновление последнего lt после обработки транзакций
         if response.transactions:
