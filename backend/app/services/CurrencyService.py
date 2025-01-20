@@ -7,4 +7,4 @@ from abstractions.services.currency import CurrencyServiceInterface
 class CurrencyService(CurrencyServiceInterface):
 
     async def convert_ton_to_inner_token(self, amount: int) -> float:
-        ...
+        return 100.5

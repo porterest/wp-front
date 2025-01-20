@@ -24,6 +24,7 @@ from services.exceptions import NotFoundException, NoSuchUserException
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class UserService(UserServiceInterface):
     user_repository: UserRepositoryInterface
