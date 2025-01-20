@@ -88,7 +88,8 @@ class TonApiClient(TonClientInterface):
         # response_data = TonApiPublicKeyResponse.model_validate(response.json())
 
         transactions = []  # Список для хранения объектов TonTransaction
-
+        logger.info("response")
+        logger.info(response)
         for transaction in response.transactions:
             if transaction.success and not transaction.aborted and transaction.in_msg:
                 for value in transaction.in_msg.value_extra:
