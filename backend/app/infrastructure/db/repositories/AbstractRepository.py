@@ -28,6 +28,9 @@ class AbstractSQLAlchemyRepository[Entity, Model, CreateDTO, UpdateDTO](
         self._set_lazy_fields()
 
     def _set_lazy_fields(self):
+        if not self.joined_fields:
+            return
+
         def convert_to_nested_dict(fields):
             return {field: {} for field in (fields or [])}
 

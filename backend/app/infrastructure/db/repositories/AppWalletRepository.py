@@ -15,7 +15,9 @@ class AppWalletRepository(
 ):
     # joined_fields: list[str] = field(default_factory=lambda: ['deposits'])
     joined_fields: dict[str, Optional[list[str]]] = field(
-        default_factory=lambda: None
+        default_factory=lambda: {
+
+        }
     )
 
     def create_dto_to_entity(self, dto: CreateAppWalletDTO) -> AppWallet:
