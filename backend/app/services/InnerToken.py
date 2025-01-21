@@ -4,16 +4,16 @@ from uuid import UUID
 from pytoniq import Address
 
 from abstractions.repositories.user import UserRepositoryInterface
+from abstractions.services.app_wallet import AppWalletServiceInterface
 from abstractions.services.inner_token import InnerTokenInterface
 from abstractions.services.tonclient import TonClientInterface
-from services.app_wallet.service import AppWalletService
 
 
 @dataclass
 class InnerTokenService(InnerTokenInterface):
     ton_client: TonClientInterface
     user_repository: UserRepositoryInterface
-    app_wallet_provider: AppWalletService
+    app_wallet_provider: AppWalletServiceInterface
 
     token_minter_address: Address = Address('EQBrltnukNOtAPgUwUO5o6VlDuFv2pkzEkOPvnqmOe2OmdB3')
 
