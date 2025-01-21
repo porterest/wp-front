@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 import createAuthRefreshInterceptor from "axios-auth-refresh";
-import { AxiosAuthRefreshRequestConfig } from 'axios-auth-refresh';
+// import { AxiosAuthRefreshRequestConfig } from 'axios-auth-refresh';
 
 const BASE_URL =
   process.env.REACT_APP_API_BASE_URL || "https://abchaaa.duckdns.org";
