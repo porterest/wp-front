@@ -7,6 +7,7 @@ from dependencies.services.app_wallet.service import get_app_wallet_service
 from dependencies.services.assets_management import get_assets_management_service
 from dependencies.services.block import get_block_service
 from dependencies.services.dex import get_dex_service
+from dependencies.services.inner_token import get_inner_token_service
 from dependencies.services.pool import get_pool_service
 from dependencies.services.swap import get_swap_service
 from dependencies.services.user import get_user_service
@@ -28,4 +29,5 @@ def get_orchestrator_service() -> OrchestratorServiceInterface:
         chain_repository=get_chain_repository(),
         pool_service=get_pool_service(),
         inner_token_symbol=settings.inner_token_symbol,
+        inner_token_service=get_inner_token_service()
     )
