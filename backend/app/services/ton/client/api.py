@@ -6,8 +6,10 @@ from typing import List, Optional
 
 from httpx import AsyncClient
 from pydantic import SecretStr
+from pytoniq_core import Address
 
 from abstractions.services.tonclient import TonClientInterface
+from domain.models.app_wallet import AppWalletWithPrivateData
 from domain.ton.transaction import TonTransaction, TonTransactionStatus
 from services.ton.public_keys.api import TonApiPublicKeyResponse
 from services.ton.public_keys.exceptions import PublicKeyCannotBeFetchedException
@@ -114,6 +116,22 @@ class TonApiClient(TonClientInterface):
             self._save_last_lt(new_last_lt)  # Сохраняем обновленный last_lt в файл
 
         return transactions
+
+    async def mint(self, amount: int, token_address: Address, admin_wallet: AppWalletWithPrivateData):
+        ...
+
+    async def mint_tokens(self, amount: int):
+        ...
+
+
+    async def send_jettons(
+            self,
+            user_wallet_address: Address,
+            amount: int,
+            token_address: Address,
+            app_wallet: AppWalletWithPrivateData,
+    ) -> None:
+        ...
 # import logging
 # from dataclasses import dataclass
 # from enum import Enum

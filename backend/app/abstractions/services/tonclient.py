@@ -71,9 +71,6 @@ class TonClientInterface(ABC):
     async def mint_tokens(self, amount: int):
         ...
 
-    @abstractmethod
-    async def burn_tokens(self, amount: int):
-        ...
 
     @abstractmethod
     async def get_current_pool_state(self) -> dict[str, float]:
