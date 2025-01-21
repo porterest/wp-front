@@ -19,8 +19,8 @@ code {
 html, body {
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Отключаем прокрутку */
-  height: 100%; /* Фиксируем высоту */
+  /*overflow: hidden; !* Отключаем прокрутку *!*/
+  /*height: 100%; !* Фиксируем высоту *!*/
   width: 100%;
 }
 
