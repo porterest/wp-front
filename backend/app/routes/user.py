@@ -105,9 +105,7 @@ async def get_user_history(
 async def withdraw_tokens(
         request: Request,
         amount: int
-        ):
+):
     user_id = get_user_id_from_request(request)
     inner_token_service = get_inner_token_service()
     await inner_token_service.withdraw_to_user(user_id=user_id, amount=amount)
-
-

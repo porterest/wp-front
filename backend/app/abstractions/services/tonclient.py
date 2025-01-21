@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from abc import ABC
 from typing import Annotated
 
@@ -45,24 +45,37 @@ class TonClientInterface(ABC):
 
         return address
 
+    @abstractmethod
     async def mint(self, amount: int, token_address: Address, admin_wallet: AppWalletWithPrivateData):
         ...
 
-    async def withdraw_to_user(self, wallet_address: Address, amount: int, token_address: Address):
+    @abstractmethod
+    async def send_jettons(
+            self,
+            user_wallet_address: Address,
+            amount: int,
+            token_address: Address,
+            app_wallet: AppWalletWithPrivateData,
+    ) -> None:
         ...
 
+    @abstractmethod
     async def get_public_key(self, address: str) -> str:
         ...
 
+    @abstractmethod
     async def get_transactions(self, address: str) -> list[TonTransaction]:
         ...
 
+    @abstractmethod
     async def mint_tokens(self, amount: int):
         ...
 
+    @abstractmethod
     async def burn_tokens(self, amount: int):
         ...
 
+    @abstractmethod
     async def get_current_pool_state(self) -> dict[str, float]:
         ...
 

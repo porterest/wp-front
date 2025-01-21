@@ -77,7 +77,7 @@ class TonTonLibClient(TonClientInterface):
             amount: int,
             token_address: Address,
             app_wallet: AppWalletWithPrivateData,
-    ):
+    ) -> None:
         await self.ton.start_up()
 
         logger.debug('Preparing mint transaction')
