@@ -106,6 +106,20 @@ export async function fetchUserBalances(): Promise<UserInfo> {
     }
 }
 
+export async function withdrawTokens(amount: number): Promise<void> {
+    try {
+        const response = await apiClient.post("/user/withdraw", { amount });
+        if (response.status === 200) {
+            console.log("Withdrawal successful");
+        } else {
+            console.warn("Unexpected response status:", response.status);
+        }
+    } catch (error) {
+        console.error("Failed to withdraw tokens:", error);
+        throw error;
+    }
+}
+
 /**
  * Запрос на получение доступных пар
  */
@@ -256,7 +270,7 @@ export async function fetchCandles(pairId: string): Promise<CandleData[]> {
                 volume: 9,
                 block_number: 5
             },
-        ];
+        ]; //todo
     } catch (error) {
         console.error("Ошибка при запросе данных свечей:", error);
         throw error;

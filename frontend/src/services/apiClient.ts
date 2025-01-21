@@ -30,7 +30,7 @@ interface RefreshedTokens {
 
 async function refreshTokens() {
   const refreshToken = localStorage.getItem("refreshToken");
-  console.log(refreshToken);
+  console.log("refresh is", refreshToken);
   const response = await apiClient.post<RefreshedTokens>('/auth/refresh', {}, {
     headers: {
       'X-Refresh-Token': refreshToken,

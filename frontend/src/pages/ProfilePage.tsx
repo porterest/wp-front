@@ -1,16 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useTonConnectUI } from "@tonconnect/ui-react"; // Для работы с TonConnect UI
-import { getUserBets, getUserHistory, cancelBet } from "../services/api"; // Импорт функций для выполнения запросов к API
+import { getUserBets, getUserHistory, cancelBet, fetchUserBalances, withdrawTokens } from "../services/api"; // Импорт функций для выполнения запросов к API
 import { BetResponse, TransactionResponse } from "../types/apiTypes";
 import { UUID } from "node:crypto";
 
 const ProfilePage: React.FC = () => {
   // Статические данные (адреса депозита и вознаграждений)
   const depositAddress = process.env.REACT_APP_DEPOSIT_ADDRESS || "";
-  const rewardAddress = process.env.REACT_APP_REWARD_ADDRESS || "";
 
-  // Подключение TonConnect UI для управления кошельком
-  const [tonConnectUI] = useTonConnectUI();
 
   // Локальный стейт для управления вкладками (история ставок или транзакций)
   const [activeTab, setActiveTab] = useState<"bets" | "transactions">("bets");
@@ -19,13 +15,32 @@ const ProfilePage: React.FC = () => {
   const [bets, setBets] = useState<BetResponse[]>([]);
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
 
-  // Локальные стейты для управления загрузкой и ошибками
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Локальное состояние для отмены ставки
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
+  const [balance, setBalance] = useState<number>(0); // Состояние для хранения баланса
+  const [withdrawAmount, setWithdrawAmount] = useState<number>(0); // Сумма вывода
+  const [loading, setLoading] = useState<boolean>(true); // Индикатор загрузки
+  const [error, setError] = useState<string | null>(null); // Состояние ошибки
+  const [isWithdrawing, setIsWithdrawing] = useState<boolean>(false); // Индикатор выполнения вывода
 
+  // Загрузка баланса пользователя
+  useEffect(() => {
+    const loadBalance = async () => {
+      try {
+        setLoading(true);
+        const userInfo = await fetchUserBalances();
+        setBalance(userInfo.balance);
+      } catch (err) {
+        console.error("Ошибка при загрузке баланса:", err);
+        setError("Не удалось загрузить баланс.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBalance();
+  }, []);
   // Функция загрузки данных в зависимости от активной вкладки
   const fetchData = useCallback(async () => {
     try {
@@ -57,17 +72,25 @@ const ProfilePage: React.FC = () => {
     alert("Address copied to clipboard!");
   }, []);
 
-  // Функция для изменения кошелька
-  const changeWallet = useCallback(async () => {
-    try {
-      await tonConnectUI.disconnect(); // Отключаем текущий кошелек
-      alert("Wallet disconnected. Please connect a new wallet.");
-      await tonConnectUI.openModal(); // Открываем модальное окно для подключения нового кошелька
-    } catch (error) {
-      console.error("Failed to change wallet:", error);
-      alert("Failed to change wallet. Please try again.");
+  // Обработчик вывода средств
+  const handleWithdraw = async () => {
+    if (withdrawAmount <= 0 || withdrawAmount > balance) {
+      alert("Введите корректную сумму для вывода.");
+      return;
     }
-  }, [tonConnectUI]);
+
+    try {
+      setIsWithdrawing(true);
+      await withdrawTokens(withdrawAmount); // Отправка суммы на бэкенд
+      setBalance((prevBalance) => prevBalance - withdrawAmount); // Обновление локального состояния баланса
+      alert("Средства успешно выведены.");
+    } catch (err) {
+      console.error("Ошибка при выводе средств:", err);
+      alert("Не удалось выполнить вывод. Попробуйте позже.");
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
 
   // Функция для отмены ставки
   const handleCancelBet = useCallback(
@@ -168,17 +191,38 @@ const ProfilePage: React.FC = () => {
         </button>
       </section>
 
-      {/* Адрес для вознаграждений */}
+      {/* Баланс и вывод средств */}
       <section className="w-11/12 bg-gradient-to-r from-teal-600 to-teal-400 rounded-md shadow-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold">Reward Address</h2>
-        <p className="text-sm break-words">{rewardAddress}</p>
-        <button
-          onClick={changeWallet}
-          className="w-full py-2 bg-teal-800 text-white font-bold rounded-md hover:bg-teal-700 transition-colors duration-300"
-        >
-          Change Wallet
-        </button>
+        <h2 className="text-lg font-semibold">Ваш баланс</h2>
+        {loading ? (
+          <p className="text-center text-gray-400">Загрузка...</p>
+        ) : error ? (
+          <p className="text-center text-red-500">{error}</p>
+        ) : (
+          <>
+            <p className="text-sm">Доступный баланс: {balance} токенов</p>
+            <input
+              type="number"
+              placeholder="Сумма для вывода"
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(Number(e.target.value))}
+              className="w-full py-2 px-4 rounded-md border border-gray-700 text-black"
+            />
+            <button
+              onClick={handleWithdraw}
+              disabled={isWithdrawing || withdrawAmount <= 0 || withdrawAmount > balance}
+              className={`w-full py-2 ${
+                isWithdrawing
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-teal-800 hover:bg-teal-700"
+              } text-white font-bold rounded-md transition-colors duration-300`}
+            >
+              {isWithdrawing ? "Вывод..." : "Вывести"}
+            </button>
+          </>
+        )}
       </section>
+
 
       {/* Переключатель вкладок */}
       <div className="w-11/12 flex justify-center space-x-4 mt-6">
