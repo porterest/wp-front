@@ -191,19 +191,19 @@ const ProfilePage: React.FC = () => {
         </button>
       </section>
 
-      {/* Баланс и вывод средств */}
+      {/* Balance and Withdrawal */}
       <section className="w-11/12 bg-gradient-to-r from-teal-600 to-teal-400 rounded-md shadow-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold">Ваш баланс</h2>
+        <h2 className="text-lg font-semibold">Your Balance</h2>
         {loading ? (
-          <p className="text-center text-gray-400">Загрузка...</p>
+          <p className="text-center text-gray-400">Loading...</p>
         ) : error ? (
           <p className="text-center text-red-500">{error}</p>
         ) : (
           <>
-            <p className="text-sm">Доступный баланс: {balance} токенов</p>
+            <p className="text-sm">Available balance: {balance} tokens</p>
             <input
               type="number"
-              placeholder="Сумма для вывода"
+              placeholder="Withdrawal amount"
               value={withdrawAmount}
               onChange={(e) => setWithdrawAmount(Number(e.target.value))}
               className="w-full py-2 px-4 rounded-md border border-gray-700 text-black"
@@ -217,11 +217,12 @@ const ProfilePage: React.FC = () => {
                   : "bg-teal-800 hover:bg-teal-700"
               } text-white font-bold rounded-md transition-colors duration-300`}
             >
-              {isWithdrawing ? "Вывод..." : "Вывести"}
+              {isWithdrawing ? "Withdrawing..." : "Withdraw"}
             </button>
           </>
         )}
       </section>
+
 
 
       {/* Переключатель вкладок */}
