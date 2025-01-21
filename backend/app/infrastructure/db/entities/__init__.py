@@ -12,6 +12,7 @@ from domain.enums import BetStatus, TransactionType, WalletType
 from domain.enums.block_status import BlockStatus
 from domain.enums.chain_status import ChainStatus
 from domain.enums.deposit import DepositEntryStatus
+from domain.models.app_wallet import AppWalletVersion
 from domain.models.bet import BetVector
 
 Base = declarative_base()
@@ -90,6 +91,7 @@ class AppWallet(AbstractBase):
 
     id: Mapped[pyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     address: Mapped[str] = mapped_column(String(255))
+    wallet_version: Mapped[AppWalletVersion] = mapped_column(SQLEnum(AppWalletVersion))
     wallet_type: Mapped[WalletType] = mapped_column(SQLEnum(WalletType))
     balance: Mapped[float]
 
