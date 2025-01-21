@@ -1,5 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { getUserBets, getUserHistory, cancelBet, fetchUserBalances, withdrawTokens } from "../services/api"; // Импорт функций для выполнения запросов к API
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  cancelBet,
+  fetchUserBalances,
+  getUserBets,
+  getUserHistory,
+  withdrawTokens,
+} from "../services/api"; // Импорт функций для выполнения запросов к API
 import { BetResponse, TransactionResponse } from "../types/apiTypes";
 import { UUID } from "node:crypto";
 
@@ -7,14 +13,12 @@ const ProfilePage: React.FC = () => {
   // Статические данные (адреса депозита и вознаграждений)
   const depositAddress = process.env.REACT_APP_DEPOSIT_ADDRESS || "";
 
-
   // Локальный стейт для управления вкладками (история ставок или транзакций)
   const [activeTab, setActiveTab] = useState<"bets" | "transactions">("bets");
 
   // Локальные стейты для хранения данных
   const [bets, setBets] = useState<BetResponse[]>([]);
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
-
 
   // Локальное состояние для отмены ставки
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
@@ -93,23 +97,20 @@ const ProfilePage: React.FC = () => {
   };
 
   // Функция для отмены ставки
-  const handleCancelBet = useCallback(
-    async (betId: UUID) => {
-      if (!window.confirm("Вы уверены, что хотите отменить ставку?")) return;
-      setIsCanceling(true);
-      try {
-        await cancelBet(betId.toString());
-        setBets((prevBets) => prevBets.filter((bet) => bet.id !== betId));
-        alert("Ставка успешно отменена.");
-      } catch (error) {
-        console.error("Ошибка при отмене ставки:", error);
-        alert("Не удалось отменить ставку. Попробуйте снова.");
-      } finally {
-        setIsCanceling(false);
-      }
-    },
-    []
-  );
+  const handleCancelBet = useCallback(async (betId: UUID) => {
+    if (!window.confirm("Вы уверены, что хотите отменить ставку?")) return;
+    setIsCanceling(true);
+    try {
+      await cancelBet(betId.toString());
+      setBets((prevBets) => prevBets.filter((bet) => bet.id !== betId));
+      alert("Ставка успешно отменена.");
+    } catch (error) {
+      console.error("Ошибка при отмене ставки:", error);
+      alert("Не удалось отменить ставку. Попробуйте снова.");
+    } finally {
+      setIsCanceling(false);
+    }
+  }, []);
 
   // Функция для рендера списка ставок
   const renderBets = () => (
@@ -123,13 +124,16 @@ const ProfilePage: React.FC = () => {
             <strong>Amount:</strong> {bet.amount}
           </p>
           <p>
-            <strong>Created At:</strong> {new Date(bet.created_at).toLocaleString()}
+            <strong>Created At:</strong>{" "}
+            {new Date(bet.created_at).toLocaleString()}
           </p>
           <button
             onClick={() => handleCancelBet(bet.id)}
             disabled={isCanceling}
             className={`w-full py-2 ${
-              isCanceling ? "bg-gray-500 cursor-not-allowed" : "bg-red-600 hover:bg-red-500"
+              isCanceling
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-red-600 hover:bg-red-500"
             } text-white font-bold rounded-md transition-colors duration-300 mt-2`}
           >
             {isCanceling ? "Отмена..." : "Отменить"}
@@ -167,7 +171,7 @@ const ProfilePage: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen bg-gradient-to-b from-black to-gray-900 text-white p-4 space-y-6">
+    <div className="flex flex-col items-center justify-start h-auto bg-gradient-to-b from-black to-gray-900 text-white p-4 space-y-6">
       {/* Логотип */}
       <div className="mt-6">
         <img src="/logo.png" alt="Logo" className="w-40 h-20 shadow-lg" />
@@ -210,7 +214,9 @@ const ProfilePage: React.FC = () => {
             />
             <button
               onClick={handleWithdraw}
-              disabled={isWithdrawing || withdrawAmount <= 0 || withdrawAmount > balance}
+              disabled={
+                isWithdrawing || withdrawAmount <= 0 || withdrawAmount > balance
+              }
               className={`w-full py-2 ${
                 isWithdrawing
                   ? "bg-gray-500 cursor-not-allowed"
@@ -223,14 +229,14 @@ const ProfilePage: React.FC = () => {
         )}
       </section>
 
-
-
       {/* Переключатель вкладок */}
       <div className="w-11/12 flex justify-center space-x-4 mt-6">
         <button
           onClick={() => setActiveTab("bets")}
           className={`py-2 px-4 rounded-md font-bold ${
-            activeTab === "bets" ? "bg-purple-600 text-white" : "bg-gray-700 text-gray-400"
+            activeTab === "bets"
+              ? "bg-purple-600 text-white"
+              : "bg-gray-700 text-gray-400"
           }`}
         >
           Bets History
@@ -238,7 +244,9 @@ const ProfilePage: React.FC = () => {
         <button
           onClick={() => setActiveTab("transactions")}
           className={`py-2 px-4 rounded-md font-bold ${
-            activeTab === "transactions" ? "bg-teal-400 text-white" : "bg-gray-700 text-gray-400"
+            activeTab === "transactions"
+              ? "bg-teal-400 text-white"
+              : "bg-gray-700 text-gray-400"
           }`}
         >
           Transactions History
