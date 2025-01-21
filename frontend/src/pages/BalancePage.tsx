@@ -110,9 +110,9 @@ const BalancePage: React.FC = () => {
           <p className="mt-4 text-xl font-extrabold">
             Balance: {userData.balance} WPT
           </p>
-          <p className="mt-4 text-xl font-extrabold">
-            At risk (total bets): {userData.atRisk} WPT
-          </p>
+          {/*<p className="mt-4 text-xl font-extrabold">*/}
+          {/*  At risk (total bets): {userData.atRisk} WPT*/}
+          {/*</p>*/}
         </>
       );
     }
