@@ -39,8 +39,8 @@ const refreshAuthLogic = (failedRequest: AxiosError) =>
         headers: {
           "X-Refresh-Token": getRefreshToken(),
         },
-        skipAuthRefresh: true
-      } as AxiosAuthRefreshRequestConfig,
+        // skipAuthRefresh: true
+      } // as AxiosAuthRefreshRequestConfig,
     )
     .then((tokenRefreshResponse) => {
       localStorage.setItem("authToken", tokenRefreshResponse.data.accessToken);
