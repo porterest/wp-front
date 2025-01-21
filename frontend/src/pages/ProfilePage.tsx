@@ -171,7 +171,8 @@ const ProfilePage: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col items-center justify-start h-auto bg-gradient-to-b from-black to-gray-900 text-white p-4 space-y-6">
+    <div
+      className="flex flex-col items-center justify-start min-h-screen bg-gradient-to-b from-black to-gray-900 text-white p-4 space-y-6 overflow-auto">
       {/* Логотип */}
       <div className="mt-6">
         <img src="/logo.png" alt="Logo" className="w-40 h-20 shadow-lg" />
@@ -195,7 +196,7 @@ const ProfilePage: React.FC = () => {
         </button>
       </section>
 
-      {/* Balance and Withdrawal */}
+      {/* Баланс и вывод средств */}
       <section className="w-11/12 bg-gradient-to-r from-teal-600 to-teal-400 rounded-md shadow-lg p-6 space-y-4">
         <h2 className="text-lg font-semibold">Your Balance</h2>
         {loading ? (
@@ -253,8 +254,8 @@ const ProfilePage: React.FC = () => {
         </button>
       </div>
 
-      {/* Контент: либо история ставок, либо транзакций */}
-      <section className="w-11/12 bg-gray-800 rounded-md shadow-lg p-6 space-y-4">
+      {/* Контент: история ставок или транзакций */}
+      <section className="w-11/12 bg-gray-800 rounded-md shadow-lg p-6 space-y-4 overflow-y-auto max-h-[50vh]">
         {loading ? (
           <p className="text-center text-gray-400">Loading...</p>
         ) : error ? (
@@ -269,4 +270,4 @@ const ProfilePage: React.FC = () => {
   );
 };
 
-export default ProfilePage;
+  export default ProfilePage;
