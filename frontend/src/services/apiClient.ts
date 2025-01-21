@@ -1,4 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
+import { useNavigate } from "react-router-dom";
+
+const navigate = useNavigate();
 
 const logout = () => {
   localStorage.removeItem("authToken");
@@ -61,11 +64,17 @@ apiClient.interceptors.response.use(
     console.error("[API ERROR]:", error.config?.url, error);
     const originalRequest = error.config as AxiosRequestConfig & {
       _retry?: boolean;
+      _isRefresh?: boolean;
     };
+
+    if (originalRequest.url?.endsWith("/refresh")) {
+      return;
+    }
 
     // Check for 401 Unauthorized and ensure we haven't retried this request yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+
 
       try {
         console.log("[API]: Refreshing token...");
