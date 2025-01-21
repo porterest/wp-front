@@ -5,6 +5,7 @@ from abstractions.repositories.app_wallet import AppWalletRepositoryInterface
 from abstractions.services.app_wallet import AppWalletProviderInterface
 from abstractions.services.app_wallet.vault import VaultServiceInterface
 from domain.models import AppWallet
+from domain.models.app_wallet import AppWalletWithPrivateData
 from domain.models.swap import CalculatedSwap
 
 
@@ -32,11 +33,10 @@ class AppWalletProvider(AppWalletProviderInterface):
         wallet = await self.wallet_repository.get(self.deposit_wallet_id)
         return wallet
 
-    async def get_withdraw_wallet(self) -> AppWallet:
+    async def get_withdraw_wallet(self) -> AppWalletWithPrivateData:
         wallet = await self.wallet_repository.get(self.withdraw_wallet_id)
         private_key = await self.vault_service.get_wallet_private_key(wallet_id=wallet.id)
-        wallet.private_key = private_key
-        return wallet
+        return AppWalletWithPrivateData.from_app_wallet(app_wallet=wallet, private_key=private_key)
 
     async def get_wallet_mnemonic(self) -> list[str]:
         # with open("./secret.txt", "rt") as secret:

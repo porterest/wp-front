@@ -2,7 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Tuple, List, Optional
+from typing import List, Optional
 
 from httpx import AsyncClient
 from pydantic import SecretStr
@@ -24,6 +24,7 @@ class TonApiClient(TonClientInterface):
     get_pubkey_endpoint: str = '/v2/accounts/{}/publickey'
     get_transactions_endpoint: str = '/v2/blockchain/accounts/{}/transactions'
     lt_file: str = "storage/last_lt.txt"
+
     @asynccontextmanager
     async def _get_client(self) -> AsyncClient:
         async with AsyncClient(base_url=self.base_url) as client:
@@ -49,8 +50,6 @@ class TonApiClient(TonClientInterface):
 
     async def get_current_pool_state(self) -> dict[str, float]:
         return {'X': 123.1, 'TON': 132.456}
-
-
 
     def _load_last_lt(self) -> Optional[int]:
         """Загружает значение last_lt из файла."""

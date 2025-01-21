@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 from domain.models import AppWallet
+from domain.models.app_wallet import AppWalletWithPrivateData
 from domain.models.swap import CalculatedSwap
 
 
@@ -11,7 +12,7 @@ class AppWalletProviderInterface(ABC):
         ...
 
     @abstractmethod
-    async def get_withdraw_wallet(self) -> AppWallet:
+    async def get_withdraw_wallet(self) -> AppWalletWithPrivateData:
         ...
 
     @abstractmethod

@@ -1,10 +1,10 @@
-import base64
-import hashlib
-from abc import ABC, abstractmethod
-from typing import Annotated, Tuple, Dict
+from abc import ABC
+from abc import ABC
+from typing import Annotated
 
-from pytoniq_core import Address, Cell, Builder
+from pytoniq_core import Address, Builder
 
+from domain.models.app_wallet import AppWalletWithPrivateData
 from domain.ton import InitialAccountState
 from domain.ton.transaction import TonTransaction
 from domain.tonconnect.requests import CheckProofRequest, Proof, Domain, CheckProofRequestRaw
@@ -44,6 +44,12 @@ class TonClientInterface(ABC):
         address = f'{workchain_byte.hex()}:{state_hash.hex()}'
 
         return address
+
+    async def mint(self, amount: int, token_address: Address, admin_wallet: AppWalletWithPrivateData):
+        ...
+
+    async def withdraw_to_user(self, wallet_address: Address, amount: int, token_address: Address):
+        ...
 
     async def get_public_key(self, address: str) -> str:
         ...

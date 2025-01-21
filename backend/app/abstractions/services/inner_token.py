@@ -1,11 +1,14 @@
 from abc import ABC, abstractmethod
+from uuid import UUID
 
 
 class InnerTokenInterface(ABC):
     @abstractmethod
-    async def mint(self):
+    async def mint(self, amount: int):
+        ...
+    @abstractmethod
+    async def withdraw_to_user(self, user_id: UUID, amount: int):
         ...
 
-    @abstractmethod
-    async def perform_swap(self, address: str, amount: int, from_token: str, to_token: str):
-        ...
+
+

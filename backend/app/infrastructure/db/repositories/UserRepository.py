@@ -103,7 +103,3 @@ class UserRepository(
                 logger.info(user.balance)
                 user.balance += amount
                 logger.info(f'добавили денег {user.balance}')
-
-        async with self.session_maker() as session:
-            user = await session.get(self.entity, user_id)
-            logger.info(user.balance)

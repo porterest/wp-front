@@ -7,6 +7,7 @@ from abstractions.services.app_wallet import AppWalletServiceInterface
 from abstractions.services.assets_management import AssetsManagementServiceInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.dex import DexServiceInterface
+from abstractions.services.inner_token import InnerTokenInterface
 from abstractions.services.liquidity_management import LiquidityManagerInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
 from abstractions.services.math.pool_service import PoolServiceInterface
@@ -35,6 +36,7 @@ class OrchestratorService(OrchestratorServiceInterface):
     app_wallet_service: AppWalletServiceInterface
     chain_repository: ChainRepositoryInterface
     pool_service: PoolServiceInterface
+    inner_token_service: InnerTokenInterface
     inner_token_symbol: str
 
     async def process_block(self, block_id: UUID) -> OrchestratorResult:
@@ -87,9 +89,7 @@ class OrchestratorService(OrchestratorServiceInterface):
 
         total_mint = int(reward_mint + liquidity_mint)
         # Вызываем метод минтинга
-        await self.dex_service.mint_token(
-            amount=total_mint
-        )
+        await self.inner_token_service.mint(amount=total_mint)
 
         return OrchestratorResult(
             liquidity_action=liquidity_action,
