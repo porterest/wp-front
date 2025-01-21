@@ -5,42 +5,44 @@ interface TimerProps {
   onTimerEnd: () => void; // Callback при завершении таймера
   className?: string; // Дополнительный класс для стилизации
 }
-
 const Timer: React.FC<TimerProps> = ({ onTimerEnd }) => {
   const { data } = useDataPrefetch();
-  const [timeLeft, setTimeLeft] = useState<number | null>(null); // Оставшееся время
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false); // Флаг синхронизации
 
   const syncAndStartTimer = async () => {
-    try {
-      console.log("Starting timer");
+    if (isSyncing) return; // Избегаем повторной синхронизации
+    setIsSyncing(true);
 
-      // Получаем время из контекста
-      const remainingTime = (data.time || 0) * 1000; // В миллисекундах
+    try {
+      const remainingTime = (data.time || 0) * 1000; // Конвертируем в миллисекунды
       console.log("remaining time", remainingTime);
 
       if (remainingTime <= 0) {
-        console.log("Получено 0, ждём 5 секунд и повторяем запрос...");
-        setTimeout(syncAndStartTimer, 5000); // Подождать 5 секунд и повторно вызвать
-        return; // Завершаем текущий вызов, чтобы не устанавливать 0 в timeLeft
+        console.log("Получено 0, ждем 5 секунд и повторяем запрос...");
+        setTimeout(syncAndStartTimer, 5000);
+        setIsSyncing(false);
+        return;
       }
 
       setTimeLeft(remainingTime);
     } catch (error) {
-      console.error("Ошибка синхронизации времени в Timer:", error);
+      console.error("Ошибка синхронизации времени:", error);
+    } finally {
+      setIsSyncing(false);
     }
   };
 
   useEffect(() => {
-    // Первый запуск таймера при монтировании компонента
     syncAndStartTimer();
-  }, [data.time]); // Зависимость от времени в контексте
+  }, [data.time]);
 
   useEffect(() => {
     if (timeLeft === 0) {
       onTimerEnd();
-      syncAndStartTimer(); // Сразу запрашиваем новое время
+      syncAndStartTimer();
     }
-  }, [timeLeft]); // Отслеживаем изменения timeLeft
+  }, [timeLeft]);
 
   useEffect(() => {
     const interval = setInterval(() => {
