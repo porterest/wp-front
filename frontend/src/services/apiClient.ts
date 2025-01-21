@@ -53,7 +53,7 @@ const refreshAuthLogic = (failedRequest: AxiosError) =>
       return Promise.resolve();
     });
 
-createAuthRefreshInterceptor(axios, refreshAuthLogic, {
+createAuthRefreshInterceptor(apiClient, refreshAuthLogic, {
   pauseInstanceWhileRefreshing: true,
 });
 
