@@ -42,6 +42,12 @@ class BetService(BetServiceInterface):
         bet = await self.get(bet_id)
         user = await self.user_repository.get(bet.user.id)
 
+        if bet.status == BetStatus.CANCELED:
+            return
+
+        if bet.status == BetStatus.RESOLVED:
+            return
+
         update_user = UpdateUserDTO(
             balance=user.balance + bet.amount,
         )
