@@ -53,6 +53,7 @@ const ProfilePage: React.FC = () => {
       if (activeTab === "bets") {
         const betsData = await getUserBets();
         setBets(betsData.bets);
+        console.log(betsData.bets);
       } else {
         const transactionsData = await getUserHistory();
         setTransactions(transactionsData.transactions);
