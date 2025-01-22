@@ -89,7 +89,11 @@ class OrchestratorService(OrchestratorServiceInterface):
 
         total_mint = int(reward_mint + liquidity_mint)
         # Вызываем метод минтинга
-        await self.inner_token_service.mint(amount=total_mint)
+        if total_mint > 0:
+            try:
+                await self.inner_token_service.mint(amount=total_mint)
+            except Exception as e:
+                logger.error(f"not minted {total_mint}")
 
         return OrchestratorResult(
             liquidity_action=liquidity_action,

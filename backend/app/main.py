@@ -43,6 +43,7 @@ logging.basicConfig(
 )
 
 logging.getLogger('urllib3').setLevel(logging.INFO)
+logging.getLogger('httpcore').setLevel(logging.INFO)
 logging.getLogger('apscheduler').setLevel(logging.DEBUG)
 
 

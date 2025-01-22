@@ -41,7 +41,9 @@ class VaultClient(VaultClientInterface):
             url=f'/secret/data/{path}',
         )
 
-        response.raise_for_status()
+        # response.raise_for_status()
+        if not response.is_success:
+            raise Exception()  # todo: debug
 
         return SecretStr(response.json()['data']['data'][key])
 
