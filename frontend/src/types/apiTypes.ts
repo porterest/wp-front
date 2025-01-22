@@ -56,12 +56,6 @@ export interface PlaceBetRequest {
   predicted_vector: number[];
 }
 
-export interface StatusResponse {
-  status: "PENDING" | "WON" | "LOST";
-  accuracy: number;
-  winning: number;
-}
-
 export interface PairResponse {
   pair_id: string;
   name: string;
