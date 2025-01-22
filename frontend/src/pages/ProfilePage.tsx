@@ -98,9 +98,8 @@ const ProfilePage: React.FC = () => {
 
   // Функция для отмены ставки
   const handleCancelBet = async (betId: UUID) => {
-    console.log(betId, bets);
-    const bet = bets.find((b) => b.id == betId);
-    console.log(bet, bet?.status);
+    const betIndex = bets.findIndex((b) => b.id == betId);
+    const bet = bets[betIndex];
     if (!bet || bet.status != "pending") {
       return;
     }
@@ -108,7 +107,17 @@ const ProfilePage: React.FC = () => {
     setIsCanceling(betId);
     try {
       await cancelBet(betId.toString());
-      setBets((prevBets) => prevBets.filter((bet) => bet.id !== betId));
+      const newBet = bet;
+      newBet.status = "canceled";
+      let newBets: BetResponse[] = [];
+      if (betIndex > 0) {
+        newBets = newBets.concat(bets.slice(0, betIndex));
+      }
+      newBets = newBets.concat([newBet]);
+      if (betIndex + 1 >= bets.length) {
+        newBets = newBets.concat(bets.slice(betIndex + 1, bets.length));
+      }
+      setBets(newBets);
       alert("Ставка успешно отменена.");
     } catch (error) {
       console.error("Ошибка при отмене ставки:", error);
