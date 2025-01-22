@@ -7,7 +7,7 @@ interface TimerProps {
   className?: string; // Дополнительный класс для стилизации
 }
 const Timer: React.FC<TimerProps> = ({ onTimerEnd }) => {
-  const { data, setData } = useDataPrefetch();
+  const { data } = useDataPrefetch();
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isSyncing, setIsSyncing] = useState(false); // Флаг синхронизации
 
