@@ -20,7 +20,7 @@ const GamePage: React.FC = () => {
       "CandleDataContext must be used within a CandleDataProvider",
     );
   }
-  const { data, setData } = useDataPrefetch();
+  const { data, setData } = context;
 
   const [orbitControlsEnabled, setOrbitControlsEnabled] = useState(true);
   const [currentMode, setCurrentMode] = useState(1);
@@ -146,6 +146,10 @@ const GamePage: React.FC = () => {
       setShowInstructions(true); // Показываем инструкцию
       localStorage.setItem("hasVisitedGamePage", "true"); // Отмечаем, что уже показывали
     }
+  }, []);
+
+  useEffect(() => {
+    context.setSelectedPair(selectedPair);
   }, []);
 
   return (

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
+import { fetchTime } from "../services/api";
 
 interface TimerProps {
   onTimerEnd: () => void; // Callback при завершении таймера
   className?: string; // Дополнительный класс для стилизации
 }
 const Timer: React.FC<TimerProps> = ({ onTimerEnd }) => {
-  const { data } = useDataPrefetch();
+  const { data, setData } = useDataPrefetch();
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isSyncing, setIsSyncing] = useState(false); // Флаг синхронизации
 
@@ -15,6 +16,8 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd }) => {
     setIsSyncing(true);
 
     try {
+      const timeData = await fetchTime();
+      setData((prev) => ({ ...prev, time: timeData.remaining_time_in_block }));
       const remainingTime = (data.time || 0) * 1000; // Конвертируем в миллисекунды
       console.log("remaining time", remainingTime);
 
