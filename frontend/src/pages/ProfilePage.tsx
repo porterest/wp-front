@@ -98,7 +98,7 @@ const ProfilePage: React.FC = () => {
 
   // Функция для отмены ставки
   const handleCancelBet = useCallback(async (betId: UUID) => {
-    console.log(betId);
+    console.log(betId, bets);
     const bet = bets.find((b) => b.id == betId);
     console.log(bet, bet?.status);
     if (!bet || bet.status != "pending") {
