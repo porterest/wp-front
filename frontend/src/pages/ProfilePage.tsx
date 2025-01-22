@@ -53,7 +53,6 @@ const ProfilePage: React.FC = () => {
       if (activeTab === "bets") {
         const betsData = await getUserBets();
         setBets(betsData.bets);
-        console.log(betsData.bets);
       } else {
         const transactionsData = await getUserHistory();
         setTransactions(transactionsData.transactions);
@@ -102,7 +101,7 @@ const ProfilePage: React.FC = () => {
     console.log(betId, bets);
     const bet = bets.find((b) => b.id == betId);
     console.log(bet, bet?.status);
-    if (!bet || bet.status != "pending") {
+    if (!bet || bet.status != "pending" || isCanceling) {
       return;
     }
     if (!window.confirm("Вы уверены, что хотите отменить ставку?")) return;
@@ -117,7 +116,7 @@ const ProfilePage: React.FC = () => {
     } finally {
       setIsCanceling(null);
     }
-  }, []);
+  }, [isCanceling]);
 
   // Функция для рендера списка ставок
   const renderBets = () => (
