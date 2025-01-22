@@ -17,7 +17,7 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { setData } = useDataPrefetch();
+  const { data, setData } = useDataPrefetch();
 
   useEffect(() => {
     const fetchPairs = async (): Promise<void> => {
@@ -64,9 +64,8 @@ const HomePage: React.FC = () => {
       fetchPairs();
       fetchTimeData();
     };
-
     fetchData(); // Запускаем первый цикл запросов
-  }, [setData]);
+  }, [data.selectedPair]);
 
 
   // Проверка, если кошелек подключен, запускаем авторизацию
