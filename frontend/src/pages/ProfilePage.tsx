@@ -97,11 +97,11 @@ const ProfilePage: React.FC = () => {
   };
 
   // Функция для отмены ставки
-  const handleCancelBet = useCallback(async (betId: UUID) => {
+  const handleCancelBet = async (betId: UUID) => {
     console.log(betId, bets);
     const bet = bets.find((b) => b.id == betId);
     console.log(bet, bet?.status);
-    if (!bet || bet.status != "pending" || isCanceling) {
+    if (!bet || bet.status != "pending") {
       return;
     }
     if (!window.confirm("Вы уверены, что хотите отменить ставку?")) return;
@@ -116,7 +116,7 @@ const ProfilePage: React.FC = () => {
     } finally {
       setIsCanceling(null);
     }
-  }, [isCanceling]);
+  };
 
   // Функция для рендера списка ставок
   const renderBets = () => (
