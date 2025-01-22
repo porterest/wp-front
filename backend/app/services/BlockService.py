@@ -113,6 +113,9 @@ class BlockService(BlockServiceInterface):
             reward.user_id: reward.reward for reward in rewards.user_rewards
         }
         for bet in block.bets:
+            if bet.status != BetStatus.PENDING:
+                continue
+
             # todo: refactor to Bet/User service?
             update_dto = UpdateBetDTO(
                 status=BetStatus.RESOLVED
