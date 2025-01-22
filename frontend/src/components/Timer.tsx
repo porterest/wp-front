@@ -17,8 +17,8 @@ const Timer: React.FC<TimerProps> = ({ onTimerEnd }) => {
 
     try {
       const timeData = await fetchTime();
-      setData((prev) => ({ ...prev, time: timeData.remaining_time_in_block }));
-      const remainingTime = (data.time || 0) * 1000; // Конвертируем в миллисекунды
+      // setData((prev) => ({ ...prev, time: timeData.remaining_time_in_block }));
+      const remainingTime = (timeData.remaining_time_in_block || 0) * 1000; // Конвертируем в миллисекунды
       console.log("remaining time", remainingTime);
 
       if (remainingTime <= 0) {
