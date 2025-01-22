@@ -135,22 +135,22 @@ const ProfilePage: React.FC = () => {
             onClick={() => handleCancelBet(bet.id)}
             disabled={isCanceling === bet.id}
             className={`w-full py-2 ${
-              bet.status === "CANCELED"
+              bet.status === "canceled"
               ? "bg-gray-500 cursor-not-allowed"
               : isCanceling === bet.id
                 ? "bg-gray-500 cursor-not-allowed"
-                : bet.status === "PENDING" 
+                : bet.status === "pending" 
                   ? "bg-red-600 hover:bg-red-500"
                   : "bg-purple-600 cursor-not-allowed"
             } text-white font-bold rounded-md transition-colors duration-300 mt-2`
           }
           >
             {
-              bet.status === "CANCELED"
+              bet.status === "canceled"
                 ? "Отменена"
                 : isCanceling === bet.id
                   ? "Отмена..."
-                  : bet.status === "PENDING"
+                  : bet.status === "pending"
                     ? "В обработке"
                     : "Учтена"
             }

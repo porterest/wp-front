@@ -25,7 +25,7 @@ export interface BetResponse {
   created_at: string; // ISO-формат даты
 }
 
-export type BetStatus = "PENDING" | "RESOLVED" | "CANCELED"; // Пример возможных значений
+export type BetStatus = "pending" | "resolved" | "canceled"; // Пример возможных значений
 
 export type BetVector = [price: number, betsAmount: number];
 
