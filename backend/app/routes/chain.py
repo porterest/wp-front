@@ -28,7 +28,7 @@ async def get_time(
         chains = await repository.get_all()  # пизда
         # logger.info('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
         res = await service.get_current_block_state(chains[0].pair_id)
-        # logger.info(f"res: {res}")
+        logger.info(f"res: {res}")
         return res
     except NotFoundException:
         raise HTTPException(
