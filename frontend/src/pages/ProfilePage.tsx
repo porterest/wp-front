@@ -21,7 +21,7 @@ const ProfilePage: React.FC = () => {
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
 
   // Локальное состояние для отмены ставки
-  const [isCanceling, setIsCanceling] = useState<boolean>(false);
+  const [isCanceling, setIsCanceling] = useState<string | null>(null);
   const [balance, setBalance] = useState<number>(0); // Состояние для хранения баланса
   const [withdrawAmount, setWithdrawAmount] = useState<number>(0); // Сумма вывода
   const [loading, setLoading] = useState<boolean>(true); // Индикатор загрузки
@@ -99,7 +99,7 @@ const ProfilePage: React.FC = () => {
   // Функция для отмены ставки
   const handleCancelBet = useCallback(async (betId: UUID) => {
     if (!window.confirm("Вы уверены, что хотите отменить ставку?")) return;
-    setIsCanceling(true);
+    setIsCanceling(betId);
     try {
       await cancelBet(betId.toString());
       setBets((prevBets) => prevBets.filter((bet) => bet.id !== betId));
@@ -108,7 +108,7 @@ const ProfilePage: React.FC = () => {
       console.error("Ошибка при отмене ставки:", error);
       alert("Не удалось отменить ставку. Попробуйте снова.");
     } finally {
-      setIsCanceling(false);
+      setIsCanceling(null);
     }
   }, []);
 
@@ -129,14 +129,27 @@ const ProfilePage: React.FC = () => {
           </p>
           <button
             onClick={() => handleCancelBet(bet.id)}
-            disabled={isCanceling}
+            disabled={isCanceling === bet.id}
             className={`w-full py-2 ${
-              isCanceling
+              bet.status === "CANCELED"
+              ? "bg-gray-500 cursor-not-allowed"
+              : isCanceling === bet.id
                 ? "bg-gray-500 cursor-not-allowed"
-                : "bg-red-600 hover:bg-red-500"
-            } text-white font-bold rounded-md transition-colors duration-300 mt-2`}
+                : bet.status === "PENDING" 
+                  ? "bg-red-600 hover:bg-red-500"
+                  : "bg-purple-600 cursor-not-allowed"
+            } text-white font-bold rounded-md transition-colors duration-300 mt-2`
+          }
           >
-            {isCanceling ? "Отмена..." : "Отменить"}
+            {
+              bet.status === "CANCELED"
+                ? "Отменена"
+                : isCanceling === bet.id
+                  ? "Отмена..."
+                  : bet.status === "PENDING"
+                    ? "В обработке"
+                    : "Учтена"
+            }
           </button>
         </li>
       ))}
