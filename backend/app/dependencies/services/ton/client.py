@@ -1,6 +1,5 @@
 from abstractions.services.tonclient import TonClientInterface
 from services.ton.client.api import TonApiClient
-# from services.ton.client.api import TonApiClient
 from settings import settings
 
 

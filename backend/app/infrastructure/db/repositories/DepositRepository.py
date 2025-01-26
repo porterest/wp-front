@@ -4,10 +4,7 @@ from typing import Optional
 
 from abstractions.repositories.deposit import DepositRepositoryInterface
 from domain.dto.deposit import DepositEntryCreateDTO, DepositEntryUpdateDTO
-from domain.models.app_wallet import AppWallet as AppWalletModel
 from domain.models.deposit import DepositEntry as DepositEntryModel
-from domain.models.transaction import Transaction as TransactionModel
-from domain.models.user import User as UserModel
 from infrastructure.db.entities import DepositEntry
 from infrastructure.db.repositories import AbstractSQLAlchemyRepository
 

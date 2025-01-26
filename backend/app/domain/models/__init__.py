@@ -1,9 +1,9 @@
-from .pair import Pair
-from .user import User
-from .bet import Bet
-from .balance import Balance
-from .transaction import Transaction
 from .app_wallet import AppWallet
+from .balance import Balance
+from .bet import Bet
+from .pair import Pair
+from .transaction import Transaction
+from .user import User
 
 __all__ = [
     'Pair',

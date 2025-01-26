@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pydantic import SecretStr
 
 from abstractions.services.public_keys import PublicKeyProviderInterface
-from ..client.api import TonApiClient
+from abstractions.services.tonclient import TonClientInterface
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class PublicKeyTonApiProvider(PublicKeyProviderInterface):
     api_token: SecretStr
 
     def __post_init__(self):
-        self.client = TonApiClient(token=self.api_token)
+        self.ton_client = TonClientInterface(token=self.api_token)
 
     async def get_public_key(self, address: str) -> str:
-        return await self.client.get_public_key(address)
+        return await self.ton_client.get_public_key(address)

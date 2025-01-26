@@ -37,7 +37,7 @@ class TokenService(TokenServiceInterface):
             "exp": datetime.now(tz=UTC) + timedelta(seconds=ttl),  # payload ttl is not the same as general jwt ttl
         }
 
-        return self.create_token(**claims)
+        return self._create_token(**claims)
 
     def create_auth_token(self, wallet_address: str, payload: str) -> AuthTokens:
         access_claims = {
@@ -55,11 +55,11 @@ class TokenService(TokenServiceInterface):
         }
 
         return AuthTokens(
-            access_token=self.create_token(**access_claims),
-            refresh_token=self.create_token(**refresh_claims),
+            access_token=self._create_token(**access_claims),
+            refresh_token=self._create_token(**refresh_claims),
         )
 
-    def create_token(self, **claims) -> str:
+    def _create_token(self, **claims) -> str:
         if 'iss' not in claims:
             claims["iss"] = self.jwt_settings.issuer
 

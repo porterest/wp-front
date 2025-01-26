@@ -19,19 +19,17 @@ logger = logging.getLogger(__name__)
 async def get_time(
 ) -> BlockStateResponse:
     service = get_chain_service()
-    # logger.info('serviceр')
     repository = get_chain_repository()
     # todo: может стоит сделать TimeResponse как часть метахолдера?
     #  ну хз как будто уже пиздец бойлерплейт,
     #  но с другой стороны по сути ни один сервис не должен отдавать напрямую модели метахолдера короче хз наверное пох
     try:
-        chains = await repository.get_all()  # пизда
-        # logger.info('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+        chains = await repository.get_all()
         res = await service.get_current_block_state(chains[0].pair_id)
         logger.info(f"res: {res}")
         return res
     except NotFoundException:
         raise HTTPException(
-            status_code=503,  # AAAAAAAA
+            status_code=503,
             detail=f"No one block bro",
         )

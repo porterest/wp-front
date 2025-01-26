@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Request
 
-from dependencies.repositories.chain import get_chain_repository
 from dependencies.services.bet import get_bet_service
 from dependencies.services.chain import get_chain_service
 from domain.dto.bet import CreateBetDTO

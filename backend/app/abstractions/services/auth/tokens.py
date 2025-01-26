@@ -26,13 +26,6 @@ class TokenServiceInterface(ABC):
         ...
 
     @abstractmethod
-    def create_token(self, **claims) -> str:
-        """
-        Creates a JWT token with the specified payload and address.
-        """
-        ...
-
-    @abstractmethod
     def create_auth_token(self, wallet_address: str, payload: str) -> AuthTokens:
         """
         Creates a JWT auth token for provided credentials. If invalid raises InvalidTokenError

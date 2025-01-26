@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -5,7 +6,7 @@ from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
 from domain.models.bet import BetVector
 
-
+logger = logging.getLogger(__name__)
 @dataclass
 class AggregateBetsService(AggregateBetsServiceInterface):
     block_repository: BlockRepositoryInterface
@@ -14,27 +15,41 @@ class AggregateBetsService(AggregateBetsServiceInterface):
             self,
             block_id: UUID,
     ) -> BetVector:
-        # Получаем ставки для указанного блока
         block = await self.block_repository.get(block_id)
 
-        # Инициализация агрегированных значений
         total_weight = 0
         aggregate_x: float = .0
         aggregate_y: int = 0
 
-        # Агрегируем значения с учётом веса (суммы ставки)
         for bet in block.bets:
-            weight = bet.amount  # Сумма ставки пользователя
+            weight = bet.amount
             total_weight += weight
             aggregate_x += bet.vector[0] * weight
             aggregate_y += bet.vector[1] * weight
+            logger.info("weight")
+            logger.info(weight)
+            logger.info("total_weight")
+            logger.info(total_weight)
+            logger.info("aggregate_x")
+            logger.info(aggregate_x)
+            logger.info("aggregate_y")
+            logger.info(aggregate_y)
 
-        # Нормализация агрегированных значений
+
         if total_weight > 0:
             aggregate_x /= total_weight
             aggregate_y /= total_weight
+            logger.info(aggregate_x)
+            logger.info("aggregate_x")
+            logger.info(aggregate_y)
+            logger.info("aggregate_y")
+        else:
+            aggregate_x = 0
+            aggregate_y = 0
 
-        # Формируем итоговый кватернион
         aggregated_quaternion = aggregate_x, aggregate_y
+
+        logger.info("aggregated_quaternion")
+        logger.info(aggregated_quaternion)
 
         return aggregated_quaternion

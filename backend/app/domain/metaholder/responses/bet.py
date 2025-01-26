@@ -10,7 +10,7 @@ from domain.models.bet import BetVector  # domain TypeVar could be used in metah
 class BetResponse(BaseModel):
     id: UUID
     amount: float
-    vector: BetVector  # tuple[float, float]
+    vector: BetVector
     pair_name: str
     status: BetStatus
     created_at: datetime

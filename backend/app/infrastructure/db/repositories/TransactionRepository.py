@@ -13,7 +13,6 @@ class TransactionRepository(
     AbstractSQLAlchemyRepository[Transaction, TransactionModel, CreateTransactionDTO, UpdateTransactionDTO],
     TransactionRepositoryInterface
 ):
-    # joined_fields: list[str] = field(default_factory=lambda: ['user'])
     joined_fields: dict[str, Optional[list[str]]] = field(
         default_factory=lambda: {
             'user': None,

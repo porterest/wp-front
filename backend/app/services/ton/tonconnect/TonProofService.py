@@ -6,9 +6,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, UTC
 from typing import Annotated
 
-from nacl.hash import sha256
 from nacl.encoding import RawEncoder
 from nacl.exceptions import BadSignatureError
+from nacl.hash import sha256
 from nacl.signing import VerifyKey
 from pytoniq_core import Address
 from pytoniq_core import Cell
@@ -195,53 +195,3 @@ class TonProofService(TonProofServiceInterface):
         composed_address = self.compose_address(composed_address_info)
         return composed_address == wanted_address.to_str(is_user_friendly=False)
 
-
-if __name__ == "__main__":
-    service = TonProofService(
-        # services
-        tokens_service=get_token_service(),
-        ton_client=get_ton_client(),
-        public_key_provider=get_public_key_provider(),
-        known_wallets_provider=get_known_wallets_provider(),
-
-        # settings
-        payload_ttl=settings.ton.tonconnect.payload_ttl,
-        allowed_domains=settings.ton.tonconnect.allowed_domains,
-    )
-
-    proof_init_object = {
-        "address": "0:f4355c5607b5a36e4462c9f8a9cbb9db0bf1ec9b8fc25987ecacc046eec3b770",
-        "network": "-239",
-        "public_key": "4f16b3d0e1bf086af95da8e8500638797837f48c0621b7e3d1791e65ab043fc3",
-        "proof": {
-            "timestamp": 1735327997,
-            "domain": {
-                "LengthBytes": 21,
-                "value": "ab328c6h7.duckdns.org"
-            },
-            "payload": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMTA4ODk5Yi0yYzgxLTQ0ZTctODkxYy1jN2E1ZGFjNzZjYWMiLCJleHAiOjE3MzUzMzkzNjIsImlzcyI6IndpcGktYmFjayIsImF1ZCI6IndpcGktZnJvbnQifQ.TVtg5KbHIDBWWQGSewrBYHbgW9ygvZWDYdTBRJ6j000",
-            "signature": "i3E881kKct4p0NIij+WvHvjLPkS3wJ4qkplXz3SIghCmlpO+Ocatnf7ipMEW1LIzo8Kp77dDzwjN8rrjwYb6Ag==",
-            "state_init": "te6cckECFgEAAwQAAgE0AREBFP8A9KQT9LzyyAsCAgEgCAME+PKDCNcYINMf0x/THwL4I7vyZO1E0NMf0x/T//QE0VFDuvKhUVG68qIF+QFUEGT5EPKj+AAkpMjLH1JAyx9SMMv/UhD0AMntVPgPAdMHIcAAn2xRkyDXSpbTB9QC+wDoMOAhwAHjACHAAuMAAcADkTDjDQOkyMsfEssfy/8GBwUEAAr0AMntVABsgQEI1xj6ANM/MFIkgQEI9Fnyp4IQZHN0cnB0gBjIywXLAlAFzxZQA/oCE8tqyx8Syz/Jc/sAAG7SB/oA1NQi+QAFyMoHFcv/ydB3dIAYyMsFywIizxZQBfoCFMtrEszMyXP7AMhAFIEBCPRR8qcCAHCBAQjXGPoA0z/IVCBHgQEI9FHyp4IQbm90ZXB0gBjIywXLAlAGzxZQBPoCFMtqEssfyz/Jc/sAAgIBSA0JAgEgChUCASAMCwARuMl+1E0NcLH4AgFYEBIC5tAB0NMDIXGwkl8E4CLXScEgkl8E4ALTHyGCEHBsdWe9IoIQZHN0cr2wkl8F4AP6QDAg+kQByMoHy//J0O1E0IEBQNch9AQwXIEBCPQKb6Exs5JfB+AF0z/IJYIQcGx1Z7qSODDjDQOCEGRzdHK6kl8G4w0PDgCKUASBAQj0WTDtRNCBAUDXIMgBzxb0AMntVAFysI4jghBkc3Rygx6xcIAYUAXLBVADzxYj+gITy2rLH8s/yYBA+wCSXwPiAHgB+gD0BDD4J28iMFAKoSG+8uBQghBwbHVngx6xcIAYUATLBSbPFlj6Ahn0AMtpF8sfUmDLPyDJgED7AAYAPbKd+1E0IEBQNch9AQwAsjKB8v/ydABgQEI9ApvoTGAAUQAAAAApqaMXTxaz0OG/CGr5XajoUAY4eXg39IwGIbfj0XkeZasEP8NAAgEgFBMAGa8d9qJoQBBrkOuFj8AAGa3OdqJoQCBrkOuF/8AAWb0kK29qJoQICga5D6AhhHDUCAhHpJN9KZEM5pA+n/mDeBKAG3gQFImHFZ8xhKOjwYk="
-        }
-    }
-
-    # Constructing Request
-    proof = proof_init_object['proof']
-    domain = proof['domain']
-    req = CheckProofRequest(
-        address=proof_init_object['address'],
-        network=proof_init_object['network'],
-        public_key=proof_init_object['public_key'],
-        proof=Proof(
-            timestamp=proof['timestamp'],
-            domain=Domain(
-                LengthBytes=domain['LengthBytes'],
-                value=domain['value'],
-            ),
-            payload=proof['payload'],
-            signature=proof['signature'],
-            state_init=proof['state_init'],
-        )
-    )
-
-    asyncio.run(service.check_payload(request=req))

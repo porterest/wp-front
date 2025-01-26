@@ -12,10 +12,4 @@ class PairRepositoryInterface(
     ],
     ABC,
 ):
-    @abstractmethod
-    async def get_block_pair(self, block_id: UUID):
-        ...
-
-    @abstractmethod
-    async def get_pair_by_tokens(self, token1: str, token2: str) -> Pair:
-        ...
+    ...

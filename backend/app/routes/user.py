@@ -8,6 +8,7 @@ from dependencies.services.inner_token import get_inner_token_service
 from dependencies.services.user import get_user_service
 from domain.enums import BetStatus
 from domain.metaholder.requests.pair import GetUserLastBetRequest
+from domain.metaholder.requests.wallet import WithdrawToExternalWalletRequest
 from domain.metaholder.responses import BetResponse
 from domain.metaholder.responses.user import UserHistoryResponse, UserBetsResponse, UserInfoResponse
 from routes.helpers import get_user_id_from_request
@@ -104,8 +105,8 @@ async def get_user_history(
 @router.post('/withdraw')
 async def withdraw_tokens(
         request: Request,
-        amount: int
+        withdraw_request: WithdrawToExternalWalletRequest
 ):
     user_id = get_user_id_from_request(request)
     inner_token_service = get_inner_token_service()
-    await inner_token_service.withdraw_to_user(user_id=user_id, amount=amount)
+    await inner_token_service.withdraw_to_user(user_id=user_id, amount=withdraw_request.amount)

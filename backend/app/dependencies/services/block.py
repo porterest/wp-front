@@ -11,7 +11,6 @@ from services.BlockService import BlockService
 def get_block_service() -> BlockServiceInterface:
     return BlockService(
         block_repository=get_block_repository(),
-        bet_service=get_bet_service(),
         aggregate_bets_service=get_aggregate_bets_service(),
         chain_repository=get_chain_repository(),
         user_repository=get_user_repository(),

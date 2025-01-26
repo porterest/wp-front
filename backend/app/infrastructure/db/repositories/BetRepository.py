@@ -4,8 +4,8 @@ from typing import Optional
 from abstractions.repositories.bet import BetRepositoryInterface
 from domain.dto.bet import CreateBetDTO, UpdateBetDTO
 from domain.models.bet import Bet as BetModel
-from domain.models.user import User as UserModel
 from domain.models.pair import Pair as PairModel
+from domain.models.user import User as UserModel
 from infrastructure.db.entities import Bet
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
@@ -15,7 +15,6 @@ class BetRepository(
     AbstractSQLAlchemyRepository[Bet, BetModel, CreateBetDTO, UpdateBetDTO],
     BetRepositoryInterface
 ):
-
     # related fields needed to be fetched while get
     joined_fields: dict[str, Optional[list[str]]] = field(
         default_factory=lambda: {

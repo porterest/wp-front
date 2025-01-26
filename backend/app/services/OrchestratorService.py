@@ -2,18 +2,16 @@ import logging
 from dataclasses import dataclass
 from uuid import UUID
 
+
 from abstractions.repositories.chain import ChainRepositoryInterface
 from abstractions.services.app_wallet import AppWalletServiceInterface
-from abstractions.services.assets_management import AssetsManagementServiceInterface
 from abstractions.services.block import BlockServiceInterface
-from abstractions.services.dex import DexServiceInterface
 from abstractions.services.inner_token import InnerTokenInterface
 from abstractions.services.liquidity_management import LiquidityManagerInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
 from abstractions.services.math.pool_service import PoolServiceInterface
 from abstractions.services.math.reward_distribution import RewardDistributionServiceInterface
 from abstractions.services.orchestrator import OrchestratorServiceInterface
-from abstractions.services.swap import SwapServiceInterface
 from abstractions.services.user import UserServiceInterface
 from domain.enums.liquidity_action import LiquidityActionType
 from domain.models.orchestrator_result import OrchestratorResult
@@ -27,11 +25,8 @@ logger = logging.getLogger(__name__)
 class OrchestratorService(OrchestratorServiceInterface):
     aggregate_bets_service: AggregateBetsServiceInterface
     liquidity_manager: LiquidityManagerInterface
-    assets_management_service: AssetsManagementServiceInterface
-    dex_service: DexServiceInterface
     reward_service: RewardDistributionServiceInterface
     user_service: UserServiceInterface
-    swap_service: SwapServiceInterface
     block_service: BlockServiceInterface
     app_wallet_service: AppWalletServiceInterface
     chain_repository: ChainRepositoryInterface

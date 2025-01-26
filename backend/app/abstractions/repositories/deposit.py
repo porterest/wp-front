@@ -1,9 +1,8 @@
 from abc import ABC
 
 from abstractions.repositories import CRUDRepositoryInterface
-
-from domain.models.deposit import DepositEntry
 from domain.dto.deposit import DepositEntryCreateDTO, DepositEntryUpdateDTO
+from domain.models.deposit import DepositEntry
 
 
 class DepositRepositoryInterface(

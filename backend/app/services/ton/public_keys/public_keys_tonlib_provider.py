@@ -1,7 +1,10 @@
+from dataclasses import dataclass
+
 from abstractions.services.public_keys import PublicKeyProviderInterface
 from abstractions.services.tonclient import TonClientInterface
 
 
+@dataclass
 class PublicKeyTonLibProvider(PublicKeyProviderInterface):
     ton_client: TonClientInterface
 

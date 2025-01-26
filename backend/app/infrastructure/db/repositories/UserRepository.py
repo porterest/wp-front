@@ -16,6 +16,7 @@ from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemy
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class UserRepository(
     AbstractSQLAlchemyRepository[User, UserModel, CreateUserDTO, UpdateUserDTO],

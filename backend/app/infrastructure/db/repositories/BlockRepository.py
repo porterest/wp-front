@@ -22,7 +22,6 @@ class BlockRepository(
     AbstractSQLAlchemyRepository[Block, BlockModel, CreateBlockDTO, UpdateBlockDTO],
     BlockRepositoryInterface
 ):
-    # joined_fields: list[str] = field(default_factory=lambda: ['bets', 'chain'])
     joined_fields: dict[str, Optional[list[str]]] = field(
         default_factory=lambda: {
             'chain': None,
@@ -134,8 +133,6 @@ class BlockRepository(
             logger.info(block)
 
         return self.entity_to_model(block) if block else None
-
-
 
     def create_dto_to_entity(self, dto: CreateBlockDTO) -> Block:
         return Block(

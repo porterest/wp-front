@@ -126,10 +126,10 @@ class AbstractSQLAlchemyRepository[Entity, Model, CreateDTO, UpdateDTO](
                         )).unique().scalars().all()
                     ]
             res = (await session.execute(
-                    select(self.entity)
-                    .limit(limit)
-                    .offset(offset)
-                )).scalars().all()
+                select(self.entity)
+                .limit(limit)
+                .offset(offset)
+            )).scalars().all()
             return [
                 self.entity_to_model(entity)
                 for entity in res

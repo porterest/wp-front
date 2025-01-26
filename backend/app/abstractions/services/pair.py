@@ -9,4 +9,3 @@ class PairServiceInterface(ABC):
     @abstractmethod
     async def get_pairs_list(self) -> List[PairResponse]:
         ...
-

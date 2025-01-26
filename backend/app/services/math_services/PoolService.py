@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Dict
 
 from abstractions.services.math.pool_service import PoolServiceInterface
 from abstractions.services.tonclient import TonClientInterface

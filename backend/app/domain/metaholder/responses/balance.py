@@ -3,11 +3,6 @@ from typing import Annotated
 from pydantic import BaseModel
 
 
-# class BalanceResponse(BaseModel):
-#     balance: float
-#     token_type: str
-
-
 class BalanceResponse(BaseModel):
     balances: dict[
         Annotated[str, 'Token name'],

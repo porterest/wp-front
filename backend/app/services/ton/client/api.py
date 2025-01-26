@@ -8,9 +8,9 @@ from httpx import AsyncClient
 from pydantic import SecretStr
 from pytoniq_core import Address
 
-from abstractions.services.tonclient import TonClientInterface
 from domain.models.app_wallet import AppWalletWithPrivateData
 from domain.ton.transaction import TonTransaction, TonTransactionStatus
+from services.ton.client.base import AbstractBaseTonClient
 from services.ton.public_keys.api import TonApiPublicKeyResponse
 from services.ton.public_keys.exceptions import PublicKeyCannotBeFetchedException
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class TonApiClient(TonClientInterface):
+class TonApiClient(AbstractBaseTonClient):
     token: SecretStr
     base_url: str = 'https://tonapi.io'
 
@@ -39,7 +39,7 @@ class TonApiClient(TonClientInterface):
         return self.get_transactions_endpoint.replace('{}', address)
 
     async def get_public_key(self, address: str) -> str:
-        async with self._get_client() as client:  # type: AsyncClient
+        async with self._get_client() as client:
             response = await client.get(
                 url=self._get_public_key_endpoint(address),
             )
@@ -123,7 +123,6 @@ class TonApiClient(TonClientInterface):
     async def mint_tokens(self, amount: int):
         ...
 
-
     async def send_jettons(
             self,
             user_wallet_address: Address,
@@ -132,35 +131,3 @@ class TonApiClient(TonClientInterface):
             app_wallet: AppWalletWithPrivateData,
     ) -> None:
         ...
-# import logging
-# from dataclasses import dataclass
-# from enum import Enum
-#
-# from pydantic import SecretStr
-#
-# from abstractions.services.tonclient import TonClientInterface
-
-
-# class HTTPMethod(Enum):
-#     GET = 'get'
-#     POST = 'post'
-#
-#
-# logger = logging.getLogger(__name__)
-#
-#
-# @dataclass
-# class MockTonApiClient(TonClientInterface):
-#     token: SecretStr
-#     base_url: str = 'https://tonapi.io'
-#
-#     async def get_public_key(self, address: str) -> str:
-#         logger.info(f"Mocking public key retrieval for address: {address}")
-#         return "mocked_public_key"
-#
-#
-# # Usage example
-# async def main():
-#     mock_client = MockTonApiClient(token="dummy_token")
-#     public_key = await mock_client.get_public_key("dummy_address")
-#     logger.info(f"Retrieved mocked public key: {public_key}")

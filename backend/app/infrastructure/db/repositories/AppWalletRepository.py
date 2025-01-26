@@ -13,7 +13,6 @@ class AppWalletRepository(
     AbstractSQLAlchemyRepository[AppWallet, AppWalletModel, CreateAppWalletDTO, UpdateAppWalletDTO],
     AppWalletRepositoryInterface
 ):
-    # joined_fields: list[str] = field(default_factory=lambda: ['deposits'])
     joined_fields: dict[str, Optional[list[str]]] = field(
         default_factory=lambda: {
 

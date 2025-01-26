@@ -8,7 +8,6 @@ from abstractions.repositories.bet import BetRepositoryInterface
 from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.repositories.chain import ChainRepositoryInterface
 from abstractions.repositories.user import UserRepositoryInterface
-from abstractions.services.bet import BetServiceInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
 from domain.dto.bet import CreateBetDTO, UpdateBetDTO
@@ -26,17 +25,10 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BlockService(BlockServiceInterface):
     block_repository: BlockRepositoryInterface
-    bet_service: BetServiceInterface
     aggregate_bets_service: AggregateBetsServiceInterface
     chain_repository: ChainRepositoryInterface
     user_repository: UserRepositoryInterface
     bet_repository: BetRepositoryInterface
-
-    async def create(self, create_dto):
-        await self.block_repository.create(create_dto)
-
-    async def get(self, block_id: UUID) -> Block:
-        return await self.block_repository.get(block_id)
 
     async def get_last_block(self, chain_id: UUID) -> Optional[Block]:
         last_block = await self.block_repository.get_last_block(chain_id)
@@ -133,7 +125,7 @@ class BlockService(BlockServiceInterface):
                     status=BetStatus.PENDING
                 )
                 logger.info(f'Повторная ставка: {new_bet}')
-                await self.bet_service.create_bet(new_bet)
+                await self.bet_repository.create(new_bet)
             else:
                 logger.error(f"Somehow new_bet_amount <= 0 for {bet.id}")
 
@@ -143,13 +135,3 @@ class BlockService(BlockServiceInterface):
         except RepositoryNotFoundException:
             raise NotFoundException(f"Block with ID {block_id} not found")
         return block
-
-    async def rollback_block(self, block: Block) -> None:
-        # Implement rollback logic here
-        update_block = UpdateBlockDTO(
-            status=BlockStatus.COMPLETED,
-            result_vector=block.result_vector,
-            completed_at=None,
-        )
-        block.status = BlockStatus.COMPLETED
-        await self.block_repository.update(block.id, update_block)

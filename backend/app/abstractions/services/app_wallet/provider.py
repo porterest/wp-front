@@ -3,7 +3,6 @@ from uuid import UUID
 
 from domain.models import AppWallet
 from domain.models.app_wallet import AppWalletWithPrivateData
-from domain.models.swap import CalculatedSwap
 
 
 class AppWalletProviderInterface(ABC):
@@ -23,9 +22,6 @@ class AppWalletProviderInterface(ABC):
     async def get_token_amount(self, token_symbol: str) -> float:
         ...
 
-    @abstractmethod
-    async def get_wallet_id_to_perform_swap(self, swap: CalculatedSwap) -> UUID:
-        ...
 
     @abstractmethod
     async def get_wallet(self, wallet_id: UUID) -> AppWallet:

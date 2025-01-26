@@ -32,11 +32,3 @@ class BlockRepositoryInterface(
     @abstractmethod
     async def get_last_completed_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:
         ...
-
-    # @abstractmethod
-    # async def get(self, block_id: UUID) -> Optional[Block]:
-    #     pass
-
-    # @abstractmethod
-    # async def update(self, block: Block) -> None:
-    #     pass

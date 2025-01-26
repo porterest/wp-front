@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Dict
 
-
 from domain.models.user_reward import UserReward
 
 

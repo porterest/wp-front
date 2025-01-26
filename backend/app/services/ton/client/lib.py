@@ -4,15 +4,16 @@ from dataclasses import dataclass
 from pytoniq import LiteBalancer, WalletV4R2, begin_cell, Address
 
 from domain.models.app_wallet import AppWalletWithPrivateData, AppWalletVersion
-from abstractions.services.tonclient import TonClientInterface
+from services.ton.client.base import AbstractBaseTonClient
 from services.ton.client.exceptions import UnsupportedWalletVersionException
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
-class TonTonLibClient(TonClientInterface):
-    ton: LiteBalancer
+class TonTonLibClient(AbstractBaseTonClient):
+    def __post_init__(self):
+        self.ton = LiteBalancer.from_mainnet_config()
 
     async def mint(self, amount: int, token_address: Address, admin_wallet: AppWalletWithPrivateData):
         await self.ton.start_up()
@@ -80,7 +81,7 @@ class TonTonLibClient(TonClientInterface):
     ) -> None:
         await self.ton.start_up()
 
-        logger.debug('Preparing mint transaction')
+        logger.debug('Preparing sending jettons')
 
         match app_wallet.wallet_version:
             case AppWalletVersion.V4R2:

@@ -1,20 +1,17 @@
-import asyncio
 from dataclasses import dataclass
-from uuid import UUID
 
 from abstractions.services.math.reward_distribution import RewardDistributionServiceInterface
 from domain.models.prediction import Prediction
 from domain.models.reward_model import Rewards
-from domain.models.user_prediction import UserPrediction
 from domain.models.user_reward import UserReward
 
 
 @dataclass
 class RewardDistributionService(RewardDistributionServiceInterface):
-    FIXED_REWARD: int = 1  # гарантированная награда за участие в раунде
+    FIXED_REWARD: int = 1
     base_multiplier: float = 1.3
 
-    def calculate_accuracy_coefficient(self, predicted: float, actual: float) -> float:
+    def _calculate_accuracy_coefficient(self, predicted: float, actual: float) -> float:
         """
         Рассчитывает коэффициент точности предсказания.
         :param predicted: Предсказанное значение.
@@ -34,12 +31,11 @@ class RewardDistributionService(RewardDistributionServiceInterface):
         total_accuracy = 0
         user_accuracies = {}
 
-        # Рассчитываем точность для каждого пользователя
         for user_prediction in prediction.user_predictions:
-            price_accuracy = self.calculate_accuracy_coefficient(
+            price_accuracy = self._calculate_accuracy_coefficient(
                 user_prediction.predicted_price_change, prediction.actual_price_change
             )
-            tx_accuracy = self.calculate_accuracy_coefficient(
+            tx_accuracy = self._calculate_accuracy_coefficient(
                 user_prediction.predicted_tx_count, prediction.actual_tx_count
             )
             accuracy = (price_accuracy + tx_accuracy) / 2
@@ -52,7 +48,6 @@ class RewardDistributionService(RewardDistributionServiceInterface):
                 user_rewards=[],
             )
 
-        # Расчет наград
         rewards = []
         for user_prediction in prediction.user_predictions:
             user_id = user_prediction.user_id
@@ -67,47 +62,3 @@ class RewardDistributionService(RewardDistributionServiceInterface):
             )
 
         return Rewards(total_reward_pool=sum(r.reward for r in rewards), user_rewards=rewards)
-
-
-if __name__ == "__main__":
-    async def main():
-        # Пример данных для расчёта
-        prediction = Prediction(
-            user_predictions=[
-                UserPrediction(
-                    user_id=UUID('d992c181-a2e2-4439-b075-7e799cd7052f'),
-                    stake=5,
-                    predicted_price_change=95,
-                    predicted_tx_count=55
-                ),
-                UserPrediction(
-                    user_id=UUID('d036d331-c4fc-4e65-9398-05dd5b89aa92'),
-                    stake=10,
-                    predicted_price_change=110,
-                    predicted_tx_count=60
-                ),
-                UserPrediction(
-                    user_id=UUID('ff68456d-2b16-4fff-b1fb-041210ec6e9f'),
-                    stake=30,
-                    predicted_price_change=1,
-                    predicted_tx_count=20000
-                ),
-            ],
-            actual_price_change=100,
-            actual_tx_count=50,
-            block_id=None,
-        )
-
-        # Инициализация сервиса
-        service = RewardDistributionService()
-
-        # Расчёт наград
-        result = await service.calculate_rewards(prediction)
-
-        # Вывод наград для каждого пользователя
-        for user_reward in result.user_rewards:
-            print(f"Пользователь {user_reward.user_id} получает награду: {user_reward.reward:.2f}")
-
-
-    # Запуск асинхронной функции
-    asyncio.run(main())
