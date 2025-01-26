@@ -11,10 +11,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PublicKeyTonApiProvider(PublicKeyProviderInterface):
-    api_token: SecretStr
-
-    def __post_init__(self):
-        self.ton_client = TonClientInterface(token=self.api_token)
+    ton_client: TonClientInterface
 
     async def get_public_key(self, address: str) -> str:
         return await self.ton_client.get_public_key(address)
