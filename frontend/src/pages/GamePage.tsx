@@ -39,6 +39,11 @@ const GamePage: React.FC = () => {
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
   const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
 
+
+  window.Telegram.WebApp.expand(); // развернет при открытии
+  window.Telegram.WebApp.disableVerticalSwipes();
+
+
   // Функция для загрузки последней ставки пользователя, обернутая в useCallback для предотвращения лишних пересозданий
   const loadUserLastBet = useCallback(async (pair: PairOption) => {
     try {
