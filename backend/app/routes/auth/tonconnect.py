@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 from starlette.responses import JSONResponse
 
 from dependencies.services.auth import get_tonproof_service, get_auth_service
-from dependencies.services.user import get_user_service
+# from dependencies.services.user import get_user_service
 from domain.dto.auth import Credentials
 from domain.metaholder.responses.auth import AuthResponse
 from domain.tonconnect.requests import CheckProofRequest
@@ -39,14 +39,14 @@ async def verify_payload(
 ) -> JSONResponse:
     tonproof_service = get_tonproof_service()
     auth_service = get_auth_service()
-    user_service = get_user_service()
+    # user_service = get_user_service()
 
     try:
         await tonproof_service.check_payload(
             request=verify_payload_request,
         )
 
-        logger.error(verify_payload_request.proof.payload)
+        # logger.error(verify_payload_request.proof.payload)
 
         tokens = await auth_service.create_token(
             credentials=Credentials(
@@ -54,12 +54,12 @@ async def verify_payload(
                 wallet_address=verify_payload_request.address,
             ),
         )
-        user = await user_service.get_user_by_wallet(verify_payload_request.address)
+        # user = await user_service.get_user_by_wallet(verify_payload_request.address)
         return AuthResponse(
             accessToken=tokens.access_token.get_secret_value(),
             refreshToken=tokens.refresh_token.get_secret_value(),
-            user_id=str(user.id),
-            user_name=user.username or 'LOLUSER'
+            # user_id=str(user.id),
+            # user_name=user.username or 'LOLUSER'
         )
 
     except TonProofVerificationFailed as e:

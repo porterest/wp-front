@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Header
 from starlette.responses import JSONResponse
 
 from dependencies.services.auth import get_auth_service
+from domain.metaholder.responses.auth import AuthResponse
 from services.exceptions import ExpiredTokenException, NoSuchUserException, InvalidTokenException
 from .tonconnect import router as ton_router
 
@@ -27,10 +28,10 @@ async def refresh_tokens(
 
     try:
         new_tokens = await auth_service.refresh_token(refresh_token)
-        return JSONResponse(status_code=200, content={
-            "accessToken": new_tokens.access_token.get_secret_value(),
-            "refreshToken": new_tokens.refresh_token.get_secret_value(),
-        })
+        return AuthResponse(
+            access_token=new_tokens.access_token.get_secret_value(),
+            refresh_token=new_tokens.refresh_token.get_secret_value(),
+        )
     except (InvalidTokenException, NoSuchUserException, ExpiredTokenException) as e:
         code, detail = 401, 'Unknown authorization exception'
         match e:

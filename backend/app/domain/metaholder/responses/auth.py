@@ -1,10 +1,8 @@
-from uuid import UUID
-
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, Field
 
 
 class AuthResponse(BaseModel):
-    accessToken: SecretStr
-    refreshToken: SecretStr
-    user_id: UUID
-    user_name: str
+    access_token: str = Field(serialization_alias='accessToken')
+    refresh_token: str = Field(serialization_alias='refreshToken')
+    # user_id: UUID
+    # user_name: str
