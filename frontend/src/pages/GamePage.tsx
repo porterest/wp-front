@@ -40,8 +40,9 @@ const GamePage: React.FC = () => {
   const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
 
 
-  window.Telegram.WebApp.expand(); // развернет при открытии
-  window.Telegram.WebApp.disableVerticalSwipes();
+  const tele = window.Telegram.WebApp; // Сохраняем объект в переменной
+  tele.expand(); // Разворачиваем приложение сразу при загрузке
+
 
 
   // Функция для загрузки последней ставки пользователя, обернутая в useCallback для предотвращения лишних пересозданий
