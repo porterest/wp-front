@@ -40,8 +40,21 @@ const GamePage: React.FC = () => {
   const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
 
 
-  const tele = window.Telegram.WebApp; // Сохраняем объект в переменной
-  tele.expand(); // Разворачиваем приложение сразу при загрузке
+
+    useEffect(() => {
+      // Проверяем, доступен ли объект Telegram
+      if (window.Telegram?.WebApp) {
+        const tele = window.Telegram.WebApp; // Сохраняем объект в переменной
+
+        // Разворачиваем приложение
+        tele.expand();
+
+        // Логируем объект Telegram.WebApp
+        console.log('Telegram WebApp API:', tele);
+      } else {
+        console.error('Telegram WebApp API не доступен. Запустите приложение через Telegram.');
+      }
+    }, []);
 
 
 
