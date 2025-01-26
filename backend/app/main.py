@@ -16,7 +16,6 @@ from routes import (
     pair_router,
     user_router,
     chain_router,
-    deposit_router,
     auth_router,
     candle_router,
 )
