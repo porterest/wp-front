@@ -56,8 +56,8 @@ async def verify_payload(
         )
         # user = await user_service.get_user_by_wallet(verify_payload_request.address)
         return AuthResponse(
-            accessToken=tokens.access_token.get_secret_value(),
-            refreshToken=tokens.refresh_token.get_secret_value(),
+            access_token=tokens.access_token.get_secret_value(),
+            refresh_token=tokens.refresh_token.get_secret_value(),
             # user_id=str(user.id),
             # user_name=user.username or 'LOLUSER'
         )
