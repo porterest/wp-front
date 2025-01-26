@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class TonApiClient(AbstractBaseTonClient):
+    async def get_wallet_address(self, contract_address: Address, target_address: Address) -> Address:
+        pass
+
     token: SecretStr
     base_url: str = 'https://tonapi.io'
 
