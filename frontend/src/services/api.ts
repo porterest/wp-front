@@ -221,15 +221,30 @@ export async function fetchCandles(pairId: string): Promise<CandleData[]> {
         console.log('свечи');
         console.log(pairId);
 
-        return response.data.map((candle: BackendCandle) => ({
-            open: candle.opening_price,
-            close: candle.closing_price,
-            high: candle.high_price,
-            low: candle.low_price,
-            volume: candle.volume,
-            block_number: candle.block_number,
-        })) as CandleData[]; // Приводим к типу CandleData
+        return response.data.map((candle: BackendCandle) => {
+            // Log each field of the candle
+            console.log('Candle:', {
+                open: candle.opening_price,
+                close: candle.closing_price,
+                high: candle.high_price,
+                low: candle.low_price,
+                volume: candle.volume,
+                block_number: candle.block_number,
+            });
 
+            return {
+                open: candle.opening_price,
+                close: candle.closing_price,
+                high: candle.high_price,
+                low: candle.low_price,
+                volume: candle.volume,
+                block_number: candle.block_number,
+            } as CandleData;
+        });
+    } catch (error) {
+        console.error("Error fetching candle data:", error);
+        throw error;
+    }
         // return [
         //     {
         //         open: 10,
@@ -272,8 +287,5 @@ export async function fetchCandles(pairId: string): Promise<CandleData[]> {
         //         block_number: 5
         //     },
         // ]; //todo
-    } catch (error) {
-        console.error("Ошибка при запросе данных свечей:", error);
-        throw error;
-    }
+
 }
