@@ -72,6 +72,8 @@ class TokenService(TokenServiceInterface):
             algorithm="HS256"
         )
 
+        logger.info(token)
+
         return token
 
     def get_token_payload(self, token: str) -> dict:
