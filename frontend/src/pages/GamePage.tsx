@@ -45,7 +45,7 @@ const GamePage: React.FC = () => {
       // Проверяем, доступен ли объект Telegram
       if (window.Telegram?.WebApp) {
         const tele = window.Telegram.WebApp; // Сохраняем объект в переменной
-
+        console.log("Telegram", tele);
         // Разворачиваем приложение
         tele.expand();
 
