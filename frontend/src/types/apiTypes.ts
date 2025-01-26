@@ -5,15 +5,15 @@ export interface TonProofPayloadResponse {
   payload: string;
 }
 
-export interface User {
-  id: string;
-  name: string;
-}
+// export interface User {
+//   id: string;
+//   name: string;
+// }
 
 export interface CheckProofResponse {
   accessToken: string,
   refreshToken: string,
-  user: User
+  // user: User
 }
 
 export interface BetResponse {
