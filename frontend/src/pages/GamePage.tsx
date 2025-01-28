@@ -125,8 +125,18 @@ const GamePage: React.FC = () => {
         console.log(betData.predicted_vector)
         console.log('data.candles?.length')
         console.log(data.candles?.length)
+        console.log("sceneX")
+        console.log(sceneX)
+        console.log("sceneY")
+        console.log(sceneY)
+        console.log('data.candles?.length')
+        console.log(data.candles?.length)
+        console.log('data.candles?.length || 0')
+        console.log(data.candles?.length || 0)
         const absoluteVolumeChange = denormalizeX(sceneX, data.candles?.length || 0); //null
         const absolutePriceChange = denormalizeY(sceneY); //nan
+        console.log("absoluteVolumeChange", absoluteVolumeChange)
+        console.log("absolutePriceChange", absolutePriceChange)
         const betRequest: PlaceBetRequest = {
           pair_id: selectedPair.value,
           amount: betData.amount,
