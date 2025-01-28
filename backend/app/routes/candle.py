@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from fastapi import APIRouter
@@ -9,13 +10,14 @@ router = APIRouter(
     prefix="/candles",
     tags=["Candles"]
 )
-
+logger = logging.getLogger(__name__)
 
 @router.get('')
 async def get_candles(pair_id: str, n: int) -> Optional[list[Candle]]:
     service = get_candle_service()
     blocks = await service.get_n_last_blocks_by_pair_id(pair_id=pair_id, n=n)
-
+    logger.info("blocks!!!")
+    logger.info(blocks)
     candles = []
     for block in blocks:
         volume = sum([bet.amount for bet in block.bets])
@@ -34,5 +36,6 @@ async def get_candles(pair_id: str, n: int) -> Optional[list[Candle]]:
             block_number=block.block_number,
         )
         candles.append(candle)
-
+    logger.info("candles")
+    logger.info(candles)
     return candles
