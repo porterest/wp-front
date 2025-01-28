@@ -112,36 +112,49 @@ const GamePage: React.FC = () => {
   const handleShowConfirmButton = useCallback(
     async (
       show: boolean,
-      betData?: { amount: number; predicted_vector: number[] },
+      betData?: { amount: number; predicted_vector: number[] }
     ) => {
       if (!betData || !selectedPair || !scaleFunctions) {
         console.warn("Ожидание необходимых данных для расчета ставки.");
         return;
       }
+
       try {
         const { denormalizeX, denormalizeY } = scaleFunctions;
         const [sceneX, sceneY] = betData.predicted_vector;
-        console.log('betData.predicted_vector')
-        console.log(betData.predicted_vector)
-        console.log('data.candles?.length')
-        console.log(data.candles?.length)
-        console.log("sceneX")
-        console.log(sceneX)
-        console.log("sceneY")
-        console.log(sceneY)
-        console.log('data.candles?.length')
-        console.log(data.candles?.length)
-        console.log('data.candles?.length || 0')
-        console.log(data.candles?.length || 0)
-        const absoluteVolumeChange = denormalizeX(sceneX, data.candles?.length || 0); //null data.candles?.length || 0
-        const absolutePriceChange = denormalizeY(sceneY); //nan
-        console.log("absoluteVolumeChange", absoluteVolumeChange)
-        console.log("absolutePriceChange", absolutePriceChange)
+
+        console.log("betData.predicted_vector", betData.predicted_vector);
+
+        // Проверяем, загружены ли свечи
+        if (!data.candles || data.candles.length === 0) {
+          console.log("Свечи ещё не загружены. Ожидание...");
+          // Ожидаем пока свечи загрузятся
+          await new Promise<void>((resolve) => {
+            const interval = setInterval(() => {
+              if (data.candles && data.candles.length > 0) {
+                clearInterval(interval);
+                resolve();
+              }
+            }, 500); // Проверяем каждые 500 мс
+          });
+        }
+
+        console.log("data.candles?.length", data.candles?.length);
+
+        // Когда свечи загружены, выполняем расчет
+        const absoluteVolumeChange = denormalizeX(sceneX, data.candles?.length || 0);
+        const absolutePriceChange = denormalizeY(sceneY);
+
+        console.log("absoluteVolumeChange", absoluteVolumeChange);
+        console.log("absolutePriceChange", absolutePriceChange);
+
+        // Формируем запрос на ставку
         const betRequest: PlaceBetRequest = {
           pair_id: selectedPair.value,
           amount: betData.amount,
           predicted_vector: [absoluteVolumeChange, absolutePriceChange],
         };
+
         console.log("betRequest", betRequest);
         setShowConfirmButton(show);
         setCurrentBet(betRequest);
@@ -150,14 +163,13 @@ const GamePage: React.FC = () => {
         setShowConfirmButton(false);
       }
     },
-    [data, scaleFunctions, selectedPair],
+    [data, scaleFunctions, selectedPair]
   );
 
   const handleConfirmBet = useCallback(async () => {
     if (!currentBet) return;
     try {
-      console.log("currentBet")
-      console.log(currentBet)
+      console.log("currentBet", currentBet);
       const response = await placeBet(currentBet);
       console.log("Bet placed successfully:", response);
       setShowConfirmButton(false);
@@ -165,6 +177,7 @@ const GamePage: React.FC = () => {
       console.error("Error placing bet:", error);
     }
   }, [currentBet]);
+
 
   const legendItems = [
     { color: "#5e00f5", label: "X: Time Progress" },
