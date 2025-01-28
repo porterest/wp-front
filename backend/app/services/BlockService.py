@@ -8,6 +8,7 @@ from abstractions.repositories.bet import BetRepositoryInterface
 from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.repositories.chain import ChainRepositoryInterface
 from abstractions.repositories.user import UserRepositoryInterface
+from abstractions.services.bet import BetServiceInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
 from domain.dto.bet import CreateBetDTO, UpdateBetDTO
@@ -29,6 +30,7 @@ class BlockService(BlockServiceInterface):
     chain_repository: ChainRepositoryInterface
     user_repository: UserRepositoryInterface
     bet_repository: BetRepositoryInterface
+    bet_service: BetServiceInterface
 
     async def get_last_block(self, chain_id: UUID) -> Optional[Block]:
         last_block = await self.block_repository.get_last_block(chain_id)

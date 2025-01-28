@@ -14,5 +14,6 @@ def get_block_service() -> BlockServiceInterface:
         aggregate_bets_service=get_aggregate_bets_service(),
         chain_repository=get_chain_repository(),
         user_repository=get_user_repository(),
-        bet_repository=get_bet_repository()
+        bet_repository=get_bet_repository(),
+        bet_service=get_bet_service()
     )
