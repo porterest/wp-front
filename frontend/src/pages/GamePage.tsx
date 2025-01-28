@@ -128,6 +128,7 @@ const GamePage: React.FC = () => {
           amount: betData.amount,
           predicted_vector: [absoluteVolumeChange, absolutePriceChange],
         };
+        console.log("betRequest", betRequest);
         setShowConfirmButton(show);
         setCurrentBet(betRequest);
       } catch (error) {
@@ -141,6 +142,8 @@ const GamePage: React.FC = () => {
   const handleConfirmBet = useCallback(async () => {
     if (!currentBet) return;
     try {
+      console.log("currentBet")
+      console.log(currentBet)
       const response = await placeBet(currentBet);
       console.log("Bet placed successfully:", response);
       setShowConfirmButton(false);
