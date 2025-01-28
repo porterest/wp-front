@@ -71,6 +71,10 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   }, []);
 
   const denormalizeX = useCallback((sceneValue: number, length: number) => {
+    if (length === 0) {
+      console.info("No bets in the last block. Defaulting to minimal scale.");
+      length = 1; // Минимально допустимый масштаб
+    }
     return (sceneValue / 5) * length; // 5 — это масштаб из normalizeX
   }, []);
 
