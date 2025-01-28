@@ -71,18 +71,20 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   }, []);
 
   const denormalizeX = useCallback((sceneValue: number, length: number) => {
-    if (length === 0) {
-      console.info("No bets in the last block. Defaulting to minimal scale.");
-      length = 1; // Минимально допустимый масштаб
-    }
+    // if (length === 0) {
+    //   console.info("No bets in the last block. Defaulting to minimal scale.");
+    //   length = 5; // Минимально допустимый масштаб
+    // }
     return (sceneValue / 5) * length; // 5 — это масштаб из normalizeX
   }, []);
 
 
   const denormalizeY = useCallback(
     (sceneValue: number) => {
-      const graphHeight = 5; // Такой же, как в normalizeY
+      const graphHeight = 2; // Такой же, как в normalizeY
       console.log(sceneValue, graphHeight, maxPrice, minPrice);
+      // if (minPrice === Infinity || maxPrice === -Infinity) {
+      // }
       return (sceneValue / graphHeight) * (maxPrice - minPrice) + minPrice;
     },
     [minPrice, maxPrice]
