@@ -21,7 +21,7 @@ class BlockServiceInterface(ABC):
         """
         ...
 
-    async def get_n_last_blocks_by_pair_id(self, pair_id: UUID, n: int) -> Optional[list[Block]]:
+    async def get_n_last_active_blocks_by_pair_id(self, pair_id: UUID, n: int) -> Optional[list[Block]]:
         """
         Возвращает последний блок в системе.
         """

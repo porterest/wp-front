@@ -36,8 +36,8 @@ class BlockService(BlockServiceInterface):
         last_block = await self.block_repository.get_last_block(chain_id)
         return last_block
 
-    async def get_n_last_blocks_by_pair_id(self, n: int, pair_id: UUID) -> Optional[list[Block]]:
-        last_blocks = await self.block_repository.get_n_last_blocks_by_pair_id(n, pair_id)
+    async def get_n_last_active_blocks_by_pair_id(self, n: int, pair_id: UUID) -> Optional[list[Block]]:
+        last_blocks = await self.block_repository.get_n_last_active_blocks_by_pair_id(n, pair_id)
         return last_blocks
 
     async def get_last_block_by_pair_id(self, pair_id: UUID) -> Optional[Block]:

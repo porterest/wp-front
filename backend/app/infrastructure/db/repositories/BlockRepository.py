@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, and_
 
 from abstractions.repositories.block import BlockRepositoryInterface
 from domain.dto.block import CreateBlockDTO, UpdateBlockDTO
@@ -59,7 +59,7 @@ class BlockRepository(
             block = res.unique().scalars().one_or_none()
         return self.entity_to_model(block) if block else None
 
-    async def get_n_last_blocks_by_pair_id(self, n: int, pair_id: str) -> Optional[list[Block]]:
+    async def get_n_last_active_blocks_by_pair_id(self, n: int, pair_id: str) -> Optional[list[Block]]:
         async with self.session_maker() as session:
             chain_res = await session.execute(
                 select(Chain)
@@ -69,7 +69,10 @@ class BlockRepository(
 
             res = await session.execute(
                 select(self.entity)
-                .where(self.entity.chain_id == chain.id)
+                .where(and_(
+        self.entity.chain_id == chain.id,
+        self.entity.result_vector != [0.0, 0.0]
+    ))
                 .order_by(desc(self.entity.created_at, ))
                 .limit(n)
                 .options(*self.options),
