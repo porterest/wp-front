@@ -32,7 +32,6 @@ async def get_user_info(
 
     try:
         user = await user_service.get_user(user_id)
-
         return UserInfoResponse(
             user_id=user.id,
             balance=user.balance,
