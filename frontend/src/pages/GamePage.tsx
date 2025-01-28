@@ -121,8 +121,12 @@ const GamePage: React.FC = () => {
       try {
         const { denormalizeX, denormalizeY } = scaleFunctions;
         const [sceneX, sceneY] = betData.predicted_vector;
-        const absoluteVolumeChange = denormalizeX(sceneX, data.candles?.length || 0);
-        const absolutePriceChange = denormalizeY(sceneY);
+        console.log('betData.predicted_vector')
+        console.log(betData.predicted_vector)
+        console.log('data.candles?.length')
+        console.log(data.candles?.length)
+        const absoluteVolumeChange = denormalizeX(sceneX, data.candles?.length || 0); //null
+        const absolutePriceChange = denormalizeY(sceneY); //nan
         const betRequest: PlaceBetRequest = {
           pair_id: selectedPair.value,
           amount: betData.amount,
