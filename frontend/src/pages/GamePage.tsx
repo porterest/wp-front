@@ -109,7 +109,7 @@ const GamePage: React.FC = () => {
   }, [scaleFunctions]);
 
   // Оптимизированная функция для показа кнопки подтверждения
-  const handleShowConfirmButton = useCallback(
+  const handleShowConfirmButton = useCallback( //todo
     async (
       show: boolean,
       betData?: { amount: number; predicted_vector: number[] }
