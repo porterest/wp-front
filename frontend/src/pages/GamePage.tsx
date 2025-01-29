@@ -35,7 +35,7 @@ const GamePage: React.FC = () => {
     null,
   );
   const [showConfirmButton, setShowConfirmButton] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(false);
+  const [setShowInstructions] = useState(false);
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
   const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
 
@@ -200,7 +200,7 @@ const GamePage: React.FC = () => {
   useEffect(() => {
     const hasVisited = localStorage.getItem("hasVisitedGamePage");
     if (!hasVisited) {
-      setShowInstructions(true); // Показываем инструкцию
+      // setShowInstructions(true); // Показываем инструкцию
       localStorage.setItem("hasVisitedGamePage", "true"); // Отмечаем, что уже показывали
     }
   }, []);
@@ -211,9 +211,9 @@ const GamePage: React.FC = () => {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden touch-none">
-      {showInstructions && (
-        <Instructions onClose={() => setShowInstructions(false)} />
-      )}
+      {/*{showInstructions && (*/}
+        <Instructions onClose={() => {} } /> //setShowInstructions(false)
+      {/*)}*/}
       <Timer
         onTimerEnd={() => {}}
         className="absolute top-[50px] left-1/2 transform -translate-x-1/2 z-10"

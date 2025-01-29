@@ -7,7 +7,7 @@ interface InstructionsProps {
 const Instructions: React.FC<InstructionsProps> = ({ onClose }) => (
   <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-80 text-white flex justify-center items-center z-[1000]">
     <div
-      className="max-w-lg p-5 rounded-2xl text-center shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+      className="w-full max-w-md max-h-[80vh] p-5 rounded-2xl text-center shadow-[0_4px_20px_rgba(0,0,0,0.5)] overflow-y-auto"
       style={{ background: "linear-gradient(135deg, #6a11cb, #2575fc)" }}
     >
       <h2 className="text-xl font-bold">Добро пожаловать в игру!</h2>
