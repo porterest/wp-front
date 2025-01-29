@@ -22,7 +22,6 @@ class AppWalletProviderInterface(ABC):
     async def get_token_amount(self, token_symbol: str) -> float:
         ...
 
-
     @abstractmethod
     async def get_wallet(self, wallet_id: UUID) -> AppWallet:
         ...

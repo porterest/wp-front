@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-
 from abstractions.services.liquidity_management import LiquidityManagerInterface
 from domain.enums.liquidity_action import LiquidityActionType
 from domain.models.liquidity_action import LiquidityAction, TokenState

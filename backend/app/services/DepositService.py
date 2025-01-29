@@ -25,7 +25,6 @@ class DepositService(
     user_service: UserServiceInterface
     ton_client: TonClientInterface
 
-
     async def check_users_transactions(self) -> None:
         logger.info("check_users_transactions")
         wallet = await self.app_wallet_service.get_deposit_wallet()

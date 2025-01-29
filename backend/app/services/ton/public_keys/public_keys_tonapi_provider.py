@@ -1,8 +1,6 @@
 import logging
 from dataclasses import dataclass
 
-from pydantic import SecretStr
-
 from abstractions.services.public_keys import PublicKeyProviderInterface
 from abstractions.services.tonclient import TonClientInterface
 

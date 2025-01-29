@@ -3,7 +3,7 @@ from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Type, Optional
 
-from sqlalchemy import select, desc
+from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.orm import joinedload, InstrumentedAttribute

@@ -2,7 +2,7 @@ from abc import ABC
 from abc import abstractmethod
 from typing import Annotated
 
-from pytoniq_core import Address, Builder
+from pytoniq_core import Address
 
 from domain.models.app_wallet import AppWalletWithPrivateData
 from domain.ton import InitialAccountState

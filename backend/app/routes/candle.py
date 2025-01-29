@@ -12,6 +12,7 @@ router = APIRouter(
 )
 logger = logging.getLogger(__name__)
 
+
 @router.get('')
 async def get_candles(pair_id: str, n: int) -> Optional[list[Candle]]:
     service = get_candle_service()

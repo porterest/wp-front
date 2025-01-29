@@ -13,5 +13,3 @@ class WalletContractV3R1(WalletContractInterface):
         slice.skip_bits(32)
         slice.skip_bits(32)
         return slice.read_bytes(32).hex()
-
-

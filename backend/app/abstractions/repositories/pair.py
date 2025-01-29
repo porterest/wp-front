@@ -1,5 +1,4 @@
-from abc import ABC, abstractmethod
-from uuid import UUID
+from abc import ABC
 
 from abstractions.repositories import CRUDRepositoryInterface
 from domain.dto.pair import CreatePairDTO, UpdatePairDTO
