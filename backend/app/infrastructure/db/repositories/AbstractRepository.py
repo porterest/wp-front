@@ -3,7 +3,7 @@ from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Type, Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, desc
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.orm import joinedload, InstrumentedAttribute
@@ -91,6 +91,7 @@ class AbstractSQLAlchemyRepository[Entity, Model, CreateDTO, UpdateDTO](
                         select(self.entity)
                         .where(self.entity.id == obj_id)
                         .options(*self.options)
+                        .order_by(desc(self.entity.id))
                     )
                     obj = res.unique().scalars().one()
                 else:
