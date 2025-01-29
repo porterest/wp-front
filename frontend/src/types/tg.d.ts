@@ -1,8 +1,11 @@
 declare global {
   interface TelegramWebApp {
+    ready: () => void;
     expand: () => void;
     disableVerticalSwipes: () => void;
     enableVerticalSwipes: () => void;
+    canRequestFullscreen: boolean;
+    requestFullscreen: () => void;
     isExpanded: boolean;
     MainButton: {
       show: () => void;

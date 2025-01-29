@@ -41,20 +41,22 @@ const GamePage: React.FC = () => {
 
 
 
-    useEffect(() => {
-      // Проверяем, доступен ли объект Telegram
-      if (window.Telegram?.WebApp) {
-        const tele = window.Telegram.WebApp; // Сохраняем объект в переменной
-        console.log("Telegram", tele);
-        // Разворачиваем приложение
-        tele.expand();
+  useEffect(() => {
+    // Инициализация Telegram Web App
+    const tg = window.Telegram.WebApp;
 
-        // Логируем объект Telegram.WebApp
-        console.log('Telegram WebApp API:', tele);
+    if (tg) {
+      tg.ready(); // Говорим Telegram, что приложение загружено
+      tg.disableVerticalSwipes(); // Отключаем вертикальные свайпы
+
+      // Проверяем, поддерживается ли полноэкранный режим
+      if (tg.canRequestFullscreen) {
+        tg.requestFullscreen(); // Запрашиваем полный экран
       } else {
-        console.error('Telegram WebApp API не доступен. Запустите приложение через Telegram.');
+        console.log('Fullscreen mode is not supported');
       }
-    }, []);
+    }
+  }, []);
 
 
 
