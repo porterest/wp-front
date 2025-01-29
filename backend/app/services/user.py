@@ -53,7 +53,7 @@ class UserService(UserServiceInterface):
                     status=MetaholderBetStatus(bet.status.value),
                     pair_name=bet.pair.name,
                     created_at=bet.created_at,
-                ) for bet in user.bets
+                ) for bet in sorted(user.bets, key=lambda b: b.created_at, reverse=True)
             ]
         )
 
