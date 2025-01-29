@@ -35,7 +35,7 @@ const GamePage: React.FC = () => {
     null,
   );
   const [showConfirmButton, setShowConfirmButton] = useState(false);
-  const [setShowInstructions] = useState(false);
+  // const [setShowInstructions] = useState(false);
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
   const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
 
