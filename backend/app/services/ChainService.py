@@ -41,10 +41,6 @@ class ChainService(
     deposit_service: DepositServiceInterface
     block_generation_interval: timedelta = timedelta(minutes=1.5)
     transaction_check_interval: timedelta = timedelta(minutes=0.5)
-    logger = logging.getLogger(__name__)
-
-    def __post_init__(self):
-        self.logger = logging.getLogger("ChainService")
 
     async def start_block_generation(self):
         """
@@ -54,7 +50,7 @@ class ChainService(
         self.scheduler.start()
         self._add_generation_job()
         self._add_transaction_check_job()
-        self.logger.info("Сервис генерации блоков запущен.")
+        logger.info("Сервис генерации блоков запущен.")
 
     def _add_generation_job(self):
         self.scheduler.add_job(
@@ -79,7 +75,7 @@ class ChainService(
         """
         Инициализирует цепочки и обеспечивает генерацию блоков для активных цепочек.
         """
-        self.logger.info("Начало генерации цепочек.")
+        logger.info("Начало генерации цепочек.")
 
         pairs = await self.pair_repository.get_all()
         for pair in pairs:
@@ -92,7 +88,7 @@ class ChainService(
                     created_at=datetime.now()
                 )
                 await self.chain_repository.create(chain)
-                self.logger.info(f"Создана новая цепочка для пары {pair.id}: {chain}")
+                logger.info(f"Создана новая цепочка для пары {pair.id}: {chain}")
             else:
                 await self._handle_interrupted_chain(chain.id)
 
@@ -104,8 +100,7 @@ class ChainService(
             return
 
         if interrupted_block.status == BlockStatus.COMPLETED:
-            raise BaseException(
-                f'Last block ({interrupted_block.id}) in interrupted chain {chain_id} is completed')  # noqa
+            raise BaseException(f'Last block ({interrupted_block.id}) in interrupted chain {chain_id} is completed')  # noqa
 
         await self.block_service.handle_interrupted_block(interrupted_block.id)
 
@@ -113,7 +108,7 @@ class ChainService(
         """
         Генерирует новые блоки и обрабатывает завершённые блоки для всех активных цепочек.
         """
-        # self.logger.info(f"Начало генерации блоков в {datetime.now()}.")
+        logger.info(f"Начало генерации блоков в {datetime.now()}.")
         try:
             chains = await self.chain_repository.get_all()
             for chain in chains:
@@ -124,7 +119,7 @@ class ChainService(
 
                 if last_block:
                     elapsed_time = (datetime.now() - last_block.created_at).seconds + 1
-                    # self.logger.info(f'elapsed_time {elapsed_time}, block {last_block.id}, status {last_block.status}')
+                    # logger.info(f'elapsed_time {elapsed_time}, block {last_block.id}, status {last_block.status}')
                     if (elapsed_time >= self.block_generation_interval.total_seconds()
                             and last_block.status == BlockStatus.IN_PROGRESS):
                         try:
@@ -133,7 +128,7 @@ class ChainService(
                             await self._pause_chain(chain)
                             continue
                     else:
-                        # logger.error(f"Fuck! Chain {chain.id} integrity is broken")
+                        # logger.error(f"Chain {chain.id} integrity is broken")
                         continue
 
                 new_block = await self.block_service.start_new_block(chain.id)
@@ -149,14 +144,14 @@ class ChainService(
                 await self.chain_repository.update(chain.id, update_chain)
                 self._add_generation_job()
         except Exception:
-            # logger.error('Something went wrong during block generation', exc_info=True)
+            logger.error('Something went wrong during block generation', exc_info=True)
             raise
 
     async def _process_completed_block(self, block: Block) -> Rewards:
         """
         Обрабатывает завершённый блок, распределяет результаты и обновляет данные.
         """
-        # self.logger.info(f"Обработка завершённого блока {block.block_number}.")
+        logger.info(f"Обработка завершённого блока {block.block_number}.")
         await self.block_service.complete_block(block.id)
         try:
             result = await self.orchestrator_service.process_block(block_id=block.id)
@@ -164,7 +159,7 @@ class ChainService(
             logger.error('Stopping pair')
             raise
 
-        # self.logger.info(f"Завершённый блок {block.block_number} успешно обработан.")
+        logger.info(f"Завершённый блок {block.block_number} успешно обработан.")
         return result.rewards
 
     async def stop_block_generation(self):
@@ -178,7 +173,7 @@ class ChainService(
 
         # self.scheduler.remove_job("block_generation")
         self.scheduler.shutdown()
-        # self.logger.info("Сервис генерации блоков остановлен.")
+        logger.info("Сервис генерации блоков остановлен.")
 
     async def _stop_chain(self, chain: Chain):
         current_block = await self.block_service.get_last_block(chain.id)
