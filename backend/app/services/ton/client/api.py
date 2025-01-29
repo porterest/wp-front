@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class TonApiClient(AbstractBaseTonClient):
+    async def get_jetton_wallet_address(self, contract_address: Address, target_address: Address) -> Address:
+        pass
+
     async def get_wallet_address(self, contract_address: Address, target_address: Address) -> Address:
         pass
 
