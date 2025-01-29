@@ -32,7 +32,7 @@ class TonClientInterface(ABC):
         ...
 
     @abstractmethod
-    async def get_wallet_address(
+    async def get_jetton_wallet_address(
             self,
             contract_address: Address,
             target_address: Address) -> Address:

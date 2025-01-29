@@ -34,3 +34,9 @@ class InnerTokenService(InnerTokenInterface):
             token_address=self.token_minter_address,
             app_wallet=app_wallet,
         )
+
+
+    async def add_liquidity(self):
+        ...
+    async def remove_liquidity(self):
+        ...

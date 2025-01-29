@@ -37,10 +37,10 @@ class MainTonClient(AbstractBaseTonClient):
         return await self.ton_client.send_jettons(user_wallet_address, amount, token_address, app_wallet)
 
     async def mint(self, amount: int, token_address: Address, admin_wallet: AppWalletWithPrivateData):
-        return self.ton_client.mint(amount, token_address, admin_wallet)
+        return await self.ton_client.mint(amount, token_address, admin_wallet)
 
     async def get_wallet_address(
             self,
             contract_address: Address,
             target_address: Address) -> Address:
-        return await self.ton_client.get_wallet_address()
+        return await self.ton_client.get_jetton_wallet_address(contract_address, target_address)

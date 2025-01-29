@@ -39,4 +39,6 @@ class AbstractBaseTonClient(TonClientInterface, ABC):
         workchain_byte = workchain_id.to_bytes(1, byteorder='big', signed=True)  # Signed byte for workchain
         address = f'{workchain_byte.hex()}:{state_hash.hex()}'
 
-        return address
+    @staticmethod
+    def to_nano(amount: float):
+        return int(amount * 1e9)
