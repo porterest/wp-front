@@ -1,6 +1,5 @@
 import { AxiosError } from "axios";
 import {
-    BackendCandle,
     BetResponse, CheckProofResponse,
     // BackendCandle,
     PairResponse,
