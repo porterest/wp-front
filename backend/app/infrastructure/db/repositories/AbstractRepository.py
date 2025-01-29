@@ -91,7 +91,7 @@ class AbstractSQLAlchemyRepository[Entity, Model, CreateDTO, UpdateDTO](
                         select(self.entity)
                         .where(self.entity.id == obj_id)
                         .options(*self.options)
-                        .order_by(desc(self.entity.id))
+                        .order_by(desc(self.entity.created_at))
                     )
                     obj = res.unique().scalars().one()
                 else:
