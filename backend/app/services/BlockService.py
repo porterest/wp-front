@@ -65,8 +65,8 @@ class BlockService(BlockServiceInterface):
 
     async def start_new_block(self, chain_id: UUID) -> Block:
         last_block = await self.block_repository.get_last_completed_block(chain_id)
-        logger.info(f'last completed block is {last_block.id} ({last_block.status})')
         if last_block:
+            logger.info(f'last completed block is {last_block.id} ({last_block.status})')
             block = CreateBlockDTO(
                 block_number=last_block.block_number + 1,
                 status=BlockStatus.IN_PROGRESS,
