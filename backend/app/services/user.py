@@ -12,7 +12,7 @@ from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.currency import CurrencyServiceInterface
 from abstractions.services.user import UserServiceInterface
-from domain.dto.user import UpdateUserDTO, CreateUserDTO
+from domain.dto.user import CreateUserDTO
 from domain.enums.deposit import DepositEntryStatus
 from domain.metaholder.enums import BetStatus as MetaholderBetStatus
 from domain.metaholder.responses import TransactionResponse, BetResponse
@@ -96,8 +96,6 @@ class UserService(UserServiceInterface):
         if not user:
             raise NoSuchUserException(f"User with wallet address {wallet_address} not found.")
         return user
-
-
 
     async def deposit_funded(self, deposit_id: UUID) -> None:
         deposit = await self.deposit_repository.get(deposit_id)

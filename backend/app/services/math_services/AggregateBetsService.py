@@ -7,6 +7,8 @@ from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterf
 from domain.models.bet import BetVector
 
 logger = logging.getLogger(__name__)
+
+
 @dataclass
 class AggregateBetsService(AggregateBetsServiceInterface):
     block_repository: BlockRepositoryInterface
@@ -34,7 +36,6 @@ class AggregateBetsService(AggregateBetsServiceInterface):
             logger.info(aggregate_x)
             logger.info("aggregate_y")
             logger.info(aggregate_y)
-
 
         if total_weight > 0:
             aggregate_x /= total_weight

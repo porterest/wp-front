@@ -1,4 +1,3 @@
-import asyncio
 import base64
 import logging
 import struct
@@ -18,15 +17,10 @@ from abstractions.services.auth.tonproof import TonProofServiceInterface
 from abstractions.services.known_wallets import KnownWalletsProviderInterface
 from abstractions.services.public_keys import PublicKeyProviderInterface
 from abstractions.services.tonclient import TonClientInterface
-from dependencies.services.auth import get_token_service
-from dependencies.services.ton.client import get_ton_client
-from dependencies.services.ton.known_wallets import get_known_wallets_provider
-from dependencies.services.ton.public_keys import get_public_key_provider
 from domain.ton.address import TonAddressInfo
 from domain.tonconnect.enums import VerifyResult
-from domain.tonconnect.requests import CheckProofRequest, CheckProofRequestRaw, Proof, Domain
+from domain.tonconnect.requests import CheckProofRequest, CheckProofRequestRaw
 from services.ton.tonconnect.exceptions import KeyCannotBeParsedException, TonProofVerificationFailed
-from settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -194,4 +188,3 @@ class TonProofService(TonProofServiceInterface):
         )
         composed_address = self.compose_address(composed_address_info)
         return composed_address == wanted_address.to_str(is_user_friendly=False)
-

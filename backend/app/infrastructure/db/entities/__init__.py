@@ -141,4 +141,3 @@ class Chain(AbstractBase):
 
     blocks: Mapped[List[Block]] = relationship("Block", back_populates='chain')
     pair: Mapped[Pair] = relationship("Pair")
-

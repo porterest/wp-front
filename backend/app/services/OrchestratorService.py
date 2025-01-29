@@ -2,7 +2,6 @@ import logging
 from dataclasses import dataclass
 from uuid import UUID
 
-
 from abstractions.repositories.chain import ChainRepositoryInterface
 from abstractions.services.app_wallet import AppWalletServiceInterface
 from abstractions.services.block import BlockServiceInterface

@@ -1,7 +1,6 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, Header
-from starlette.responses import JSONResponse
 
 from dependencies.services.auth import get_auth_service
 from domain.metaholder.responses.auth import AuthResponse
