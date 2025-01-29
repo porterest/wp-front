@@ -109,74 +109,80 @@ const GamePage: React.FC = () => {
   }, [scaleFunctions]);
 
   // Оптимизированная функция для показа кнопки подтверждения
-  const handleShowConfirmButton = useCallback( //todo
-    async (
+  const handleShowConfirmButton = useCallback(
+    (
       show: boolean,
       betData?: { amount: number; predicted_vector: number[] }
     ) => {
-      if (!betData || !selectedPair || !scaleFunctions) {
-        console.warn("Ожидание необходимых данных для расчета ставки.");
+      if (!betData || !selectedPair) {
+        console.warn("Торговая пара или данные ставки отсутствуют.");
         return;
       }
 
-      try {
-        const { denormalizeX, denormalizeY } = scaleFunctions;
-        const [sceneX, sceneY] = betData.predicted_vector;
+      console.log("Показ кнопки Confirm Bet");
 
-        console.log("betData.predicted_vector", betData.predicted_vector);
-
-        // Проверяем, загружены ли свечи
-        if (!data.candles || data.candles.length === 0) {
-          console.log("Свечи ещё не загружены. Ожидание...");
-          // Ожидаем пока свечи загрузятся
-          await new Promise<void>((resolve) => {
-            const interval = setInterval(() => {
-              if (data.candles && data.candles.length > 0) {
-                clearInterval(interval);
-                resolve();
-              }
-            }, 500); // Проверяем каждые 500 мс
-          });
-        }
-
-        console.log("data.candles?.length", data.candles?.length);
-
-        // Когда свечи загружены, выполняем расчет
-        const absoluteVolumeChange = denormalizeX(sceneX, data.candles?.length || 0);
-        const absolutePriceChange = denormalizeY(sceneY);
-
-        console.log("absoluteVolumeChange", absoluteVolumeChange);
-        console.log("absolutePriceChange", absolutePriceChange);
-
-        // Формируем запрос на ставку
-        const betRequest: PlaceBetRequest = {
-          pair_id: selectedPair.value,
-          amount: betData.amount,
-          predicted_vector: [absoluteVolumeChange, absolutePriceChange],
-        };
-
-        console.log("betRequest", betRequest);
-        setShowConfirmButton(show);
-        setCurrentBet(betRequest);
-      } catch (error) {
-        console.error("Ошибка при расчёте ставки:", error);
-        setShowConfirmButton(false);
-      }
+      setShowConfirmButton(show);
+      setCurrentBet({
+        pair_id: selectedPair.value,
+        amount: betData.amount,
+        predicted_vector: betData.predicted_vector, // Пока без преобразования
+      });
     },
-    [data, scaleFunctions, selectedPair]
+    [selectedPair]
   );
+
 
   const handleConfirmBet = useCallback(async () => {
     if (!currentBet) return;
+
+    console.log("Нажатие Confirm Bet. Проверяем данные свечей...");
+
+    // Ждем свечи, если их ещё нет
+    if (!data.candles || data.candles.length === 0) {
+      console.log("Свечи отсутствуют. Ожидаем загрузку...");
+
+      await new Promise<void>((resolve) => {
+        const interval = setInterval(() => {
+          if (data.candles && data.candles.length > 0) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 500); // Проверка каждые 500 мс
+      });
+
+      console.log("Свечи загружены, продолжаем расчёт...");
+    }
+
     try {
-      console.log("currentBet", currentBet);
-      const response = await placeBet(currentBet);
-      console.log("Bet placed successfully:", response);
+      if (!scaleFunctions) {
+        console.error("Функции нормализации не доступны!");
+        return;
+      }
+
+      const { denormalizeX, denormalizeY } = scaleFunctions;
+      const [sceneX, sceneY] = currentBet.predicted_vector;
+
+      const absoluteVolumeChange = denormalizeX(sceneX, data.candles?.length || 0);
+      const absolutePriceChange = denormalizeY(sceneY);
+
+      console.log("absoluteVolumeChange", absoluteVolumeChange);
+      console.log("absolutePriceChange", absolutePriceChange);
+
+      const betRequest: PlaceBetRequest = {
+        ...currentBet,
+        predicted_vector: [absoluteVolumeChange, absolutePriceChange],
+      };
+
+      console.log("Отправляем ставку:", betRequest);
+      const response = await placeBet(betRequest);
+
+      console.log("Ставка успешно размещена:", response);
       setShowConfirmButton(false);
     } catch (error) {
-      console.error("Error placing bet:", error);
+      console.error("Ошибка при размещении ставки:", error);
     }
-  }, [currentBet]);
+  }, [currentBet, data.candles, scaleFunctions]);
+
 
 
   const legendItems = [
