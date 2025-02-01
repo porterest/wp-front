@@ -43,7 +43,12 @@ class VaultSettings(BaseSettings):
 
 class InnerTokenSettings(BaseSettings):
     symbol: str
-    minter_address: str #= Field
+    minter_address: str  # = Field
+
+
+class SecretsSettings(BaseSettings):
+    expected_path: str
+    expected_key: str
 
 
 class Settings(BaseSettings):
@@ -53,6 +58,7 @@ class Settings(BaseSettings):
     vault: VaultSettings
     allowed_domains: list[str]
     inner_token: InnerTokenSettings
+    secrets: SecretsSettings
 
     debug: bool = True
 

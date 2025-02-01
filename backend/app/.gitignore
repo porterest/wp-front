@@ -1,3 +1,6 @@
 viz/
 **/project_files.txt
 change_owner.py
+ahvac/deploy.py
+ahvac/fs.py
+ahvac/secured.
