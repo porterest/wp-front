@@ -2,13 +2,15 @@ services:
   vault:
     image: hashicorp/vault:latest
     container_name: vault
+    restart: unless-stopped
     ports:
       - "8200:8200"
-    environment:
-      VAULT_DEV_ROOT_TOKEN_ID: "root"
-      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
     cap_add:
       - IPC_LOCK
-    command: "server -dev -dev-root-token-id=root"
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8200"
+    command: "server -config=/vault/config/vault.hcl"
     volumes:
       - ./vault_data:/vault/file
+      - ./config:/vault/config
+      - ./logs:/vault/logs
