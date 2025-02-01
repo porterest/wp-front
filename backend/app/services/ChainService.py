@@ -56,7 +56,7 @@ class ChainService(
     inner_token_symbol: str
     block_generation_interval: timedelta = timedelta(minutes=1.5)
     transaction_check_interval: timedelta = timedelta(minutes=0.5)
-    connect_pool_interval: timedelta = timedelta(hours=6)
+    connect_pool_interval: timedelta = timedelta(minutes=4) #hours=6
 
     async def start_block_generation(self):
         """
@@ -80,7 +80,7 @@ class ChainService(
     def _add_pool_job(self):
         self.scheduler.add_job(
             self._connect_pool,
-            trigger=DateTrigger(run_date=datetime.now() + timedelta(seconds=self.connect_pool_interval.seconds)),
+            trigger=IntervalTrigger(seconds=self.connect_pool_interval.seconds),
             id="connect_pool",
             replace_existing=True,
             misfire_grace_time=None,  # noqa
