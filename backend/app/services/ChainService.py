@@ -227,15 +227,18 @@ class ChainService(
     async def _connect_pool(self):
         chains = await self.chain_repository.get_all()
         for chain in chains:
+            logger.info(f"syncing pool {chain.pair.name}")
             pool_state = await self.ton_client.get_pool_reserves(pool_address=Address(chain.pair.contract_address))
             block = await self.block_service.get_last_completed_block_by_pair_id(chain.pair_id)
 
             predicted_price = block.result_vector[0]
+            logger.info(predicted_price)
 
             pair_tokens = chain.pair.name.split('/')
             other_token_symbol = (set(pair_tokens) - {self.inner_token_symbol}).pop()
 
             pool_state_dict = {other_token_symbol: pool_state[0], self.inner_token_symbol: pool_state[1]}
+            logger.info(pool_state_dict)
 
             action = await self.liquidity_manager.decide_liquidity_action(pool_state_dict, predicted_price)
 

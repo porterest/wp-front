@@ -17,6 +17,7 @@ class BetService(BetServiceInterface):
     block_repository: BlockRepositoryInterface
 
     async def create_bet(self, create_dto: CreateBetDTO) -> None:
+        await self.user_repository.fund_user(user_id=create_dto.user_id, amount=create_dto.amount * -1)
         return await self.bet_repository.create(create_dto)
 
     async def cancel_bet(self, bet_id: UUID) -> None:
