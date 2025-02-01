@@ -12,7 +12,6 @@ import Scene from "../components/Scene";
 import { ScaleFunctions } from "../types/scale";
 import { PairOption } from "../types/pair";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
-import { max } from "lodash";
 import { CandleData } from "../types/candles";
 
 const GamePage: React.FC = () => {
