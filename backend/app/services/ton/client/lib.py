@@ -1,3 +1,4 @@
+import base64
 import logging
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -290,6 +291,6 @@ class TonTonLibClient(AbstractBaseTonClient):
 
         wallet = await wallet_cls.from_private_key(
             provider=self.ton,
-            private_key=wallet.private_key.get_secret_value().encode(),
+            private_key=base64.b64decode(wallet.private_key.get_secret_value()),
         )
         return wallet
