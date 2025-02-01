@@ -12,7 +12,6 @@ from abstractions.services.math.pool_service import PoolServiceInterface
 from abstractions.services.math.reward_distribution import RewardDistributionServiceInterface
 from abstractions.services.orchestrator import OrchestratorServiceInterface
 from abstractions.services.user import UserServiceInterface
-from domain.enums.liquidity_action import LiquidityActionType
 from domain.models.orchestrator_result import OrchestratorResult
 from domain.models.prediction import Prediction
 from domain.models.user_prediction import UserPrediction
@@ -64,33 +63,17 @@ class OrchestratorService(OrchestratorServiceInterface):
         rewards = await self.reward_service.calculate_rewards(prediction_dto)
         logger.info(f"Rewards: {rewards}")
 
-        pool_state = await self.pool_service.get_current_pool_state()
-        liquidity_action = await self.liquidity_manager.decide_liquidity_action(current_pool_state=pool_state,
-                                                                                predicted_price=aggregated_bets[0])
-
         # Stage 4: минт
         reward_mint = rewards.total_reward_pool
 
-        # Получаем состояние внутреннего токена из liquidity_action
-        inner_token_state = liquidity_action.states.get(self.inner_token_symbol)
-
-        # Проверяем, нужно ли добавить токены
-        if liquidity_action.action == LiquidityActionType.ADD and inner_token_state and inner_token_state.delta > 0:
-            # Рассчитываем количество токенов для минтинга
-            liquidity_mint = inner_token_state.delta
-        else:
-            liquidity_mint = 0
-
-        total_mint = int(reward_mint + liquidity_mint)
         # Вызываем метод минтинга
-        if total_mint > 0:
+        if reward_mint > 0:
             try:
-                await self.inner_token_service.mint(amount=total_mint)
+                await self.inner_token_service.mint(amount=int(reward_mint))
             except Exception as e:
-                logger.error(f"not minted {total_mint}")
+                logger.error(f"not minted {reward_mint}")
 
         return OrchestratorResult(
-            liquidity_action=liquidity_action,
-            mint=total_mint,
+            mint=int(reward_mint),
             rewards=rewards,
         )

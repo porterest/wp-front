@@ -7,6 +7,5 @@ from domain.models.reward_model import Rewards
 
 @dataclass(kw_only=True)
 class OrchestratorResult:
-    liquidity_action: Optional[LiquidityAction] = None
     mint: Optional[int] = None
     rewards: Optional[Rewards] = None

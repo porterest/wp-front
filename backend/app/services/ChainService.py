@@ -6,16 +6,23 @@ from uuid import UUID
 from apscheduler.schedulers.base import BaseScheduler
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
+from pytoniq_core import Address
 
 from abstractions.repositories.chain import ChainRepositoryInterface
 from abstractions.repositories.pair import PairRepositoryInterface
+from abstractions.services.app_wallet import AppWalletServiceInterface
 from abstractions.services.bet import BetServiceInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.chain import ChainServiceInterface
 from abstractions.services.deposit import DepositServiceInterface
+from abstractions.services.inner_token import InnerTokenInterface
+from abstractions.services.liquidity_management import LiquidityManagerInterface
+from abstractions.services.math.pool_service import PoolServiceInterface
 from abstractions.services.orchestrator import OrchestratorServiceInterface
+from abstractions.services.tonclient import TonClientInterface
 from domain.dto.chain import CreateChainDTO, UpdateChainDTO
 from domain.enums.chain_status import ChainStatus
+from domain.enums.liquidity_action import LiquidityActionType
 from domain.metaholder.responses.block_state import BlockStateResponse
 from domain.models.block import Block
 from domain.models.chain import Chain
@@ -23,6 +30,7 @@ from domain.models.reward_model import Rewards
 from infrastructure.db.entities import BlockStatus
 from services import SingletonMeta
 from services.exceptions import NotFoundException, StopPairProcessingException
+from settings import InnerTokenSettings
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +47,16 @@ class ChainService(
     bet_service: BetServiceInterface
     orchestrator_service: OrchestratorServiceInterface
     deposit_service: DepositServiceInterface
+    liquidity_manager: LiquidityManagerInterface
+    ton_client: TonClientInterface
+    inner_token: InnerTokenSettings
+    app_wallet_service: AppWalletServiceInterface
+    pool_service: PoolServiceInterface
+    inner_token_service: InnerTokenInterface
+    inner_token_symbol: str
     block_generation_interval: timedelta = timedelta(minutes=1.5)
     transaction_check_interval: timedelta = timedelta(minutes=0.5)
+    connect_pool_interval: timedelta = timedelta(hours=6)
 
     async def start_block_generation(self):
         """
@@ -57,6 +73,15 @@ class ChainService(
             self._generate_new_blocks,
             trigger=DateTrigger(run_date=datetime.now() + timedelta(seconds=self.block_generation_interval.seconds)),
             id="block_generation",
+            replace_existing=True,
+            misfire_grace_time=None,  # noqa
+        )
+
+    def _add_pool_job(self):
+        self.scheduler.add_job(
+            self._connect_pool,
+            trigger=DateTrigger(run_date=datetime.now() + timedelta(seconds=self.connect_pool_interval.seconds)),
+            id="connect_pool",
             replace_existing=True,
             misfire_grace_time=None,  # noqa
         )
@@ -100,7 +125,8 @@ class ChainService(
             return
 
         if interrupted_block.status == BlockStatus.COMPLETED:
-            raise BaseException(f'Last block ({interrupted_block.id}) in interrupted chain {chain_id} is completed')  # noqa
+            raise BaseException(
+                f'Last block ({interrupted_block.id}) in interrupted chain {chain_id} is completed')  # noqa
 
         await self.block_service.handle_interrupted_block(interrupted_block.id)
 
@@ -197,6 +223,50 @@ class ChainService(
 
         except NotFoundException:
             raise
+
+    async def _connect_pool(self):
+        chains = await self.chain_repository.get_all()
+        for chain in chains:
+            pool_state = await self.ton_client.get_pool_reserves(pool_address=Address(chain.pair.contract_address))
+            block = await self.block_service.get_last_completed_block_by_pair_id(chain.pair_id)
+
+            predicted_price = block.result_vector[0]
+
+            pair_tokens = chain.pair.name.split('/')
+            other_token_symbol = (set(pair_tokens) - {self.inner_token_symbol}).pop()
+
+            pool_state_dict = {other_token_symbol: pool_state[0], self.inner_token_symbol: pool_state[1]}
+
+            action = await self.liquidity_manager.decide_liquidity_action(pool_state_dict, predicted_price)
+
+            inner_token_state = action.states.get(self.inner_token_symbol)
+
+            if action.action == LiquidityActionType.ADD and inner_token_state and inner_token_state.delta > 0:
+                liquidity_mint = inner_token_state.delta
+            else:
+                liquidity_mint = 0
+
+            if liquidity_mint > 0:
+                try:
+                    await self.inner_token_service.mint(amount=liquidity_mint)
+                except Exception as e:
+                    logger.error(f"not minted {liquidity_mint}", exc_info=True)
+
+            if action.action == LiquidityActionType.ADD:
+                await self.ton_client.provide_liquidity(
+                    ton_amount=action.states.get(other_token_symbol).delta,
+                    jetton_amount=action.states.get(self.inner_token.symbol).delta,
+                    pool_address=chain.pair.contract_address,
+                    admin_wallet=await self.app_wallet_service.get_withdraw_wallet()
+                )
+            elif action.action == LiquidityActionType.REMOVE:
+                await self.ton_client.remove_liquidity(
+                    ton_amount=action.states.get(other_token_symbol).delta,
+                    jetton_amount=action.states.get(self.inner_token.symbol).delta,
+                    pool_address=chain.pair.contract_address,
+                    admin_wallet=await self.app_wallet_service.get_withdraw_wallet()
+                )
+            logger.info(f'Pool states:\nold: {pool_state}\nnew: {action.states}')
 
     async def get_by_pair_id(self, pair_id: UUID) -> Chain:
         return await self.chain_repository.get_by_pair_id(pair_id)

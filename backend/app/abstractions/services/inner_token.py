@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
+from typing import Annotated
 from uuid import UUID
 
 
 class InnerTokenInterface(ABC):
     @abstractmethod
-    async def mint(self, amount: int):
+    async def mint(self, amount: Annotated[float, 'nano']):
         ...
 
     @abstractmethod

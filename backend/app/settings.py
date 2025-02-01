@@ -41,13 +41,18 @@ class VaultSettings(BaseSettings):
     token: SecretStr
 
 
+class InnerTokenSettings(BaseSettings):
+    symbol: str
+    minter_address: str #= Field
+
+
 class Settings(BaseSettings):
     db: DBSettings
     jwt: JwtSettings
     ton: TonSettings
     vault: VaultSettings
     allowed_domains: list[str]
-    inner_token_symbol: str
+    inner_token: InnerTokenSettings
 
     debug: bool = True
 

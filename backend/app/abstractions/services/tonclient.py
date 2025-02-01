@@ -18,7 +18,12 @@ class TonClientInterface(ABC):
         ...
 
     @abstractmethod
-    async def mint(self, amount: int, token_address: Address, admin_wallet: AppWalletWithPrivateData):
+    async def mint(
+            self,
+            amount: Annotated[float, 'nano'],
+            token_address: Address,
+            admin_wallet: AppWalletWithPrivateData,
+    ) -> None:
         ...
 
     @abstractmethod
@@ -29,6 +34,28 @@ class TonClientInterface(ABC):
             token_address: Address,
             app_wallet: AppWalletWithPrivateData,
     ) -> None:
+        ...
+
+    @abstractmethod
+    async def provide_liquidity(
+            self,
+            ton_amount: float,
+            jetton_amount: float,
+            admin_wallet: AppWalletWithPrivateData,
+            pool_address: str,
+    ) -> None:
+        ...
+
+    @abstractmethod
+    async def remove_liquidity(self, ton_amount: float, jetton_amount: float, admin_wallet: AppWalletWithPrivateData,
+                               pool_address: str) -> None:
+        ...
+
+    @abstractmethod
+    async def get_pool_reserves(
+            self,
+            pool_address: Address,
+    ) -> tuple[float, float]:
         ...
 
     @abstractmethod

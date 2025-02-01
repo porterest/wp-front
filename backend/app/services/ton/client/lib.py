@@ -2,12 +2,15 @@ import logging
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from enum import Enum
+from typing import Optional, Annotated
 
 from pytoniq import LiteBalancer, WalletV4R2, begin_cell, Address, BaseWallet, Cell
+from pytoniq_core import Slice
 
 from domain.models.app_wallet import AppWalletWithPrivateData, AppWalletVersion
 from services.ton.client.base import AbstractBaseTonClient
 from services.ton.client.exceptions import UnsupportedWalletVersionException
+from settings import InnerTokenSettings
 
 logger = logging.getLogger(__name__)
 
@@ -20,40 +23,45 @@ class OPS(Enum):
 
 class Opcodes(Enum):
     PROVIDE_LIQUIDITY = 0x1
-    # DEPLOY = 0x2
     REMOVE_LIQUIDITY = 0x3
-    # SET_JETTON_WALLET_ADDRESS = 0x4
 
 
 @dataclass
 class TonTonLibClient(AbstractBaseTonClient):
+    inner_token: InnerTokenSettings
+
     def __post_init__(self):
         self.ton = LiteBalancer.from_mainnet_config()
         self.ton_is_up = False
 
     @asynccontextmanager
     async def _connect(self):
-        await self.ton.start_up()
-        self.ton_is_up = True
+        if self.ton_is_up:
+            raise Warning("Ton is already launched")
+        else:
+            await self.ton.start_up()
+            self.ton_is_up = True
 
         yield
 
-        await self.ton.close_all()
-        self.ton_is_up = False
+        if self.ton_is_up:
+            await self.ton.close_all()
+            self.ton_is_up = False
 
-    async def mint(self, amount: int, token_address: Address, admin_wallet: AppWalletWithPrivateData):
-        await self.ton.start_up()
-
+    async def mint(
+            self,
+            amount: Annotated[float, 'nano'],
+            token_address: Address,
+            admin_wallet: AppWalletWithPrivateData,
+    ) -> None:
         logger.debug('Preparing mint transaction')
-
-        wallet = await self._get_wallet_instance(wallet=admin_wallet)
 
         payload = (
             begin_cell()
             .store_uint(OPS.Mint, 32)
             .store_uint(0, 64)
-            .store_address(wallet.address)
-            .store_coins( AbstractBaseTonClient.to_nano(0.2))
+            .store_address(Address(admin_wallet.address))
+            .store_coins(AbstractBaseTonClient.to_nano(0.2))
             .store_ref(
                 begin_cell()
                 .store_uint(OPS.InternalTransfer, 32)
@@ -70,20 +78,18 @@ class TonTonLibClient(AbstractBaseTonClient):
 
         logger.debug('Wallet initialized for minting tokens')
 
-        async with self._connect():
-            result = await self._send_transfer(
-                to=token_address,
-                value= AbstractBaseTonClient.to_nano(0.001),
-                body=payload,
-                wallet=wallet
-            )
+        # async with self._connect():
+        #     wallet = await self._get_wallet_instance(wallet=admin_wallet)
+        #
+        #     result = await self._send_transfer(
+        #         to=token_address,
+        #         value=AbstractBaseTonClient.to_nano(0.01),
+        #         body=payload,
+        #         wallet=wallet
+        #     )
 
-        if result > 1:
-            raise Exception("Mint failed")
-
-        logger.info(f"Minting successful for {amount} tokens to {wallet.address.to_str(is_user_friendly=False)}")
-
-        await self.ton.close_all()
+        logger.info(f"Minting successful for {amount} tokens to "
+                    f"{Address(admin_wallet.address).to_str(is_user_friendly=False)}")
 
     async def send_jettons(
             self,
@@ -91,17 +97,14 @@ class TonTonLibClient(AbstractBaseTonClient):
             amount: int,
             token_address: Address,
             app_wallet: AppWalletWithPrivateData,
-    ):
-        await self.ton.start_up()
-
+    ) -> None:
         logger.debug('Preparing sending jettons')
 
-        wallet = await self._get_wallet_instance(wallet=app_wallet)
-
-        source_address = await self.get_jetton_wallet_address(
-            contract_address=token_address,
-            target_address=wallet.address,
-        )
+        async with self._connect():
+            source_address = await self.get_jetton_wallet_address(
+                contract_address=Address(self.inner_token.minter_address),
+                target_address=Address(app_wallet.address),
+            )
 
         payload = (
             begin_cell()
@@ -119,9 +122,11 @@ class TonTonLibClient(AbstractBaseTonClient):
         logger.debug('Wallet initialized for sending tokens')
 
         async with self._connect():
+            wallet = await self._get_wallet_instance(wallet=app_wallet)
+
             result = await self._send_transfer(
                 to=source_address,
-                value= AbstractBaseTonClient.to_nano(0.001),
+                value=AbstractBaseTonClient.to_nano(0.05),
                 body=payload,
                 wallet=wallet
             )
@@ -135,70 +140,75 @@ class TonTonLibClient(AbstractBaseTonClient):
             f"to {destination_owner_address.to_str(is_user_friendly=False)}"
         )
 
-        await self.ton.close_all()
-
     async def provide_liquidity(
             self,
-            token0amount: int,
-            token1amount: int,
-            minter_address: Address,
+            ton_amount: float,
+            jetton_amount: float,
             admin_wallet: AppWalletWithPrivateData,
-    ):
-        await self.ton.start_up()
-
+            pool_address: str,
+    ) -> None:
         logger.debug('Preparing provide liquidity transaction')
 
-        wallet = await self._get_wallet_instance(wallet=admin_wallet)
+        ton_amount = self.to_nano(ton_amount)
+        jetton_amount = self.to_nano(jetton_amount)
 
-        payload = (
+        provide_liquidity_body = (
             begin_cell()
             .store_uint(Opcodes.PROVIDE_LIQUIDITY, 32)
-            .store_coins(token0amount)
-            .store_coins(token1amount)
+            .store_coins(ton_amount)
+            .store_coins(jetton_amount)
             .end_cell()
         )
 
-        async with self._connect():
-            result = await self._send_transfer(
-                to=minter_address,
-                value= AbstractBaseTonClient.to_nano(0.001),
-                body=payload,
-                wallet=wallet
-            )
+        pool_address = Address(pool_address)
 
-        if result > 1:
-            raise Exception("Providing liquidity transaction failed")
+        logger.info(f'Providing liquidity: {ton_amount} TON, {jetton_amount} {self.inner_token.symbol}')
 
-        await self.ton.close_all()
+        # async with self._connect():
+        #     wallet = await self._get_wallet_instance(wallet=admin_wallet)
+        #
+        #     await self._send_transfer(
+        #         to=pool_address,
+        #         body=provide_liquidity_body,
+        #         wallet=wallet,
+        #         value=ton_amount + int(0.01 * 1e9)
+        #     )
+        #
+        #     await self.send_jettons(
+        #         destination_owner_address=pool_address,
+        #         amount=jetton_amount,
+        #         token_address=Address(self.inner_token.minter_address),
+        #         app_wallet=admin_wallet,
+        #     )
 
-    async def remove_liquidity(
-            self,
-            token0amount: int,
-            token1amount: int,
-            minter_address: Address,
-            admin_wallet: AppWalletWithPrivateData,
-    ):
+    async def remove_liquidity(self, ton_amount: float, jetton_amount: float, admin_wallet: AppWalletWithPrivateData,
+                               pool_address: str) -> None:
         logger.debug('Preparing remove liquidity transaction')
 
         wallet = await self._get_wallet_instance(wallet=admin_wallet)
+        ton_amount = self.to_nano(ton_amount)
+        jetton_amount = self.to_nano(jetton_amount)
 
-        payload = (
+        remove_liquidity_body = (
             begin_cell()
             .store_uint(Opcodes.REMOVE_LIQUIDITY, 32)
-            .store_coins(token0amount)
-            .store_coins(token1amount)
+            .store_coins(ton_amount)
+            .store_coins(jetton_amount)
             .end_cell()
         )
 
-        async with self._connect():
-            result = await self._send_transfer(
-                wallet=wallet,
-                body=payload,
-                to=minter_address,
-            )
+        pool_address = Address(pool_address)
 
-        if result > 1:
-            raise Exception("Removing liquidity transaction failed")
+        logger.info(f'Providing liquidity: {ton_amount} TON, {jetton_amount} {self.inner_token.symbol}')
+
+
+        # async with self._connect():
+        #     await self._send_transfer(
+        #         to=pool_address,
+        #         value=int(0.05 * 1e9),
+        #         body=remove_liquidity_body,
+        #         wallet=wallet
+        #     )
 
     async def get_jetton_wallet_address(self, contract_address: Address, target_address: Address) -> Address:
         response = await self.ton.run_get_method(
@@ -206,8 +216,48 @@ class TonTonLibClient(AbstractBaseTonClient):
             method='get_wallet_address',
             stack=[target_address.to_str(is_user_friendly=False)],
         )
-
         return Address(response[0])
+
+    async def get_price(
+            self,
+            pool_address: Address,
+    ) -> float:
+        stack = await self.run_get_method(
+            method='get_price',
+            address=pool_address,
+            stack=[],
+        )
+
+        return stack[0]  # / 1e9
+
+    async def get_pool_reserves(
+            self,
+            pool_address: Address,
+    ) -> tuple[float, float]:
+        stack = await self.run_get_method(
+            method='get_reserves',
+            address=pool_address,
+            stack=[],
+        )
+        return stack[0] / 1e9, stack[1] / 1e9
+
+    async def run_get_method(self, method: str, address: Address, stack: Optional[list] = None) -> list:
+        balancer = LiteBalancer.from_mainnet_config(trust_level=1)
+        print('balancer init')
+
+        await balancer.start_up()
+
+        print('balancer started')
+
+        res: list[Slice] = await balancer.run_get_method(
+            method=method,
+            address=address,
+            stack=stack
+        )
+
+        await balancer.close_all()
+
+        return res
 
     async def _send_transfer(
             self,
@@ -243,4 +293,3 @@ class TonTonLibClient(AbstractBaseTonClient):
             private_key=wallet.private_key.get_secret_value().encode(),
         )
         return wallet
-

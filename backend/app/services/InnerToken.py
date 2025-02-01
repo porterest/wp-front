@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Annotated
 from uuid import UUID
 
 from pytoniq import Address
@@ -17,7 +18,7 @@ class InnerTokenService(InnerTokenInterface):
 
     token_minter_address: Address = Address('EQBrltnukNOtAPgUwUO5o6VlDuFv2pkzEkOPvnqmOe2OmdB3')
 
-    async def mint(self, amount: int):
+    async def mint(self, amount: Annotated[float, 'nano']):
         admin_wallet = await self.app_wallet_provider.get_withdraw_wallet()
         await self.ton_client.mint(
             amount=amount,

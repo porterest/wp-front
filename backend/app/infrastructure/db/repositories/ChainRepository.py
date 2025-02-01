@@ -7,6 +7,7 @@ from sqlalchemy import select
 from abstractions.repositories.chain import ChainRepositoryInterface
 from domain.dto.chain import CreateChainDTO, UpdateChainDTO
 from domain.models.chain import Chain as ChainModel
+from domain.models.pair import Pair as PairModel
 from infrastructure.db.entities import Chain
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
 
@@ -19,6 +20,7 @@ class ChainRepository(
     joined_fields: dict[str, Optional[list[str]]] = field(
         default_factory=lambda: {
             'blocks': None,
+            'pair': None,
         }
     )
 
@@ -54,6 +56,13 @@ class ChainRepository(
             id=entity.id,
             current_block=entity.current_block,
             pair_id=entity.pair_id,
+            pair=PairModel(
+                id=entity.pair.id,
+                name=entity.pair.name,
+                contract_address=entity.pair.contract_address,
+                created_at=entity.pair.created_at,
+                updated_at=entity.pair.updated_at,
+            ),
             created_at=entity.created_at,
             status=entity.status,
             updated_at=entity.updated_at

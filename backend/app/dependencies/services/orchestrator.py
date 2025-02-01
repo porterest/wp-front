@@ -22,6 +22,6 @@ def get_orchestrator_service() -> OrchestratorServiceInterface:
         app_wallet_service=get_app_wallet_service(),
         chain_repository=get_chain_repository(),
         pool_service=get_pool_service(),
-        inner_token_symbol=settings.inner_token_symbol,
+        inner_token_symbol=settings.inner_token.symbol,
         inner_token_service=get_inner_token_service()
     )
