@@ -30,6 +30,11 @@ pf:
 	git commit -m "meow (frontend)"
 	git push origin main
 
+pv:
+	git add backend/vault
+	git commit -m "fix: vault"
+	git push origin main
+
 deploy-b:
 	docker compose stop app
 	git pull origin main
@@ -39,3 +44,8 @@ deploy-f:
 	docker compose stop frontend
 	git pull origin main
 	docker compose up --build -d frontend
+
+deploy-v:
+	docker compose stop vault
+	git pull origin main
+	docker compose up --build -d vault
