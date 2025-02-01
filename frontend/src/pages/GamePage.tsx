@@ -12,6 +12,8 @@ import Scene from "../components/Scene";
 import { ScaleFunctions } from "../types/scale";
 import { PairOption } from "../types/pair";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
+import { max } from "lodash";
+import { CandleData } from "../types/candles";
 
 const GamePage: React.FC = () => {
   const context = useDataPrefetch();
@@ -164,7 +166,13 @@ const GamePage: React.FC = () => {
       const { denormalizeX, denormalizeY } = scaleFunctions;
       const [sceneX, sceneY] = currentBet.predicted_vector;
 
-      const absoluteVolumeChange = denormalizeX(sceneX, data.candles?.length || 0);
+      let maxVolume = 0;
+
+      if (data.candles != undefined) {
+        maxVolume = Math.max(...data.candles.map((x: CandleData) => x.volume));
+      }
+
+      const absoluteVolumeChange = denormalizeX(sceneX, maxVolume);
       const absolutePriceChange = denormalizeY(sceneY);
 
       console.log("absoluteVolumeChange", absoluteVolumeChange);
@@ -172,7 +180,7 @@ const GamePage: React.FC = () => {
 
       const betRequest: PlaceBetRequest = {
         ...currentBet,
-        predicted_vector: [absoluteVolumeChange, absolutePriceChange],
+        predicted_vector: [absolutePriceChange, absoluteVolumeChange],
       };
 
       console.log("Отправляем ставку:", betRequest);
