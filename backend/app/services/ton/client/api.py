@@ -19,6 +19,17 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class TonApiClient(AbstractBaseTonClient):
+    async def provide_liquidity(self, ton_amount: float, jetton_amount: float, admin_wallet: AppWalletWithPrivateData,
+                                pool_address: str) -> None:
+        pass
+
+    async def remove_liquidity(self, ton_amount: float, jetton_amount: float, admin_wallet: AppWalletWithPrivateData,
+                               pool_address: str) -> None:
+        pass
+
+    async def get_pool_reserves(self, pool_address: Address) -> tuple[float, float]:
+        pass
+
     async def get_jetton_wallet_address(self, contract_address: Address, target_address: Address) -> Address:
         pass
 
