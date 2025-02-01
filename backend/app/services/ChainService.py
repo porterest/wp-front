@@ -232,7 +232,7 @@ class ChainService(
             logger.info(f"syncing pool {chain.pair.name}")
             pool_state = await self.ton_client.get_pool_reserves(pool_address=Address(chain.pair.contract_address))
             block = await self.block_service.get_last_completed_block_by_pair_id(chain.pair_id)
-            logger.info(pool_state)
+            logger.info(f'ps {pool_state}')
 
             predicted_price = block.result_vector[0]
             logger.info(predicted_price)
