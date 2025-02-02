@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from pytoniq_core import Address
 
-from abstractions.services.tonclient import TonClientInterface
+from abstractions.services.tonclient import TonClientInterface, Nano
 from domain.models.app_wallet import AppWalletWithPrivateData
 from services.ton.client.base import AbstractBaseTonClient
 
@@ -46,13 +46,13 @@ class MainTonClient(AbstractBaseTonClient):
     async def send_jettons(
             self,
             user_wallet_address: Address,
-            amount: int,
+            amount: Nano,
             token_address: Address,
             app_wallet: AppWalletWithPrivateData,
     ) -> None:
         return await self.ton_client.send_jettons(user_wallet_address, amount, token_address, app_wallet)
 
-    async def mint(self, amount: int, token_address: Address, admin_wallet: AppWalletWithPrivateData):
+    async def mint(self, amount: Nano, token_address: Address, admin_wallet: AppWalletWithPrivateData):
         return await self.ton_client.mint(amount, token_address, admin_wallet)
 
     async def get_wallet_address(

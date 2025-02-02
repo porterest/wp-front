@@ -8,6 +8,7 @@ from typing import Optional, Annotated
 from pytoniq import LiteBalancer, WalletV4R2, begin_cell, Address, BaseWallet, Cell
 from pytoniq_core import Slice
 
+from abstractions.services.tonclient import Nano
 from domain.models.app_wallet import AppWalletWithPrivateData, AppWalletVersion
 from domain.ton.transaction import TonTransaction
 from services.ton.client.base import AbstractBaseTonClient
@@ -62,7 +63,7 @@ class TonTonLibClient(AbstractBaseTonClient):
 
     async def mint(
             self,
-            amount: Annotated[float, 'nano'],
+            amount: Nano,
             token_address: Address,
             admin_wallet: AppWalletWithPrivateData,
     ) -> None:
@@ -106,7 +107,7 @@ class TonTonLibClient(AbstractBaseTonClient):
     async def send_jettons(
             self,
             destination_owner_address: Address,
-            amount: int,
+            amount: Nano,
             token_address: Address,
             app_wallet: AppWalletWithPrivateData,
     ) -> None:
@@ -154,15 +155,12 @@ class TonTonLibClient(AbstractBaseTonClient):
 
     async def provide_liquidity(
             self,
-            ton_amount: float,
-            jetton_amount: float,
+            ton_amount: Nano,
+            jetton_amount: Nano,
             admin_wallet: AppWalletWithPrivateData,
             pool_address: str,
     ) -> None:
         logger.debug('Preparing provide liquidity transaction')
-
-        ton_amount = self.to_nano(ton_amount)
-        jetton_amount = self.to_nano(jetton_amount)
 
         provide_liquidity_body = (
             begin_cell()
@@ -193,13 +191,16 @@ class TonTonLibClient(AbstractBaseTonClient):
         #         app_wallet=admin_wallet,
         #     )
 
-    async def remove_liquidity(self, ton_amount: float, jetton_amount: float, admin_wallet: AppWalletWithPrivateData,
-                               pool_address: str) -> None:
+    async def remove_liquidity(
+            self,
+            ton_amount: Nano,
+            jetton_amount: Nano,
+            admin_wallet: AppWalletWithPrivateData,
+            pool_address: str,
+    ) -> None:
         logger.debug('Preparing remove liquidity transaction')
 
         wallet = await self._get_wallet_instance(wallet=admin_wallet)
-        ton_amount = self.to_nano(ton_amount)
-        jetton_amount = self.to_nano(jetton_amount)
 
         remove_liquidity_body = (
             begin_cell()
@@ -276,7 +277,7 @@ class TonTonLibClient(AbstractBaseTonClient):
             wallet: BaseWallet,
             to: Address,
             body: Cell,
-            value: int = AbstractBaseTonClient.to_nano(0.001)
+            value: Nano = AbstractBaseTonClient.to_nano(0.001)
     ) -> int:
         if not self.ton_is_up:
             raise Exception("Ton liteserver client should be up to send transfers")

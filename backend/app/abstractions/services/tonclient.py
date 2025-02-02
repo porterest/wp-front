@@ -1,12 +1,17 @@
 from abc import ABC
 from abc import abstractmethod
-from typing import Annotated
+from typing import Annotated, TypeVar
 
 from pytoniq_core import Address
 
 from domain.models.app_wallet import AppWalletWithPrivateData
 from domain.ton import InitialAccountState
 from domain.ton.transaction import TonTransaction
+
+Nano = TypeVar(
+    'Nano',
+    bound=Annotated[int, 'Token amount in nano']
+)
 
 
 class TonClientInterface(ABC):
@@ -20,7 +25,7 @@ class TonClientInterface(ABC):
     @abstractmethod
     async def mint(
             self,
-            amount: Annotated[float, 'nano'],
+            amount: Nano,
             token_address: Address,
             admin_wallet: AppWalletWithPrivateData,
     ) -> None:
@@ -30,7 +35,7 @@ class TonClientInterface(ABC):
     async def send_jettons(
             self,
             user_wallet_address: Address,
-            amount: int,
+            amount: Nano,
             token_address: Address,
             app_wallet: AppWalletWithPrivateData,
     ) -> None:
@@ -39,16 +44,21 @@ class TonClientInterface(ABC):
     @abstractmethod
     async def provide_liquidity(
             self,
-            ton_amount: float,
-            jetton_amount: float,
+            ton_amount: Nano,
+            jetton_amount: Nano,
             admin_wallet: AppWalletWithPrivateData,
             pool_address: str,
     ) -> None:
         ...
 
     @abstractmethod
-    async def remove_liquidity(self, ton_amount: float, jetton_amount: float, admin_wallet: AppWalletWithPrivateData,
-                               pool_address: str) -> None:
+    async def remove_liquidity(
+            self,
+            ton_amount: Nano,
+            jetton_amount: Nano,
+            admin_wallet: AppWalletWithPrivateData,
+            pool_address: str,
+    ) -> None:
         ...
 
     @abstractmethod
@@ -72,7 +82,6 @@ class TonClientInterface(ABC):
     @abstractmethod
     async def get_transactions(self, address: str) -> list[TonTransaction]:
         ...
-
 
     @abstractmethod
     async def get_current_pool_state(self) -> dict[str, float]:

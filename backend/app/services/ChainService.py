@@ -30,6 +30,7 @@ from domain.models.reward_model import Rewards
 from infrastructure.db.entities import BlockStatus
 from services import SingletonMeta
 from services.exceptions import NotFoundException, StopPairProcessingException
+from services.ton.client.base import AbstractBaseTonClient
 from settings import InnerTokenSettings
 
 logger = logging.getLogger(__name__)
@@ -259,17 +260,19 @@ class ChainService(
                     logger.error(f"not minted {liquidity_mint}", exc_info=True)
 
             logger.info(f'states: {action.states}')
+            ton_amount = AbstractBaseTonClient.to_nano(action.states.get(other_token_symbol).delta)
+            jetton_amount = AbstractBaseTonClient.to_nano(action.states.get(self.inner_token.symbol).delta)
             if action.action == LiquidityActionType.ADD:
                 await self.ton_client.provide_liquidity(
-                    ton_amount=action.states.get(other_token_symbol).delta,
-                    jetton_amount=action.states.get(self.inner_token.symbol).delta,
+                    ton_amount=ton_amount,
+                    jetton_amount=jetton_amount,
                     pool_address=chain.pair.contract_address,
                     admin_wallet=await self.app_wallet_service.get_withdraw_wallet()
                 )
             elif action.action == LiquidityActionType.REMOVE:
                 await self.ton_client.remove_liquidity(
-                    ton_amount=action.states.get(other_token_symbol).delta,
-                    jetton_amount=action.states.get(self.inner_token.symbol).delta,
+                    ton_amount=ton_amount,
+                    jetton_amount=jetton_amount,
                     pool_address=chain.pair.contract_address,
                     admin_wallet=await self.app_wallet_service.get_withdraw_wallet()
                 )

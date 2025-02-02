@@ -8,6 +8,7 @@ from httpx import AsyncClient
 from pydantic import SecretStr
 from pytoniq_core import Address
 
+from abstractions.services.tonclient import Nano
 from domain.models.app_wallet import AppWalletWithPrivateData
 from domain.ton.transaction import TonTransaction, TonTransactionStatus
 from services.ton.client.base import AbstractBaseTonClient
@@ -134,7 +135,7 @@ class TonApiClient(AbstractBaseTonClient):
 
         return transactions
 
-    async def mint(self, amount: int, token_address: Address, admin_wallet: AppWalletWithPrivateData):
+    async def mint(self, amount: Nano, token_address: Address, admin_wallet: AppWalletWithPrivateData):
         ...
 
 
