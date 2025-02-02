@@ -1,8 +1,10 @@
+import asyncio
 from dataclasses import dataclass
 
 from abstractions.services.liquidity_management import LiquidityManagerInterface
 from domain.enums.liquidity_action import LiquidityActionType
 from domain.models.liquidity_action import LiquidityAction, TokenState
+from settings import settings
 
 
 @dataclass
@@ -72,3 +74,19 @@ class LiquidityManager(LiquidityManagerInterface):
                     )
                 }
             )
+
+
+if __name__ == '__main__':
+    manager = LiquidityManager(inner_token_symbol=settings.inner_token.symbol)
+    current_state = {'TON': 2, 'DD': 10}
+    predicted_price = 2.5
+
+    async def main():
+        a = await manager.decide_liquidity_action(
+            current_pool_state=current_state,
+            predicted_price=predicted_price
+        )
+
+        print(a)
+
+    asyncio.run(main())

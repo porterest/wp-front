@@ -200,8 +200,6 @@ class TonTonLibClient(AbstractBaseTonClient):
     ) -> None:
         logger.debug('Preparing remove liquidity transaction')
 
-        wallet = await self._get_wallet_instance(wallet=admin_wallet)
-
         remove_liquidity_body = (
             begin_cell()
             .store_uint(Opcodes.REMOVE_LIQUIDITY.value, 32)
@@ -215,6 +213,7 @@ class TonTonLibClient(AbstractBaseTonClient):
         logger.info(f'Providing liquidity: {ton_amount} TON, {jetton_amount} {self.inner_token.symbol}')
 
         # async with self._connect():
+        #     wallet = await self._get_wallet_instance(wallet=admin_wallet)
         #     await self._send_transfer(
         #         to=pool_address,
         #         value=int(0.05 * 1e9),
