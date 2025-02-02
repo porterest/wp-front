@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info('chains stopped, exiting...')
 
 
-load_dotenv()
+load_dotenv(dotenv_path='./.env')
 app = FastAPI(lifespan=lifespan)
 
 logger = logging.getLogger(__name__)
