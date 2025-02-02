@@ -43,6 +43,11 @@ class LiquidityManager(LiquidityManagerInterface):
                         name=self.inner_token_symbol,
                         state_after=inner_balance + delta_inner,
                         delta=delta_inner
+                    ),
+                    other_token_symbol: TokenState(
+                        name=other_token_symbol,
+                        state_after=other_balance,
+                        delta=.0,
                     )
                 }
             )
@@ -59,6 +64,11 @@ class LiquidityManager(LiquidityManagerInterface):
                         name=other_token_symbol,
                         state_after=other_balance + delta_other,
                         delta=delta_other
+                    ),
+                    self.inner_token_symbol: TokenState(
+                        name=self.inner_token_symbol,
+                        state_after=inner_balance,
+                        delta=.0,
                     )
                 }
             )
