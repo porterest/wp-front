@@ -56,7 +56,7 @@ class ChainService(
     inner_token_symbol: str
     block_generation_interval: timedelta = timedelta(minutes=1.5)
     transaction_check_interval: timedelta = timedelta(minutes=0.5)
-    connect_pool_interval: timedelta = timedelta(minutes=4) #hours=6
+    connect_pool_interval: timedelta = timedelta(minutes=4)  # hours=6
 
     async def start_block_generation(self):
         """
@@ -258,6 +258,7 @@ class ChainService(
                 except Exception as e:
                     logger.error(f"not minted {liquidity_mint}", exc_info=True)
 
+            logger.info(f'states: {action.states}')
             if action.action == LiquidityActionType.ADD:
                 await self.ton_client.provide_liquidity(
                     ton_amount=action.states.get(other_token_symbol).delta,
