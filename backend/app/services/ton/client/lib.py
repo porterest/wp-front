@@ -9,6 +9,7 @@ from pytoniq import LiteBalancer, WalletV4R2, begin_cell, Address, BaseWallet, C
 from pytoniq_core import Slice
 
 from domain.models.app_wallet import AppWalletWithPrivateData, AppWalletVersion
+from domain.ton.transaction import TonTransaction
 from services.ton.client.base import AbstractBaseTonClient
 from services.ton.client.exceptions import UnsupportedWalletVersionException
 from settings import InnerTokenSettings
@@ -29,6 +30,18 @@ class Opcodes(Enum):
 
 @dataclass
 class TonTonLibClient(AbstractBaseTonClient):
+    async def get_public_key(self, address: str) -> str:
+        raise NotImplementedError
+
+    async def get_transactions(self, address: str) -> list[TonTransaction]:
+        raise NotImplementedError
+
+    async def mint_tokens(self, amount: int):
+        raise NotImplementedError
+
+    async def get_current_pool_state(self) -> dict[str, float]:
+        raise NotImplementedError
+
     inner_token: InnerTokenSettings
 
     def __post_init__(self):
@@ -202,7 +215,6 @@ class TonTonLibClient(AbstractBaseTonClient):
 
         logger.info(f'Providing liquidity: {ton_amount} TON, {jetton_amount} {self.inner_token.symbol}')
 
-
         # async with self._connect():
         #     await self._send_transfer(
         #         to=pool_address,
@@ -240,6 +252,7 @@ class TonTonLibClient(AbstractBaseTonClient):
             address=pool_address,
             stack=[],
         )
+        logger.info(f'СТААААААААК: {stack}')
         return stack[0] / 1e9, stack[1] / 1e9
 
     async def run_get_method(self, method: str, address: Address, stack: Optional[list] = None) -> list:

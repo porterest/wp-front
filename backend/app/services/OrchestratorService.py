@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass
 from uuid import UUID
 
+from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.repositories.chain import ChainRepositoryInterface
 from abstractions.services.app_wallet import AppWalletServiceInterface
 from abstractions.services.block import BlockServiceInterface
@@ -30,6 +31,7 @@ class OrchestratorService(OrchestratorServiceInterface):
     chain_repository: ChainRepositoryInterface
     pool_service: PoolServiceInterface
     inner_token_service: InnerTokenInterface
+    block_repository: BlockRepositoryInterface
     inner_token_symbol: str
 
     async def process_block(self, block_id: UUID) -> OrchestratorResult:
@@ -41,6 +43,11 @@ class OrchestratorService(OrchestratorServiceInterface):
         # 1. Получение агрегированной ставки
         aggregated_bets = await self.aggregate_bets_service.aggregate_bets(block.id)
         logger.info(f"Aggregated bets: {aggregated_bets}")
+        if not aggregated_bets:
+            block = await self.block_repository.get(block_id)
+            chain = await self.chain_repository.get(block.chain_id)
+
+            block = await self.block_service.get_last_completed_block_by_pair_id(chain.pair_id)
         # 2. Предсказания юзеров
         user_predictions = [
             UserPrediction(
