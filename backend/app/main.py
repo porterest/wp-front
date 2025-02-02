@@ -1,5 +1,4 @@
 import logging
-import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -29,14 +28,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     chain = get_chain_service()
     await chain.start_block_generation()
 
-    load_dotenv()
-
     yield
 
     await chain.stop_block_generation()
     logger.info('chains stopped, exiting...')
 
 
+load_dotenv()
 app = FastAPI(lifespan=lifespan)
 
 logger = logging.getLogger(__name__)
