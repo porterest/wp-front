@@ -271,8 +271,8 @@ class ChainService(
                 )
             elif action.action == LiquidityActionType.REMOVE:
                 await self.ton_client.remove_liquidity(
-                    ton_amount=ton_amount,
-                    jetton_amount=jetton_amount,
+                    ton_amount=abs(ton_amount),
+                    jetton_amount=abs(jetton_amount),
                     pool_address=chain.pair.contract_address,
                     admin_wallet=await self.app_wallet_service.get_withdraw_wallet()
                 )
