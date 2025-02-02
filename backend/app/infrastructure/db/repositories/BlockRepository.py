@@ -43,7 +43,7 @@ class BlockRepository(
                 )
                 .limit(1)
             )
-            target = res.scalars().one()
+            target = res.unique().scalars().one()
 
         return self.entity_to_model(target)
 
