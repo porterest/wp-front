@@ -1,3 +1,4 @@
+import logging
 import os
 from dataclasses import dataclass, field
 
@@ -5,6 +6,7 @@ from pydantic import SecretStr
 
 from .abstractions import VaultClientInterface
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class FileSystemVaultClient(VaultClientInterface):
@@ -24,5 +26,7 @@ class FileSystemVaultClient(VaultClientInterface):
         """
         if path != self.expected_path or key != self.expected_key:
             raise ValueError("Unauthorized access: Incorrect path or key.")
+
+        logger.info(self.private_key)
 
         return self.private_key
