@@ -45,6 +45,7 @@ logging.basicConfig(
 logging.getLogger('urllib3').setLevel(logging.INFO)
 logging.getLogger('httpcore').setLevel(logging.INFO)
 logging.getLogger('apscheduler').setLevel(logging.DEBUG)
+logging.getLogger('LiteClient').setLevel(logging.WARN)
 
 de = load_dotenv(dotenv_path='./.env')
 # logger.info(de)
