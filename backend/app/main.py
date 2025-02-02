@@ -34,11 +34,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await chain.stop_block_generation()
     logger.info('chains stopped, exiting...')
 
-
-de = load_dotenv(dotenv_path='./.env')
-logger = logging.getLogger(__name__)
-logger.info(de)
-logger.info(os.environ.keys())
 app = FastAPI(lifespan=lifespan)
 
 logger = logging.getLogger(__name__)
@@ -50,6 +45,10 @@ logging.basicConfig(
 logging.getLogger('urllib3').setLevel(logging.INFO)
 logging.getLogger('httpcore').setLevel(logging.INFO)
 logging.getLogger('apscheduler').setLevel(logging.DEBUG)
+
+de = load_dotenv(dotenv_path='./.env')
+logger.info(de)
+logger.info(os.environ.keys())
 
 
 @app.exception_handler(RequestValidationError)
