@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -34,7 +35,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info('chains stopped, exiting...')
 
 
-load_dotenv(dotenv_path='./.env')
+de = load_dotenv(dotenv_path='./.env')
+logger = logging.getLogger(__name__)
+logger.info(de)
+logger.info(os.environ.keys())
 app = FastAPI(lifespan=lifespan)
 
 logger = logging.getLogger(__name__)
