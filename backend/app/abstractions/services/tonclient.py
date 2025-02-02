@@ -73,9 +73,6 @@ class TonClientInterface(ABC):
     async def get_transactions(self, address: str) -> list[TonTransaction]:
         ...
 
-    @abstractmethod
-    async def mint_tokens(self, amount: int):
-        ...
 
     @abstractmethod
     async def get_current_pool_state(self) -> dict[str, float]:

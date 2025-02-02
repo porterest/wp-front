@@ -36,8 +36,6 @@ class TonTonLibClient(AbstractBaseTonClient):
     async def get_transactions(self, address: str) -> list[TonTransaction]:
         raise NotImplementedError
 
-    async def mint_tokens(self, amount: int):
-        raise NotImplementedError
 
     async def get_current_pool_state(self) -> dict[str, float]:
         raise NotImplementedError

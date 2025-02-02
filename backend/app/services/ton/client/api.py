@@ -137,8 +137,7 @@ class TonApiClient(AbstractBaseTonClient):
     async def mint(self, amount: int, token_address: Address, admin_wallet: AppWalletWithPrivateData):
         ...
 
-    async def mint_tokens(self, amount: int):
-        ...
+
 
     async def send_jettons(
             self,
