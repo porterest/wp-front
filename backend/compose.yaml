@@ -9,6 +9,7 @@ services:
     volumes:
       - ./app/storage/:/app/storage/
       - ./app/settings.json:/app/settings.json
+      - ./app/.env:/app/.env
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 #    depends_on:
