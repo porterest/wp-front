@@ -42,6 +42,7 @@ class BlockRepository(
                     self.entity.created_at.desc(),
                 )
                 .limit(1)
+                .options(*self.options)
             )
             target = res.unique().scalars().one()
 
