@@ -11,7 +11,7 @@ class FileSystemVaultClient(VaultClientInterface):
     expected_path: str
     expected_key: str
 
-    private_key: str = field(default_factory=lambda: SecretStr(os.getenv('APP_WALLET_PRIVATE_KEY')))
+    private_key: SecretStr = field(default_factory=lambda: SecretStr(os.getenv('APP_WALLET_PRIVATE_KEY')))
 
     async def get_secret(self, path: str, key: str) -> SecretStr:
         """
@@ -25,4 +25,4 @@ class FileSystemVaultClient(VaultClientInterface):
         if path != self.expected_path or key != self.expected_key:
             raise ValueError("Unauthorized access: Incorrect path or key.")
 
-        return SecretStr(self.private_key)
+        return self.private_key
