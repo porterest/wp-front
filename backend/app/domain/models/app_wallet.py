@@ -20,15 +20,15 @@ class AppWallet(BaseModel):
     wallet_version: AppWalletVersion
     balance: float
 
-    private_key: Optional[SecretStr] = None
+    private_key: Optional[bytes] = None
 
 
 @dataclass
 class AppWalletWithPrivateData(AppWallet):
-    private_key: SecretStr
+    private_key: bytes
 
     @staticmethod
-    def from_app_wallet(app_wallet: AppWallet, private_key: SecretStr) -> 'A':
+    def from_app_wallet(app_wallet: AppWallet, private_key: bytes) -> 'AppWalletWithPrivateData':
         return AppWalletWithPrivateData(
             id=app_wallet.id,
             address=app_wallet.address,

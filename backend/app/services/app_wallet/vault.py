@@ -13,7 +13,7 @@ class VaultService(VaultServiceInterface):
 
     awpk_path: str = 'awpk'
 
-    async def get_wallet_private_key(self, wallet_id: UUID) -> SecretStr:
+    async def get_wallet_private_key(self, wallet_id: UUID) -> bytes:
         value = await self.client.get_secret(
             path=self.awpk_path,
             key=str(wallet_id),

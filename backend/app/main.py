@@ -47,8 +47,8 @@ logging.getLogger('httpcore').setLevel(logging.INFO)
 logging.getLogger('apscheduler').setLevel(logging.DEBUG)
 
 de = load_dotenv(dotenv_path='./.env')
-logger.info(de)
-logger.info(os.environ.keys())
+# logger.info(de)
+# logger.info(os.environ.keys())
 
 
 @app.exception_handler(RequestValidationError)

@@ -3,7 +3,7 @@ import os
 from dataclasses import dataclass, field
 
 from pydantic import SecretStr
-
+from pytoniq_core.crypto.keys import mnemonic_to_private_key, mnemonic_is_valid
 from .abstractions import VaultClientInterface
 
 logger = logging.getLogger(__name__)
@@ -13,9 +13,9 @@ class FileSystemVaultClient(VaultClientInterface):
     expected_path: str
     expected_key: str
 
-    private_key: SecretStr = field(default_factory=lambda: SecretStr(os.getenv('APP_WALLET_PRIVATE_KEY')))
+    mnemonic: SecretStr = field(default_factory=lambda: SecretStr(os.getenv('APP_WALLET_MNEMONIC')))
 
-    async def get_secret(self, path: str, key: str) -> SecretStr:
+    async def get_secret(self, path: str, key: str) -> bytes:
         """
         Retrieves the secret if the correct path and key are provided.
 
@@ -27,6 +27,7 @@ class FileSystemVaultClient(VaultClientInterface):
         if path != self.expected_path or key != self.expected_key:
             raise ValueError("Unauthorized access: Incorrect path or key.")
 
-        logger.info(self.private_key)
+        if not mnemonic_is_valid(self.mnemonic.get_secret_value().split()):
+            raise Exception('Mnemonic is invalid')
 
-        return self.private_key
+        return mnemonic_to_private_key(self.mnemonic.get_secret_value().split())[1]

@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 from uuid import UUID
 
@@ -44,8 +44,8 @@ class InnerTokenService(InnerTokenInterface):
             app_wallet=app_wallet,
         )
 
-
     async def add_liquidity(self):
         ...
+
     async def remove_liquidity(self):
         ...

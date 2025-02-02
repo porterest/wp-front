@@ -3,7 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Annotated
+from typing import Optional
 
 from pytoniq import LiteBalancer, WalletV4R2, begin_cell, Address, BaseWallet, Cell
 from pytoniq_core import Slice
@@ -303,6 +303,6 @@ class TonTonLibClient(AbstractBaseTonClient):
 
         wallet = await wallet_cls.from_private_key(
             provider=self.ton,
-            private_key=base64.b64decode(wallet.private_key.get_secret_value()),
+            private_key=wallet.private_key,
         )
         return wallet
