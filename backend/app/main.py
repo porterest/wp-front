@@ -2,6 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,6 +27,8 @@ from settings import settings
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     chain = get_chain_service()
     await chain.start_block_generation()
+
+    load_dotenv()
 
     yield
 
