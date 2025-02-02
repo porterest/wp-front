@@ -70,13 +70,13 @@ class TonTonLibClient(AbstractBaseTonClient):
 
         payload = (
             begin_cell()
-            .store_uint(OPS.Mint, 32)
+            .store_uint(OPS.Mint.value, 32)
             .store_uint(0, 64)
             .store_address(Address(admin_wallet.address))
             .store_coins(AbstractBaseTonClient.to_nano(0.2))
             .store_ref(
                 begin_cell()
-                .store_uint(OPS.InternalTransfer, 32)
+                .store_uint(OPS.InternalTransfer.value, 32)
                 .store_uint(0, 64)
                 .store_coins(amount)
                 .store_address(None)
@@ -120,7 +120,7 @@ class TonTonLibClient(AbstractBaseTonClient):
 
         payload = (
             begin_cell()
-            .store_uint(OPS.Transfer, 32)
+            .store_uint(OPS.Transfer.value, 32)
             .store_uint(0, 64)
             .store_coins(amount)
             .store_address(destination_owner_address)
@@ -166,7 +166,7 @@ class TonTonLibClient(AbstractBaseTonClient):
 
         provide_liquidity_body = (
             begin_cell()
-            .store_uint(Opcodes.PROVIDE_LIQUIDITY, 32)
+            .store_uint(Opcodes.PROVIDE_LIQUIDITY.value, 32)
             .store_coins(ton_amount)
             .store_coins(jetton_amount)
             .end_cell()
@@ -203,7 +203,7 @@ class TonTonLibClient(AbstractBaseTonClient):
 
         remove_liquidity_body = (
             begin_cell()
-            .store_uint(Opcodes.REMOVE_LIQUIDITY, 32)
+            .store_uint(Opcodes.REMOVE_LIQUIDITY.value, 32)
             .store_coins(ton_amount)
             .store_coins(jetton_amount)
             .end_cell()
