@@ -29,6 +29,24 @@ class BlockRepository(
         }
     )
 
+    async def get_previous_block(self, block: Block) -> Block:
+        async with self.session_maker() as session:
+            res = await session.execute(
+                select(self.entity)
+                .where(
+                    self.entity.chain_id == block.chain_id,
+                    self.entity.status == BlockStatus.COMPLETED,
+                    self.entity.block_number < block.block_number
+                )
+                .order_by(
+                    self.entity.created_at.desc(),
+                )
+                .limit(1)
+            )
+            target = res.scalars().one()
+
+        return self.entity_to_model(target)
+
     async def get_last_completed_block(self, chain_id: UUID) -> Optional[Block]:
         async with self.session_maker() as session:
             res = await session.execute(

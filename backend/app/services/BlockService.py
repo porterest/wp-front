@@ -90,6 +90,9 @@ class BlockService(BlockServiceInterface):
     async def complete_block(self, block_id: UUID) -> None:
         block = await self.get_block(block_id)
         result_vector = await self.aggregate_bets_service.aggregate_bets(block_id)
+        if result_vector[0] == .0:
+            result_vector = (await self.block_repository.get_previous_block(block)).result_vector
+
         update_block = (
             UpdateBlockDTO(
                 status=BlockStatus.COMPLETED,
