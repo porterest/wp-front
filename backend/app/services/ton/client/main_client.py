@@ -9,6 +9,29 @@ from services.ton.client.base import AbstractBaseTonClient
 
 @dataclass
 class MainTonClient(AbstractBaseTonClient):
+    ton_lib_client: TonClientInterface
+    async def provide_liquidity(
+            self,
+            ton_amount: float,
+            jetton_amount: float,
+            admin_wallet: AppWalletWithPrivateData,
+            pool_address: str,
+    ) -> None:
+        await self.ton_lib_client.provide_liquidity(ton_amount=ton_amount, jetton_amount=jetton_amount,
+                                                    admin_wallet=admin_wallet, pool_address=pool_address)
+
+    async def remove_liquidity(self, ton_amount: float, jetton_amount: float, admin_wallet: AppWalletWithPrivateData,
+                               pool_address: str) -> None:
+        await self.ton_lib_client.remove_liquidity(ton_amount=ton_amount,jetton_amount=jetton_amount,
+                                                   admin_wallet=admin_wallet, pool_address=pool_address)
+
+    async def get_pool_reserves(self, pool_address: Address) -> tuple[float, float]:
+        return await self.ton_lib_client.get_pool_reserves(pool_address=pool_address)
+
+    async def get_jetton_wallet_address(self, contract_address: Address, target_address: Address) -> Address:
+        return await self.ton_lib_client.get_jetton_wallet_address(contract_address=contract_address,
+                                                                   target_address=target_address)
+
     ton_client: TonClientInterface
     ton_api_client: TonClientInterface
 
@@ -20,12 +43,6 @@ class MainTonClient(AbstractBaseTonClient):
 
     async def get_transactions(self, adress: str):
         return await self.ton_api_client.get_transactions(adress)
-
-    async def mint(self, amount: int, token_address: Address, admin_wallet: AppWalletWithPrivateData):
-        return await self.ton_api_client.mint(amount, token_address, admin_wallet)
-
-    async def mint_tokens(self, amount: int):
-        return await self.ton_api_client.mint_tokens(amount)
 
     async def send_jettons(
             self,
