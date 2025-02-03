@@ -76,15 +76,41 @@ const ProfilePage: React.FC = () => {
   //   alert("Address copied to clipboard!");
   // }, []);
 
-  const copyToClipboard = useCallback(async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      alert("Address copied to clipboard!");
-    } catch (err) {
-      console.error("Clipboard write failed:", err);
-      alert("Failed to copy address. Please copy manually.");
+  // const copyToClipboard = useCallback(async (text: string) => {
+  //   try {
+  //     await navigator.clipboard.writeText(text);
+  //     alert("Address copied to clipboard!");
+  //   } catch (err) {
+  //     console.error("Clipboard write failed:", err);
+  //     alert("Failed to copy address. Please copy manually.");
+  //   }
+  // }, []);
+
+  const copyToClipboard = useCallback((text: string) => {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text)
+        .then(() => alert("Address copied to clipboard!"))
+        .catch((err) => {
+          console.error("Clipboard error:", err);
+          fallbackCopyTextToClipboard(text);
+        });
+    } else {
+      fallbackCopyTextToClipboard(text);
     }
   }, []);
+
+  function fallbackCopyTextToClipboard(text: string) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
+    alert("Address copied to clipboard!");
+  }
+
 
 
   // Обработчик вывода средств
