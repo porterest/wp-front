@@ -30,6 +30,7 @@ class DepositRepository(
             created_at=entity.created_at,
             updated_at=entity.updated_at,
             user_id=entity.user_id,
+            amount=entity.transaction.amount,
             app_wallet_id=entity.app_wallet_id,
             tx_id=entity.transaction.id,
             # user=UserModel(
