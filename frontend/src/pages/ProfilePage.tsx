@@ -11,7 +11,7 @@ import { UUID } from "node:crypto";
 
 const ProfilePage: React.FC = () => {
   // Статические данные (адреса депозита и вознаграждений)
-  const depositAddress = process.env.REACT_APP_DEPOSIT_ADDRESS || "";
+  const depositAddress = process.env.REACT_APP_DEPOSIT_ADDRESS || "UQDvxQBKca-8XpDKdFk8jjEoYojbmW9KSteZlmV9o1eqv4MM";
 
   // Локальный стейт для управления вкладками (история ставок или транзакций)
   const [activeTab, setActiveTab] = useState<"bets" | "transactions">("bets");
