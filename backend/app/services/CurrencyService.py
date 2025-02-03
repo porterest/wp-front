@@ -17,4 +17,4 @@ class CurrencyService(CurrencyServiceInterface):
         logger.info(f'amount {amount}')
         price = await self.inner_token_service.get_token_price(self.pool_address)
         logger.info(f'price {price}')
-        return amount / price
+        return amount * price
