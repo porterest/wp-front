@@ -40,7 +40,7 @@ class DepositService(
                     dto = CreateTransactionDTO(
                         user_id=user.id,
                         type=TransactionType.EXTERNAL_DEPOSIT,
-                        amount=transaction.amount,
+                        amount=transaction.amount / 1e9,
                         sender=transaction.from_address,
                         recipient=transaction.to_address,
                         tx_id=transaction.tx_id,
@@ -54,7 +54,6 @@ class DepositService(
                         app_wallet_id=wallet.id,
                         user_id=user.id,
                         status=DepositEntryStatus.FUNDED,
-                        amount=transaction.amount,
                         tx_id=dto.id,
                     )
                     # logger.info("deposit")
