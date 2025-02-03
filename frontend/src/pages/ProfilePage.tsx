@@ -71,10 +71,21 @@ const ProfilePage: React.FC = () => {
   }, [fetchData]);
 
   // Функция копирования текста в буфер обмена
-  const copyToClipboard = useCallback((text: string) => {
-    navigator.clipboard.writeText(text);
-    alert("Address copied to clipboard!");
+  // const copyToClipboard = useCallback((text: string) => {
+  //   navigator.clipboard.writeText(text);
+  //   alert("Address copied to clipboard!");
+  // }, []);
+
+  const copyToClipboard = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("Address copied to clipboard!");
+    } catch (err) {
+      console.error("Clipboard write failed:", err);
+      alert("Failed to copy address. Please copy manually.");
+    }
   }, []);
+
 
   // Обработчик вывода средств
   const handleWithdraw = async () => {
