@@ -67,7 +67,7 @@ class ChainService(
         self.scheduler.start()
         self._add_generation_job()
         self._add_transaction_check_job()
-        self._add_pool_job()
+        # self._add_pool_job()
         logger.info("Сервис генерации блоков запущен.")
 
     def _add_generation_job(self):
@@ -226,7 +226,7 @@ class ChainService(
         except NotFoundException:
             raise
 
-    async def _connect_pool(self):
+    async def _connect_pool(self):  # disabled
         logger.info('hui')
         chains = await self.chain_repository.get_all()
         for chain in chains:

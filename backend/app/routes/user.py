@@ -101,7 +101,7 @@ async def get_user_history(
         )
 
 
-@router.post('/withdraw')
+@router.post('/withdraw')  # disabled
 async def withdraw_tokens(
         request: Request,
         withdraw_request: WithdrawToExternalWalletRequest

@@ -28,7 +28,10 @@ class MainTonClient(AbstractBaseTonClient):
                                                    admin_wallet=admin_wallet, pool_address=pool_address)
 
     async def get_pool_reserves(self, pool_address: Address) -> tuple[float, float]:
-        return await self.ton_client.get_pool_reserves(pool_address=pool_address)
+        try:
+            return await self.ton_client.get_pool_reserves(pool_address=pool_address)
+        except:
+            return await self.ton_api_client.get_pool_reserves(pool_address=pool_address.to_str())
 
     async def get_jetton_wallet_address(self, contract_address: Address, target_address: Address) -> Address:
         return await self.ton_client.get_jetton_wallet_address(contract_address=contract_address,

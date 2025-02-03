@@ -26,13 +26,13 @@ class DepositService(
     ton_client: TonClientInterface
 
     async def check_users_transactions(self) -> None:
-        logger.info("check_users_transactions")
+        # logger.info("check_users_transactions")
         wallet = await self.app_wallet_service.get_deposit_wallet()
-        logger.info("wallet")
-        logger.info(wallet)
+        # logger.info("wallet")
+        # logger.info(wallet)
         transactions = await self.ton_client.get_transactions(wallet.address)
-        logger.info("transactions")
-        logger.info(transactions)
+        # logger.info("transactions")
+        # logger.info(transactions)
         if transactions:
             for transaction in transactions:
                 user = await self.user_service.get_user_by_wallet(transaction.from_address)
@@ -45,8 +45,8 @@ class DepositService(
                         recipient=transaction.to_address,
                         tx_id=transaction.tx_id,
                     )
-                    logger.info("Transaction")
-                    logger.info(dto)
+                    # logger.info("Transaction")
+                    # logger.info(dto)
 
                     await self.transaction_repository.create(dto)
 
@@ -57,7 +57,7 @@ class DepositService(
                         amount=transaction.amount,
                         tx_id=dto.id,
                     )
-                    logger.info("deposit")
-                    logger.info(deposit)
+                    # logger.info("deposit")
+                    # logger.info(deposit)
                     await self.deposit_repository.create(deposit)
                     await self.user_service.deposit_funded(deposit.id)

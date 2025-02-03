@@ -31,17 +31,16 @@ class Opcodes(Enum):
 
 @dataclass
 class TonTonLibClient(AbstractBaseTonClient):
+    inner_token: InnerTokenSettings
+
     async def get_public_key(self, address: str) -> str:
         raise NotImplementedError
 
     async def get_transactions(self, address: str) -> list[TonTransaction]:
         raise NotImplementedError
 
-
     async def get_current_pool_state(self) -> dict[str, float]:
         raise NotImplementedError
-
-    inner_token: InnerTokenSettings
 
     def __post_init__(self):
         self.ton = LiteBalancer.from_mainnet_config()

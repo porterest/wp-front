@@ -20,41 +20,55 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class TonApiClient(AbstractBaseTonClient):
-    async def provide_liquidity(self, ton_amount: float, jetton_amount: float, admin_wallet: AppWalletWithPrivateData,
-                                pool_address: str) -> None:
-        pass
-
-    async def remove_liquidity(self, ton_amount: float, jetton_amount: float, admin_wallet: AppWalletWithPrivateData,
-                               pool_address: str) -> None:
-        pass
-
-    async def get_pool_reserves(self, pool_address: Address) -> tuple[float, float]:
-        pass
-
-    async def get_jetton_wallet_address(self, contract_address: Address, target_address: Address) -> Address:
-        pass
-
-    async def get_wallet_address(self, contract_address: Address, target_address: Address) -> Address:
-        pass
-
     token: SecretStr
     base_url: str = 'https://tonapi.io'
 
     get_address_endpoint: str = ''
     get_pubkey_endpoint: str = '/v2/accounts/{}/publickey'
     get_transactions_endpoint: str = '/v2/blockchain/accounts/{}/transactions'
+    get_reserves_endpoint: str = '/v2/blockchain/accounts/{}/methods/get_reserves'
     lt_file: str = "storage/last_lt.txt"
 
+    async def provide_liquidity(self, ton_amount: float, jetton_amount: float, admin_wallet: AppWalletWithPrivateData,
+                                pool_address: str) -> None:
+        ...
+
+    async def remove_liquidity(self, ton_amount: float, jetton_amount: float, admin_wallet: AppWalletWithPrivateData,
+                               pool_address: str) -> None:
+        ...
+
+    async def get_pool_reserves(self, pool_address: str) -> tuple[float, float]:
+        async with self._get_client() as client:
+            response = await client.get(
+                url=self._get_reserves_endpoint(pool_address)
+            )
+
+            if not response.is_success():
+                logger.error(f"Failed to get reserves of {pool_address} via API")
+                raise Exception
+
+        data = response.json()
+        return data['decoded'].values()
+
+    async def get_jetton_wallet_address(self, contract_address: Address, target_address: Address) -> Address:
+        ...
+
+    async def get_wallet_address(self, contract_address: Address, target_address: Address) -> Address:
+        ...
+    
     @asynccontextmanager
     async def _get_client(self) -> AsyncClient:
         async with AsyncClient(base_url=self.base_url) as client:
             yield client
 
-    def _get_public_key_endpoint(self, address: str):
+    def _get_public_key_endpoint(self, address: str) -> str:
         return self.get_pubkey_endpoint.replace('{}', address)
 
-    def _get_transactions_endpoint(self, address: str):
+    def _get_transactions_endpoint(self, address: str) -> str:
         return self.get_transactions_endpoint.replace('{}', address)
+    
+    def _get_reserves_endpoint(self, address: str) -> str:
+        return self.get_reserves_endpoint.replace('{}', address)
 
     async def get_public_key(self, address: str) -> str:
         async with self._get_client() as client:
@@ -101,8 +115,8 @@ class TonApiClient(AbstractBaseTonClient):
             )
 
         if not response.is_success:
-            logger.error(f"Failed to fetch {app_wallet_address} public key via API")
-            raise PublicKeyCannotBeFetchedException()
+            logger.error(f"Failed to fetch {app_wallet_address} transactions via API")
+            raise Exception()
 
         transactions_from_response = response.json().get('transactions')
 

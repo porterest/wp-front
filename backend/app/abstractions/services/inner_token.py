@@ -10,3 +10,7 @@ class InnerTokenInterface(ABC):
     @abstractmethod
     async def withdraw_to_user(self, user_id: UUID, amount: float):
         ...
+
+    @abstractmethod
+    async def get_token_price(self, pool_address: str) -> float:
+        ...

@@ -24,6 +24,10 @@ class InnerTokenService(InnerTokenInterface):
     def __post_init__(self):
         self.token_minter_address = Address(self.token_minter_address_str)
 
+    async def get_token_price(self, pool_address: str) -> float:
+        state = await self.ton_client.get_pool_reserves(Address(pool_address))
+        return state[0] / state[1]
+
     async def mint(self, amount: float):
         admin_wallet = await self.app_wallet_provider.get_withdraw_wallet()
         amount = AbstractBaseTonClient.to_nano(amount)
@@ -34,15 +38,16 @@ class InnerTokenService(InnerTokenInterface):
         )
 
     async def withdraw_to_user(self, amount: float, user_id: UUID):
-        user = await self.user_repository.get(user_id)
-        app_wallet = await self.app_wallet_provider.get_withdraw_wallet()
-        amount = AbstractBaseTonClient.to_nano(amount)
-        await self.ton_client.send_jettons(
-            amount=amount,
-            user_wallet_address=Address(user.wallet_address),
-            token_address=self.token_minter_address,
-            app_wallet=app_wallet,
-        )
+        ...
+    #     user = await self.user_repository.get(user_id)
+    #     app_wallet = await self.app_wallet_provider.get_withdraw_wallet()
+    #     amount = AbstractBaseTonClient.to_nano(amount)
+        # await self.ton_client.send_jettons(
+        #     amount=amount,
+        #     user_wallet_address=Address(user.wallet_address),
+        #     token_address=self.token_minter_address,
+        #     app_wallet=app_wallet,
+        # )
 
     async def add_liquidity(self):
         ...
