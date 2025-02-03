@@ -47,8 +47,8 @@ class MainTonClient(AbstractBaseTonClient):
     async def get_current_pool_state(self):
         return await self.ton_api_client.get_current_pool_state()
 
-    async def get_transactions(self, adress: str):
-        return await self.ton_api_client.get_transactions(adress)
+    async def get_transactions(self, address: str):
+        return await self.ton_api_client.get_transactions(address)
 
     async def send_jettons(
             self,
