@@ -37,7 +37,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
       <GradientPlanes />
       <Axes />
 
-      {/* Отрисовка графика свечей для режимов Candles и Both */}
+      {/* Отрисовываем CandlestickChart только для режимов Candles и Both */}
       {(currentMode === 2 || currentMode === 3) && data && (
         <CandlestickChart
           data={data}
@@ -45,8 +45,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
         />
       )}
 
-      {/* Отрисовка BetArrow для режимов Axes и Both.
-          Добавляем key, зависящий от currentMode, чтобы при переключении моды компонент точно размонтировался */}
+      {/* Отрисовываем BetArrow только для режимов Axes и Both */}
       {(currentMode === 1 || currentMode === 3) && (
         <BetArrow
           key={`betarrow-${currentMode}`}
