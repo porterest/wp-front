@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import BetArrow from "./BetArrow";
 import * as THREE from "three";
 import CandlestickChart from "./CandlestickChart";
@@ -32,30 +32,49 @@ const GraphModes: React.FC<GraphModesProps> = ({
                                                  onDragging,
                                                  onShowConfirmButton,
                                                }) => {
+  // Состояние суммы ставки вынесено в родительский компонент,
+  // чтобы оно сохранялось между переключениями режимов.
+  const [betAmount, setBetAmount] = useState(0);
+
   return (
     <>
       <GradientPlanes />
       <Axes />
 
-      {/* Отрисовываем CandlestickChart только для режимов Candles и Both */}
-      {(currentMode === 2 || currentMode === 3) && data && (
-        <CandlestickChart
-          data={data}
-          mode={currentMode === 2 ? "Candles" : "Both"}
-        />
+      {/* Режим "Candles" – отрисовываем только CandlestickChart */}
+      {currentMode === 2 && data && (
+        <CandlestickChart data={data} mode="Candles" />
       )}
 
-      {/* Отрисовываем BetArrow только для режимов Axes и Both */}
-      {(currentMode === 1 || currentMode === 3) && (
+      {/* Режим "Axes" – отрисовываем только BetArrow */}
+      {currentMode === 1 && (
         <BetArrow
-          key={`betarrow-${currentMode}`}
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
           setUserPreviousBet={setUserPreviousBet}
           axisMode={axisMode}
           onDragging={onDragging}
           onShowConfirmButton={onShowConfirmButton}
+          betAmount={betAmount}
+          setBetAmount={setBetAmount}
         />
+      )}
+
+      {/* Режим "Both" – отрисовываем CandlestickChart и BetArrow */}
+      {currentMode === 3 && data && (
+        <>
+          <CandlestickChart data={data} mode="Both" />
+          <BetArrow
+            previousBetEnd={previousBetEnd}
+            userPreviousBet={userPreviousBet}
+            setUserPreviousBet={setUserPreviousBet}
+            axisMode={axisMode}
+            onDragging={onDragging}
+            onShowConfirmButton={onShowConfirmButton}
+            betAmount={betAmount}
+            setBetAmount={setBetAmount}
+          />
+        </>
       )}
     </>
   );
