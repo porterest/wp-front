@@ -37,14 +37,19 @@ const GraphModes: React.FC<GraphModesProps> = ({
       <GradientPlanes />
       <Axes />
 
-      {/* Режим "Candles" – отображаем только CandlestickChart */}
-      {currentMode === 2 && data && (
-        <CandlestickChart data={data} mode="Candles" />
+      {/* Отрисовка графика свечей для режимов Candles и Both */}
+      {(currentMode === 2 || currentMode === 3) && data && (
+        <CandlestickChart
+          data={data}
+          mode={currentMode === 2 ? "Candles" : "Both"}
+        />
       )}
 
-      {/* Режим "Axes" – отображаем только BetArrow */}
-      {currentMode === 1 && (
+      {/* Отрисовка BetArrow для режимов Axes и Both.
+          Добавляем key, зависящий от currentMode, чтобы при переключении моды компонент точно размонтировался */}
+      {(currentMode === 1 || currentMode === 3) && (
         <BetArrow
+          key={`betarrow-${currentMode}`}
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
           setUserPreviousBet={setUserPreviousBet}
@@ -52,21 +57,6 @@ const GraphModes: React.FC<GraphModesProps> = ({
           onDragging={onDragging}
           onShowConfirmButton={onShowConfirmButton}
         />
-      )}
-
-      {/* Режим "Both" – отображаем CandlestickChart и BetArrow */}
-      {currentMode === 3 && data && (
-        <>
-          <CandlestickChart data={data} mode="Both" />
-          <BetArrow
-            previousBetEnd={previousBetEnd}
-            userPreviousBet={userPreviousBet}
-            setUserPreviousBet={setUserPreviousBet}
-            axisMode={axisMode}
-            onDragging={onDragging}
-            onShowConfirmButton={onShowConfirmButton}
-          />
-        </>
       )}
     </>
   );
