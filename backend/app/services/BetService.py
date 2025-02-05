@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from typing import Optional
 from uuid import UUID
@@ -11,6 +12,7 @@ from domain.enums import BetStatus
 from domain.metaholder.responses import BetResponse
 
 
+logger = logging.getLogger(__name__)
 @dataclass
 class BetService(BetServiceInterface):
     bet_repository: BetRepositoryInterface
@@ -42,6 +44,8 @@ class BetService(BetServiceInterface):
         await self.bet_repository.update(bet.id, update_bet)
 
     async def get_last_user_bet(self, user_id: UUID, pair_id: UUID) -> Optional[BetResponse]:
+        logger.info('мяу!')
 
         last_bet = await self.bet_repository.get_last_user_bet(user_id, pair_id)
+        logger.info(last_bet)
         return last_bet
