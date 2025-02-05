@@ -1,19 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Text } from "@react-three/drei";
 import BetLines from "./BetLines";
 import * as THREE from "three";
 import { useUserBalance } from "../pages/BalancePage";
 
 interface BetArrowProps {
-  previousBetEnd: THREE.Vector3; // Конец желтой линии (агрегированная ставка)
-  userPreviousBet: THREE.Vector3; // Ставка пользователя
+  previousBetEnd: THREE.Vector3; // Конец агрегированной (желтой) линии
+  userPreviousBet: THREE.Vector3; // Текущая позиция пользовательской ставки
   setUserPreviousBet: (value: THREE.Vector3) => void;
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
-  axisMode: "X" | "Y"; // Ось движения
+  axisMode: "X" | "Y";
 }
 
 const BetArrow: React.FC<BetArrowProps> = ({
@@ -24,66 +24,81 @@ const BetArrow: React.FC<BetArrowProps> = ({
                                              onShowConfirmButton,
                                              axisMode,
                                            }) => {
-  const [xValue, setXValue] = useState(userPreviousBet.x); // Позиция X
-  const [yValue, setYValue] = useState(userPreviousBet.y); // Позиция Y
-  const [betAmount, setBetAmount] = useState(0); // Сумма ставки
+  const { userData } = useUserBalance();
+  const userDeposit = userData?.balance || 0;
+  const maxArrowLength = 2;
 
-  const { userData } = useUserBalance(); // Получение баланса пользователя
-  const userDeposit = userData?.balance || 0; // Баланс по умолчанию 0
-  const maxArrowLength = 2; // Максимальная длина желтой стрелки
+  // Локальное состояние для хранения позиции и суммы ставки
+  const [betState, setBetState] = useState({
+    x: userPreviousBet.x,
+    y: userPreviousBet.y,
+    amount: 0,
+  });
 
-  // Колбек для обработки перетаскивания из `BetLines`
+  // При изменении userPreviousBet обновляем локальную позицию
+  useEffect(() => {
+    setBetState((prev) => ({
+      ...prev,
+      x: userPreviousBet.x,
+      y: userPreviousBet.y,
+    }));
+  }, [userPreviousBet]);
+
+  // Обработчик перетаскивания. Он обновляет родительскую позицию и вычисляет ставку.
   const handleDrag = (newPosition: THREE.Vector3) => {
-    // Обновление позиции на основе выбранной оси
-    if (axisMode === "X") {
-      setXValue(newPosition.x);
-    } else if (axisMode === "Y") {
-      setYValue(newPosition.y);
+    // Если позиция изменилась, обновляем родительское состояние
+    if (!userPreviousBet.equals(newPosition)) {
+      setUserPreviousBet(new THREE.Vector3(newPosition.x, newPosition.y, newPosition.z));
     }
-
-    // Расчет расстояния от начала до новой позиции
-    // const distance = new THREE.Vector3()
-    //   .subVectors(newPosition, previousBetEnd)
-    //   .length();
-
+    // Ограничиваем длину агрегированной линии
     const aggregatorClipped = previousBetEnd.clone();
     if (aggregatorClipped.length() > maxArrowLength) {
       aggregatorClipped.setLength(maxArrowLength);
     }
+    // Вычисляем дистанцию от ограниченной позиции
     const distance = new THREE.Vector3()
       .subVectors(newPosition, aggregatorClipped)
       .length();
-
-
-    // Процент от максимальной длины стрелки
     const percentage = Math.min(distance / maxArrowLength, 1);
-    // Сумма ставки на основе процента и баланса пользователя
-    const bet = percentage * userDeposit;
+    const bet = Math.min(percentage * userDeposit, userDeposit);
+    setBetState((prev) => ({ ...prev, amount: bet }));
+  };
 
-    // Обновление состояния
-    setBetAmount(Math.min(bet, userDeposit));
-    setUserPreviousBet(newPosition);
-    console.log("Updated userPreviousBet:", userPreviousBet);
-
+  // Функция для рендеринга текста ставки. Он отрисовывается только если ставка >= 0.5
+  const renderBetText = () => {
+    if (betState.amount < 0.5) return null;
+    return (
+      <Text
+        position={[betState.x + 0.5, betState.y + 1, previousBetEnd.z + 0.5]}
+        fontSize={0.3}
+        color="white"
+        anchorX="center"
+        anchorY="middle"
+        depthOffset={-1}
+      >
+        {`Bet: $${betState.amount.toFixed(2)}`}
+      </Text>
+    );
   };
 
   return (
     <>
-      {/* Компонент BetLines */}
-
+      {/* Компонент для отрисовки линий. Он вызывает handleDrag при перетаскивании. */}
       <BetLines
         previousBetEnd={previousBetEnd}
         userPreviousBet={userPreviousBet}
         onDragging={onDragging}
-        onShowConfirmButton={onShowConfirmButton} // Передаем onShowConfirmButton в BetLines
+        onShowConfirmButton={onShowConfirmButton}
         maxYellowLength={maxArrowLength}
         maxWhiteLength={maxArrowLength}
-        handleDrag={handleDrag} // Передача колбека для обработки перетаскивания
+        handleDrag={handleDrag}
         axisMode={axisMode}
-        setBetAmount={setBetAmount}
+        setBetAmount={(bet: number) =>
+          setBetState((prev) => ({ ...prev, amount: bet }))
+        }
       />
 
-      {/* Текст депозита */}
+      {/* Текст для отображения депозита */}
       <Text
         position={[1, 5.3, 0]}
         fontSize={0.3}
@@ -91,22 +106,13 @@ const BetArrow: React.FC<BetArrowProps> = ({
         anchorX="center"
         anchorY="middle"
       >
-        Deposit: ${userDeposit.toFixed(2)}
+        {`Deposit: $${userDeposit.toFixed(2)}`}
       </Text>
 
-      {/* Текст ставки */}
-      <Text
-        position={[xValue + 0.5, yValue + 1, previousBetEnd.z + 0.5]}
-        fontSize={0.3}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-      >
-        Bet: ${betAmount.toFixed(2)}
-      </Text>
+      {/* Рендерим текст ставки только если значение >= 0.5 */}
+      {renderBetText()}
     </>
   );
 };
 
 export default BetArrow;
-
