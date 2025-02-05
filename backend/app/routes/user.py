@@ -75,7 +75,15 @@ async def get_last_user_bet(
 
     try:
         user_bet = await bets.get_last_user_bet(user_id=user_id, pair_id=pair_id.pair_id)
-        return user_bet
+        bet = BetResponse(
+            id=user_bet.id,
+            amount=user_bet.amount,
+            vector=user_bet.vector,
+            pair_name=user_bet.pair_name,
+            status=user_bet.status,
+            created_at=user_bet.created_at
+        )
+        return bet
     except NotFoundException:
         logger.error(f"No user with ID {user_id}", exc_info=True)
         raise HTTPException(

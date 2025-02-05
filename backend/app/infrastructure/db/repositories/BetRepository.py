@@ -6,6 +6,7 @@ from sqlalchemy import desc, select
 
 from abstractions.repositories.bet import BetRepositoryInterface
 from domain.dto.bet import CreateBetDTO, UpdateBetDTO
+from domain.metaholder.responses import BetResponse
 from domain.models.bet import Bet as BetModel
 from domain.models.pair import Pair as PairModel
 from domain.models.user import User as UserModel
