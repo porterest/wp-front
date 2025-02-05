@@ -28,7 +28,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
   const userDeposit = userData?.balance || 0;
   const maxArrowLength = 2;
 
-  // Локальное состояние для хранения позиции и суммы ставки
+  // Локальное состояние для хранения позиции и вычисленной суммы ставки
   const [betState, setBetState] = useState({
     x: userPreviousBet.x,
     y: userPreviousBet.y,
@@ -44,18 +44,15 @@ const BetArrow: React.FC<BetArrowProps> = ({
     }));
   }, [userPreviousBet]);
 
-  // Обработчик перетаскивания. Он обновляет родительскую позицию и вычисляет ставку.
+  // Обработчик перетаскивания: обновляет позицию и вычисляет ставку
   const handleDrag = (newPosition: THREE.Vector3) => {
-    // Если позиция изменилась, обновляем родительское состояние
     if (!userPreviousBet.equals(newPosition)) {
       setUserPreviousBet(new THREE.Vector3(newPosition.x, newPosition.y, newPosition.z));
     }
-    // Ограничиваем длину агрегированной линии
     const aggregatorClipped = previousBetEnd.clone();
     if (aggregatorClipped.length() > maxArrowLength) {
       aggregatorClipped.setLength(maxArrowLength);
     }
-    // Вычисляем дистанцию от ограниченной позиции
     const distance = new THREE.Vector3()
       .subVectors(newPosition, aggregatorClipped)
       .length();
@@ -64,26 +61,9 @@ const BetArrow: React.FC<BetArrowProps> = ({
     setBetState((prev) => ({ ...prev, amount: bet }));
   };
 
-  // Функция для рендеринга текста ставки. Он отрисовывается только если ставка >= 0.5
-  const renderBetText = () => {
-    if (betState.amount < 0.5) return null;
-    return (
-      <Text
-        position={[betState.x + 0.5, betState.y + 1, previousBetEnd.z + 0.5]}
-        fontSize={0.3}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-        depthOffset={-1}
-      >
-        {`Bet: $${betState.amount.toFixed(2)}`}
-      </Text>
-    );
-  };
-
   return (
     <>
-      {/* Компонент для отрисовки линий. Он вызывает handleDrag при перетаскивании. */}
+      {/* Компонент для отрисовки линий, обновляет позицию и ставку */}
       <BetLines
         previousBetEnd={previousBetEnd}
         userPreviousBet={userPreviousBet}
@@ -98,7 +78,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         }
       />
 
-      {/* Текст для отображения депозита */}
+      {/* Текст депозита */}
       <Text
         position={[1, 5.3, 0]}
         fontSize={0.3}
@@ -109,8 +89,17 @@ const BetArrow: React.FC<BetArrowProps> = ({
         {`Deposit: $${userDeposit.toFixed(2)}`}
       </Text>
 
-      {/* Рендерим текст ставки только если значение >= 0.5 */}
-      {renderBetText()}
+      {/* Текст ставки – отрисовывается всегда (без условия) */}
+      <Text
+        position={[betState.x + 0.5, betState.y + 1, previousBetEnd.z + 0.5]}
+        fontSize={0.3}
+        color="white"
+        anchorX="center"
+        anchorY="middle"
+        depthOffset={-1}
+      >
+        {`Bet: $${betState.amount.toFixed(2)}`}
+      </Text>
     </>
   );
 };

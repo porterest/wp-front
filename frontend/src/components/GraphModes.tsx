@@ -1,5 +1,5 @@
 import React from "react";
-import BetArrow from "./BetArrow"; // Компонент для управления стрелкой
+import BetArrow from "./BetArrow";
 import * as THREE from "three";
 import CandlestickChart from "./CandlestickChart";
 import GradientPlanes from "./GradientPlanes";
@@ -8,18 +8,18 @@ import { PairOption } from "../types/pair";
 import { CandleData } from "../types/candles";
 
 interface GraphModesProps {
-  currentMode: number; // Текущий режим отображения графика
-  data: CandleData[] | null; // Данные свечей
+  currentMode: number; // 1: Axes, 2: Candles, 3: Both
+  data: CandleData[] | null;
   selectedPair: PairOption | null;
-  previousBetEnd: THREE.Vector3; // Конец предыдущей общей ставки
-  userPreviousBet: THREE.Vector3; // Конец пунктира (прошлая ставка пользователя)
-  setUserPreviousBet: (value: THREE.Vector3) => void; // Обновление конечной точки пользовательской ставки
-  axisMode: "X" | "Y"; // Режим управления осями
-  onDragging: (isDragging: boolean) => void; // Управление состоянием перетаскивания
+  previousBetEnd: THREE.Vector3;
+  userPreviousBet: THREE.Vector3;
+  setUserPreviousBet: (value: THREE.Vector3) => void;
+  axisMode: "X" | "Y";
+  onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
-    betData?: { amount: number; predicted_vector: number[] },
-  ) => void; // Управление видимостью кнопки и передача данных ставки
+    betData?: { amount: number; predicted_vector: number[] }
+  ) => void;
 }
 
 const GraphModes: React.FC<GraphModesProps> = ({
@@ -32,11 +32,32 @@ const GraphModes: React.FC<GraphModesProps> = ({
                                                  onDragging,
                                                  onShowConfirmButton,
                                                }) => {
-  const renderContent = () => {
-    switch (currentMode) {
-      case 1:
-        // Режим "Axes": отображаем только BetArrow.
-        return (
+  return (
+    <>
+      <GradientPlanes />
+      <Axes />
+
+      {/* Режим "Candles" – отображаем только CandlestickChart */}
+      {currentMode === 2 && data && (
+        <CandlestickChart data={data} mode="Candles" />
+      )}
+
+      {/* Режим "Axes" – отображаем только BetArrow */}
+      {currentMode === 1 && (
+        <BetArrow
+          previousBetEnd={previousBetEnd}
+          userPreviousBet={userPreviousBet}
+          setUserPreviousBet={setUserPreviousBet}
+          axisMode={axisMode}
+          onDragging={onDragging}
+          onShowConfirmButton={onShowConfirmButton}
+        />
+      )}
+
+      {/* Режим "Both" – отображаем CandlestickChart и BetArrow */}
+      {currentMode === 3 && data && (
+        <>
+          <CandlestickChart data={data} mode="Both" />
           <BetArrow
             previousBetEnd={previousBetEnd}
             userPreviousBet={userPreviousBet}
@@ -45,35 +66,8 @@ const GraphModes: React.FC<GraphModesProps> = ({
             onDragging={onDragging}
             onShowConfirmButton={onShowConfirmButton}
           />
-        );
-      case 2:
-        // Режим "Candles": отображаем только CandlestickChart.
-        return data ? <CandlestickChart data={data} mode="Candles" /> : null;
-      case 3:
-        // Режим "Both": отображаем CandlestickChart и BetArrow.
-        return data ? (
-          <>
-            <CandlestickChart data={data} mode="Both" />
-            <BetArrow
-              previousBetEnd={previousBetEnd}
-              userPreviousBet={userPreviousBet}
-              setUserPreviousBet={setUserPreviousBet}
-              axisMode={axisMode}
-              onDragging={onDragging}
-              onShowConfirmButton={onShowConfirmButton}
-            />
-          </>
-        ) : null;
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <>
-      <GradientPlanes />
-      <Axes />
-      {renderContent()}
+        </>
+      )}
     </>
   );
 };
