@@ -9,7 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
-from prometheus_client import Counter, Histogram, generate_latest
+# from prometheus_client import Counter, Histogram, generate_latest
 from starlette.middleware.base import BaseHTTPMiddleware
 import time
 from dependencies.services.chain import get_chain_service
@@ -54,33 +54,33 @@ de = load_dotenv(dotenv_path='./.env')
 # logger.info(os.environ.keys())
 
 # Метрика количества запросов
-REQUEST_COUNT = Counter(
-    "http_requests_total", "Total HTTP requests",
-    ["method", "endpoint"]
-)
+# REQUEST_COUNT = Counter(
+#     "http_requests_total", "Total HTTP requests",
+#     ["method", "endpoint"]
+# )
+#
+# # Метрика времени обработки запросов
+# REQUEST_LATENCY = Histogram(
+#     "http_request_latency_seconds", "HTTP request latency",
+#     ["method", "endpoint"]
+# )
 
-# Метрика времени обработки запросов
-REQUEST_LATENCY = Histogram(
-    "http_request_latency_seconds", "HTTP request latency",
-    ["method", "endpoint"]
-)
-
-class MetricsMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        method = request.method
-        endpoint = request.url.path
-        REQUEST_COUNT.labels(method=method, endpoint=endpoint).inc()
-        start_time = time.time()
-        response = await call_next(request)
-        latency = time.time() - start_time
-        REQUEST_LATENCY.labels(method=method, endpoint=endpoint).observe(latency)
-        return response
-
-app.add_middleware(MetricsMiddleware)
-
-@app.get("/metrics")
-def metrics():
-    return generate_latest()
+# class MetricsMiddleware(BaseHTTPMiddleware):
+#     async def dispatch(self, request, call_next):
+#         method = request.method
+#         endpoint = request.url.path
+#         REQUEST_COUNT.labels(method=method, endpoint=endpoint).inc()
+#         start_time = time.time()
+#         response = await call_next(request)
+#         latency = time.time() - start_time
+#         REQUEST_LATENCY.labels(method=method, endpoint=endpoint).observe(latency)
+#         return response
+#
+# app.add_middleware(MetricsMiddleware)
+#
+# @app.get("/metrics")
+# def metrics():
+#     return generate_latest()
 
 
 @app.exception_handler(RequestValidationError)
