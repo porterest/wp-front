@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 from uuid import UUID
 
 from domain.dto.bet import CreateBetDTO
+from domain.metaholder.responses import BetResponse
 
 
 class BetServiceInterface(ABC):
@@ -17,4 +19,8 @@ class BetServiceInterface(ABC):
         """
         Отменяет ставку, добавляя сумму ставки к балансу пользователя.
         """
+        ...
+
+    @abstractmethod
+    async def get_last_user_bet(self, user_id: UUID, pair_id: UUID) -> Optional[BetResponse]:
         ...

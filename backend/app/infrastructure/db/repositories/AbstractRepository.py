@@ -2,6 +2,7 @@ import logging
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Type, Optional
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound

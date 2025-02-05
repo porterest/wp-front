@@ -57,19 +57,6 @@ class UserService(UserServiceInterface):
             ]
         )
 
-    async def get_last_user_bet(self, user_id: UUID, pair_id: UUID) -> Optional[BetResponse]:
-        last_block = await self.block_service.get_last_completed_block_by_pair_id(pair_id=pair_id)
-        for bet in last_block.bets:
-            if bet.user_id == user_id:
-                return BetResponse(
-                    id=bet.id,
-                    amount=bet.amount,
-                    vector=bet.vector,
-                    status=MetaholderBetStatus(bet.status.value),
-                    pair_name=bet.pair.name,
-                    created_at=bet.created_at,
-                )
-
     async def get_user_history(self, user_id: UUID) -> UserHistoryResponse:
         user = await self.user_repository.get(user_id)
         return UserHistoryResponse(

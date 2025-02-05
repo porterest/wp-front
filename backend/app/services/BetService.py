@@ -1,20 +1,20 @@
 from dataclasses import dataclass
+from typing import Optional
 from uuid import UUID
 
 from abstractions.repositories.bet import BetRepositoryInterface
-from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.bet import BetServiceInterface
 from domain.dto.bet import CreateBetDTO, UpdateBetDTO
 from domain.dto.user import UpdateUserDTO
 from domain.enums import BetStatus
+from domain.metaholder.responses import BetResponse
 
 
 @dataclass
 class BetService(BetServiceInterface):
     bet_repository: BetRepositoryInterface
     user_repository: UserRepositoryInterface
-    block_repository: BlockRepositoryInterface
 
     async def create_bet(self, create_dto: CreateBetDTO) -> None:
         await self.user_repository.fund_user(user_id=create_dto.user_id, amount=create_dto.amount * -1)
@@ -40,3 +40,8 @@ class BetService(BetServiceInterface):
             status=BetStatus.CANCELED
         )
         await self.bet_repository.update(bet.id, update_bet)
+
+    async def get_last_user_bet(self, user_id: UUID, pair_id: UUID) -> Optional[BetResponse]:
+
+        last_bet = await self.bet_repository.get_last_user_bet(user_id, pair_id)
+        return last_bet

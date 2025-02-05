@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 
+from dependencies.services.bet import get_bet_service
 from dependencies.services.inner_token import get_inner_token_service
 from dependencies.services.user import get_user_service
 from domain.enums import BetStatus
@@ -70,10 +71,10 @@ async def get_last_user_bet(
 ) -> Optional[BetResponse]:
     user_id = get_user_id_from_request(request)
 
-    users = get_user_service()
+    bets = get_bet_service()
 
     try:
-        user_bet = await users.get_last_user_bet(user_id=user_id, pair_id=pair_id.pair_id)
+        user_bet = await bets.get_last_user_bet(user_id=user_id, pair_id=pair_id.pair_id)
         return user_bet
     except NotFoundException:
         logger.error(f"No user with ID {user_id}", exc_info=True)
