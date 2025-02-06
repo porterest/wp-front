@@ -19,6 +19,13 @@ class BetService(BetServiceInterface):
     user_repository: UserRepositoryInterface
 
     async def create_bet(self, create_dto: CreateBetDTO) -> None:
+        current_pair_bet = await self.bet_repository.get_last_user_bet(
+            user_id=create_dto.user_id,
+            pair_id=create_dto.pair_id,
+        )
+        if current_pair_bet and current_pair_bet.status == BetStatus.PENDING:
+            await self.cancel_bet(current_pair_bet.id)
+
         await self.user_repository.fund_user(user_id=create_dto.user_id, amount=create_dto.amount * -1)
         return await self.bet_repository.create(create_dto)
 
