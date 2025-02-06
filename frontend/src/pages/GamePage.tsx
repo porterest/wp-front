@@ -137,6 +137,8 @@ const GamePage: React.FC = () => {
   );
 
 
+// Другие импорты
+
   const handleConfirmBet = useCallback(async () => {
     if (!currentBet) return;
 
@@ -163,28 +165,22 @@ const GamePage: React.FC = () => {
       }
 
       const { denormalizeX, denormalizeY } = scaleFunctions;
-      // Используем сохранённый вектор ставки из localStorage
+      // Берем белый вектор из localStorage – он уже сохранён после подтверждения предыдущей ставки
       const storedBetStr = localStorage.getItem("userBetVector");
-      let storedBet: number[] | null = null;
-      if (storedBetStr) {
-        storedBet = JSON.parse(storedBetStr);
-      }
-      if (!storedBet) {
+      if (!storedBetStr) {
         console.error("Нет сохранённого вектора ставки!");
         return;
       }
-
-      // Пусть серверные расчёты работают с абсолютными значениями (без нормализации относительно агрегатора)
-      // Если нужно – можно добавить дополнительные вычисления.
-      const [sceneX, sceneY] = storedBet;
+      const storedBet = JSON.parse(storedBetStr); // Массив чисел [x, y, z]
+      console.log("Используем сохранённый вектор ставки:", storedBet);
 
       let maxVolume = 0;
-      if (data.candles) {
+      if (data.candles && data.candles.length > 0) {
         maxVolume = Math.max(...data.candles.map((x: CandleData) => x.volume));
       }
 
-      const absoluteVolumeChange = denormalizeX(sceneX, maxVolume);
-      const absolutePriceChange = denormalizeY(sceneY);
+      const absoluteVolumeChange = denormalizeX(storedBet[0], maxVolume);
+      const absolutePriceChange = denormalizeY(storedBet[1]);
 
       console.log("absoluteVolumeChange", absoluteVolumeChange);
       console.log("absolutePriceChange", absolutePriceChange);
@@ -199,10 +195,14 @@ const GamePage: React.FC = () => {
 
       console.log("Ставка успешно размещена:", response);
       setShowConfirmButton(false);
+
+      // Сохраняем в localStorage белый вектор, подтверждённый юзером
+      localStorage.setItem("userBetVector", JSON.stringify(storedBet));
     } catch (error) {
       console.error("Ошибка при размещении ставки:", error);
     }
   }, [currentBet, data.candles, scaleFunctions]);
+
 
 
   const legendItems = [

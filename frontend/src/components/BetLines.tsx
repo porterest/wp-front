@@ -45,7 +45,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     maxWhiteLength,
   });
 
-  // --- Баланс пользователя
+  // --- Загружаем баланс пользователя
   const [userBalance, setUserBalance] = useState(0);
   useEffect(() => {
     (async () => {
@@ -59,7 +59,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     })();
   }, []);
 
-  // --- Агрегатор (жёлтая стрелка)
+  // --- Агрегированный вектор (жёлтая стрелка)
   const [aggregator, setAggregator] = useState<THREE.Vector3>(() => {
     const v = previousBetEnd.clone();
     if (v.length() > maxYellowLength) v.setLength(maxYellowLength);
@@ -73,27 +73,24 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [previousBetEnd, maxYellowLength]);
 
   // --- Белая стрелка
-  // Сначала пытаемся взять сохранённое значение из localStorage
-  const getStoredUserBet = (): THREE.Vector3 | null => {
+  // При инициализации пытаемся взять сохранённый вектор из localStorage.
+  // Если его нет – используем server-значение, ограниченное по длине от aggregator.
+  const [betPosition, setBetPosition] = useState<THREE.Vector3>(() => {
     const stored = localStorage.getItem(LOCAL_KEY);
+    let bp: THREE.Vector3;
     if (stored) {
       try {
         const arr = JSON.parse(stored);
-        if (Array.isArray(arr) && arr.length >= 3) {
-          return new THREE.Vector3(arr[0], arr[1], arr[2]);
-        }
+        bp = new THREE.Vector3(arr[0], arr[1], arr[2]);
+        console.log("Initial betPosition from localStorage:", bp.toArray());
       } catch (err) {
         console.error("Error parsing stored user bet:", err);
+        bp = userPreviousBet.clone();
       }
+    } else {
+      bp = userPreviousBet.clone();
     }
-    return null;
-  };
-
-  const [betPosition, setBetPosition] = useState<THREE.Vector3>(() => {
-    const stored = getStoredUserBet();
-    // Если есть сохранённое значение – использовать его,
-    // иначе используем userPreviousBet, при этом ограничивая длину относительно aggregator
-    let bp = stored ? stored : userPreviousBet.clone();
+    // Ограничиваем длину вектора (от aggregator до bp)
     const offset = bp.clone().sub(aggregator);
     if (offset.length() > maxWhiteLength) {
       offset.setLength(maxWhiteLength);
@@ -105,8 +102,20 @@ const BetLines: React.FC<BetLinesProps> = ({
     return bp;
   });
   useEffect(() => {
-    const stored = getStoredUserBet();
-    let bp = stored ? stored : userPreviousBet.clone();
+    const stored = localStorage.getItem(LOCAL_KEY);
+    let bp: THREE.Vector3;
+    if (stored) {
+      try {
+        const arr = JSON.parse(stored);
+        bp = new THREE.Vector3(arr[0], arr[1], arr[2]);
+        console.log("Updated betPosition from localStorage:", bp.toArray());
+      } catch (err) {
+        console.error("Error parsing stored user bet:", err);
+        bp = userPreviousBet.clone();
+      }
+    } else {
+      bp = userPreviousBet.clone();
+    }
     const offset = bp.clone().sub(aggregator);
     if (offset.length() > maxWhiteLength) {
       offset.setLength(maxWhiteLength);
@@ -118,16 +127,11 @@ const BetLines: React.FC<BetLinesProps> = ({
     setBetPosition(bp);
   }, [userPreviousBet, maxWhiteLength, aggregator]);
 
-  const storeUserBet = useCallback((v: THREE.Vector3) => {
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(v.toArray()));
-    console.log("Stored user bet vector:", v.toArray());
-  }, []);
-
   // --- Обновление геометрии белой стрелки
   const updateWhiteLine = (pos: THREE.Vector3) => {
     if (whiteLineRef.current && whiteLineRef.current.geometry) {
       const geom = whiteLineRef.current.geometry as LineGeometry;
-      // Белая стрелка рисуется от aggregator до (aggregator + (pos - aggregator))
+      // Белая стрелка строится от aggregator до betPosition
       console.log("Updating white line geometry: start:", aggregator.toArray(), "-> end:", pos.toArray());
       geom.setPositions([
         aggregator.x, aggregator.y, aggregator.z,
@@ -199,7 +203,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   // --- Отрисовка белой стрелки (линия + конус + draggable сфера)
   useEffect(() => {
     console.log("Creating white line, cone and draggable sphere");
-    // Белая стрелка рисуется от aggregator до конечной точки = betPosition
+    // Белая стрелка строится от aggregator до betPosition
     const wGeom = new LineGeometry();
     wGeom.setPositions([
       aggregator.x, aggregator.y, aggregator.z,
@@ -219,7 +223,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     const coneMat = new THREE.MeshStandardMaterial({ color: "white" });
     const wCone = new THREE.Mesh(coneGeom, coneMat);
     wCone.position.copy(betPosition);
-    // Вычисляем направление: от aggregator до betPosition
+    // Вычисляем направление от aggregator до betPosition
     const dirW = betPosition.clone().sub(aggregator).normalize();
     if (dirW.length() > 0) {
       const up = new THREE.Vector3(0, 1, 0);
@@ -338,7 +342,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
       console.log("PointerMove: intersectPoint =", intersectPoint.toArray());
 
-      // Если axisMode задан, ограничиваем изменение только по указанной оси
+      // Если axisMode задан, изменяем только соответствующую ось
       let updatedPos = intersectPoint.clone();
       if (axisMode === "X") {
         updatedPos.y = betPosition.y;
@@ -348,7 +352,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         updatedPos.z = betPosition.z;
       }
 
-      // Белая стрелка всегда должна идти от aggregator. Вычисляем offset = updatedPos - aggregator.
+      // Белая стрелка всегда должна оставаться от aggregator. Вычисляем offset.
       const offset = updatedPos.clone().sub(aggregator);
       if (offset.length() > maxWhiteLength) {
         offset.setLength(maxWhiteLength);
@@ -364,7 +368,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       setBetAmount(userBalance * fraction);
       console.log("PointerMove: fraction =", fraction, "=> betAmount =", userBalance * fraction);
       handleDrag(updatedPos);
-      storeUserBet(updatedPos);
+      // НЕ записываем в localStorage пока не подтверждена ставка
     },
     [
       isDragging,
@@ -378,7 +382,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       setBetAmount,
       handleDrag,
       aggregator,
-      storeUserBet,
     ]
   );
 
@@ -395,9 +398,9 @@ const BetLines: React.FC<BetLinesProps> = ({
         amount: betAmt,
         predicted_vector: [betPosition.x, betPosition.y, betPosition.z],
       });
-      storeUserBet(betPosition);
+      // Здесь не записываем в localStorage – запись произойдёт при подтверждении
     }
-  }, [isDragging, betPosition, maxWhiteLength, userBalance, setBetAmount, onDragging, onShowConfirmButton, aggregator, storeUserBet]);
+  }, [isDragging, betPosition, maxWhiteLength, userBalance, setBetAmount, onDragging, onShowConfirmButton, aggregator]);
 
   useEffect(() => {
     const canvas = gl.domElement;
