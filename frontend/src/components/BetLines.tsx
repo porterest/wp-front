@@ -18,7 +18,7 @@ interface BetLinesProps {
   maxYellowLength: number;
   maxWhiteLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
-  axisMode: "X" | "Y"; // Если задан, то во время drag обновляются только соответствующие координаты
+  axisMode: "X" | "Y"; // Если задан, то при drag изменяется только указанная ось (остальные фиксируются)
   setBetAmount: (newAmount: number) => void;
 }
 
@@ -57,8 +57,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     })();
   }, []);
 
-  // --- Вычисляем агрегированный вектор для жёлтой стрелки
-  // Если длина вектора превышает maxYellowLength, обрезаем его.
+  // --- Вычисляем агрегированный вектор для жёлтой стрелки (aggregator)
+  // Если длина предыдущего вектора больше maxYellowLength, обрезаем его.
   const [aggregator, setAggregator] = useState<THREE.Vector3>(() => {
     const v = previousBetEnd.clone();
     if (v.length() > maxYellowLength) v.setLength(maxYellowLength);
@@ -71,16 +71,32 @@ const BetLines: React.FC<BetLinesProps> = ({
     setAggregator(newAgg);
   }, [previousBetEnd, maxYellowLength]);
 
-  // --- Инициализируем betPosition для белой стрелки
-  // Используем серверное значение, не меняем его при инициализации
+  // --- Инициализируем позицию белой стрелки (betPosition)
+  // Если offset = (userPreviousBet - aggregator) длиннее maxWhiteLength – обрезаем.
   const [betPosition, setBetPosition] = useState<THREE.Vector3>(() => {
-    console.log("Initial betPosition (server):", userPreviousBet.toArray());
-    return userPreviousBet.clone();
+    const pos = userPreviousBet.clone();
+    const offset = pos.clone().sub(aggregator);
+    if (offset.length() > maxWhiteLength) {
+      offset.setLength(maxWhiteLength);
+      pos.copy(aggregator).add(offset);
+      console.log("Initial betPosition limited:", pos.toArray());
+    } else {
+      console.log("Initial betPosition not limited:", pos.toArray());
+    }
+    return pos;
   });
   useEffect(() => {
-    console.log("Updated betPosition (server):", userPreviousBet.toArray());
-    setBetPosition(userPreviousBet.clone());
-  }, [userPreviousBet]);
+    const pos = userPreviousBet.clone();
+    const offset = pos.clone().sub(aggregator);
+    if (offset.length() > maxWhiteLength) {
+      offset.setLength(maxWhiteLength);
+      pos.copy(aggregator).add(offset);
+      console.log("Updated betPosition limited:", pos.toArray());
+    } else {
+      console.log("Updated betPosition not limited:", pos.toArray());
+    }
+    setBetPosition(pos);
+  }, [userPreviousBet, maxWhiteLength, aggregator]);
 
   // --- Функция обновления геометрии белой линии
   const updateWhiteLine = (pos: THREE.Vector3) => {
@@ -113,7 +129,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   // --- Отрисовка жёлтой стрелки (линия + конус)
   useEffect(() => {
     console.log("Creating yellow line and cone");
-    // Жёлтая линия: от (0,0,0) до агрегатора
+    // Жёлтая линия: от (0,0,0) до aggregator
     const yGeom = new LineGeometry();
     yGeom.setPositions([
       0, 0, 0,
@@ -161,7 +177,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   // --- Отрисовка белой стрелки (линия + конус + draggable сфера)
   useEffect(() => {
     console.log("Creating white line, cone and draggable sphere");
-    // Белая линия: от агрегатора до betPosition (используем серверные координаты)
+    // Белая линия: от aggregator до betPosition (с учётом ограничений)
     const wGeom = new LineGeometry();
     wGeom.setPositions([
       aggregator.x, aggregator.y, aggregator.z,
@@ -182,7 +198,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     const coneMat = new THREE.MeshStandardMaterial({ color: "white" });
     const wCone = new THREE.Mesh(coneGeom, coneMat);
     wCone.position.copy(betPosition);
-    // Используем разницу (userPreviousBet - aggregator) как есть
+    // Вычисляем направление по разнице (userPreviousBet - aggregator) – уже учтённое ограничение при инициализации
     const dirW = betPosition.clone().sub(aggregator).normalize();
     if (dirW.length() > 0) {
       const up = new THREE.Vector3(0, 1, 0);
@@ -303,22 +319,27 @@ const BetLines: React.FC<BetLinesProps> = ({
       console.log("PointerMove: intersectPoint =", intersectPoint.toArray());
 
       // Если axisMode задан, ограничиваем изменение только по указанной оси
-      const updatedPos = intersectPoint.clone();
+      let updatedPos = intersectPoint.clone();
       if (axisMode === "X") {
-        // Если движение по оси X, оставляем Y и Z прежними (из текущей betPosition)
         updatedPos.y = betPosition.y;
         updatedPos.z = betPosition.z;
       } else if (axisMode === "Y") {
-        // Если движение по оси Y, оставляем X и Z прежними
         updatedPos.x = betPosition.x;
         updatedPos.z = betPosition.z;
+      }
+
+      // Обязательно ограничиваем длину вектора от агрегатора до новой позиции
+      const finalDir = updatedPos.clone().sub(aggregator);
+      if (finalDir.length() > maxWhiteLength) {
+        finalDir.setLength(maxWhiteLength);
+        updatedPos = aggregator.clone().add(finalDir);
+        console.log("PointerMove: finalDir limited =", finalDir.toArray());
       }
 
       console.log("PointerMove: updated betPosition =", updatedPos.toArray());
       setBetPosition(updatedPos);
       debouncedUpdateWhiteLine(updatedPos);
 
-      const finalDir = updatedPos.clone().sub(aggregator);
       const fraction = finalDir.length() / maxWhiteLength;
       setBetAmount(userBalance * fraction);
       console.log("PointerMove: fraction =", fraction, "=> betAmount =", userBalance * fraction);
