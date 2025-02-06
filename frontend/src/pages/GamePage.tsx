@@ -165,17 +165,17 @@ const GamePage: React.FC = () => {
       }
 
       const { denormalizeX, denormalizeY } = scaleFunctions;
-      // Берем белый вектор из localStorage – он уже сохранён после подтверждения предыдущей ставки
+      // Берем сохранённый вектор ставки из localStorage
       const storedBetStr = localStorage.getItem("userBetVector");
       if (!storedBetStr) {
         console.error("Нет сохранённого вектора ставки!");
         return;
       }
-      const storedBet = JSON.parse(storedBetStr); // Массив чисел [x, y, z]
+      const storedBet = JSON.parse(storedBetStr); // [x, y, z]
       console.log("Используем сохранённый вектор ставки:", storedBet);
 
       let maxVolume = 0;
-      if (data.candles && data.candles.length > 0) {
+      if (data.candles) {
         maxVolume = Math.max(...data.candles.map((x: CandleData) => x.volume));
       }
 
@@ -192,17 +192,15 @@ const GamePage: React.FC = () => {
 
       console.log("Отправляем ставку:", betRequest);
       const response = await placeBet(betRequest);
-
       console.log("Ставка успешно размещена:", response);
       setShowConfirmButton(false);
 
-      // Сохраняем в localStorage белый вектор, подтверждённый юзером
+      // Записываем в localStorage окончательный вектор (уже подтверждённый)
       localStorage.setItem("userBetVector", JSON.stringify(storedBet));
     } catch (error) {
       console.error("Ошибка при размещении ставки:", error);
     }
   }, [currentBet, data.candles, scaleFunctions]);
-
 
 
   const legendItems = [
