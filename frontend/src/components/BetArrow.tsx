@@ -58,17 +58,16 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   const formatNumber = (num: number) => {
     if (num >= 1e12) {
-      return (num / 1e12).toFixed(2) + "T"; // Триллионы
+      return (Math.round((num / 1e12) * 100) / 100).toFixed(2) + "T"; // Триллионы
     } else if (num >= 1e9) {
-      return (num / 1e9).toFixed(2) + "B"; // Миллиарды
+      return (Math.round((num / 1e9) * 100) / 100).toFixed(2) + "B"; // Миллиарды
     } else if (num >= 1e6) {
-      return (num / 1e6).toFixed(2) + "M"; // Миллионы
+      return (Math.round((num / 1e6) * 100) / 100).toFixed(2) + "M"; // Миллионы
     } else if (num >= 1e3) {
-      return (num / 1e3).toFixed(2) + "K"; // Тысячи
+      return (Math.round((num / 1e3) * 100) / 100).toFixed(2) + "K"; // Тысячи
     }
     return num.toFixed(2); // Обычный формат для мелких чисел
   };
-
 
   return (
     <>
