@@ -58,7 +58,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, []);
 
   // --- Вычисляем агрегированный вектор для жёлтой стрелки (aggregator)
-  // Если длина предыдущего вектора больше maxYellowLength, обрезаем его.
+  // Если длина вектора больше maxYellowLength – обрезаем.
   const [aggregator, setAggregator] = useState<THREE.Vector3>(() => {
     const v = previousBetEnd.clone();
     if (v.length() > maxYellowLength) v.setLength(maxYellowLength);
@@ -151,13 +151,11 @@ const BetLines: React.FC<BetLinesProps> = ({
     const yCone = new THREE.Mesh(coneGeom, coneMat);
     yCone.position.copy(aggregator);
     console.log("Yellow cone initial position:", aggregator.toArray());
-    const dir = aggregator.clone().normalize();
-    if (dir.length() > 0) {
-      const up = new THREE.Vector3(0, 1, 0);
-      const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
-      yCone.setRotationFromQuaternion(quat);
-      console.log("Yellow cone rotation set with quaternion:", quat);
-    }
+    // Здесь вместо (0,1,0) используем (1,0,0) как базовый вектор – сервер считает 0° по оси X
+    const base = new THREE.Vector3(1, 0, 0);
+    const quat = new THREE.Quaternion().setFromUnitVectors(base, aggregator.clone().normalize());
+    yCone.setRotationFromQuaternion(quat);
+    console.log("Yellow cone rotation set with quaternion:", quat);
     yellowConeRef.current = yCone;
     scene.add(yCone);
     console.log("Yellow cone added:", yCone);
@@ -177,7 +175,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   // --- Отрисовка белой стрелки (линия + конус + draggable сфера)
   useEffect(() => {
     console.log("Creating white line, cone and draggable sphere");
-    // Белая линия: от aggregator до betPosition (с учётом ограничений)
+    // Белая линия: от aggregator до betPosition (с учетом ограничений)
     const wGeom = new LineGeometry();
     wGeom.setPositions([
       aggregator.x, aggregator.y, aggregator.z,
@@ -198,14 +196,12 @@ const BetLines: React.FC<BetLinesProps> = ({
     const coneMat = new THREE.MeshStandardMaterial({ color: "white" });
     const wCone = new THREE.Mesh(coneGeom, coneMat);
     wCone.position.copy(betPosition);
-    // Вычисляем направление по разнице (userPreviousBet - aggregator) – уже учтённое ограничение при инициализации
+    // Для белого конуса также используем базовый вектор (1,0,0)
+    const base = new THREE.Vector3(1, 0, 0);
     const dirW = betPosition.clone().sub(aggregator).normalize();
-    if (dirW.length() > 0) {
-      const up = new THREE.Vector3(0, 1, 0);
-      const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
-      wCone.setRotationFromQuaternion(quatW);
-      console.log("White cone rotation set with quaternion:", quatW);
-    }
+    const quatW = new THREE.Quaternion().setFromUnitVectors(base, dirW);
+    wCone.setRotationFromQuaternion(quatW);
+    console.log("White cone rotation set with quaternion:", quatW);
     whiteConeRef.current = wCone;
     scene.add(wCone);
     console.log("White cone added:", wCone);
@@ -255,11 +251,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (whiteConeRef.current) {
       whiteConeRef.current.position.copy(betPosition);
       const dirW = betPosition.clone().sub(aggregator).normalize();
-      if (dirW.length() > 0) {
-        const up = new THREE.Vector3(0, 1, 0);
-        const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
-        whiteConeRef.current.setRotationFromQuaternion(quatW);
-      }
+      const base = new THREE.Vector3(1, 0, 0);
+      const quatW = new THREE.Quaternion().setFromUnitVectors(base, dirW);
+      whiteConeRef.current.setRotationFromQuaternion(quatW);
     }
     if (sphereRef.current) {
       sphereRef.current.position.copy(betPosition);
@@ -328,7 +322,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         updatedPos.z = betPosition.z;
       }
 
-      // Обязательно ограничиваем длину вектора от агрегатора до новой позиции
+      // Ограничиваем длину вектора от агрегатора до новой позиции
       const finalDir = updatedPos.clone().sub(aggregator);
       if (finalDir.length() > maxWhiteLength) {
         finalDir.setLength(maxWhiteLength);
