@@ -57,16 +57,27 @@ const BetArrow: React.FC<BetArrowProps> = ({
   };
 
   const formatNumber = (num: number) => {
-    if (num >= 1e12) {
-      return (Math.round((num / 1e12) * 100) / 100).toFixed(2) + "T"; // Триллионы
-    } else if (num >= 1e9) {
-      return (Math.round((num / 1e9) * 100) / 100).toFixed(2) + "B"; // Миллиарды
-    } else if (num >= 1e6) {
-      return (Math.round((num / 1e6) * 100) / 100).toFixed(2) + "M"; // Миллионы
-    } else if (num >= 1e3) {
-      return (Math.round((num / 1e3) * 100) / 100).toFixed(2) + "K"; // Тысячи
+    if (isNaN(num)) return "Invalid Number";
+
+    const absNum = Math.abs(num); // Работает и с отрицательными числами
+    let suffix = "";
+    let value = num;
+
+    if (absNum >= 1e12) {
+      value = num / 1e12;
+      suffix = "T"; // Триллионы
+    } else if (absNum >= 1e9) {
+      value = num / 1e9;
+      suffix = "B"; // Миллиарды
+    } else if (absNum >= 1e6) {
+      value = num / 1e6;
+      suffix = "M"; // Миллионы
+    } else if (absNum >= 1e3) {
+      value = num / 1e3;
+      suffix = "K"; // Тысячи
     }
-    return num.toFixed(2); // Обычный формат для мелких чисел
+
+    return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + suffix;
   };
 
   return (
