@@ -80,7 +80,7 @@ async def get_last_user_bet(
             amount=user_bet.amount,
             vector=user_bet.vector,
             pair_name=user_bet.pair.name,
-            status=user_bet.status,
+            status=user_bet.status.value,
             created_at=user_bet.created_at
         )
         return bet
