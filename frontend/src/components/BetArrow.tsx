@@ -56,6 +56,20 @@ const BetArrow: React.FC<BetArrowProps> = ({
     setBetAmount(bet);
   };
 
+  const formatNumber = (num: number) => {
+    if (num >= 1e12) {
+      return (num / 1e12).toFixed(2) + "T"; // Триллионы
+    } else if (num >= 1e9) {
+      return (num / 1e9).toFixed(2) + "B"; // Миллиарды
+    } else if (num >= 1e6) {
+      return (num / 1e6).toFixed(2) + "M"; // Миллионы
+    } else if (num >= 1e3) {
+      return (num / 1e3).toFixed(2) + "K"; // Тысячи
+    }
+    return num.toFixed(2); // Обычный формат для мелких чисел
+  };
+
+
   return (
     <>
       {/* Компонент для отрисовки линий. Он вызывает handleDrag, который обновляет позицию и ставку. */}
@@ -79,10 +93,10 @@ const BetArrow: React.FC<BetArrowProps> = ({
         anchorX="center"
         anchorY="middle"
       >
-        {`Deposit: ${userDeposit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DD`}
+        {`Deposit: ${formatNumber(userDeposit)} DD`}
       </Text>
 
-      {/* Текст ставки – отрисовывается всегда и использует betAmount из родителя */}
+      {/* Текст ставки */}
       <Text
         position={[userPreviousBet.x + 0.5, userPreviousBet.y + 1, previousBetEnd.z + 0.5]}
         fontSize={0.3}
@@ -91,8 +105,9 @@ const BetArrow: React.FC<BetArrowProps> = ({
         anchorY="middle"
         depthOffset={-1}
       >
-        {`Bet: ${betAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DD`}
+        {`Bet: ${formatNumber(betAmount)} DD`}
       </Text>
+
     </>
   );
 };
