@@ -79,7 +79,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         anchorX="center"
         anchorY="middle"
       >
-        {`Deposit: ${userDeposit.toFixed(2)} DD`}
+        {`Deposit: ${userDeposit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DD`}
       </Text>
 
       {/* Текст ставки – отрисовывается всегда и использует betAmount из родителя */}
@@ -91,7 +91,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         anchorY="middle"
         depthOffset={-1}
       >
-        {`Bet: ${betAmount.toFixed(2)} DD`}
+        {`Bet: ${betAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DD`}
       </Text>
     </>
   );
