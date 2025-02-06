@@ -108,7 +108,7 @@ const BalancePage: React.FC = () => {
       return (
         <>
           <p className="mt-4 text-xl font-extrabold">
-            Balance: {userData.balance.toFixed(5)} WPT
+            Balance: {userData.balance.toFixed(3)} WPT
           </p>
           {/*<p className="mt-4 text-xl font-extrabold">*/}
           {/*  At risk (total bets): {userData.atRisk} WPT*/}
@@ -178,7 +178,7 @@ const BalancePage: React.FC = () => {
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : userData ? (
-          <p className="text-xl font-extrabold">{userData.atRisk.toFixed(5)} WPT</p>
+          <p className="text-xl font-extrabold">{userData.atRisk.toFixed(3)} WPT</p>
         ) : (
           <p className="text-gray-500">No risk data available.</p>
         )}

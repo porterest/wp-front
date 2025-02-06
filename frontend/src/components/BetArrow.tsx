@@ -59,7 +59,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
   const formatNumber = (num: number) => {
     if (isNaN(num)) return "Invalid Number";
 
-    const absNum = Math.abs(num); // Работает и с отрицательными числами
+    const absNum = Math.abs(num);
     let suffix = "";
     let value = num;
 
