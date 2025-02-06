@@ -59,8 +59,6 @@ const GamePage: React.FC = () => {
     }
   }, []);
 
-
-
   // Функция для загрузки последней ставки пользователя, обернутая в useCallback для предотвращения лишних пересозданий
   const loadUserLastBet = useCallback(async (pair: PairOption) => {
     try {
