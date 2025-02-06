@@ -236,7 +236,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
   };
 
-  const handlePointerMove = (e) => {
+  const handlePointerMove = (e: PointerEvent) => {
     if (!isDragging) return;
     const mouse = new THREE.Vector2((e.clientX / gl.domElement.clientWidth) * 2 - 1, -(e.clientY / gl.domElement.clientHeight) * 2 + 1);
     raycaster.current.setFromCamera(mouse, camera);
