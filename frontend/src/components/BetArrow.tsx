@@ -79,7 +79,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         anchorX="center"
         anchorY="middle"
       >
-        {`Deposit: ${userDeposit.toFixed(3)} DD`}
+        {`Deposit: ${userDeposit.toFixed(2)} DD`}
       </Text>
 
       {/* Текст ставки – отрисовывается всегда и использует betAmount из родителя */}
