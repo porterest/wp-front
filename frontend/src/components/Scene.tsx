@@ -13,10 +13,11 @@ interface SceneProps {
   style?: React.CSSProperties;
 }
 
-const Scene: React.FC<SceneProps> = ({ children, orbitControlsEnabled, data, onScaleReady }) => {
+const Scene: React.FC<SceneProps> = ({ children, data, onScaleReady }) => {
   return (
     <Canvas camera={{ position: [10, 10, 10], fov: 60 }}>
-      <OrbitControls enableZoom={true} enableRotate={orbitControlsEnabled} enablePan={orbitControlsEnabled} />
+      {/*<OrbitControls enableZoom={true} enableRotate={orbitControlsEnabled} enablePan={orbitControlsEnabled} />*/}
+      <OrbitControls enableRotate={false} enablePan={false} enableZoom={false} />
 
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 10]} intensity={1} castShadow={true} />
