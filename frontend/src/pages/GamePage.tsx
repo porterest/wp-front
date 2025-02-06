@@ -144,7 +144,7 @@ const GamePage: React.FC = () => {
 
     console.log("Нажатие Confirm Bet. Проверяем данные свечей...");
 
-    // Ждем свечи, если их ещё нет
+    // Ждём свечи, если их нет
     if (!data.candles || data.candles.length === 0) {
       console.log("Свечи отсутствуют. Ожидаем загрузку...");
       await new Promise<void>((resolve) => {
@@ -165,7 +165,7 @@ const GamePage: React.FC = () => {
       }
 
       const { denormalizeX, denormalizeY } = scaleFunctions;
-      // Берем сохранённый вектор ставки из localStorage
+      // Берём сохранённый вектор ставки
       const storedBetStr = localStorage.getItem("userBetVector");
       if (!storedBetStr) {
         console.error("Нет сохранённого вектора ставки!");
@@ -195,12 +195,14 @@ const GamePage: React.FC = () => {
       console.log("Ставка успешно размещена:", response);
       setShowConfirmButton(false);
 
-      // Записываем в localStorage окончательный вектор (уже подтверждённый)
-      localStorage.setItem("userBetVector", JSON.stringify(storedBet));
+      // Записываем окончательно подтверждённый вектор
+      localStorage.setItem("userBetVector", storedBetStr);
+
     } catch (error) {
       console.error("Ошибка при размещении ставки:", error);
     }
   }, [currentBet, data.candles, scaleFunctions]);
+
 
 
   const legendItems = [
