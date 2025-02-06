@@ -258,6 +258,10 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     const direction = intersectPt.clone().sub(aggregatorClipped);
     const updatedPos = betPosition.clone();
+
+    console.log("Diff vector:", updatedPos);
+    console.log("Diff vector:", betPosition.clone().sub(aggregatorClipped));
+
     const partialPos = aggregatorClipped.clone().add(direction);
 
     if (axisMode === "X") {
@@ -319,6 +323,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         whiteConeRef.current.setRotationFromQuaternion(quatW);
       }
     }
+
 
     handleDrag(updatedPos);
   };

@@ -68,6 +68,8 @@ const GamePage: React.FC = () => {
         lastBet.vector[1],
         0,
       );
+      console.log("userVector")
+      console.log(userVector)
       setUserPreviousBet(userVector);
     } catch (error) {
       console.error("Ошибка загрузки прошлой ставки пользователя:", error);
@@ -85,6 +87,8 @@ const GamePage: React.FC = () => {
             prevBetData[1],
             0,
           );
+          console.log("resultVector")
+          console.log(resultVector)
           setPreviousBetEnd(resultVector);
           // Загрузка последней ставки пользователя параллельно
           loadUserLastBet(selectedPair);
