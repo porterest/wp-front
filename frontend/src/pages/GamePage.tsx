@@ -145,16 +145,14 @@ const GamePage: React.FC = () => {
     // Ждем свечи, если их ещё нет
     if (!data.candles || data.candles.length === 0) {
       console.log("Свечи отсутствуют. Ожидаем загрузку...");
-
       await new Promise<void>((resolve) => {
         const interval = setInterval(() => {
           if (data.candles && data.candles.length > 0) {
             clearInterval(interval);
             resolve();
           }
-        }, 500); // Проверка каждые 500 мс
+        }, 500);
       });
-
       console.log("Свечи загружены, продолжаем расчёт...");
     }
 
@@ -165,11 +163,23 @@ const GamePage: React.FC = () => {
       }
 
       const { denormalizeX, denormalizeY } = scaleFunctions;
-      const [sceneX, sceneY] = currentBet.predicted_vector;
+      // Используем сохранённый вектор ставки из localStorage
+      const storedBetStr = localStorage.getItem("userBetVector");
+      let storedBet: number[] | null = null;
+      if (storedBetStr) {
+        storedBet = JSON.parse(storedBetStr);
+      }
+      if (!storedBet) {
+        console.error("Нет сохранённого вектора ставки!");
+        return;
+      }
+
+      // Пусть серверные расчёты работают с абсолютными значениями (без нормализации относительно агрегатора)
+      // Если нужно – можно добавить дополнительные вычисления.
+      const [sceneX, sceneY] = storedBet;
 
       let maxVolume = 0;
-
-      if (data.candles != undefined) {
+      if (data.candles) {
         maxVolume = Math.max(...data.candles.map((x: CandleData) => x.volume));
       }
 
@@ -193,7 +203,6 @@ const GamePage: React.FC = () => {
       console.error("Ошибка при размещении ставки:", error);
     }
   }, [currentBet, data.candles, scaleFunctions]);
-
 
 
   const legendItems = [
