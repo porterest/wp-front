@@ -141,7 +141,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       userPreviousBet.z === 0
     ) {
       console.log("[BetLines] userPreviousBet равен (0,0,0) – устанавливаем default (3,3,0) для betPosition");
-      setBetPosition(new THREE.Vector3(1, 1, 0));
+      setBetPosition(new THREE.Vector3(aggregatorClipped.x + 0.0001, aggregatorClipped.y + 0.0001, 0));
       return;
     }
     const offset = userPreviousBet.clone().sub(aggregatorClipped);
