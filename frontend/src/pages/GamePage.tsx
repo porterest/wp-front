@@ -137,24 +137,24 @@ const GamePage: React.FC = () => {
   );
 
 
-// Другие импорты
-
   const handleConfirmBet = useCallback(async () => {
     if (!currentBet) return;
 
     console.log("Нажатие Confirm Bet. Проверяем данные свечей...");
 
-    // Ждём свечи, если их нет
+    // Ждем свечи, если их ещё нет
     if (!data.candles || data.candles.length === 0) {
       console.log("Свечи отсутствуют. Ожидаем загрузку...");
+
       await new Promise<void>((resolve) => {
         const interval = setInterval(() => {
           if (data.candles && data.candles.length > 0) {
             clearInterval(interval);
             resolve();
           }
-        }, 500);
+        }, 500); // Проверка каждые 500 мс
       });
+
       console.log("Свечи загружены, продолжаем расчёт...");
     }
 
@@ -165,22 +165,16 @@ const GamePage: React.FC = () => {
       }
 
       const { denormalizeX, denormalizeY } = scaleFunctions;
-      // Берём сохранённый вектор ставки
-      const storedBetStr = localStorage.getItem("userBetVector");
-      if (!storedBetStr) {
-        console.error("Нет сохранённого вектора ставки!");
-        return;
-      }
-      const storedBet = JSON.parse(storedBetStr); // [x, y, z]
-      console.log("Используем сохранённый вектор ставки:", storedBet);
+      const [sceneX, sceneY] = currentBet.predicted_vector;
 
       let maxVolume = 0;
-      if (data.candles) {
+
+      if (data.candles != undefined) {
         maxVolume = Math.max(...data.candles.map((x: CandleData) => x.volume));
       }
 
-      const absoluteVolumeChange = denormalizeX(storedBet[0], maxVolume);
-      const absolutePriceChange = denormalizeY(storedBet[1]);
+      const absoluteVolumeChange = denormalizeX(sceneX, maxVolume);
+      const absolutePriceChange = denormalizeY(sceneY);
 
       console.log("absoluteVolumeChange", absoluteVolumeChange);
       console.log("absolutePriceChange", absolutePriceChange);
@@ -192,12 +186,10 @@ const GamePage: React.FC = () => {
 
       console.log("Отправляем ставку:", betRequest);
       const response = await placeBet(betRequest);
+      localStorage.setItem("userBetVector", JSON.stringify("userBetVector", [absolutePriceChange, absoluteVolumeChange, 0]));
+
       console.log("Ставка успешно размещена:", response);
       setShowConfirmButton(false);
-
-      // Записываем окончательно подтверждённый вектор
-      localStorage.setItem("userBetVector", storedBetStr);
-
     } catch (error) {
       console.error("Ошибка при размещении ставки:", error);
     }
