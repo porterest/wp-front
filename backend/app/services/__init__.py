@@ -2,9 +2,6 @@ from abc import ABCMeta
 
 
 class SingletonMeta(ABCMeta):
-    """
-    Метакласс для обеспечения, что существует только один экземпляр ChainService.
-    """
     _instances = {}
 
     def __call__(cls, *args, **kwargs):

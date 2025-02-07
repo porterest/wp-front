@@ -127,8 +127,7 @@ class ChainService(
             return
 
         if interrupted_block.status == BlockStatus.COMPLETED:
-            raise BaseException(
-                f'Last block ({interrupted_block.id}) in interrupted chain {chain_id} is completed')  # noqa
+            raise BaseException(f'Last block ({interrupted_block.id}) in interrupted chain {chain_id} is completed')  # noqa
 
         await self.block_service.handle_interrupted_block(interrupted_block.id)
 

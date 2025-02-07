@@ -36,3 +36,7 @@ class BlockRepositoryInterface(
     @abstractmethod
     async def get_previous_block(self, block: Block) -> Block:
         ...
+
+    @abstractmethod
+    async def get_last_block_by_contract_address(self, contract_address: str) -> Optional[Block]:
+        ...
