@@ -114,7 +114,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     if (isUserBetZero && isVectorZero(aggregatorClipped)) {
       console.log("[BetLines] Ситуация: нет ни aggregatorClipped, ни betPosition. Устанавливаем default (3,3,0)");
-      return new THREE.Vector3(3, 3, 0);
+      return new THREE.Vector3(0.01, 0.01, 0);
     }
     if (isUserBetZero && !isVectorZero(aggregatorClipped)) {
       console.log("[BetLines] Ситуация: нет betPosition, но есть aggregatorClipped. Добавляем минимальное смещение.");
