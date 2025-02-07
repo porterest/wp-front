@@ -29,6 +29,10 @@ interface BetLinesProps {
 
 const LOCAL_KEY = "userBetVector";
 
+// Функция для проверки, равен ли вектор (почти) нулю (с небольшим эпсилон)
+const isVectorZero = (vec: THREE.Vector3, eps = 0.000001): boolean =>
+  Math.abs(vec.x) < eps && Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
+
 const BetLines: React.FC<BetLinesProps> = ({
                                              previousBetEnd,
                                              userPreviousBet,
@@ -68,7 +72,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, []);
 
   // ===== aggregatorClipped (Жёлтая стрелка) =====
-  // Обрезаем previousBetEnd до maxYellowLength.
+  // Берём previousBetEnd и обрезаем его по maxYellowLength.
   const aggregatorClipped = useMemo(() => {
     const agg = previousBetEnd.clone();
     if (agg.length() > maxYellowLength) {
@@ -78,11 +82,20 @@ const BetLines: React.FC<BetLinesProps> = ({
     return agg;
   }, [previousBetEnd, maxYellowLength]);
 
+  // ===== Флаг: userPreviousBet равен (0,0,0)?
+  const isUserBetZero = useMemo(
+    () =>
+      userPreviousBet.x === 0 &&
+      userPreviousBet.y === 0 &&
+      userPreviousBet.z === 0,
+    [userPreviousBet]
+  );
+
   // ===== Инициализация белого вектора (betPosition) =====
   // Логика:
   // 1) Если в LS есть сохранённый вектор – используем его (без обрезания).
   // 2) Если LS пуст:
-  //    a) Если и userPreviousBet, и агрегатор (aggregatorClipped) равны (0,0,0) → возвращаем default (3,3,0)
+  //    a) Если и userPreviousBet, и агрегатор равны (0,0,0) → возвращаем default (3,3,0)
   //    b) Если userPreviousBet равен (0,0,0), а агрегатор не равен (0,0,0) → возвращаем aggregatorClipped + минимальное смещение по axisMode
   //    c) Иначе – используем userPreviousBet (при необходимости обрезая его до maxWhiteLength).
   const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(() => {
@@ -99,28 +112,18 @@ const BetLines: React.FC<BetLinesProps> = ({
     } catch (err) {
       console.error("[BetLines] Ошибка парсинга LS:", err);
     }
-    const isUserBetZero =
-      userPreviousBet.x === 0 &&
-      userPreviousBet.y === 0 &&
-      userPreviousBet.z === 0;
-    const isAggZero =
-      aggregatorClipped.x === 0 &&
-      aggregatorClipped.y === 0 &&
-      aggregatorClipped.z === 0;
-    if (isUserBetZero && isAggZero) {
+    if (isUserBetZero && isVectorZero(aggregatorClipped)) {
       console.log("[BetLines] Ситуация: нет ни aggregatorClipped, ни betPosition. Устанавливаем default (3,3,0)");
       return new THREE.Vector3(3, 3, 0);
     }
-    if (isUserBetZero && !isAggZero) {
+    if (isUserBetZero && !isVectorZero(aggregatorClipped)) {
       console.log("[BetLines] Ситуация: нет betPosition, но есть aggregatorClipped. Добавляем минимальное смещение.");
-      const minDelta = 0.0001;
+      const minDelta = 0.01; // минимальное смещение (можете подстроить)
       if (axisMode === "X") {
         return aggregatorClipped.clone().add(new THREE.Vector3(minDelta, 0, 0));
       } else if (axisMode === "Y") {
         return aggregatorClipped.clone().add(new THREE.Vector3(0, minDelta, 0));
       }
-      console.log("aggregatorClipped")
-      console.log(aggregatorClipped)
       return aggregatorClipped.clone();
     }
     console.log("[BetLines] Ситуация: есть и aggregatorClipped, и betPosition (userPreviousBet задан).");
@@ -132,7 +135,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     return userPreviousBet.clone();
   });
 
-  // При изменении userPreviousBet (например, после выбора пары) обновляем betPosition.
+  // При изменении userPreviousBet (например, после выбора пары) – обновляем betPosition.
   useEffect(() => {
     console.log("[BetLines] userPreviousBet изменился:", userPreviousBet.toArray());
     if (
@@ -206,7 +209,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       sphereRef.current = null;
       return;
     } else {
-      console.log("[BetLines] ЕСТЬ и aggregatorClipped и betPosition – создаём белые объекты. betPosition =", betPosition.toArray());
+      console.log("[BetLines] ЕСТЬ и aggregatorClipped, и betPosition – создаём белые объекты. betPosition =", betPosition.toArray());
     }
 
     const wGeom = new LineGeometry();
@@ -232,33 +235,51 @@ const BetLines: React.FC<BetLinesProps> = ({
       new THREE.MeshStandardMaterial({ color: "white" })
     );
     wCone.position.copy(betPosition);
-    const dirW = betPosition.clone().sub(aggregatorClipped).normalize();
-    if (dirW.length() > 0) {
-      const up = new THREE.Vector3(0, 1, 0);
-      const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
-      wCone.setRotationFromQuaternion(quatW);
+    // Если userPreviousBet равен (0,0,0), заставляем белый конус смотреть так же, как жёлтый.
+    if (isUserBetZero) {
+      const dirAgg = aggregatorClipped.clone().normalize();
+      if (dirAgg.length() > 0) {
+        const up = new THREE.Vector3(0, 1, 0);
+        const quat = new THREE.Quaternion().setFromUnitVectors(up, dirAgg);
+        wCone.setRotationFromQuaternion(quat);
+      }
+    } else {
+      const dirW = betPosition.clone().sub(aggregatorClipped).normalize();
+      if (dirW.length() > 0) {
+        const up = new THREE.Vector3(0, 1, 0);
+        const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
+        wCone.setRotationFromQuaternion(quatW);
+      }
     }
     whiteConeRef.current = wCone;
     scene.add(wCone);
 
-    const sph = new THREE.Mesh(
-      new THREE.SphereGeometry(0.5, 16, 16),
-      new THREE.MeshStandardMaterial({
-        color: "blue",
-        opacity: 0.5,
-        transparent: true
-      })
-    );
-    sph.position.copy(betPosition);
-    sphereRef.current = sph;
-    scene.add(sph);
+    // Создаём сферу только если betPosition не равен (0,0,0)
+    if (!isVectorZero(betPosition)) {
+      const sph = new THREE.Mesh(
+        new THREE.SphereGeometry(0.5, 16, 16),
+        new THREE.MeshStandardMaterial({
+          color: "blue",
+          opacity: 0.5,
+          transparent: true
+        })
+      );
+      sph.position.copy(betPosition);
+      sphereRef.current = sph;
+      scene.add(sph);
+    } else {
+      if (sphereRef.current) {
+        scene.remove(sphereRef.current);
+        sphereRef.current = null;
+      }
+    }
 
     return () => {
       if (whiteLineRef.current) scene.remove(whiteLineRef.current);
       if (whiteConeRef.current) scene.remove(whiteConeRef.current);
       if (sphereRef.current) scene.remove(sphereRef.current);
     };
-  }, [aggregatorClipped, betPosition, scene]);
+  }, [aggregatorClipped, betPosition, scene, isUserBetZero]);
 
   // ===== Обновление объектов при изменении aggregatorClipped или betPosition =====
   useEffect(() => {
@@ -297,17 +318,27 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     if (whiteConeRef.current && betPosition) {
       whiteConeRef.current.position.copy(betPosition);
-      const dirW = betPosition.clone().sub(aggregatorClipped).normalize();
-      if (dirW.length() > 0) {
-        const up = new THREE.Vector3(0, 1, 0);
-        const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
-        whiteConeRef.current.setRotationFromQuaternion(quatW);
+      // Если userPreviousBet равен (0,0,0), белый конус должен смотреть в направлении агрегатора.
+      if (isUserBetZero) {
+        const dirAgg = aggregatorClipped.clone().normalize();
+        if (dirAgg.length() > 0) {
+          const up = new THREE.Vector3(0, 1, 0);
+          const quat = new THREE.Quaternion().setFromUnitVectors(up, dirAgg);
+          whiteConeRef.current.setRotationFromQuaternion(quat);
+        }
+      } else {
+        const dirW = betPosition.clone().sub(aggregatorClipped).normalize();
+        if (dirW.length() > 0) {
+          const up = new THREE.Vector3(0, 1, 0);
+          const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
+          whiteConeRef.current.setRotationFromQuaternion(quatW);
+        }
       }
     }
     if (sphereRef.current && betPosition) {
       sphereRef.current.position.copy(betPosition);
     }
-  }, [aggregatorClipped, betPosition]);
+  }, [aggregatorClipped, betPosition, isUserBetZero]);
 
   // ===== Drag-логика =====
   const isClickOnSphere = useCallback((evt: PointerEvent) => {
@@ -436,12 +467,6 @@ const BetLines: React.FC<BetLinesProps> = ({
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="white" />
       </mesh>
-
-      {/*/!* Сфера (drag point) *!/*/}
-      {/*<mesh ref={sphereRef} scale={[0.5, 0.5, 0.5]}>*/}
-      {/*  <sphereGeometry args={[1, 16, 16]} />*/}
-      {/*  <meshStandardMaterial color="blue" opacity={0.5} transparent />*/}
-      {/*</mesh>*/}
     </>
   );
 };
