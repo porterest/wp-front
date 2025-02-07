@@ -11,8 +11,6 @@ import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { fetchUserBalances } from "../services/api";
-import debounce from "lodash.debounce";
-import { DebouncedFunc } from "lodash";
 
 interface BetLinesProps {
   previousBetEnd: THREE.Vector3;  // Жёлтая (агрегатор)
@@ -34,17 +32,6 @@ interface BetLinesProps {
 
 const LOCAL_KEY = "userBetVector";
 
-/**
- * Вспомогательная функция, чтобы TypeScript не ругался на debounce(...) с Vector3
- */
-function debounceVector3(
-  fn: (pos: THREE.Vector3) => void,
-  wait: number
-): DebouncedFunc<(pos: THREE.Vector3) => void> {
-  // @ts-expect-error meow
-  return debounce((...args: [THREE.Vector3]) => fn(...args), wait);
-}
-
 const BetLines: React.FC<BetLinesProps> = ({
                                              previousBetEnd,
                                              userPreviousBet,
@@ -56,122 +43,88 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              axisMode,
                                              setBetAmount,
                                            }) => {
+  // THREE
   const { gl, camera, scene } = useThree();
-
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
 
-  // ---------- Состояния ----------
-  const [isDragging, setIsDragging] = useState(false);
-  const [userBalance, setUserBalance] = useState(0);
-
-  // ---------- Ссылки на объекты ----------
+  // Ссылки на объекты
   const yellowLineRef = useRef<Line2|null>(null);
   const whiteLineRef = useRef<Line2|null>(null);
-  const sphereRef = useRef<THREE.Mesh|null>(null);
   const yellowConeRef = useRef<THREE.Mesh|null>(null);
   const whiteConeRef = useRef<THREE.Mesh|null>(null);
+  const sphereRef = useRef<THREE.Mesh|null>(null);
 
-  // ---------- 1) Загружаем баланс ----------
+  // Состояние «drag»
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Баланс юзера
+  const [userBalance, setUserBalance] = useState(0);
   useEffect(() => {
     (async () => {
       try {
         const { balance } = await fetchUserBalances();
         setUserBalance(balance);
         console.log("[BetLines] userBalance =", balance);
+
       } catch (err) {
         console.error("[BetLines] Failed to fetch user balances:", err);
       }
     })();
   }, []);
 
-  // ---------- 2) aggregatorClipped (жёлтая) ----------
-  // Обрезаем previousBetEnd до maxYellowLength
+  // 1) aggregatorClipped: обрезаем previousBetEnd (жёлтая) по maxYellowLength
   const aggregatorClipped = useMemo(() => {
-    const depositVec = previousBetEnd.clone();
-    if (depositVec.length() > maxYellowLength) {
-      depositVec.setLength(maxYellowLength);
+    const v = previousBetEnd.clone();
+    if (v.length()>maxYellowLength) {
+      v.setLength(maxYellowLength);
     }
-    console.log("[BetLines] aggregatorClipped computed:", depositVec.toArray());
-    return depositVec;
+    return v;
   }, [previousBetEnd, maxYellowLength]);
 
-  // ---------- 3) Начальное положение белой стрелки (betPosition) ----------
-  // Читаем из localStorage, если там есть; иначе userPreviousBet
+  // 2) Начальное положение белого вектора
+  //   Если localStorage есть — берём его (не обрезаем);
+  //   Иначе — userPreviousBet (тоже не обрезаем).
   const [betPosition, setBetPosition] = useState<THREE.Vector3>(() => {
-    // Смотрим localStorage
+    // Для отладки
     try {
       const stored = localStorage.getItem(LOCAL_KEY);
+      console.log("[BetLines] localStorage userBetVector =", stored);
       if (stored) {
         const arr = JSON.parse(stored);
-        if (Array.isArray(arr) && arr.length >= 3) {
-          const localVec = new THREE.Vector3(arr[0], arr[1], arr[2]);
-          console.log("[BetLines] Loading betPosition from localStorage:", localVec.toArray());
-          return localVec;
+        if (Array.isArray(arr) && arr.length>=3) {
+          const fromLS = new THREE.Vector3(arr[0], arr[1], arr[2]);
+          console.log("[BetLines] using localStorage vector:", fromLS.toArray());
+          return fromLS;
         }
       }
     } catch (err) {
-      console.error("[BetLines] parse stored bet error:", err);
+      console.error("[BetLines] parse localStorage error:", err);
     }
-    // Если нет localStorage — берём userPreviousBet
-    console.log("[BetLines] betPosition from userPreviousBet:", userPreviousBet.toArray());
+    console.log("[BetLines] using userPreviousBet:", userPreviousBet.toArray());
     return userPreviousBet.clone();
   });
 
-  // При mount (или обновлении aggregatorClipped) — обрезаем betPosition
+  // Если userPreviousBet меняется извне, обновим betPosition (не обрезаем)
   useEffect(() => {
-    const dir = betPosition.clone().sub(aggregatorClipped);
-    if (dir.length() > maxWhiteLength) {
-      dir.setLength(maxWhiteLength);
-      const clippedPos = aggregatorClipped.clone().add(dir);
-      setBetPosition(clippedPos);
-      console.log("[BetLines] betPosition clipped at mount:", clippedPos.toArray());
-    }
-  }, []); // Запускаем один раз при mount
-
-  // Если userPreviousBet меняется (из пропов) — тоже обновимся
-  useEffect(() => {
-    // Для отладки
     console.log("[BetLines] userPreviousBet changed =>", userPreviousBet.toArray());
-    const offset = userPreviousBet.clone().sub(aggregatorClipped);
-    if (offset.length() > maxWhiteLength) {
-      offset.setLength(maxWhiteLength);
-      userPreviousBet.copy(aggregatorClipped).add(offset);
-    }
     setBetPosition(userPreviousBet.clone());
-  }, [userPreviousBet, aggregatorClipped, maxWhiteLength]);
+  }, [userPreviousBet]);
 
-  // ---------- 4) Debounced обновление белой линии ----------
-  // Помогаем TypeScript через функцию debounceVector3
-  const debouncedUpdateWhiteLine = useMemo(() => {
-    return debounceVector3((pos: THREE.Vector3) => {
-      if (!whiteLineRef.current || !whiteLineRef.current.geometry) return;
-      const geom = whiteLineRef.current.geometry as LineGeometry;
-      geom.setPositions([
-        aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z,
-        pos.x, pos.y, pos.z
-      ]);
-      geom.computeBoundingSphere?.();
-      console.log("[BetLines] debouncedUpdateWhiteLine =>", pos.toArray());
-    }, 15);
-  }, [aggregatorClipped]);
-
-  // ---------- 5) Создание линий, конусов, сферы (один раз) ----------
+  // 3) Создаём линии, конусы, сферу — один раз
   useEffect(() => {
-    console.log("[BetLines] Creating lines, cones, sphere (ONE TIME)");
+    console.log("[BetLines] creating lines, cones, sphere (once)");
 
-    // --- Жёлтая линия ---
+    // Жёлтая линия
     const yGeom = new LineGeometry();
     yGeom.setPositions([
       0,0,0,
-      aggregatorClipped.x,
-      aggregatorClipped.y,
-      aggregatorClipped.z
+      aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z
     ]);
     const yMat = new LineMaterial({
       color:"yellow",
       linewidth:3,
-      resolution:new THREE.Vector2(window.innerWidth, window.innerHeight)
+      resolution:new THREE.Vector2(window.innerWidth,window.innerHeight),
     });
     const yLine = new Line2(yGeom, yMat);
     yellowLineRef.current = yLine;
@@ -194,16 +147,16 @@ const BetLines: React.FC<BetLinesProps> = ({
     yellowConeRef.current = yCone;
     scene.add(yCone);
 
-    // --- Белая линия ---
+    // Белая линия
     const wGeom = new LineGeometry();
     wGeom.setPositions([
       aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z,
-      betPosition.x, betPosition.y, betPosition.z
+      betPosition.x,       betPosition.y,       betPosition.z
     ]);
     const wMat = new LineMaterial({
       color:"white",
       linewidth:3,
-      resolution:new THREE.Vector2(window.innerWidth, window.innerHeight)
+      resolution:new THREE.Vector2(window.innerWidth,window.innerHeight),
     });
     const wLine = new Line2(wGeom, wMat);
     whiteLineRef.current = wLine;
@@ -232,7 +185,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       new THREE.MeshStandardMaterial({
         color:"blue",
         opacity:0.5,
-        transparent:true
+        transparent:true,
       })
     );
     sph.position.copy(betPosition);
@@ -247,18 +200,15 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (wCone) scene.remove(wCone);
       if (sph)   scene.remove(sph);
     };
-  }, [scene, aggregatorClipped, betPosition]);
+  }, []);
 
-  // ---------- 6) useEffect: при изменении aggregatorClipped / betPosition, обновляем объекты ----------
+  // 4) Обновление объектов при смене aggregatorClipped или betPosition
   useEffect(() => {
-    console.log("[BetLines useEffect] aggregator=", aggregatorClipped.toArray(),
-      "betPosition=", betPosition.toArray());
-
-    // Жёлтый line + конус
+    // Жёлтая линия + конус
     if (yellowLineRef.current?.geometry) {
       const geom = yellowLineRef.current.geometry as LineGeometry;
       geom.setPositions([
-        0, 0, 0,
+        0,0,0,
         aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z
       ]);
       geom.computeBoundingSphere?.();
@@ -273,7 +223,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
 
-    // Белая line + конус + сфера
+    // Белая линия + конус + сфера
     if (whiteLineRef.current?.geometry) {
       const geom = whiteLineRef.current.geometry as LineGeometry;
       geom.setPositions([
@@ -294,9 +244,15 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (sphereRef.current) {
       sphereRef.current.position.copy(betPosition);
     }
-  }, [aggregatorClipped, betPosition]);
 
-  // ---------- 7) Drag-логика ----------
+  }, [aggregatorClipped, betPosition, scene]);
+
+  // 5) Логика Drag
+  const updatePlane = useCallback(() => {
+    const camDir = camera.getWorldDirection(new THREE.Vector3());
+    plane.current.setFromNormalAndCoplanarPoint(camDir, betPosition);
+  }, [camera, betPosition]);
+
   const isClickOnSphere = useCallback((evt: PointerEvent) => {
     if (!sphereRef.current) return false;
     const rect = gl.domElement.getBoundingClientRect();
@@ -309,24 +265,18 @@ const BetLines: React.FC<BetLinesProps> = ({
     return hits.length>0;
   }, [camera, gl.domElement]);
 
-  const updatePlane = useCallback(() => {
-    const camDir = camera.getWorldDirection(new THREE.Vector3());
-    plane.current.setFromNormalAndCoplanarPoint(camDir, betPosition);
-    console.log("[BetLines] updatePlane => betPosition=", betPosition.toArray());
-  }, [camera, betPosition]);
-
   const handlePointerDown = useCallback((evt: PointerEvent) => {
-    console.log("[BetLines] pointerDown");
     if (isClickOnSphere(evt)) {
       setIsDragging(true);
       onDragging(true);
       updatePlane();
-      console.log("[BetLines] start dragging");
+      console.log("[BetLines] pointerDown => dragging start");
     }
   }, [isClickOnSphere, onDragging, updatePlane]);
 
   const handlePointerMove = useCallback((evt: PointerEvent) => {
     if (!isDragging) return;
+
     const rect = gl.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(
       ((evt.clientX - rect.left)/rect.width)*2 -1,
@@ -342,68 +292,68 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     // direction = intersectPt - aggregatorClipped
     const direction = intersectPt.clone().sub(aggregatorClipped);
+    let newPos = betPosition.clone();
 
-    // newPos = aggregatorClipped + direction( axisMode ) - then clamp
-    let newPos = aggregatorClipped.clone();
-
-    if (axisMode==="X") {
-      newPos.x += direction.x;
-    } else if (axisMode==="Y") {
-      newPos.y += direction.y;
+    // Если axisMode="X", меняем только X;
+    // Если "Y", меняем только Y
+    // ИНАЧЕ — или если axisMode не задан — free movement
+    if (axisMode === "X") {
+      newPos.x = aggregatorClipped.x + direction.x;
+    } else if (axisMode === "Y") {
+      newPos.y = aggregatorClipped.y + direction.y;
     } else {
-      newPos.add(direction);
+      newPos = aggregatorClipped.clone().add(direction);
     }
 
     // Обрезаем по maxWhiteLength
     const finalDir = newPos.clone().sub(aggregatorClipped);
-    if (finalDir.length() > maxWhiteLength) {
+    if (finalDir.length()>maxWhiteLength) {
       finalDir.setLength(maxWhiteLength);
       newPos = aggregatorClipped.clone().add(finalDir);
     }
 
-    console.log("[BetLines] pointerMove => aggregator=", aggregatorClipped.toArray(),
-      "direction=", direction.toArray(),
-      "newPos=", newPos.toArray()
-    );
-
     setBetPosition(newPos);
-    debouncedUpdateWhiteLine(newPos);
 
-    // fraction
     const fraction = finalDir.length()/maxWhiteLength;
-    setBetAmount(userBalance * fraction);
+    setBetAmount(userBalance*fraction);
 
     handleDrag(newPos);
+
   }, [
-    isDragging, aggregatorClipped, axisMode, camera, gl.domElement,
-    maxWhiteLength, userBalance, setBetAmount,
-    debouncedUpdateWhiteLine, handleDrag
+    isDragging, aggregatorClipped, axisMode,
+    betPosition, camera, gl.domElement,
+    maxWhiteLength, userBalance,
+    setBetAmount, handleDrag
   ]);
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging) return;
+
     setIsDragging(false);
     onDragging(false);
 
+    // При отпускании: считаем финальную ставку
     const finalDir = betPosition.clone().sub(aggregatorClipped);
-    const fraction = Math.min(finalDir.length()/maxWhiteLength, 1);
+    const fraction = Math.min(finalDir.length()/maxWhiteLength,1);
     const betAmt = fraction * userBalance;
     setBetAmount(betAmt);
 
-    // Сохраняем в localStorage (финальное положение)
-    // localStorage.setItem(LOCAL_KEY, JSON.stringify(betPosition.toArray()));
-    // console.log("[BetLines] pointerUp => final betPos=", betPosition.toArray(), " => saved in localStorage");
-
+    // Вызываем диалог confirm
     onShowConfirmButton(true, {
       amount: betAmt,
       predicted_vector: [betPosition.x, betPosition.y, betPosition.z],
     });
+
+    console.log("[BetLines] pointerUp => final bet:", betPosition.toArray(), " => betAmt =", betAmt);
+
   }, [
-    isDragging, onDragging, aggregatorClipped,
-    betPosition, maxWhiteLength, userBalance,
-    setBetAmount, onShowConfirmButton
+    isDragging, aggregatorClipped,
+    betPosition, maxWhiteLength,
+    userBalance, setBetAmount,
+    onDragging, onShowConfirmButton
   ]);
 
+  // Слушатели
   useEffect(() => {
     const canvas = gl.domElement;
     canvas.addEventListener("pointerdown", handlePointerDown);
@@ -416,6 +366,13 @@ const BetLines: React.FC<BetLinesProps> = ({
       canvas.removeEventListener("pointerup", handlePointerUp);
     };
   }, [gl.domElement, handlePointerDown, handlePointerMove, handlePointerUp]);
+
+  // Логируем всё localStorage при монтировании (чтобы проверить, что там лежит):
+  useEffect(() => {
+    console.log("[BetLines] localStorage snapshot:", { ...localStorage });
+    console.log("[BetLines] localStorage userBetVector =",
+      localStorage.getItem(LOCAL_KEY));
+  }, []);
 
   return (
     <>
@@ -431,7 +388,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         <meshStandardMaterial color="white" />
       </mesh>
 
-      {/* Сфера (для drag) */}
+      {/* Сфера (Drag) */}
       <mesh ref={sphereRef} scale={[0.5,0.5,0.5]}>
         <sphereGeometry args={[1,16,16]} />
         <meshStandardMaterial color="blue" opacity={0.5} transparent />
