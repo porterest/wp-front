@@ -29,7 +29,7 @@ interface BetLinesProps {
 
 const LOCAL_KEY = "userBetVector";
 
-// Функция для проверки, равен ли вектор (почти) нулю (с небольшим эпсилон)
+// Функция для проверки, равен ли вектор (почти) нулю (с учетом эпсилон)
 const isVectorZero = (vec: THREE.Vector3, eps = 0.000001): boolean =>
   Math.abs(vec.x) < eps && Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
 
@@ -72,7 +72,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, []);
 
   // ===== aggregatorClipped (Жёлтая стрелка) =====
-  // Берём previousBetEnd и обрезаем его по maxYellowLength.
+  // Обрезаем previousBetEnd до maxYellowLength.
   const aggregatorClipped = useMemo(() => {
     const agg = previousBetEnd.clone();
     if (agg.length() > maxYellowLength) {
@@ -95,8 +95,8 @@ const BetLines: React.FC<BetLinesProps> = ({
   // Логика:
   // 1) Если в LS есть сохранённый вектор – используем его (без обрезания).
   // 2) Если LS пуст:
-  //    a) Если и userPreviousBet, и агрегатор равны (0,0,0) → возвращаем default (3,3,0)
-  //    b) Если userPreviousBet равен (0,0,0), а агрегатор не равен (0,0,0) → возвращаем aggregatorClipped + минимальное смещение по axisMode
+  //    a) Если и userPreviousBet, и агрегатор равны (0,0,0) → возвращаем default (3,3,0).
+  //    b) Если userPreviousBet равен (0,0,0), а агрегатор не равен (0,0,0) → возвращаем aggregatorClipped + минимальное смещение по axisMode.
   //    c) Иначе – используем userPreviousBet (при необходимости обрезая его до maxWhiteLength).
   const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(() => {
     try {
@@ -118,7 +118,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     if (isUserBetZero && !isVectorZero(aggregatorClipped)) {
       console.log("[BetLines] Ситуация: нет betPosition, но есть aggregatorClipped. Добавляем минимальное смещение.");
-      const minDelta = 0.01; // минимальное смещение (можете подстроить)
+      const minDelta = 0.01; // минимальное смещение (подберите по необходимости)
       if (axisMode === "X") {
         return aggregatorClipped.clone().add(new THREE.Vector3(minDelta, 0, 0));
       } else if (axisMode === "Y") {
@@ -135,16 +135,22 @@ const BetLines: React.FC<BetLinesProps> = ({
     return userPreviousBet.clone();
   });
 
-  // При изменении userPreviousBet (например, после выбора пары) – обновляем betPosition.
+  // При изменении userPreviousBet (например, после выбора пары) – обновляем betPosition,
+  // но если в LS уже есть сохранённый вектор, то не обновляем.
   useEffect(() => {
     console.log("[BetLines] userPreviousBet изменился:", userPreviousBet.toArray());
+    const stored = localStorage.getItem(LOCAL_KEY);
+    if (stored) {
+      console.log("[BetLines] LS присутствует – не обновляем betPosition из userPreviousBet");
+      return;
+    }
     if (
       userPreviousBet.x === 0 &&
       userPreviousBet.y === 0 &&
       userPreviousBet.z === 0
     ) {
       console.log("[BetLines] userPreviousBet равен (0,0,0) – устанавливаем default (3,3,0) для betPosition");
-      setBetPosition(new THREE.Vector3(aggregatorClipped.x + 0.0001, aggregatorClipped.y + 0.0001, 0));
+      setBetPosition(new THREE.Vector3(3, 3, 0));
       return;
     }
     const offset = userPreviousBet.clone().sub(aggregatorClipped);
@@ -235,7 +241,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       new THREE.MeshStandardMaterial({ color: "white" })
     );
     wCone.position.copy(betPosition);
-    // Если userPreviousBet равен (0,0,0), заставляем белый конус смотреть так же, как жёлтый.
+    // Если пользовательской ставки нет (userPreviousBet равен (0,0,0)), заставляем белый конус смотреть в том же направлении, что и жёлтый.
     if (isUserBetZero) {
       const dirAgg = aggregatorClipped.clone().normalize();
       if (dirAgg.length() > 0) {
@@ -254,7 +260,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     whiteConeRef.current = wCone;
     scene.add(wCone);
 
-    // Создаём сферу только если betPosition не равен (0,0,0)
+    // Создаём drag‑point (синяя сфера) только если betPosition не равен (0,0,0)
     if (!isVectorZero(betPosition)) {
       const sph = new THREE.Mesh(
         new THREE.SphereGeometry(0.5, 16, 16),
@@ -318,7 +324,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     if (whiteConeRef.current && betPosition) {
       whiteConeRef.current.position.copy(betPosition);
-      // Если userPreviousBet равен (0,0,0), белый конус должен смотреть в направлении агрегатора.
+      // Если пользовательской ставки нет (userPreviousBet равен (0,0,0)), белый конус смотрит в направлении агрегатора.
       if (isUserBetZero) {
         const dirAgg = aggregatorClipped.clone().normalize();
         if (dirAgg.length() > 0) {
