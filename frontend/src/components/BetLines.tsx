@@ -80,36 +80,30 @@ const BetLines: React.FC<BetLinesProps> = ({
   // Определяем начальный betPosition (белая стрелка)
   //   1) Если localStorage есть => используем ЕГО (без обрезания!)
   //   2) Иначе => userPreviousBet, но обрезаем
-  const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(() => {
+  const [betPosition, setBetPosition] = useState<THREE.Vector3>(() => {
     try {
       const stored = localStorage.getItem(LOCAL_KEY);
+      console.log("[BetLines] localStorage content =>", stored);
       if (stored) {
         const arr = JSON.parse(stored);
-        if (Array.isArray(arr) && arr.length >= 3) {
-          return new THREE.Vector3(arr[0], arr[1], arr[2]);
+        if (Array.isArray(arr) && arr.length>=3) {
+          const fromLS = new THREE.Vector3(arr[0], arr[1], arr[2]);
+          console.log("[BetLines] Using from localStorage =>", fromLS.toArray());
+          return fromLS;
         }
       }
     } catch (err) {
       console.error("[BetLines] parse localStorage error:", err);
     }
-    // Если нет в LS, проверяем userPreviousBet.
-    // Если он равен (0,0,0), возвращаем null, чтобы белые объекты не создавались.
-    if (
-      userPreviousBet.x === 0 &&
-      userPreviousBet.y === 0 &&
-      userPreviousBet.z === 0
-    ) {
-      return null;
-    }
-    // Иначе возвращаем обрезанный userPreviousBet
+    // Иначе => обрезаем userPreviousBet
     const dir = userPreviousBet.clone().sub(aggregatorClipped);
-    if (dir.length() > maxWhiteLength) {
+    if (dir.length()> maxWhiteLength) {
       dir.setLength(maxWhiteLength);
       userPreviousBet.copy(aggregatorClipped).add(dir);
     }
+    console.log("[BetLines] Using userPreviousBet =>", userPreviousBet.toArray());
     return userPreviousBet.clone();
   });
-
 
   // Если userPreviousBet приходит новый (из бэка), перезапишем betPosition — но обрезаем
   useEffect(() => {
@@ -173,6 +167,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     // === Белая линия
     {
+
       const wGeom = new LineGeometry();
       wGeom.setPositions([
         aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z,
