@@ -134,20 +134,33 @@ const BetLines: React.FC<BetLinesProps> = ({
   // но если LS уже содержит значение, то оставляем его.
   useEffect(() => {
     console.log("[BetLines] userPreviousBet изменился:", userPreviousBet.toArray());
+
+    // Если в localStorage уже есть сохранённый вектор, ничего не обновляем.
     const stored = localStorage.getItem(LOCAL_KEY);
     if (stored) {
       console.log("[BetLines] LS присутствует – не обновляем betPosition из userPreviousBet");
       return;
     }
+
+    // Если userPreviousBet равен (0,0,0), то устанавливаем betPosition как aggregatorClipped + минимальное смещение (0.001) по выбранной оси.
     if (
       userPreviousBet.x === 0 &&
       userPreviousBet.y === 0 &&
       userPreviousBet.z === 0
     ) {
-      console.log("[BetLines] userPreviousBet равен (0,0,0) – устанавливаем default (3,3,0) для betPosition");
-      setBetPosition(new THREE.Vector3(3, 3, 0));
+      console.log("[BetLines] userPreviousBet равен (0,0,0) – устанавливаем betPosition как aggregatorClipped + минимальное смещение (0.001) по оси");
+      if (axisMode === "X") {
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0, 0)));
+      } else if (axisMode === "Y") {
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0, 0.001, 0)));
+      } else {
+        // Если по каким-то причинам axisMode не задан, добавляем смещение по обоим осям
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0.001, 0)));
+      }
       return;
     }
+
+    // В остальных случаях (когда userPreviousBet задан) — вычисляем offset относительно агрегатора
     const offset = userPreviousBet.clone().sub(aggregatorClipped);
     if (offset.length() > maxWhiteLength) {
       offset.setLength(maxWhiteLength);
