@@ -437,11 +437,11 @@ const BetLines: React.FC<BetLinesProps> = ({
         <meshStandardMaterial color="white" />
       </mesh>
 
-      {/* Сфера (drag point) */}
-      <mesh ref={sphereRef} scale={[0.5, 0.5, 0.5]}>
-        <sphereGeometry args={[1, 16, 16]} />
-        <meshStandardMaterial color="blue" opacity={0.5} transparent />
-      </mesh>
+      {/*/!* Сфера (drag point) *!/*/}
+      {/*<mesh ref={sphereRef} scale={[0.5, 0.5, 0.5]}>*/}
+      {/*  <sphereGeometry args={[1, 16, 16]} />*/}
+      {/*  <meshStandardMaterial color="blue" opacity={0.5} transparent />*/}
+      {/*</mesh>*/}
     </>
   );
 };
