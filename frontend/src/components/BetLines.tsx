@@ -113,12 +113,14 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     if (isUserBetZero && !isAggZero) {
       console.log("[BetLines] Ситуация: нет betPosition, но есть aggregatorClipped. Добавляем минимальное смещение.");
-      const minDelta = 0.001;
+      const minDelta = 0.0001;
       if (axisMode === "X") {
         return aggregatorClipped.clone().add(new THREE.Vector3(minDelta, 0, 0));
       } else if (axisMode === "Y") {
         return aggregatorClipped.clone().add(new THREE.Vector3(0, minDelta, 0));
       }
+      console.log("aggregatorClipped")
+      console.log(aggregatorClipped)
       return aggregatorClipped.clone();
     }
     console.log("[BetLines] Ситуация: есть и aggregatorClipped, и betPosition (userPreviousBet задан).");
