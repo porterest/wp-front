@@ -279,7 +279,7 @@ const GamePage: React.FC = () => {
         <GraphModes
           axisMode={axisMode}
           currentMode={currentMode}
-          selectedPair={selectedPair}
+          // selectedPair={selectedPair}
           data={data.candles || []}
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
