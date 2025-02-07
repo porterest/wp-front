@@ -109,11 +109,11 @@ const BetLines: React.FC<BetLinesProps> = ({
     // Если LS пуст, то:
     if (isUserBetZero && isVectorZero(aggregatorClipped)) {
       console.log("[BetLines] Ситуация: нет ни агрегатора, ни ставки. Устанавливаем default (3,3,0)");
-      return new THREE.Vector3(0.001, 0.001, 0);
+      return new THREE.Vector3(3, 3, 0);
     }
     if (isUserBetZero && !isVectorZero(aggregatorClipped)) {
       console.log("[BetLines] Ситуация: нет userPreviousBet, но есть агрегатор. Добавляем минимальное смещение.");
-      const minDelta = 0.01; // минимальное смещение (настраиваемое)
+      const minDelta = 0.0001; // минимальное смещение (настраиваемое)
       if (axisMode === "X") {
         return aggregatorClipped.clone().add(new THREE.Vector3(minDelta, 0, 0));
       } else if (axisMode === "Y") {
