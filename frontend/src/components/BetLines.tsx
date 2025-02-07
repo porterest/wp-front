@@ -13,8 +13,8 @@ import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { fetchUserBalances } from "../services/api";
 
 interface BetLinesProps {
-  previousBetEnd: THREE.Vector3;   // Жёлтая стрелка
-  userPreviousBet: THREE.Vector3;  // Белая стрелка (может быть (0,0,0), значит «нет пары»)
+  previousBetEnd: THREE.Vector3;   // Жёлтая стрелка (агрегатор)
+  userPreviousBet: THREE.Vector3;  // Белая стрелка (прошлая ставка), если (0,0,0) – пара не выбрана
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
@@ -40,72 +40,122 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              axisMode,
                                              setBetAmount,
                                            }) => {
-  // ======== Three & references
+  // ===== THREE & references =====
   const { gl, camera, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
 
-  const yellowLineRef = useRef<Line2|null>(null);
-  const yellowConeRef = useRef<THREE.Mesh|null>(null);
+  const yellowLineRef = useRef<Line2 | null>(null);
+  const yellowConeRef = useRef<THREE.Mesh | null>(null);
 
-  // ---- Белая линия, конус, сфера (создаём/обновляем только если userPreviousBet != (0,0,0))
-  const whiteLineRef = useRef<Line2|null>(null);
-  const whiteConeRef = useRef<THREE.Mesh|null>(null);
-  const sphereRef = useRef<THREE.Mesh|null>(null);
+  // Белые объекты (создаём только если userPreviousBet != (0,0,0))
+  const whiteLineRef = useRef<Line2 | null>(null);
+  const whiteConeRef = useRef<THREE.Mesh | null>(null);
+  const sphereRef = useRef<THREE.Mesh | null>(null);
 
-  // Drag
+  // ===== Drag state =====
   const [isDragging, setIsDragging] = useState(false);
 
-  // User balance
+  // ===== Balance =====
   const [userBalance, setUserBalance] = useState(0);
   useEffect(() => {
     (async () => {
       try {
         const { balance } = await fetchUserBalances();
         setUserBalance(balance);
-      } catch (err) {
-        console.error("[BetLines] Failed to fetch user balances:", err);
+      } catch (error) {
+        console.error("[BetLines] Failed to fetch user balances:", error);
       }
     })();
   }, []);
 
-  // aggregatorClipped (жёлтая)
+  // ===== aggregatorClipped (жёлтая стрелка) =====
   const aggregatorClipped = useMemo(() => {
-    const agg = previousBetEnd.clone();
-    if (agg.length() > maxYellowLength) agg.setLength(maxYellowLength);
-    return agg;
+    const depositVec = previousBetEnd.clone();
+    if (depositVec.length() > maxYellowLength) {
+      depositVec.setLength(maxYellowLength);
+    }
+    return depositVec;
   }, [previousBetEnd, maxYellowLength]);
 
-  // ===== Состояние белой стрелки (betPosition), но создаём её объекты ТОЛЬКО если userPreviousBet!= (0,0,0)
-  const [betPosition, setBetPosition] = useState<THREE.Vector3>(new THREE.Vector3(0,0,0));
-  const [whiteCreated, setWhiteCreated] = useState(false); // флаг, что белые объекты созданы
+  // ===== betPosition (белая стрелка) =====
+  // При монтировании: если в localStorage есть сохранённый вектор – используем его (без обрезания),
+  // иначе – используем userPreviousBet (и обрезаем его по maxWhiteLength).
+  const [betPosition, setBetPosition] = useState<THREE.Vector3>(() => {
+    try {
+      const stored = localStorage.getItem(LOCAL_KEY);
+      console.log("[BetLines] localStorage content for userBetVector =>", stored);
+      if (stored) {
+        const arr = JSON.parse(stored);
+        if (Array.isArray(arr) && arr.length >= 3) {
+          console.log("[BetLines] Using white vector from localStorage:", arr);
+          return new THREE.Vector3(arr[0], arr[1], arr[2]);
+        }
+      }
+    } catch (err) {
+      console.error("[BetLines] parse localStorage error:", err);
+    }
+    console.log("[BetLines] Using userPreviousBet:", userPreviousBet.toArray());
+    // Если localStorage пуст, обрезаем userPreviousBet
+    const dir = userPreviousBet.clone().sub(aggregatorClipped);
+    if (dir.length() > maxWhiteLength) {
+      dir.setLength(maxWhiteLength);
+      userPreviousBet.copy(aggregatorClipped).add(dir);
+    }
+    return userPreviousBet.clone();
+  });
 
-  // 1) Создаём жёлтые объекты (линия + конус) один раз
+  // Если userPreviousBet меняется (то есть пара выбрана), обновляем betPosition,
+  // но только если localStorage ещё пуст (то есть ставка не подтверждена)
+  useEffect(() => {
+    if (
+      userPreviousBet.x === 0 &&
+      userPreviousBet.y === 0 &&
+      userPreviousBet.z === 0
+    ) {
+      // Пара не выбрана – ничего не делаем
+      return;
+    }
+    const stored = localStorage.getItem(LOCAL_KEY);
+    if (stored) {
+      console.log("[BetLines] localStorage present, keeping white vector");
+      return;
+    }
+    const offset = userPreviousBet.clone().sub(aggregatorClipped);
+    if (offset.length() > maxWhiteLength) {
+      offset.setLength(maxWhiteLength);
+      userPreviousBet.copy(aggregatorClipped).add(offset);
+    }
+    setBetPosition(userPreviousBet.clone());
+  }, [userPreviousBet, aggregatorClipped, maxWhiteLength]);
+
+  // ===== Создание жёлтой стрелки (один раз) =====
   useEffect(() => {
     // Жёлтая линия
     const yGeom = new LineGeometry();
     yGeom.setPositions([
-      0,0,0,
+      0, 0, 0,
       aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z
     ]);
     const yMat = new LineMaterial({
-      color:"yellow",
-      linewidth:3,
-      resolution:new THREE.Vector2(window.innerWidth, window.innerHeight),
+      color: "yellow",
+      linewidth: 3,
+      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
     });
     const yLine = new Line2(yGeom, yMat);
     yellowLineRef.current = yLine;
     scene.add(yLine);
 
+    // Жёлтый конус
     const yCone = new THREE.Mesh(
-      new THREE.ConeGeometry(0.1,0.3,12),
-      new THREE.MeshStandardMaterial({ color:"yellow" })
+      new THREE.ConeGeometry(0.1, 0.3, 12),
+      new THREE.MeshStandardMaterial({ color: "yellow" })
     );
     yCone.position.copy(aggregatorClipped);
     {
       const dir = aggregatorClipped.clone().normalize();
-      if (dir.length()>0) {
-        const up = new THREE.Vector3(0,1,0);
+      if (dir.length() > 0) {
+        const up = new THREE.Vector3(0, 1, 0);
         const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
         yCone.setRotationFromQuaternion(quat);
       }
@@ -117,137 +167,78 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (yellowLineRef.current) scene.remove(yellowLineRef.current);
       if (yellowConeRef.current) scene.remove(yellowConeRef.current);
     };
-  }, []);
+  }, [aggregatorClipped, scene]);
 
-  // 2) Логика: если userPreviousBet=(0,0,0), НЕ создаём белую стрелку (до выбора пары).
-  //    Иначе — создаём (один раз), либо обновляем
+  // ===== Создание белой стрелки (один раз) =====
+  // Белые объекты создаются только если userPreviousBet != (0,0,0)
   useEffect(() => {
     if (
-      userPreviousBet.x===0 &&
-      userPreviousBet.y===0 &&
-      userPreviousBet.z===0
+      userPreviousBet.x === 0 &&
+      userPreviousBet.y === 0 &&
+      userPreviousBet.z === 0
     ) {
-      // Удаляем, если уже были
+      // Пара не выбрана — удаляем белые объекты (если они уже созданы)
       if (whiteLineRef.current) scene.remove(whiteLineRef.current);
       if (whiteConeRef.current) scene.remove(whiteConeRef.current);
       if (sphereRef.current) scene.remove(sphereRef.current);
       whiteLineRef.current = null;
       whiteConeRef.current = null;
       sphereRef.current = null;
-      setWhiteCreated(false);
-      console.log("[BetLines] userPreviousBet=(0,0,0) => no white vector");
       return;
     }
 
-    // Иначе => userPreviousBet!=0 => Достаем localStorage или обрезаем userPreviousBet
-    //   (1) localStorage => if present => no clip
-    //   (2) else => clip userPreviousBet
-    const finalPos = new THREE.Vector3();
-    try {
-      const stored = localStorage.getItem(LOCAL_KEY);
-      if (stored) {
-        const arr = JSON.parse(stored);
-        if (Array.isArray(arr) && arr.length>=3) {
-          finalPos.set(arr[0], arr[1], arr[2]);
-          console.log("[BetLines] White => from localStorage =>", finalPos.toArray());
-        } else {
-          // fallback to userPreviousBet => clip
-          finalPos.copy(userPreviousBet);
-          console.log("[BetLines] White => localStorage invalid => fallback userPreviousBet");
-          // clip
-          const off = finalPos.clone().sub(aggregatorClipped);
-          if (off.length()> maxWhiteLength) {
-            off.setLength(maxWhiteLength);
-            finalPos.copy(aggregatorClipped).add(off);
-          }
-        }
-      } else {
-        // localStorage empty => userPreviousBet => clip
-        finalPos.copy(userPreviousBet);
-        const off = finalPos.clone().sub(aggregatorClipped);
-        if (off.length()> maxWhiteLength) {
-          off.setLength(maxWhiteLength);
-          finalPos.copy(aggregatorClipped).add(off);
-        }
-        console.log("[BetLines] White => no localStorage => from userPreviousBet =>", finalPos.toArray());
-      }
-    } catch {
-      console.error("[BetLines] parse localStorage => fallback userPreviousBet");
-      finalPos.copy(userPreviousBet);
-      // clip
-      const off = finalPos.clone().sub(aggregatorClipped);
-      if (off.length()> maxWhiteLength) {
-        off.setLength(maxWhiteLength);
-        finalPos.copy(aggregatorClipped).add(off);
+    // Создаём белую стрелку
+    const wGeom = new LineGeometry();
+    wGeom.setPositions([
+      aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z,
+      betPosition.x, betPosition.y, betPosition.z
+    ]);
+    const wMat = new LineMaterial({
+      color: "white",
+      linewidth: 3,
+      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
+    });
+    const wLine = new Line2(wGeom, wMat);
+    whiteLineRef.current = wLine;
+    scene.add(wLine);
+
+    const wCone = new THREE.Mesh(
+      new THREE.ConeGeometry(0.1, 0.3, 12),
+      new THREE.MeshStandardMaterial({ color: "white" })
+    );
+    wCone.position.copy(betPosition);
+    {
+      const dirW = betPosition.clone().sub(aggregatorClipped).normalize();
+      if (dirW.length() > 0) {
+        const up = new THREE.Vector3(0, 1, 0);
+        const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
+        wCone.setRotationFromQuaternion(quatW);
       }
     }
+    whiteConeRef.current = wCone;
+    scene.add(wCone);
 
-    // Устанавливаем betPosition
-    setBetPosition(finalPos);
+    const sph = new THREE.Mesh(
+      new THREE.SphereGeometry(0.5, 16, 16),
+      new THREE.MeshStandardMaterial({
+        color: "blue",
+        opacity: 0.5,
+        transparent: true
+      })
+    );
+    sph.position.copy(betPosition);
+    sphereRef.current = sph;
+    scene.add(sph);
 
-    if (!whiteCreated) {
-      // Создаём белую линию, конус, сферу
-      const wGeom = new LineGeometry();
-      wGeom.setPositions([
-        aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z,
-        finalPos.x, finalPos.y, finalPos.z
-      ]);
-      const wMat = new LineMaterial({
-        color:"white",
-        linewidth:3,
-        resolution:new THREE.Vector2(window.innerWidth, window.innerHeight),
-      });
-      const wLine = new Line2(wGeom, wMat);
-      whiteLineRef.current = wLine;
-      scene.add(wLine);
+  }, [userPreviousBet, aggregatorClipped, betPosition, scene]);
 
-      const wCone = new THREE.Mesh(
-        new THREE.ConeGeometry(0.1,0.3,12),
-        new THREE.MeshStandardMaterial({ color:"white" })
-      );
-      wCone.position.copy(finalPos);
-      {
-        const dirW = finalPos.clone().sub(aggregatorClipped).normalize();
-        if (dirW.length()>0) {
-          const up = new THREE.Vector3(0,1,0);
-          const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
-          wCone.setRotationFromQuaternion(quatW);
-        }
-      }
-      whiteConeRef.current = wCone;
-      scene.add(wCone);
-
-      const sp = new THREE.Mesh(
-        new THREE.SphereGeometry(0.5,16,16),
-        new THREE.MeshStandardMaterial({
-          color:"blue",
-          opacity:0.5,
-          transparent:true
-        })
-      );
-      sp.position.copy(finalPos);
-      sphereRef.current = sp;
-      scene.add(sp);
-
-      setWhiteCreated(true);
-
-      // (No cleanup needed, we'll remove them if userPreviousBet => (0,0,0) or unmount)
-    } else {
-      // Уже создано, просто обновим в другом useEffect([... aggregatorClipped, betPosition])
-      console.log("[BetLines] White objects already exist => will update in effect");
-    }
-  }, [
-    userPreviousBet, aggregatorClipped,
-    maxWhiteLength, whiteCreated, scene
-  ]);
-
-  // 3) useEffect => при aggregatorClipped/betPosition => обновляем геометрию
+  // ===== Обновление объектов при изменении aggregatorClipped или betPosition =====
   useEffect(() => {
-    // --- Жёлтый
+    // Жёлтая линия и конус
     if (yellowLineRef.current?.geometry) {
       const geom = yellowLineRef.current.geometry as LineGeometry;
       geom.setPositions([
-        0,0,0,
+        0, 0, 0,
         aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z
       ]);
       geom.computeBoundingSphere?.();
@@ -255,15 +246,14 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (yellowConeRef.current) {
       yellowConeRef.current.position.copy(aggregatorClipped);
       const dir = aggregatorClipped.clone().normalize();
-      if (dir.length()>0) {
-        const up = new THREE.Vector3(0,1,0);
+      if (dir.length() > 0) {
+        const up = new THREE.Vector3(0, 1, 0);
         const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
         yellowConeRef.current.setRotationFromQuaternion(quat);
       }
     }
-
-    // --- Белая
-    if (whiteLineRef.current && whiteLineRef.current.geometry) {
+    // Белая линия, конус и сфера
+    if (whiteLineRef.current?.geometry) {
       const geom = whiteLineRef.current.geometry as LineGeometry;
       geom.setPositions([
         aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z,
@@ -274,8 +264,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (whiteConeRef.current) {
       whiteConeRef.current.position.copy(betPosition);
       const dirW = betPosition.clone().sub(aggregatorClipped).normalize();
-      if (dirW.length()>0) {
-        const up = new THREE.Vector3(0,1,0);
+      if (dirW.length() > 0) {
+        const up = new THREE.Vector3(0, 1, 0);
         const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
         whiteConeRef.current.setRotationFromQuaternion(quatW);
       }
@@ -285,76 +275,102 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
   }, [aggregatorClipped, betPosition]);
 
-  // ==== Drag
-  const isClickOnSphere = useCallback((evt: PointerEvent) => {
-    if (!sphereRef.current) return false; // возможно сфера не создана
-    const rect = gl.domElement.getBoundingClientRect();
-    const mouse = new THREE.Vector2(
-      ((evt.clientX-rect.left)/rect.width)*2 -1,
-      -((evt.clientY-rect.top)/rect.height)*2 +1
-    );
-    raycaster.current.setFromCamera(mouse, camera);
-    const hits = raycaster.current.intersectObject(sphereRef.current);
-    return hits.length>0;
-  }, [camera, gl.domElement]);
-
-  const updatePlane = useCallback(() => {
-    const camDir = camera.getWorldDirection(new THREE.Vector3());
-    plane.current.setFromNormalAndCoplanarPoint(camDir, betPosition);
-  }, [camera, betPosition]);
-
+  // ===== Drag-логика =====
+  // Возвращаем исходную логику движения белой стрелки, как было раньше
   const handlePointerDown = useCallback((evt: PointerEvent) => {
-    if (isClickOnSphere(evt)) {
-      setIsDragging(true);
-      onDragging(true);
-      updatePlane();
+    if (sphereRef.current) {
+      // const rect = gl.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        (evt.clientX / gl.domElement.clientWidth) * 2 - 1,
+        -(evt.clientY / gl.domElement.clientHeight) * 2 + 1
+      );
+      raycaster.current.setFromCamera(mouse, camera);
+      const hits = raycaster.current.intersectObject(sphereRef.current);
+      if (hits.length > 0) {
+        setIsDragging(true);
+        onDragging(true);
+        const camDir = camera.getWorldDirection(new THREE.Vector3());
+        plane.current.setFromNormalAndCoplanarPoint(camDir, betPosition);
+      }
     }
-  }, [isClickOnSphere, onDragging, updatePlane]);
+  }, [camera, gl.domElement, onDragging, betPosition]);
 
   const handlePointerMove = useCallback((evt: PointerEvent) => {
     if (!isDragging) return;
-    const rect = gl.domElement.getBoundingClientRect();
+
     const mouse = new THREE.Vector2(
-      ((evt.clientX - rect.left)/rect.width)*2 -1,
-      -((evt.clientY - rect.top)/rect.height)*2 +1
+      (evt.clientX / gl.domElement.clientWidth) * 2 - 1,
+      -(evt.clientY / gl.domElement.clientHeight) * 2 + 1
     );
     raycaster.current.setFromCamera(mouse, camera);
 
-    const intersect = new THREE.Vector3();
-    if (!raycaster.current.ray.intersectPlane(plane.current, intersect)) {
+    const intersectPt = new THREE.Vector3();
+    if (!raycaster.current.ray.intersectPlane(plane.current, intersectPt)) {
       return;
     }
 
-    // direction = intersect - aggregatorClipped
-    const direction = intersect.clone().sub(aggregatorClipped);
-    let newPos = betPosition.clone();
+    console.log("[BetLines] pointerMove => intersectPt =", intersectPt.toArray());
 
-    if (axisMode==="X") {
-      newPos.x = aggregatorClipped.x + direction.x;
-    } else if (axisMode==="Y") {
-      newPos.y = aggregatorClipped.y + direction.y;
-    } else {
-      newPos = aggregatorClipped.clone().add(direction);
+    // Рассчитываем направление от начала белой стрелки (aggregatorClipped)
+    const direction = intersectPt.clone().sub(aggregatorClipped);
+    console.log("[BetLines] direction =", direction.toArray());
+
+    // Берём текущее betPosition и вычисляем новый вектор
+    const updatedPos = betPosition.clone();
+    const partialPos = aggregatorClipped.clone().add(direction);
+
+    if (axisMode === "X") {
+      updatedPos.x = partialPos.x;
+    } else if (axisMode === "Y") {
+      updatedPos.y = partialPos.y;
     }
 
-    // clamp
-    const finalDir = newPos.clone().sub(aggregatorClipped);
-    if (finalDir.length()> maxWhiteLength) {
+    const finalDir = updatedPos.clone().sub(aggregatorClipped);
+    console.log("[BetLines] Before finalDir limit:", finalDir.toArray(), "length =", finalDir.length());
+
+    if (finalDir.length() > maxWhiteLength) {
       finalDir.setLength(maxWhiteLength);
-      newPos = aggregatorClipped.clone().add(finalDir);
+      console.log("[BetLines] After finalDir limit:", finalDir.toArray(), "length =", finalDir.length());
+      updatedPos.copy(aggregatorClipped).add(finalDir);
+      console.log("[BetLines] UpdatedPos after applying limited finalDir:", updatedPos.toArray());
+      const fraction = finalDir.length() / maxWhiteLength;
+      setBetAmount(userBalance * fraction);
+      const normalizedFinalDir = finalDir.clone().normalize().multiplyScalar(maxWhiteLength);
+      console.log("[BetLines] normalizedFinalDir:", normalizedFinalDir.toArray());
+      updatedPos.copy(aggregatorClipped).add(normalizedFinalDir);
+      console.log("[BetLines] UpdatedPos after applying limited:", updatedPos.toArray());
+      if (updatedPos.clone().sub(aggregatorClipped).length() > maxWhiteLength) {
+        console.error("[BetLines] Error: updatedPos exceeds maxWhiteLength");
+      }
     }
 
-    setBetPosition(newPos);
-
-    const fraction = finalDir.length()/maxWhiteLength;
-    setBetAmount(userBalance*fraction);
-
-    handleDrag(newPos);
-  }, [
-    isDragging, aggregatorClipped, betPosition, axisMode,
-    camera, gl.domElement, maxWhiteLength, userBalance,
-    handleDrag, setBetAmount
-  ]);
+    setBetPosition(updatedPos);
+    console.log("[BetLines] pointerMove => new betPosition:", updatedPos.toArray());
+    if (whiteLineRef.current) {
+      // Обновляем геометрию белой линии (через debounce, если нужно)
+      // Здесь можно вызвать debouncedUpdateWhiteLine(updatedPos);
+      // Но для отладки вызовем напрямую:
+      const geom = whiteLineRef.current.geometry as LineGeometry;
+      geom.setPositions([
+        aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z,
+        updatedPos.x, updatedPos.y, updatedPos.z
+      ]);
+      geom.computeBoundingSphere?.();
+    }
+    if (sphereRef.current) {
+      sphereRef.current.position.copy(updatedPos);
+    }
+    if (whiteConeRef.current) {
+      whiteConeRef.current.position.copy(updatedPos);
+      const dirW = updatedPos.clone().sub(aggregatorClipped).normalize();
+      if (dirW.length() > 0) {
+        const up = new THREE.Vector3(0, 1, 0);
+        const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
+        whiteConeRef.current.setRotationFromQuaternion(quatW);
+      }
+    }
+    handleDrag(updatedPos);
+  }, [axisMode, betPosition, handleDrag, isDragging, maxWhiteLength, onDragging, raycaster, userBalance, gl.domElement, camera, aggregatorClipped, setBetAmount]);
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging) return;
@@ -362,30 +378,26 @@ const BetLines: React.FC<BetLinesProps> = ({
     onDragging(false);
 
     const finalDir = betPosition.clone().sub(aggregatorClipped);
-    const fraction = Math.min(finalDir.length()/maxWhiteLength,1);
-    const betAmt = fraction*userBalance;
+    const fraction = Math.min(finalDir.length() / maxWhiteLength, 1);
+    const betAmt = fraction * userBalance;
     setBetAmount(betAmt);
 
     onShowConfirmButton(true, {
       amount: betAmt,
-      predicted_vector: [betPosition.x, betPosition.y, betPosition.z],
+      predicted_vector: [betPosition.x, betPosition.y, betPosition.z]
     });
-  }, [
-    isDragging, aggregatorClipped, betPosition,
-    maxWhiteLength, userBalance,
-    onDragging, onShowConfirmButton, setBetAmount
-  ]);
+  }, [aggregatorClipped, betPosition, isDragging, maxWhiteLength, onDragging, onShowConfirmButton, setBetAmount, userBalance]);
 
   useEffect(() => {
-    const c = gl.domElement;
-    c.addEventListener("pointerdown", handlePointerDown);
-    c.addEventListener("pointermove", handlePointerMove);
-    c.addEventListener("pointerup", handlePointerUp);
+    const canvas = gl.domElement;
+    canvas.addEventListener("pointerdown", handlePointerDown);
+    canvas.addEventListener("pointermove", handlePointerMove);
+    canvas.addEventListener("pointerup", handlePointerUp);
 
     return () => {
-      c.removeEventListener("pointerdown", handlePointerDown);
-      c.removeEventListener("pointermove", handlePointerMove);
-      c.removeEventListener("pointerup", handlePointerUp);
+      canvas.removeEventListener("pointerdown", handlePointerDown);
+      canvas.removeEventListener("pointermove", handlePointerMove);
+      canvas.removeEventListener("pointerup", handlePointerUp);
     };
   }, [gl.domElement, handlePointerDown, handlePointerMove, handlePointerUp]);
 
@@ -397,15 +409,15 @@ const BetLines: React.FC<BetLinesProps> = ({
         <meshStandardMaterial color="yellow" />
       </mesh>
 
-      {/* Белая линия / конус / сфера — создаются программно,
-          тут лишь references */}
+      {/* Белый конус */}
       <mesh ref={whiteConeRef}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="white" />
       </mesh>
 
-      <mesh ref={sphereRef} scale={[0.5,0.5,0.5]}>
-        <sphereGeometry args={[1,16,16]} />
+      {/* Сфера (drag point) */}
+      <mesh ref={sphereRef} scale={[0.5, 0.5, 0.5]}>
+        <sphereGeometry args={[1, 16, 16]} />
         <meshStandardMaterial color="blue" opacity={0.5} transparent />
       </mesh>
     </>
