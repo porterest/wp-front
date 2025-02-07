@@ -166,7 +166,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (whiteConeRef.current) scene.remove(whiteConeRef.current);
       if (sphereRef.current) scene.remove(sphereRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 5) useEffect: обновляем объекты при aggregatorRef / betPosition
