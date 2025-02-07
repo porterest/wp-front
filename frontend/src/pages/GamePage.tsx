@@ -184,7 +184,6 @@ const GamePage: React.FC = () => {
         predicted_vector: [absolutePriceChange, absoluteVolumeChange],
       };
 
-
       console.log("Отправляем ставку:", betRequest);
       const response = await placeBet(betRequest);
       localStorage.setItem("userBetVector", JSON.stringify("userBetVector", [currentBet.predicted_vector[0], currentBet.predicted_vector[1], 0]));

@@ -391,8 +391,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     setBetAmount(betAmt);
 
     // Сохраняем в localStorage (финальное положение)
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(betPosition.toArray()));
-    console.log("[BetLines] pointerUp => final betPos=", betPosition.toArray(), " => saved in localStorage");
+    // localStorage.setItem(LOCAL_KEY, JSON.stringify(betPosition.toArray()));
+    // console.log("[BetLines] pointerUp => final betPos=", betPosition.toArray(), " => saved in localStorage");
 
     onShowConfirmButton(true, {
       amount: betAmt,
