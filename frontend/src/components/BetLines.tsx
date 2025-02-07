@@ -389,6 +389,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     };
   }, [gl.domElement, handlePointerDown, handlePointerMove, handlePointerUp]);
 
+
   return (
     <>
       {/* Жёлтый конус */}
