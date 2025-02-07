@@ -97,7 +97,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     // Иначе => обрезаем userPreviousBet
     const dir = userPreviousBet.clone().sub(aggregatorClipped);
-    if (dir.length()> maxWhiteLength) {
+    if (dir.length() > maxWhiteLength) {
       dir.setLength(maxWhiteLength);
       userPreviousBet.copy(aggregatorClipped).add(dir);
     }
@@ -150,7 +150,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
       const yCone = new THREE.Mesh(
         new THREE.ConeGeometry(0.1,0.3,12),
-        new THREE.MeshStandardMaterial({ color:"yellow" })
+        new THREE.MeshStandardMaterial({ color: "yellow" })
       );
       yCone.position.copy(aggregatorClipped);
       {
@@ -167,7 +167,6 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     // === Белая линия
     {
-
       const wGeom = new LineGeometry();
       wGeom.setPositions([
         aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z,

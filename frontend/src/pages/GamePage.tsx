@@ -40,7 +40,7 @@ const GamePage: React.FC = () => {
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
   const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
 
-
+  const [betsFetched, setBetsFetched] = useState<boolean>(false);
 
   useEffect(() => {
     // Инициализация Telegram Web App
@@ -91,7 +91,8 @@ const GamePage: React.FC = () => {
           console.log(resultVector)
           setPreviousBetEnd(resultVector);
           // Загрузка последней ставки пользователя параллельно
-          loadUserLastBet(selectedPair);
+          await loadUserLastBet(selectedPair);
+          setBetsFetched(true);
         } catch (error) {
           console.error("Ошибка загрузки данных ставки:", error);
         }
@@ -288,6 +289,7 @@ const GamePage: React.FC = () => {
             console.log("onShowConfirmButton called with:", show, betData);
             handleShowConfirmButton(show, betData);
           }}
+          betsFetched={betsFetched}
         />
       </Scene>
       {showConfirmButton && (

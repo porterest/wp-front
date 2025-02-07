@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import BetArrow from "./BetArrow";
 import * as THREE from "three";
 import CandlestickChart from "./CandlestickChart";
@@ -20,6 +20,7 @@ interface GraphModesProps {
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
+  betsFetched: boolean;
 }
 
 const GraphModes: React.FC<GraphModesProps> = ({
@@ -31,23 +32,17 @@ const GraphModes: React.FC<GraphModesProps> = ({
                                                  axisMode,
                                                  onDragging,
                                                  onShowConfirmButton,
+                                                 betsFetched,
                                                }) => {
   // Состояние суммы ставки вынесено в родительский компонент,
   // чтобы оно сохранялось между переключениями режимов.
   const [betAmount, setBetAmount] = useState(0);
 
-  return (
-    <>
-      <GradientPlanes />
-      <Axes />
-
-      {/* Режим "Candles" – отрисовываем только CandlestickChart */}
-      {currentMode === 2 && data && (
-        <CandlestickChart data={data} mode="Candles" />
-      )}
-
-      {/* Режим "Axes" – отрисовываем только BetArrow */}
-      {currentMode === 1 && (
+  // Используем useMemo, чтобы пересчитывать результат только при изменении нужных зависимостей.
+  const renderedData = useMemo(() => {
+    if (!betsFetched) return null;
+    if (currentMode === 1) {
+      return (
         <BetArrow
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
@@ -58,10 +53,13 @@ const GraphModes: React.FC<GraphModesProps> = ({
           betAmount={betAmount}
           setBetAmount={setBetAmount}
         />
-      )}
-
-      {/* Режим "Both" – отрисовываем CandlestickChart и BetArrow */}
-      {currentMode === 3 && data && (
+      );
+    }
+    if (currentMode === 2 && data) {
+      return <CandlestickChart data={data} mode="Candles" />;
+    }
+    if (currentMode === 3 && data) {
+      return (
         <>
           <CandlestickChart data={data} mode="Both" />
           <BetArrow
@@ -75,7 +73,16 @@ const GraphModes: React.FC<GraphModesProps> = ({
             setBetAmount={setBetAmount}
           />
         </>
-      )}
+      );
+    }
+    return null;
+  }, [betsFetched, data, currentMode, previousBetEnd, userPreviousBet, setUserPreviousBet, axisMode, onDragging, onShowConfirmButton, betAmount, setBetAmount]);
+
+  return (
+    <>
+      <GradientPlanes />
+      <Axes />
+      {renderedData}
     </>
   );
 };
