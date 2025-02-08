@@ -198,7 +198,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     yCone.position.z = 1;
     const dir = aggregatorClipped.clone().normalize();
     if (dir.length() > 0) {
-      const up = new THREE.Vector3(0, 1, 1);
+      const up = new THREE.Vector3(0, 0, 1);
       const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
       yCone.setRotationFromQuaternion(quat);
     }
@@ -314,7 +314,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       yellowConeRef.current.position.z = 1;
       const dir = aggregatorClipped.clone().normalize();
       if (dir.length() > 0) {
-        const up = new THREE.Vector3(0, 1, 1);
+        const up = new THREE.Vector3(0, 0, 1);
         const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
         yellowConeRef.current.setRotationFromQuaternion(quat);
       }

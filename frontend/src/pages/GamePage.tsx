@@ -270,7 +270,7 @@ const GamePage: React.FC = () => {
         />
       </div>
       <Scene
-        orbitControlsEnabled={orbitControlsEnabled}
+        // orbitControlsEnabled={orbitControlsEnabled}
         data={data.candles || []}
         previousBetEnd={previousBetEnd}
         userPreviousBet={userPreviousBet}

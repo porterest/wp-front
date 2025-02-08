@@ -10,7 +10,7 @@ import * as THREE from "three";
 
 interface SceneProps {
   children: React.ReactNode;
-  orbitControlsEnabled: boolean;
+  // orbitControlsEnabled: boolean;
   data: CandleData[];
   onScaleReady: (scaleFunctions: ScaleFunctions) => void;
   style?: React.CSSProperties;
@@ -26,12 +26,11 @@ interface SceneProps {
   ) => void;
   currentMode: number;
   betsFetched: boolean;
-  // Если вам нужны betAmount и setBetAmount, их можно добавить здесь, но в данном примере они не используются
 }
 
 const Scene: React.FC<SceneProps> = ({
                                        children,
-                                       orbitControlsEnabled,
+                                       // orbitControlsEnabled, // можно убрать этот пропс, если он не используется
                                        data,
                                        onScaleReady,
                                        style,
@@ -46,19 +45,15 @@ const Scene: React.FC<SceneProps> = ({
                                      }) => {
   return (
     <Canvas camera={{ position: [10, 10, 10], fov: 60 }} style={style}>
-      {/* Управление OrbitControls на основе orbitControlsEnabled */}
-      <OrbitControls
-        enableRotate={orbitControlsEnabled}
-        enablePan={orbitControlsEnabled}
-        enableZoom={orbitControlsEnabled}
-      />
+      {/* Отключаем OrbitControls, чтобы управление камерой выполнялось только через CameraTrackballControl */}
+      <OrbitControls enableRotate={false} enablePan={false} enableZoom={false} />
       <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
+      <directionalLight position={[10, 10, 10]} intensity={1} castShadow={true} />
       <ScaleProvider data={data}>
         {/* Рендерим график (children) */}
         {children}
         <ScaleHandler onScaleReady={onScaleReady} />
-        {/* Рендерим GraphModes с переданными пропсами */}
+        {/* Рендерим GraphModes, который обрабатывает ставки */}
         <GraphModes
           currentMode={currentMode}
           data={data}
