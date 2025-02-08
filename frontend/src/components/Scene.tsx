@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
 import { ScaleProvider, useScale } from "../context/ScaleContext";
+import { OrbitControls, GizmoHelper, GizmoViewport } from "@react-three/drei";
 import { ScaleFunctions } from "../types/scale";
 import { CandleData } from "../types/candles";
 
@@ -26,6 +26,14 @@ const Scene: React.FC<SceneProps> = ({ children, data, onScaleReady }) => {
         {children}
         <ScaleHandler onScaleReady={onScaleReady} />
       </ScaleProvider>
+
+      <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
+        <GizmoViewport
+          axisColors={["red", "green", "blue"]}
+          labelColor="black"
+          /* Дополнительно можно настроить стили и поведение */
+        />
+      </GizmoHelper>
     </Canvas>
   );
 };
