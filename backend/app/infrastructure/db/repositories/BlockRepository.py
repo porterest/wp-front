@@ -46,7 +46,7 @@ class BlockRepository(
             res = await session.execute(
                 select(self.entity)
                 .where(
-                    self.entity.chain_id == chain,
+                    self.entity.chain_id == chain.id,
                     self.entity.status == BlockStatus.COMPLETED,
                 )
                 .order_by(desc(self.entity.created_at))
