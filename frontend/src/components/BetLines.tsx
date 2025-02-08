@@ -100,7 +100,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         const arr = JSON.parse(stored);
         if (Array.isArray(arr) && arr.length >= 3) {
           console.log("[BetLines] Ситуация: белый вектор найден из LS:", arr);
-          return new THREE.Vector3(arr[0], arr[1], arr[2]);
+          return new THREE.Vector3(arr[0], arr[1], 1);
         }
       }
     } catch (err) {
@@ -115,9 +115,9 @@ const BetLines: React.FC<BetLinesProps> = ({
       console.log("[BetLines] Ситуация: нет userPreviousBet, но есть агрегатор. Добавляем минимальное смещение.");
       const minDelta = 0.0001; // минимальное смещение (настраиваемое)
       if (axisMode === "X") {
-        return aggregatorClipped.clone().add(new THREE.Vector3(minDelta, 0, 0));
+        return aggregatorClipped.clone().add(new THREE.Vector3(minDelta, 0, 1));
       } else if (axisMode === "Y") {
-        return aggregatorClipped.clone().add(new THREE.Vector3(0, minDelta, 0));
+        return aggregatorClipped.clone().add(new THREE.Vector3(0, minDelta, 1));
       }
       return aggregatorClipped.clone();
     }
@@ -146,7 +146,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (
       userPreviousBet.x === 0 &&
       userPreviousBet.y === 0 &&
-      userPreviousBet.z === 0
+      userPreviousBet.z === 1
     ) {
       console.log("[BetLines] userPreviousBet равен (0,0,0) – устанавливаем betPosition как aggregatorClipped + минимальное смещение (0.001) по оси");
       if (axisMode === "X") {
@@ -178,7 +178,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       0, 0, 0,
       aggregatorClipped.x,
       aggregatorClipped.y,
-      aggregatorClipped.z
+      1
     ]);
     const yMat = new LineMaterial({
       color: "yellow",
@@ -312,7 +312,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       yellowConeRef.current.position.copy(aggregatorClipped);
       const dir = aggregatorClipped.clone().normalize();
       if (dir.length() > 0) {
-        const up = new THREE.Vector3(0, 1, 0);
+        const up = new THREE.Vector3(0, 1, 1);
         const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
         yellowConeRef.current.setRotationFromQuaternion(quat);
       }
@@ -326,7 +326,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         aggregatorClipped.z,
         betPosition.x,
         betPosition.y,
-        betPosition.z
+        1
       ]);
       geom.computeBoundingSphere?.();
     }

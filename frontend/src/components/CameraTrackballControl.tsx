@@ -7,12 +7,11 @@ const CameraTrackballControl: React.FC = () => {
   const { camera } = useThree();
   const controlRef = useRef<HTMLDivElement>(null);
 
-  // Получаем начальные сферические координаты камеры
+  // Начальные сферические координаты камеры
   const initialRadius = camera.position.length();
   const initialTheta = Math.atan2(camera.position.z, camera.position.x);
   const initialPhi = Math.acos(camera.position.y / initialRadius);
 
-  // Состояния для углов, определяющие направление камеры
   const [theta, setTheta] = useState(initialTheta);
   const [phi, setPhi] = useState(initialPhi);
   const [isDragging, setIsDragging] = useState(false);
@@ -20,9 +19,9 @@ const CameraTrackballControl: React.FC = () => {
 
   const target = new THREE.Vector3(0, 0, 0); // точка, на которую камера смотрит
 
-  // Функция обновления позиции камеры по сферическим координатам
+  // Функция обновления позиции камеры
   const updateCameraPosition = () => {
-    const radius = initialRadius; // можно добавить зум
+    const radius = initialRadius;
     const x = radius * Math.sin(phi) * Math.cos(theta);
     const y = radius * Math.cos(phi);
     const z = radius * Math.sin(phi) * Math.sin(theta);
@@ -30,6 +29,7 @@ const CameraTrackballControl: React.FC = () => {
     camera.lookAt(target);
   };
 
+  // Обновляем камеру при изменении углов
   useEffect(() => {
     updateCameraPosition();
   }, [theta, phi]);
@@ -49,14 +49,25 @@ const CameraTrackballControl: React.FC = () => {
     const sensitivity = 0.005;
     setTheta((prev) => prev - deltaX * sensitivity);
     setPhi((prev) => {
-      let newPhi = prev - deltaY * sensitivity;
-      newPhi = Math.max(0.1, Math.min(Math.PI - 0.1, newPhi));
-      return newPhi;
+      const newPhi = prev - deltaY * sensitivity;
+      return Math.max(0.1, Math.min(Math.PI - 0.1, newPhi)); // Ограничиваем phi
     });
   };
 
   const onMouseUp = () => {
     setIsDragging(false);
+  };
+
+  // Восстановление позиции камеры по двойному клику
+  const onDoubleClick = () => {
+    setTheta(initialTheta);
+    setPhi(initialPhi);
+    camera.position.set(
+      initialRadius * Math.sin(initialPhi) * Math.cos(initialTheta),
+      initialRadius * Math.cos(initialPhi),
+      initialRadius * Math.sin(initialPhi) * Math.sin(initialTheta)
+    );
+    camera.lookAt(target);
   };
 
   useEffect(() => {
@@ -73,18 +84,12 @@ const CameraTrackballControl: React.FC = () => {
     };
   }, [isDragging]);
 
-  // При двойном клике сбрасываем положение камеры
-  const onDoubleClick = () => {
-    setTheta(initialTheta);
-    setPhi(initialPhi);
-  };
-
   return (
     <Html fullscreen>
       <div
         ref={controlRef}
         onMouseDown={onMouseDown}
-        onDoubleClick={onDoubleClick}
+        onDoubleClick={onDoubleClick} // Восстанавливаем положение камеры
         style={{
           position: "absolute",
           bottom: "80px",
@@ -101,13 +106,13 @@ const CameraTrackballControl: React.FC = () => {
           zIndex: 100,
         }}
       >
-        {/* Рисуем оси внутри круга */}
+        {/* Оси */}
         <div
           style={{
             position: "absolute",
             width: "80%",
             height: "2px",
-            background: "#00FFFF", // Ось X: бирюзовый
+            background: "#00FFFF",
           }}
         />
         <div
@@ -115,7 +120,7 @@ const CameraTrackballControl: React.FC = () => {
             position: "absolute",
             height: "80%",
             width: "2px",
-            background: "#0000FF", // Ось Y: синий
+            background: "#0000FF",
           }}
         />
         <div
@@ -123,7 +128,7 @@ const CameraTrackballControl: React.FC = () => {
             position: "absolute",
             width: "60%",
             height: "60%",
-            border: "2px solid #9400D3", // Ось Z: фиолетовый (окружность)
+            border: "2px solid #9400D3",
             borderRadius: "50%",
           }}
         />
