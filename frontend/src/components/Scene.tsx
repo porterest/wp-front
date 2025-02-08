@@ -17,6 +17,8 @@ interface SceneProps {
 const Scene: React.FC<SceneProps> = ({ children, data, onScaleReady }) => {
   // Ссылка на группу, к которой будем применять повороты
   const groupRef = useRef<THREE.Group>(null);
+  // Выбор варианта трекбола: "axes" или "fancy"
+  const [variant, setVariant] = useState<"axes" | "fancy">("axes");
 
   return (
     <>
@@ -33,13 +35,36 @@ const Scene: React.FC<SceneProps> = ({ children, data, onScaleReady }) => {
         </ScaleProvider>
       </Canvas>
 
-      {/* Элемент управления трекболом */}
-      <TrackballControl groupRef={groupRef} />
+      {/* Для демонстрации можно выбрать вариант управления: */}
+      {variant === "axes" ? (
+        <TrackballControlAxes groupRef={groupRef} />
+      ) : (
+        <TrackballControlFancy groupRef={groupRef} />
+      )}
+
+      {/* Пример переключателя вариантов (для удобства тестирования) */}
+      <div
+        style={{
+          position: "absolute",
+          top: "20px",
+          right: "20px",
+          background: "#fff",
+          border: "1px solid #ccc",
+          padding: "5px",
+          cursor: "pointer",
+          userSelect: "none",
+        }}
+        onClick={() => setVariant((prev) => (prev === "axes" ? "fancy" : "axes"))}
+      >
+        Переключить вариант (сейчас: {variant})
+      </div>
     </>
   );
 };
 
-const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) => void }> = ({ onScaleReady }) => {
+const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) => void }> = ({
+                                                                                              onScaleReady,
+                                                                                            }) => {
   const scaleFunctions = useScale();
 
   useEffect(() => {
@@ -53,46 +78,40 @@ interface TrackballControlProps {
   groupRef: React.RefObject<THREE.Group>;
 }
 
-/**
- * TrackballControl – элемент в виде круга, который позволяет вращать сцену по виртуальному трекболу.
- * При нажатии и перетаскивании вычисляется кватернион-поворот, который применяется к группе сцены.
- */
-const TrackballControl: React.FC<TrackballControlProps> = ({ groupRef }) => {
-  // Реф для HTML-элемента трекбола
+/* ============================================================
+   Variant 1: Трекбол с отображением осей X, Y, Z
+   ============================================================
+   В этом варианте в центре круга отображаются:
+   - Красная горизонтальная линия (ось X)
+   - Зелёная вертикальная линия (ось Y)
+   - Синяя окружность (намёк на ось Z)
+   ============================================================ */
+const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => {
   const controlRef = useRef<HTMLDivElement>(null);
-  // Состояние, определяющее, производится ли сейчас перетаскивание
   const [isDragging, setIsDragging] = useState(false);
-  // Сохраняем предыдущий вектор на виртуальном трекболе
   const [prevVector, setPrevVector] = useState<THREE.Vector3 | null>(null);
-  // Радиус трекбола (в пикселях)
   const radius = 50;
 
-  // Преобразование координат мыши в 3D-вектор на сфере трекбола
   const getTrackballVector = (clientX: number, clientY: number): THREE.Vector3 => {
     if (!controlRef.current) return new THREE.Vector3();
     const rect = controlRef.current.getBoundingClientRect();
-    // Центр элемента
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    // Нормализуем координаты относительно центра (в диапазоне [-1, 1])
     let x = (clientX - centerX) / radius;
-    let y = (centerY - clientY) / radius; // инвертируем Y, так как экранная система координат перевёрнута
+    let y = (centerY - clientY) / radius; // инвертируем Y
     const lengthSq = x * x + y * y;
     let z = 0;
     if (lengthSq > 1) {
-      // Если точка вне сферы, нормализуем до окружности
       const norm = 1 / Math.sqrt(lengthSq);
       x *= norm;
       y *= norm;
       z = 0;
     } else {
-      // На сфере: вычисляем Z как дополнение до единичной окружности
       z = Math.sqrt(1 - lengthSq);
     }
     return new THREE.Vector3(x, y, z).normalize();
   };
 
-  // Обработчик нажатия мыши
   const onMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     const vector = getTrackballVector(e.clientX, e.clientY);
@@ -100,35 +119,26 @@ const TrackballControl: React.FC<TrackballControlProps> = ({ groupRef }) => {
     setIsDragging(true);
   };
 
-  // Обработчик перемещения мыши
   const onMouseMove = (e: MouseEvent) => {
     if (!isDragging || !prevVector || !groupRef.current) return;
     const currVector = getTrackballVector(e.clientX, e.clientY);
-    // Вычисляем угол между предыдущим и текущим вектором
     const dot = prevVector.dot(currVector);
-    const clampedDot = Math.min(1, Math.max(-1, dot)); // ограничиваем значения
-    const angle = Math.acos(clampedDot);
+    const angle = Math.acos(Math.min(1, Math.max(-1, dot)));
     if (angle) {
-      // Вычисляем ось поворота как векторное произведение
       const axis = new THREE.Vector3().crossVectors(prevVector, currVector).normalize();
       if (axis.lengthSq() < 1e-6) return;
-      // Создаём кватернион для поворота
       const quaternion = new THREE.Quaternion();
       quaternion.setFromAxisAngle(axis, angle);
-      // Применяем поворот к группе
       groupRef.current.quaternion.premultiply(quaternion);
     }
-    // Обновляем предыдущий вектор
     setPrevVector(currVector);
   };
 
-  // Обработчик отпускания мыши
   const onMouseUp = () => {
     setIsDragging(false);
     setPrevVector(null);
   };
 
-  // Добавляем глобальные обработчики перемещения и отпускания мыши во время перетаскивания
   useEffect(() => {
     if (isDragging) {
       window.addEventListener("mousemove", onMouseMove);
@@ -154,18 +164,147 @@ const TrackballControl: React.FC<TrackballControlProps> = ({ groupRef }) => {
         width: `${radius * 2}px`,
         height: `${radius * 2}px`,
         borderRadius: "50%",
-        background: "radial-gradient(circle, #4B0082 10%, #000099 90%)", // Градиент от темно-фиолетового к синему
+        background: "radial-gradient(circle, #4B0082 10%, #000099 90%)",
         cursor: "grab",
         userSelect: "none",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: "#fff",
-        fontSize: "18px",
+        // Лишнее свойство position удалено
       }}
     >
-      {/* Здесь можно разместить иконку или символ */}
-      ↻
+      {/* X-ось: горизонтальная красная линия */}
+      <div
+        style={{
+          position: "absolute",
+          width: "80%",
+          height: "2px",
+          background: "#FF0000",
+        }}
+      />
+      {/* Y-ось: вертикальная зелёная линия */}
+      <div
+        style={{
+          position: "absolute",
+          height: "80%",
+          width: "2px",
+          background: "#00FF00",
+        }}
+      />
+      {/* Z-ось: синяя окружность */}
+      <div
+        style={{
+          position: "absolute",
+          width: "60%",
+          height: "60%",
+          border: "2px solid #0000FF",
+          borderRadius: "50%",
+        }}
+      />
+    </div>
+  );
+};
+
+/* ============================================================
+   Variant 2: Fancy трекбол
+   ============================================================
+   Этот вариант использует мягкий градиент, эффект подсветки при наведении и
+   небольшую анимацию (уменьшение масштаба) при перетаскивании.
+   ============================================================ */
+const TrackballControlFancy: React.FC<TrackballControlProps> = ({ groupRef }) => {
+  const controlRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [prevVector, setPrevVector] = useState<THREE.Vector3 | null>(null);
+  const [hover, setHover] = useState(false);
+  const radius = 50;
+
+  const getTrackballVector = (clientX: number, clientY: number): THREE.Vector3 => {
+    if (!controlRef.current) return new THREE.Vector3();
+    const rect = controlRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    let x = (clientX - centerX) / radius;
+    let y = (centerY - clientY) / radius;
+    const lengthSq = x * x + y * y;
+    let z = 0;
+    if (lengthSq > 1) {
+      const norm = 1 / Math.sqrt(lengthSq);
+      x *= norm;
+      y *= norm;
+      z = 0;
+    } else {
+      z = Math.sqrt(1 - lengthSq);
+    }
+    return new THREE.Vector3(x, y, z).normalize();
+  };
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setPrevVector(getTrackballVector(e.clientX, e.clientY));
+  };
+
+  const onMouseMove = (e: MouseEvent) => {
+    if (!isDragging || !prevVector || !groupRef.current) return;
+    const currVector = getTrackballVector(e.clientX, e.clientY);
+    const dot = prevVector.dot(currVector);
+    const angle = Math.acos(Math.min(1, Math.max(-1, dot)));
+    if (angle) {
+      const axis = new THREE.Vector3().crossVectors(prevVector, currVector).normalize();
+      if (axis.lengthSq() < 1e-6) return;
+      const quaternion = new THREE.Quaternion();
+      quaternion.setFromAxisAngle(axis, angle);
+      groupRef.current.quaternion.premultiply(quaternion);
+    }
+    setPrevVector(currVector);
+  };
+
+  const onMouseUp = () => {
+    setIsDragging(false);
+    setPrevVector(null);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    } else {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    }
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isDragging, prevVector]);
+
+  return (
+    <div
+      ref={controlRef}
+      onMouseDown={onMouseDown}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        position: "absolute",
+        bottom: "20px",
+        right: "20px",
+        width: `${radius * 2}px`,
+        height: `${radius * 2}px`,
+        borderRadius: "50%",
+        background: "radial-gradient(circle, #3a3f9b, #141a41)",
+        boxShadow: hover
+          ? "0 0 15px rgba(58, 63, 155, 0.8)"
+          : "0 0 8px rgba(20, 26, 65, 0.5)",
+        cursor: "grab",
+        userSelect: "none",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "box-shadow 0.3s, transform 0.1s",
+        transform: isDragging ? "scale(0.95)" : "scale(1)",
+      }}
+    >
+      <span style={{ color: "#fff", fontSize: "20px" }}>⟳</span>
     </div>
   );
 };
