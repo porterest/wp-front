@@ -1,3 +1,4 @@
+// Scene.tsx
 import React, { useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -41,32 +42,30 @@ const Scene: React.FC<SceneProps> = ({
                                        setBetAmount,
                                      }) => {
   return (
-    <>
-      <Canvas camera={{ position: [10, 10, 10], fov: 60 }}>
-        {/* Отключаем стандартное вращение — управление камерой будет нашим кастомным трекболом */}
-        <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
-        <ScaleProvider data={data}>
-          {/* Рендерим основной график (children) */}
-          {children}
-          <ScaleHandler onScaleReady={onScaleReady} />
-          {/* Рендерим компонент ставок */}
-          <BetArrow
-            previousBetEnd={previousBetEnd}
-            userPreviousBet={userPreviousBet}
-            setUserPreviousBet={setUserPreviousBet}
-            axisMode={axisMode}
-            onDragging={onDragging}
-            onShowConfirmButton={onShowConfirmButton}
-            betAmount={betAmount}
-            setBetAmount={setBetAmount}
-          />
-        </ScaleProvider>
-      </Canvas>
-      {/* Управление камерой через трекбол */}
+    <Canvas camera={{ position: [10, 10, 10], fov: 60 }}>
+      {/* Отключаем стандартное вращение — управление камерой будет нашим трекболом */}
+      <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
+      <ScaleProvider data={data}>
+        {/* Рендерим основной график */}
+        {children}
+        <ScaleHandler onScaleReady={onScaleReady} />
+        {/* Рендерим компонент ставок */}
+        <BetArrow
+          previousBetEnd={previousBetEnd}
+          userPreviousBet={userPreviousBet}
+          setUserPreviousBet={setUserPreviousBet}
+          axisMode={axisMode}
+          onDragging={onDragging}
+          onShowConfirmButton={onShowConfirmButton}
+          betAmount={betAmount}
+          setBetAmount={setBetAmount}
+        />
+      </ScaleProvider>
+      {/* Рендерим компонент управления камерой */}
       <CameraTrackballControl />
-    </>
+    </Canvas>
   );
 };
 

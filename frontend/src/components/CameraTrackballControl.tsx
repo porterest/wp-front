@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { Html } from "@react-three/drei/web/Html";
 
 const CameraTrackballControl: React.FC = () => {
   const { camera } = useThree();
@@ -83,28 +84,31 @@ const CameraTrackballControl: React.FC = () => {
   };
 
   return (
-    <div
-      ref={controlRef}
-      onMouseDown={onMouseDown}
-      onDoubleClick={onDoubleClick}
-      style={{
-        position: "absolute",
-        bottom: "80px", // можно настроить по необходимости
-        right: "20px",
-        width: "100px",
-        height: "100px",
-        borderRadius: "50%",
-        background: "radial-gradient(circle, #4B0082 10%, #000099 90%)",
-        cursor: "grab",
-        userSelect: "none",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 100,
-      }}
-    >
-      <span style={{ color: "#fff", fontSize: "20px" }}>⟳</span>
-    </div>
+    // Используем <Html> для рендеринга оверлея внутри контекста Canvas
+    <Html fullscreen>
+      <div
+        ref={controlRef}
+        onMouseDown={onMouseDown}
+        onDoubleClick={onDoubleClick}
+        style={{
+          position: "absolute",
+          bottom: "80px",
+          right: "20px",
+          width: "100px",
+          height: "100px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, #4B0082 10%, #000099 90%)",
+          cursor: "grab",
+          userSelect: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 100,
+        }}
+      >
+        <span style={{ color: "#fff", fontSize: "20px" }}>⟳</span>
+      </div>
+    </Html>
   );
 };
 
