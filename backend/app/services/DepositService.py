@@ -1,6 +1,8 @@
 import logging
 from dataclasses import dataclass
 
+from asyncpg import UniqueViolationError
+
 from abstractions.repositories.deposit import DepositRepositoryInterface
 from abstractions.repositories.transaction import TransactionRepositoryInterface
 from abstractions.services.app_wallet import AppWalletServiceInterface
@@ -47,8 +49,10 @@ class DepositService(
                     )
                     # logger.info("Transaction")
                     # logger.info(dto)
-
-                    await self.transaction_repository.create(dto)
+                    try:
+                        await self.transaction_repository.create(dto)
+                    except UniqueViolationError:
+                        continue
 
                     deposit = DepositEntryCreateDTO(
                         app_wallet_id=wallet.id,
