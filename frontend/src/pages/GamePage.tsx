@@ -12,7 +12,6 @@ import { ScaleFunctions } from "../types/scale";
 import { PairOption } from "../types/pair";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
 import { CandleData } from "../types/candles";
-import BetLines from "../components/BetLines";
 import GraphModes from "../components/GraphModes";
 
 const GamePage: React.FC = () => {
@@ -40,7 +39,7 @@ const GamePage: React.FC = () => {
   const [showInstructions, setShowInstructions] = useState(false);
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
   const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
-  const [betAmount, setBetAmount] = useState(0);
+  const [betAmount] = useState(0);
 
   const [betsFetched, setBetsFetched] = useState<boolean>(false);
 
