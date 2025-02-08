@@ -270,7 +270,7 @@ const GamePage: React.FC = () => {
         />
       </div>
       <Scene
-        // orbitControlsEnabled={orbitControlsEnabled}
+        orbitControlsEnabled={orbitControlsEnabled}
         data={data.candles || []}
         onScaleReady={(scales) => {
           console.log("Scales from Scene:", scales);
