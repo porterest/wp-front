@@ -39,17 +39,15 @@ const GamePage: React.FC = () => {
   const [showInstructions, setShowInstructions] = useState(false);
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
   const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
-  const [betAmount] = useState(0);
 
   const [betsFetched, setBetsFetched] = useState<boolean>(false);
 
   useEffect(() => {
     // Инициализация Telegram Web App
-    const tg = window.Telegram.WebApp;
-
-    if (tg) {
-      tg.ready(); // Говорим Telegram, что приложение загружено
-      tg.disableVerticalSwipes(); // Отключаем вертикальные свайпы
+    if (typeof window !== "undefined" && window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      tg.disableVerticalSwipes();
 
       // Проверяем, поддерживается ли полноэкранный режим
       if (tg.canRequestFullscreen) {
@@ -229,7 +227,6 @@ const GamePage: React.FC = () => {
     context.setSelectedPair(selectedPair);
   }, []);
   console.log(orbitControlsEnabled)
-  console.log(betAmount)
   return (
     <div className="relative w-screen h-screen overflow-hidden touch-none">
       {showInstructions && (
