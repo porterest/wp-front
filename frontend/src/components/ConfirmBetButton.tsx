@@ -20,7 +20,7 @@ export const ConfirmBetButton: React.FC<ConfirmBetButtonProps> = ({ onConfirm })
     <>
       <button
         onClick={handleClick}
-        className="absolute bottom-[70px] right-[20px] bg-cyan-400 text-white py-2 px-4 rounded-lg cursor-pointer z-10 hover:bg-cyan-500"
+        className="absolute bottom-[70px] left-[20px] bg-cyan-400 text-white py-2 px-4 rounded-lg cursor-pointer z-10 hover:bg-cyan-500"
       >
         Confirm Bet
       </button>
