@@ -4,7 +4,7 @@ import { CandleData } from "../types/candles";
 
 interface CandlestickChartProps {
   data: CandleData[];
-  mode: "Candles" | "Axes" | "Both"; // Режим отображения
+  mode: "Candles" | "Axes" | "Both";
 }
 
 const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) => {
@@ -14,11 +14,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
     return null;
   }
 
-  // Определяем максимальный объем для нормализации Z-координаты
   const maxVolume = Math.max(...data.map((candle) => candle.volume));
 
   const getColor = (isBullish: boolean): string => {
-    return isBullish ? "#32CD32" : "#ff4f4f"; // Зеленый для роста, красный для падения
+    return isBullish ? "#32CD32" : "#ff4f4f";
   };
 
   const getOpacity = (): number => {
@@ -27,11 +26,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
 
   return (
     <group>
-      {data.map((candle, index) => {
+      {data.slice(-144).map((candle, index, slicedData) => {
         const isBullish = candle.close > candle.open;
         const color = getColor(isBullish);
 
-        // Нормализация данных
         const normalizedOpen = normalizeY(candle.open);
         const normalizedClose = normalizeY(candle.close);
         const normalizedHigh = normalizeY(candle.high);
@@ -43,30 +41,21 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(({ data, mode }) 
         const shadowHeight = normalizedHigh - normalizedLow;
         const shadowY = (normalizedHigh + normalizedLow) / 2;
 
-        // Используем индекс для нормализации оси X
-        const positionZ = normalizeX(index, data.length);
+        const positionZ = normalizeX(index, slicedData.length); // Используем 144 вместо 5
         const positionX = normalizeZ(candle.volume, maxVolume);
 
         return (
           <group key={index}>
             {/* Тело свечи */}
             <mesh position={[positionX, bodyY, positionZ]}>
-              <boxGeometry args={[0.5, bodyHeight, 0.5]} />
-              <meshStandardMaterial
-                color={color}
-                transparent={mode === "Both"}
-                opacity={getOpacity()}
-              />
+              <boxGeometry args={[0.2, bodyHeight, 0.2]} /> {/* Уменьшаем ширину свечи */}
+              <meshStandardMaterial color={color} transparent={mode === "Both"} opacity={getOpacity()} />
             </mesh>
 
             {/* Тень свечи */}
             <mesh position={[positionX, shadowY, positionZ]}>
-              <boxGeometry args={[0.1, shadowHeight, 0.1]} />
-              <meshStandardMaterial
-                color={color}
-                transparent={mode === "Both"}
-                opacity={getOpacity()}
-              />
+              <boxGeometry args={[0.05, shadowHeight, 0.05]} /> {/* Тень тоже уменьшаем */}
+              <meshStandardMaterial color={color} transparent={mode === "Both"} opacity={getOpacity()} />
             </mesh>
           </group>
         );

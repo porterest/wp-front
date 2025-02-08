@@ -18,8 +18,9 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
   const maxPrice = useMemo(() => Math.max(...data.map((d) => d.high)), [data]);
 
   const normalizeX = useCallback((index: number, length: number) => {
-    return (index / length) * 5;
+    return (index / (length - 1)) * 10 - 5; // Растягиваем на диапазон [-5, 5]
   }, [viewport.width]);
+
 
   const normalizeY = useCallback(
     (value: number) => {
@@ -37,58 +38,22 @@ export const ScaleProvider: React.FC<{ children: React.ReactNode; data: CandleDa
     console.log('Normalized maxY:', normalizeY(maxPrice));
   }, [minPrice, maxPrice, normalizeY]);
 
-
-  // data.forEach((candle, index) => {
-  //   const normalizedOpen = normalizeY(candle.open);
-  //   const normalizedClose = normalizeY(candle.close);
-  //   const normalizedHigh = normalizeY(candle.high);
-  //   const normalizedLow = normalizeY(candle.low);
-  //
-  //   console.log(`Candle ${index}:`);
-  //   console.log(`  Open Y: ${normalizedOpen}`);
-  //   console.log(`  Close Y: ${normalizedClose}`);
-  //   console.log(`  High Y: ${normalizedHigh}`);
-  //   console.log(`  Low Y: ${normalizedLow}`);
-  // });
-  // console.log("Viewport height:", viewport.height);
-  // console.log("Min price:", minPrice);
-  // console.log("Max price:", maxPrice);
-  //
-  // useEffect(() => {
-  //   const minY = normalizeY(minPrice);
-  //   const maxY = normalizeY(maxPrice);
-  //
-  //   console.log(`Min line Y: ${minY}`);
-  //   console.log(`Max line Y: ${maxY}`);
-  // });
-  // data?.forEach((candle, index) => {
-  //   console.log(`Candle ${index}: Open Y: ${normalizeY(candle.open)}, Close Y: ${normalizeY(candle.close)}`);
-  // });
-
-
   const normalizeZ = useCallback((volume: number, maxVolume: number) => {
-    return (volume / maxVolume) * 5;
+    return (volume / maxVolume) * 2 - 1; // Сжимаем в диапазон [-1, 1]
   }, []);
+
 
   const denormalizeX = useCallback((sceneValue: number, length: number) => {
-    // if (length === 0) {
-    //   console.info("No bets in the last block. Defaulting to minimal scale.");
-    //   length = 5; // Минимально допустимый масштаб
-    // }
-    return (sceneValue / 5) * length; // 5 — это масштаб из normalizeX
+    return ((sceneValue + 5) / 10) * (length - 1);
   }, []);
 
 
-  const denormalizeY = useCallback(
-    (sceneValue: number) => {
-      const graphHeight = 5; // Такой же, как в normalizeY
-      console.log(sceneValue, graphHeight, maxPrice, minPrice);
-      // if (minPrice === Infinity || maxPrice === -Infinity) {
-      // }
-      return (sceneValue / graphHeight) * (maxPrice - minPrice) + minPrice;
-    },
-    [minPrice, maxPrice]
-  );
+
+  const denormalizeY = useCallback((sceneValue: number) => {
+    const graphHeight = 5;
+    return (sceneValue / graphHeight) * (maxPrice - minPrice) + minPrice;
+  }, [minPrice, maxPrice]);
+
 
   useEffect(() => {
     console.log('Min line Y:', normalizeY(minPrice));
