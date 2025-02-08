@@ -27,7 +27,6 @@ const Scene: React.FC<SceneProps> = ({ children, data, onScaleReady }) => {
         <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
-
         <ScaleProvider data={data}>
           {/* Оборачиваем содержимое сцены в группу для применения к ней поворотов */}
           <group ref={groupRef}>{children}</group>
@@ -35,14 +34,14 @@ const Scene: React.FC<SceneProps> = ({ children, data, onScaleReady }) => {
         </ScaleProvider>
       </Canvas>
 
-      {/* Для демонстрации можно выбрать вариант управления: */}
+      {/* Выбираем вариант трекбола */}
       {variant === "axes" ? (
         <TrackballControlAxes groupRef={groupRef} />
       ) : (
         <TrackballControlFancy groupRef={groupRef} />
       )}
 
-      {/* Пример переключателя вариантов (для удобства тестирования) */}
+      {/* Переключатель вариантов */}
       <div
         style={{
           position: "absolute",
@@ -66,11 +65,9 @@ const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) =>
                                                                                               onScaleReady,
                                                                                             }) => {
   const scaleFunctions = useScale();
-
   useEffect(() => {
     onScaleReady(scaleFunctions);
   }, [onScaleReady, scaleFunctions]);
-
   return null;
 };
 
@@ -81,10 +78,10 @@ interface TrackballControlProps {
 /* ============================================================
    Variant 1: Трекбол с отображением осей X, Y, Z
    ============================================================
-   В этом варианте в центре круга отображаются:
-   - Красная горизонтальная линия (ось X)
-   - Зелёная вертикальная линия (ось Y)
-   - Синяя окружность (намёк на ось Z)
+   Цвета осей:
+   - Ось X (цена): бирюзовый (#00FFFF)
+   - Ось Y (время): синий (#0000FF)
+   - Ось Z (транзакции): фиолетовый (#9400D3)
    ============================================================ */
 const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => {
   const controlRef = useRef<HTMLDivElement>(null);
@@ -170,34 +167,33 @@ const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => 
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        // Лишнее свойство position удалено
       }}
     >
-      {/* X-ось: горизонтальная красная линия */}
+      {/* Ось X: горизонтальная линия (бирюзовый) */}
       <div
         style={{
           position: "absolute",
           width: "80%",
           height: "2px",
-          background: "#FF0000",
+          background: "#00FFFF",
         }}
       />
-      {/* Y-ось: вертикальная зелёная линия */}
+      {/* Ось Y: вертикальная линия (синий) */}
       <div
         style={{
           position: "absolute",
           height: "80%",
           width: "2px",
-          background: "#00FF00",
+          background: "#0000FF",
         }}
       />
-      {/* Z-ось: синяя окружность */}
+      {/* Ось Z: окружность (фиолетовая) */}
       <div
         style={{
           position: "absolute",
           width: "60%",
           height: "60%",
-          border: "2px solid #0000FF",
+          border: "2px solid #9400D3",
           borderRadius: "50%",
         }}
       />
@@ -208,8 +204,7 @@ const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => 
 /* ============================================================
    Variant 2: Fancy трекбол
    ============================================================
-   Этот вариант использует мягкий градиент, эффект подсветки при наведении и
-   небольшую анимацию (уменьшение масштаба) при перетаскивании.
+   Мягкий градиент, эффект подсветки и анимация при нажатии.
    ============================================================ */
 const TrackballControlFancy: React.FC<TrackballControlProps> = ({ groupRef }) => {
   const controlRef = useRef<HTMLDivElement>(null);
