@@ -292,9 +292,7 @@ const GamePage: React.FC = () => {
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
           onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
-          onShowConfirmButton={(show, betData) =>
-            handleShowConfirmButton(show, betData)
-          }
+          onShowConfirmButton={(show, betData) => handleShowConfirmButton(show, betData)}
           maxYellowLength={2}
           maxWhiteLength={2}
           handleDrag={setUserPreviousBet}
@@ -302,6 +300,7 @@ const GamePage: React.FC = () => {
           setBetAmount={setBetAmount}
         />
       </Scene>
+
 
 
       {showConfirmButton && (
