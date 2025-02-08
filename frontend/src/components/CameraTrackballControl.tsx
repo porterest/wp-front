@@ -1,4 +1,3 @@
-// CameraTrackballControl.tsx
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -8,12 +7,12 @@ const CameraTrackballControl: React.FC = () => {
   const { camera } = useThree();
   const controlRef = useRef<HTMLDivElement>(null);
 
-  // Получаем начальные сферические координаты камеры
+  // Начальные сферические координаты камеры
   const initialRadius = camera.position.length();
   const initialTheta = Math.atan2(camera.position.z, camera.position.x);
   const initialPhi = Math.acos(camera.position.y / initialRadius);
 
-  // Состояния для углов (theta, phi)
+  // Состояния для углов
   const [theta, setTheta] = useState(initialTheta);
   const [phi, setPhi] = useState(initialPhi);
   const [isDragging, setIsDragging] = useState(false);
@@ -21,9 +20,9 @@ const CameraTrackballControl: React.FC = () => {
 
   const target = new THREE.Vector3(0, 0, 0); // точка, на которую камера смотрит
 
-  // Функция обновления позиции камеры по углам theta и phi
+  // Функция обновления позиции камеры
   const updateCameraPosition = useCallback(() => {
-    const radius = initialRadius;
+    const radius = initialRadius; // можно добавить управление зумом
     const x = radius * Math.sin(phi) * Math.cos(theta);
     const y = radius * Math.cos(phi);
     const z = radius * Math.sin(phi) * Math.sin(theta);
@@ -35,30 +34,15 @@ const CameraTrackballControl: React.FC = () => {
     updateCameraPosition();
   }, [theta, phi, updateCameraPosition]);
 
-  // Функция сброса камеры к начальному положению
-  const onDoubleClick = useCallback(() => {
-    setTheta(initialTheta);
-    setPhi(initialPhi);
-    camera.position.set(
-      initialRadius * Math.sin(initialPhi) * Math.cos(initialTheta),
-      initialRadius * Math.cos(initialPhi),
-      initialRadius * Math.sin(initialPhi) * Math.sin(initialTheta)
-    );
-    camera.lookAt(target);
-  }, [camera, initialPhi, initialRadius, initialTheta, target]);
-
-  // Обработчик мыши – если e.detail равен 2, считаем это двойным кликом
-  const onMouseDown = (e: React.MouseEvent) => {
+  // Обработчик pointerDown: начинаем перетаскивание
+  const onPointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
-    if (e.detail === 2) {
-      onDoubleClick();
-      return; // не начинаем перетаскивание при двойном клике
-    }
     setIsDragging(true);
     startPosRef.current = { x: e.clientX, y: e.clientY };
   };
 
-  const onMouseMove = (e: MouseEvent) => {
+  // Обработчик pointerMove: обновляем углы на основе перемещения
+  const onPointerMove = (e: PointerEvent) => {
     if (!isDragging) return;
     const deltaX = e.clientX - startPosRef.current.x;
     const deltaY = e.clientY - startPosRef.current.y;
@@ -72,32 +56,46 @@ const CameraTrackballControl: React.FC = () => {
     });
   };
 
-  const onMouseUp = () => {
+  // Обработчик pointerUp: заканчиваем перетаскивание
+  const onPointerUp = () => {
     setIsDragging(false);
   };
 
   useEffect(() => {
     if (isDragging) {
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp);
     } else {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
     }
     return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
     };
   }, [isDragging]);
+
+  // Обработчик двойного клика: сбрасываем положение камеры
+  const onDoubleClick = useCallback(() => {
+    setTheta(initialTheta);
+    setPhi(initialPhi);
+    camera.position.set(
+      initialRadius * Math.sin(initialPhi) * Math.cos(initialTheta),
+      initialRadius * Math.cos(initialPhi),
+      initialRadius * Math.sin(initialPhi) * Math.sin(initialTheta)
+    );
+    camera.lookAt(target);
+  }, [camera, initialPhi, initialRadius, initialTheta, target]);
 
   return (
     <Html fullscreen>
       <div
         ref={controlRef}
-        onMouseDown={onMouseDown}
+        onPointerDown={onPointerDown}
+        onDoubleClick={onDoubleClick}
         style={{
           position: "absolute",
-          bottom: "80px",
+          bottom: "120px", // не меняем – как у вас задано
           right: "20px",
           width: "100px",
           height: "100px",
