@@ -55,7 +55,7 @@ class ChainService(
     pool_service: PoolServiceInterface
     inner_token_service: InnerTokenInterface
     inner_token_symbol: str
-    block_generation_interval: timedelta = timedelta(minutes=1)
+    block_generation_interval: timedelta = timedelta(minutes=10)
     transaction_check_interval: timedelta = timedelta(minutes=0.5)
     connect_pool_interval: timedelta = timedelta(minutes=4)  # hours=6
 
