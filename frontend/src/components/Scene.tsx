@@ -36,7 +36,7 @@ const Scene: React.FC<SceneProps> = ({
                                        onDragging,
                                        onShowConfirmButton,
                                        betAmount,
-                                       setBetAmount,
+                                       setBetAmount
                                      }) => {
   // Ссылка на группу, к которой будем применять повороты
   const groupRef = useRef<THREE.Group>(null);
@@ -44,16 +44,15 @@ const Scene: React.FC<SceneProps> = ({
   return (
     <>
       <Canvas camera={{ position: [10, 10, 10], fov: 60 }}>
-        {/* Отключаем стандартное вращение – управление осуществляется через наш трекбол */}
         <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
 
         <ScaleProvider data={data}>
-          {/* Группа для поворотов и основного содержимого сцены */}
           <group ref={groupRef}>{children}</group>
           <ScaleHandler onScaleReady={onScaleReady} />
-          {/* Добавляем BetArrow – он оборачивает BetLines и выводит текстовые подсказки */}
+
+          {/* Вставка BetArrow внутрь сцены */}
           <BetArrow
             previousBetEnd={previousBetEnd}
             userPreviousBet={userPreviousBet}
@@ -67,7 +66,7 @@ const Scene: React.FC<SceneProps> = ({
         </ScaleProvider>
       </Canvas>
 
-      {/* Трекбол с осями для управления поворотом сцены */}
+      {/* Трекбол с осями */}
       <TrackballControlAxes groupRef={groupRef} />
     </>
   );
@@ -89,12 +88,6 @@ interface TrackballControlProps {
 
 /* ============================================================
    Трекбол с отображением осей X, Y, Z
-   ============================================================
-   Цвета осей:
-   - Ось X (цена): бирюзовый (#00FFFF)
-   - Ось Y (время): синий (#0000FF)
-   - Ось Z (транзакции): фиолетовый (#9400D3)
-   При двойном клике трекбол сбрасывает поворот сцены.
    ============================================================ */
 const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => {
   const controlRef = useRef<HTMLDivElement>(null);
@@ -102,7 +95,7 @@ const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => 
   const [prevVector, setPrevVector] = useState<THREE.Vector3 | null>(null);
   const radius = 50;
 
-  // Сброс графика в исходное положение при двойном клике
+  // Восстанавливаем положение графика при двойном клике
   const resetGraph = () => {
     if (groupRef.current) {
       groupRef.current.quaternion.set(0, 0, 0, 1);
@@ -174,10 +167,10 @@ const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => 
     <div
       ref={controlRef}
       onMouseDown={onMouseDown}
-      onDoubleClick={resetGraph} // Двойной клик для сброса поворота
+      onDoubleClick={resetGraph} // Сбрасываем поворот при двойном клике
       style={{
         position: "absolute",
-        bottom: "80px", // поднят выше, чтобы не заходил за нижнее меню
+        bottom: "80px", // Поднял выше, чтобы не заходил за нижнее меню
         right: "20px",
         width: `${radius * 2}px`,
         height: `${radius * 2}px`,
@@ -190,11 +183,8 @@ const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => 
         justifyContent: "center",
       }}
     >
-      {/* Ось X: горизонтальная линия (бирюзовый) */}
       <div style={{ position: "absolute", width: "80%", height: "2px", background: "#00FFFF" }} />
-      {/* Ось Y: вертикальная линия (синий) */}
       <div style={{ position: "absolute", height: "80%", width: "2px", background: "#0000FF" }} />
-      {/* Ось Z: окружность (фиолетовая) */}
       <div
         style={{
           position: "absolute",
