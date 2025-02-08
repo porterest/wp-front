@@ -5,64 +5,30 @@ import * as THREE from "three";
 import { ScaleProvider, useScale } from "../context/ScaleContext";
 import { ScaleFunctions } from "../types/scale";
 import { CandleData } from "../types/candles";
-import BetArrow from "./BetArrow";
 
 interface SceneProps {
   children: React.ReactNode;
   orbitControlsEnabled: boolean;
   data: CandleData[];
   onScaleReady: (scaleFunctions: ScaleFunctions) => void;
-  previousBetEnd: THREE.Vector3;
-  userPreviousBet: THREE.Vector3;
-  setUserPreviousBet: (value: THREE.Vector3) => void;
-  axisMode: "X" | "Y";
-  onDragging: (isDragging: boolean) => void;
-  onShowConfirmButton: (
-    show: boolean,
-    betData?: { amount: number; predicted_vector: number[] }
-  ) => void;
-  betAmount: number;
-  setBetAmount: (newAmount: number) => void;
+  style?: React.CSSProperties;
 }
 
-const Scene: React.FC<SceneProps> = ({
-                                       children,
-                                       data,
-                                       onScaleReady,
-                                       previousBetEnd,
-                                       userPreviousBet,
-                                       setUserPreviousBet,
-                                       axisMode,
-                                       onDragging,
-                                       onShowConfirmButton,
-                                       betAmount,
-                                       setBetAmount
-                                     }) => {
+const Scene: React.FC<SceneProps> = ({ children, data, onScaleReady }) => {
   // Ссылка на группу, к которой будем применять повороты
   const groupRef = useRef<THREE.Group>(null);
 
   return (
     <>
       <Canvas camera={{ position: [10, 10, 10], fov: 60 }}>
+        {/* Отключаем стандартное вращение – будем управлять через наш трекбол */}
         <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
-
         <ScaleProvider data={data}>
+          {/* Оборачиваем содержимое сцены в группу для применения к ней поворотов */}
           <group ref={groupRef}>{children}</group>
           <ScaleHandler onScaleReady={onScaleReady} />
-
-          {/* Вставка BetArrow внутрь сцены */}
-          <BetArrow
-            previousBetEnd={previousBetEnd}
-            userPreviousBet={userPreviousBet}
-            setUserPreviousBet={setUserPreviousBet}
-            axisMode={axisMode}
-            onDragging={onDragging}
-            onShowConfirmButton={onShowConfirmButton}
-            betAmount={betAmount}
-            setBetAmount={setBetAmount}
-          />
         </ScaleProvider>
       </Canvas>
 
@@ -88,6 +54,11 @@ interface TrackballControlProps {
 
 /* ============================================================
    Трекбол с отображением осей X, Y, Z
+   ============================================================
+   Цвета осей:
+   - Ось X (цена): бирюзовый (#00FFFF)
+   - Ось Y (время): синий (#0000FF)
+   - Ось Z (транзакции): фиолетовый (#9400D3)
    ============================================================ */
 const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => {
   const controlRef = useRef<HTMLDivElement>(null);
@@ -183,8 +154,25 @@ const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => 
         justifyContent: "center",
       }}
     >
-      <div style={{ position: "absolute", width: "80%", height: "2px", background: "#00FFFF" }} />
-      <div style={{ position: "absolute", height: "80%", width: "2px", background: "#0000FF" }} />
+      {/* Ось X: горизонтальная линия (бирюзовый) */}
+      <div
+        style={{
+          position: "absolute",
+          width: "80%",
+          height: "2px",
+          background: "#00FFFF",
+        }}
+      />
+      {/* Ось Y: вертикальная линия (синий) */}
+      <div
+        style={{
+          position: "absolute",
+          height: "80%",
+          width: "2px",
+          background: "#0000FF",
+        }}
+      />
+      {/* Ось Z: окружность (фиолетовая) */}
       <div
         style={{
           position: "absolute",
