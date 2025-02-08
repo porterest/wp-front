@@ -76,11 +76,14 @@ const CameraTrackballControl: React.FC = () => {
   }, [isDragging]);
 
   return (
-    <Html fullscreen>
+    // Внешний контейнер не перехватывает pointer-события
+    <Html fullscreen style={{ pointerEvents: "none" }}>
+      {/* Этот элемент управления получает pointer-события */}
       <div
         ref={controlRef}
         onPointerDown={onPointerDown}
         style={{
+          pointerEvents: "all",
           position: "absolute",
           bottom: "120px",
           right: "20px",
@@ -96,16 +99,18 @@ const CameraTrackballControl: React.FC = () => {
           zIndex: 100,
         }}
       >
-        {/* Оси внутри круга */}
+        {/* Внутренние оси */}
         <div style={{ position: "absolute", width: "80%", height: "2px", background: "#00FFFF" }} />
         <div style={{ position: "absolute", height: "80%", width: "2px", background: "#0000FF" }} />
-        <div style={{
-          position: "absolute",
-          width: "60%",
-          height: "60%",
-          border: "2px solid #9400D3",
-          borderRadius: "50%",
-        }} />
+        <div
+          style={{
+            position: "absolute",
+            width: "60%",
+            height: "60%",
+            border: "2px solid #9400D3",
+            borderRadius: "50%",
+          }}
+        />
       </div>
     </Html>
   );
