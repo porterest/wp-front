@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { ScaleProvider, useScale } from "../context/ScaleContext";
 import { ScaleFunctions } from "../types/scale";
 import { CandleData } from "../types/candles";
-import BetArrow from "./BetArrow";
+import GraphModes from "./GraphModes";
 import CameraTrackballControl from "./CameraTrackballControl";
 
 interface SceneProps {
@@ -23,26 +23,28 @@ interface SceneProps {
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
-  betAmount: number;
-  setBetAmount: (newAmount: number) => void;
+  // Эти пропсы передаются в GraphModes:
+  currentMode: number;
+  betsFetched: boolean;
 }
 
 const Scene: React.FC<SceneProps> = ({
                                        children,
                                        data,
                                        onScaleReady,
+                                       style,
                                        previousBetEnd,
                                        userPreviousBet,
                                        setUserPreviousBet,
                                        axisMode,
                                        onDragging,
                                        onShowConfirmButton,
-                                       betAmount,
-                                       setBetAmount,
+                                       currentMode,
+                                       betsFetched,
                                      }) => {
   return (
-    <Canvas camera={{ position: [10, 10, 10], fov: 60 }}>
-      {/* Отключаем встроенные вращения — камера будет управляться нашим трекболом */}
+    <Canvas camera={{ position: [10, 10, 10], fov: 60 }} style={style}>
+      {/* Отключаем стандартное вращение — камера будет управляться нашим кастомным трекболом */}
       <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
@@ -50,19 +52,20 @@ const Scene: React.FC<SceneProps> = ({
         {/* Рендерим график (children) */}
         {children}
         <ScaleHandler onScaleReady={onScaleReady} />
-        {/* Рендерим компонент ставок */}
-        <BetArrow
+        {/* Рендерим GraphModes, который получает все необходимые пропсы */}
+        <GraphModes
+          currentMode={currentMode}
+          data={data}
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
           setUserPreviousBet={setUserPreviousBet}
           axisMode={axisMode}
           onDragging={onDragging}
           onShowConfirmButton={onShowConfirmButton}
-          betAmount={betAmount}
-          setBetAmount={setBetAmount}
+          betsFetched={betsFetched}
         />
       </ScaleProvider>
-      {/* Рендерим компонент управления камерой (трекибол с осями) */}
+      {/* Компонент управления камерой с осями */}
       <CameraTrackballControl />
     </Canvas>
   );

@@ -13,6 +13,7 @@ import { PairOption } from "../types/pair";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
 import { CandleData } from "../types/candles";
 import BetLines from "../components/BetLines";
+import GraphModes from "../components/GraphModes";
 
 const GamePage: React.FC = () => {
   const context = useDataPrefetch();
@@ -281,23 +282,28 @@ const GamePage: React.FC = () => {
         axisMode={axisMode}
         onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
         onShowConfirmButton={(show, betData) => handleShowConfirmButton(show, betData)}
-        betAmount={betAmount}
-        setBetAmount={setBetAmount}
+        currentMode={currentMode}
+        betsFetched={betsFetched}
         onScaleReady={(scales) => {
           console.log("Scales from Scene:", scales);
           setScaleFunctions(scales);
         }}
       >
-        <BetLines
+        <GraphModes
+          axisMode={axisMode}
+          currentMode={currentMode}
+          // selectedPair={selectedPair}
+          data={data.candles || []}
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
+          setUserPreviousBet={setUserPreviousBet}
           onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
-          onShowConfirmButton={(show, betData) => handleShowConfirmButton(show, betData)}
-          maxYellowLength={2}
-          maxWhiteLength={2}
-          handleDrag={setUserPreviousBet}
-          axisMode={axisMode}
-          setBetAmount={setBetAmount}
+
+          onShowConfirmButton={(show, betData) => {
+            console.log("onShowConfirmButton called with:", show, betData);
+            handleShowConfirmButton(show, betData);
+          }}
+          betsFetched={betsFetched}
         />
       </Scene>
 

@@ -12,7 +12,7 @@ const CameraTrackballControl: React.FC = () => {
   const initialTheta = Math.atan2(camera.position.z, camera.position.x);
   const initialPhi = Math.acos(camera.position.y / initialRadius);
 
-  // Состояния для углов (theta, phi) — определяют направление камеры
+  // Состояния для углов, определяющие направление камеры
   const [theta, setTheta] = useState(initialTheta);
   const [phi, setPhi] = useState(initialPhi);
   const [isDragging, setIsDragging] = useState(false);
@@ -20,9 +20,9 @@ const CameraTrackballControl: React.FC = () => {
 
   const target = new THREE.Vector3(0, 0, 0); // точка, на которую камера смотрит
 
-  // Функция обновления позиции камеры на основе углов theta и phi
+  // Функция обновления позиции камеры по сферическим координатам
   const updateCameraPosition = () => {
-    const radius = initialRadius; // можно добавить управление зумом, если нужно
+    const radius = initialRadius; // можно добавить зум
     const x = radius * Math.sin(phi) * Math.cos(theta);
     const y = radius * Math.cos(phi);
     const z = radius * Math.sin(phi) * Math.sin(theta);
@@ -46,11 +46,11 @@ const CameraTrackballControl: React.FC = () => {
     const deltaY = e.clientY - startPosRef.current.y;
     startPosRef.current = { x: e.clientX, y: e.clientY };
 
-    const sensitivity = 0.005; // настройте чувствительность по вкусу
+    const sensitivity = 0.005;
     setTheta((prev) => prev - deltaX * sensitivity);
     setPhi((prev) => {
       let newPhi = prev - deltaY * sensitivity;
-      newPhi = Math.max(0.1, Math.min(Math.PI - 0.1, newPhi)); // ограничиваем phi
+      newPhi = Math.max(0.1, Math.min(Math.PI - 0.1, newPhi));
       return newPhi;
     });
   };
@@ -73,7 +73,7 @@ const CameraTrackballControl: React.FC = () => {
     };
   }, [isDragging]);
 
-  // По двойному клику сбрасываем положение камеры
+  // При двойном клике сбрасываем положение камеры
   const onDoubleClick = () => {
     setTheta(initialTheta);
     setPhi(initialPhi);
@@ -101,13 +101,13 @@ const CameraTrackballControl: React.FC = () => {
           zIndex: 100,
         }}
       >
-        {/* Здесь можно добавить оси, если нужно. Пример: */}
+        {/* Рисуем оси внутри круга */}
         <div
           style={{
             position: "absolute",
             width: "80%",
             height: "2px",
-            background: "#00FFFF", // Ось X (бирюзовый)
+            background: "#00FFFF", // Ось X: бирюзовый
           }}
         />
         <div
@@ -115,7 +115,7 @@ const CameraTrackballControl: React.FC = () => {
             position: "absolute",
             height: "80%",
             width: "2px",
-            background: "#0000FF", // Ось Y (синий)
+            background: "#0000FF", // Ось Y: синий
           }}
         />
         <div
@@ -123,11 +123,10 @@ const CameraTrackballControl: React.FC = () => {
             position: "absolute",
             width: "60%",
             height: "60%",
-            border: "2px solid #9400D3", // Ось Z (фиолетовый)
+            border: "2px solid #9400D3", // Ось Z: фиолетовый (окружность)
             borderRadius: "50%",
           }}
         />
-        <span style={{ color: "#fff", fontSize: "20px", zIndex: 101 }}>⟳</span>
       </div>
     </Html>
   );
