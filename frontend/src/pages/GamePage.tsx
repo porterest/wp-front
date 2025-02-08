@@ -226,6 +226,7 @@ const GamePage: React.FC = () => {
   useEffect(() => {
     context.setSelectedPair(selectedPair);
   }, []);
+  console.log(orbitControlsEnabled)
 
   return (
     <div className="relative w-screen h-screen overflow-hidden touch-none">
@@ -285,6 +286,7 @@ const GamePage: React.FC = () => {
           userPreviousBet={userPreviousBet}
           setUserPreviousBet={setUserPreviousBet}
           onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
+
           onShowConfirmButton={(show, betData) => {
             console.log("onShowConfirmButton called with:", show, betData);
             handleShowConfirmButton(show, betData);
