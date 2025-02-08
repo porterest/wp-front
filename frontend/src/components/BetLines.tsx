@@ -109,7 +109,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     // Если LS пуст, то:
     if (isUserBetZero && isVectorZero(aggregatorClipped)) {
       console.log("[BetLines] Ситуация: нет ни агрегатора, ни ставки. Устанавливаем default (3,3,0)");
-      return new THREE.Vector3(3, 3, 0);
+      return new THREE.Vector3(3, 3, 1);
     }
     if (isUserBetZero && !isVectorZero(aggregatorClipped)) {
       console.log("[BetLines] Ситуация: нет userPreviousBet, но есть агрегатор. Добавляем минимальное смещение.");

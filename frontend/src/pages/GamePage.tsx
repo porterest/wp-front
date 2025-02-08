@@ -229,7 +229,7 @@ const GamePage: React.FC = () => {
     context.setSelectedPair(selectedPair);
   }, []);
   console.log(orbitControlsEnabled)
-
+  console.log(betAmount)
   return (
     <div className="relative w-screen h-screen overflow-hidden touch-none">
       {showInstructions && (
