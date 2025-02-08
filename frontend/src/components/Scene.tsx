@@ -34,7 +34,7 @@ const Scene: React.FC<SceneProps> = ({ children, data, onScaleReady }) => {
     <>
       <Canvas camera={{ position: [10, 10, 10], fov: 60 }}>
         {/* Можно отключить встроенное управление вращением */}
-        <OrbitControls enableRotate={false} enablePan={false} enableZoom={false} />
+        {/*<OrbitControls enableRotate={false} enablePan={false} enableZoom={false} />*/}
 
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
@@ -52,7 +52,7 @@ const Scene: React.FC<SceneProps> = ({ children, data, onScaleReady }) => {
         onClick={() => setIsRotating((prev) => !prev)}
         style={{
           position: "absolute",
-          bottom: "20px",
+          bottom: "60px",
           right: "20px",
           width: "50px",
           height: "50px",
