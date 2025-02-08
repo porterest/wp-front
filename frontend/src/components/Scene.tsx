@@ -5,34 +5,69 @@ import * as THREE from "three";
 import { ScaleProvider, useScale } from "../context/ScaleContext";
 import { ScaleFunctions } from "../types/scale";
 import { CandleData } from "../types/candles";
+import BetArrow from "./BetArrow";
 
 interface SceneProps {
   children: React.ReactNode;
   orbitControlsEnabled: boolean;
   data: CandleData[];
   onScaleReady: (scaleFunctions: ScaleFunctions) => void;
-  style?: React.CSSProperties;
+  previousBetEnd: THREE.Vector3;
+  userPreviousBet: THREE.Vector3;
+  setUserPreviousBet: (value: THREE.Vector3) => void;
+  axisMode: "X" | "Y";
+  onDragging: (isDragging: boolean) => void;
+  onShowConfirmButton: (
+    show: boolean,
+    betData?: { amount: number; predicted_vector: number[] }
+  ) => void;
+  betAmount: number;
+  setBetAmount: (newAmount: number) => void;
 }
 
-const Scene: React.FC<SceneProps> = ({ children, data, onScaleReady }) => {
+const Scene: React.FC<SceneProps> = ({
+                                       children,
+                                       data,
+                                       onScaleReady,
+                                       previousBetEnd,
+                                       userPreviousBet,
+                                       setUserPreviousBet,
+                                       axisMode,
+                                       onDragging,
+                                       onShowConfirmButton,
+                                       betAmount,
+                                       setBetAmount,
+                                     }) => {
   // Ссылка на группу, к которой будем применять повороты
   const groupRef = useRef<THREE.Group>(null);
 
   return (
     <>
       <Canvas camera={{ position: [10, 10, 10], fov: 60 }}>
-        {/* Отключаем стандартное вращение – будем управлять через наш трекбол */}
+        {/* Отключаем стандартное вращение – управление осуществляется через наш трекбол */}
         <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
+
         <ScaleProvider data={data}>
-          {/* Оборачиваем содержимое сцены в группу для применения к ней поворотов */}
+          {/* Группа для поворотов и основного содержимого сцены */}
           <group ref={groupRef}>{children}</group>
           <ScaleHandler onScaleReady={onScaleReady} />
+          {/* Добавляем BetArrow – он оборачивает BetLines и выводит текстовые подсказки */}
+          <BetArrow
+            previousBetEnd={previousBetEnd}
+            userPreviousBet={userPreviousBet}
+            setUserPreviousBet={setUserPreviousBet}
+            axisMode={axisMode}
+            onDragging={onDragging}
+            onShowConfirmButton={onShowConfirmButton}
+            betAmount={betAmount}
+            setBetAmount={setBetAmount}
+          />
         </ScaleProvider>
       </Canvas>
 
-      {/* Трекбол с осями */}
+      {/* Трекбол с осями для управления поворотом сцены */}
       <TrackballControlAxes groupRef={groupRef} />
     </>
   );
@@ -59,6 +94,7 @@ interface TrackballControlProps {
    - Ось X (цена): бирюзовый (#00FFFF)
    - Ось Y (время): синий (#0000FF)
    - Ось Z (транзакции): фиолетовый (#9400D3)
+   При двойном клике трекбол сбрасывает поворот сцены.
    ============================================================ */
 const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => {
   const controlRef = useRef<HTMLDivElement>(null);
@@ -66,7 +102,7 @@ const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => 
   const [prevVector, setPrevVector] = useState<THREE.Vector3 | null>(null);
   const radius = 50;
 
-  // Восстанавливаем положение графика при двойном клике
+  // Сброс графика в исходное положение при двойном клике
   const resetGraph = () => {
     if (groupRef.current) {
       groupRef.current.quaternion.set(0, 0, 0, 1);
@@ -138,10 +174,10 @@ const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => 
     <div
       ref={controlRef}
       onMouseDown={onMouseDown}
-      onDoubleClick={resetGraph} // Сбрасываем поворот при двойном клике
+      onDoubleClick={resetGraph} // Двойной клик для сброса поворота
       style={{
         position: "absolute",
-        bottom: "80px", // Поднял выше, чтобы не заходил за нижнее меню
+        bottom: "80px", // поднят выше, чтобы не заходил за нижнее меню
         right: "20px",
         width: `${radius * 2}px`,
         height: `${radius * 2}px`,
@@ -155,23 +191,9 @@ const TrackballControlAxes: React.FC<TrackballControlProps> = ({ groupRef }) => 
       }}
     >
       {/* Ось X: горизонтальная линия (бирюзовый) */}
-      <div
-        style={{
-          position: "absolute",
-          width: "80%",
-          height: "2px",
-          background: "#00FFFF",
-        }}
-      />
+      <div style={{ position: "absolute", width: "80%", height: "2px", background: "#00FFFF" }} />
       {/* Ось Y: вертикальная линия (синий) */}
-      <div
-        style={{
-          position: "absolute",
-          height: "80%",
-          width: "2px",
-          background: "#0000FF",
-        }}
-      />
+      <div style={{ position: "absolute", height: "80%", width: "2px", background: "#0000FF" }} />
       {/* Ось Z: окружность (фиолетовая) */}
       <div
         style={{

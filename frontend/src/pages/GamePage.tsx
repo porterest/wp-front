@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
 import * as THREE from "three";
-import GraphModes from "../components/GraphModes";
 import Legend from "../components/Legend";
 import SymbolSelector from "../components/SymbolSelector";
 import Instructions from "../components/Instructions";
@@ -13,6 +12,7 @@ import { ScaleFunctions } from "../types/scale";
 import { PairOption } from "../types/pair";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
 import { CandleData } from "../types/candles";
+import BetLines from "../components/BetLines";
 
 const GamePage: React.FC = () => {
   const context = useDataPrefetch();
@@ -39,6 +39,7 @@ const GamePage: React.FC = () => {
   const [showInstructions, setShowInstructions] = useState(false);
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
   const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
+  const [betAmount, setBetAmount] = useState(0);
 
   const [betsFetched, setBetsFetched] = useState<boolean>(false);
 
@@ -93,6 +94,7 @@ const GamePage: React.FC = () => {
           // Загрузка последней ставки пользователя параллельно
           await loadUserLastBet(selectedPair);
           setBetsFetched(true);
+          console.log(betsFetched)
         } catch (error) {
           console.error("Ошибка загрузки данных ставки:", error);
         }
@@ -262,6 +264,7 @@ const GamePage: React.FC = () => {
                 break;
             }
             setCurrentMode(modeToSet);
+            console.log(currentMode)
           }}
           onAxisModeChange={(axis: "X" | "Y") => {
             console.log("AxisModeChange:", axis);
@@ -272,28 +275,35 @@ const GamePage: React.FC = () => {
       <Scene
         orbitControlsEnabled={orbitControlsEnabled}
         data={data.candles || []}
+        previousBetEnd={previousBetEnd}
+        userPreviousBet={userPreviousBet}
+        setUserPreviousBet={setUserPreviousBet}
+        axisMode={axisMode}
+        onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
+        onShowConfirmButton={(show, betData) => handleShowConfirmButton(show, betData)}
+        betAmount={betAmount}
+        setBetAmount={setBetAmount}
         onScaleReady={(scales) => {
           console.log("Scales from Scene:", scales);
           setScaleFunctions(scales);
         }}
       >
-        <GraphModes
-          axisMode={axisMode}
-          currentMode={currentMode}
-          // selectedPair={selectedPair}
-          data={data.candles || []}
+        <BetLines
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
-          setUserPreviousBet={setUserPreviousBet}
           onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
-
-          onShowConfirmButton={(show, betData) => {
-            console.log("onShowConfirmButton called with:", show, betData);
-            handleShowConfirmButton(show, betData);
-          }}
-          betsFetched={betsFetched}
+          onShowConfirmButton={(show, betData) =>
+            handleShowConfirmButton(show, betData)
+          }
+          maxYellowLength={2}
+          maxWhiteLength={2}
+          handleDrag={setUserPreviousBet}
+          axisMode={axisMode}
+          setBetAmount={setBetAmount}
         />
       </Scene>
+
+
       {showConfirmButton && (
         <div className="absolute bottom-[20px] right-[20px] z-10">
           <ConfirmBetButton onConfirm={handleConfirmBet} />

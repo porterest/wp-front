@@ -16,13 +16,11 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
                                                        }) => {
   const { data, setData } = useDataPrefetch();
   const pairs = data.pairs || []; // Пары из контекста
-  const [globalMode, setGlobalMode] = useState<"Candles" | "Axes" | "Both">(
-    "Axes"
-  );
+  const [globalMode, setGlobalMode] = useState<"Candles" | "Axes" | "Both">("Axes");
   const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
 
-  // Стили для компонента select
+  // Стили для компонента Select
   const selectStyles: StylesConfig<PairOption, false> = useMemo(
     () => ({
       control: (base) => ({
@@ -60,7 +58,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   // Обработчик изменения выбранной пары
   const handlePairChange = useCallback(
     (selectedOption: PairOption | null) => {
-      setSelectedPair(selectedOption); // Локальное состояние
+      setSelectedPair(selectedOption); // Обновляем локальное состояние
       if (selectedOption) {
         setData((prev) => ({ ...prev, selectedPair: selectedOption })); // Обновляем в контексте
         onSymbolChange(selectedOption); // Вызываем callback
@@ -69,7 +67,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     [setData, onSymbolChange]
   );
 
-  // Обработчик переключения режима
+  // Обработчик переключения глобального режима
   const handleGlobalModeSwitch = useCallback(() => {
     const nextMode =
       globalMode === "Axes"
@@ -95,12 +93,26 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     console.log("Selected pairs from context:", pairs);
   }, [pairs]);
 
-  // Эффект для синхронизации локального состояния `selectedPair` с данными из контекста
+  // Эффект для синхронизации локального состояния selectedPair с данными из контекста
   useEffect(() => {
     if (data.selectedPair) {
       setSelectedPair(data.selectedPair);
     }
   }, [data.selectedPair]);
+
+  // Эффект для автоматического выбора нужной пары при загрузке списка
+  useEffect(() => {
+    // Если список загружен и ни одна пара ещё не выбрана
+    if (pairs.length > 0 && !selectedPair) {
+      // Ищем пару с нужным label (например, "DD/TON")
+      const defaultPair = pairs.find(pair => pair.label === "DD/TON");
+      if (defaultPair) {
+        setSelectedPair(defaultPair);
+        setData(prev => ({ ...prev, selectedPair: defaultPair }));
+        onSymbolChange(defaultPair);
+      }
+    }
+  }, [pairs, selectedPair, setData, onSymbolChange]);
 
   return (
     <div className="relative w-[180px] p-2 rounded-lg bg-[rgba(0,255,255,0.2)] text-white shadow-md">
