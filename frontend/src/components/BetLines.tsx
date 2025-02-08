@@ -302,7 +302,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (yellowLineRef.current?.geometry) {
       const geom = yellowLineRef.current.geometry as LineGeometry;
       geom.setPositions([
-        0, 0, 0,
+        0, 0, 1,
         aggregatorClipped.x,
         aggregatorClipped.y,
         1

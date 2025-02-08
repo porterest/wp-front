@@ -1,63 +1,44 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import { useThree } from "@react-three/fiber";
+import React, { useEffect, useRef, useState } from "react";
+import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Html } from "@react-three/drei/web/Html";
 
 const CameraTrackballControl: React.FC = () => {
   const { camera } = useThree();
   const controlRef = useRef<HTMLDivElement>(null);
-
-  // Начальные сферические координаты камеры
-  const initialRadius = camera.position.length();
-  const initialTheta = Math.atan2(camera.position.z, camera.position.x);
-  const initialPhi = Math.acos(camera.position.y / initialRadius);
-
-  // Состояния для углов (theta, phi)
-  const [theta, setTheta] = useState(initialTheta);
-  const [phi, setPhi] = useState(initialPhi);
-  const [isDragging, setIsDragging] = useState(false);
   const startPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-
-  // Для детекции двойного клика: запоминаем время последнего pointerUp
   const lastClickTimeRef = useRef<number>(0);
-  const DOUBLE_CLICK_THRESHOLD = 300; // миллисекунд
 
-  const target = new THREE.Vector3(0, 0, 0); // точка, на которую камера смотрит
+  // Начальные координаты камеры
+  const initialCameraPosition = new THREE.Vector3(10, 10, 10);
+  const target = new THREE.Vector3(0, 0, 0);
 
-  // Функция обновления позиции камеры на основе углов theta и phi
-  const updateCameraPosition = useCallback(() => {
-    const radius = initialRadius;
-    const x = radius * Math.sin(phi) * Math.cos(theta);
-    const y = radius * Math.cos(phi);
-    const z = radius * Math.sin(phi) * Math.sin(theta);
-    camera.position.set(x, y, z);
-    camera.lookAt(target);
-  }, [camera, initialRadius, phi, theta, target]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [cameraResetProgress, setCameraResetProgress] = useState<number | null>(null);
 
-  useEffect(() => {
-    updateCameraPosition();
-  }, [theta, phi, updateCameraPosition]);
+  // Обновляем камеру при двойном клике (с плавной анимацией)
+  useFrame(() => {
+    if (cameraResetProgress !== null) {
+      const t = Math.min(1, cameraResetProgress + 0.05); // Интерполяция
+      camera.position.lerpVectors(camera.position, initialCameraPosition, t);
+      camera.lookAt(target);
 
-  // Функция сброса камеры к начальному положению
-  const resetCamera = useCallback(() => {
-    setTheta(initialTheta);
-    setPhi(initialPhi);
-    camera.position.set(
-      initialRadius * Math.sin(initialPhi) * Math.cos(initialTheta),
-      initialRadius * Math.cos(initialPhi),
-      initialRadius * Math.sin(initialPhi) * Math.sin(initialTheta)
-    );
-    camera.lookAt(target);
-  }, [camera, initialPhi, initialRadius, initialTheta, target]);
+      if (t >= 1) {
+        setCameraResetProgress(null);
+      } else {
+        setCameraResetProgress(t);
+      }
+    }
+  });
 
-  // Обработчик pointerDown: начинаем перетаскивание
+  // Начинаем перетаскивание
   const onPointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     setIsDragging(true);
     startPosRef.current = { x: e.clientX, y: e.clientY };
   };
 
-  // Обработчик pointerMove: обновляем углы на основе перемещения мыши
+  // Двигаем камеру
   const onPointerMove = (e: PointerEvent) => {
     if (!isDragging) return;
     const deltaX = e.clientX - startPosRef.current.x;
@@ -65,26 +46,20 @@ const CameraTrackballControl: React.FC = () => {
     startPosRef.current = { x: e.clientX, y: e.clientY };
 
     const sensitivity = 0.005;
-    setTheta((prev) => prev - deltaX * sensitivity);
-    setPhi((prev) => {
-      const newPhi = prev - deltaY * sensitivity;
-      return Math.max(0.1, Math.min(Math.PI - 0.1, newPhi));
-    });
+    camera.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * sensitivity);
+    camera.position.applyAxisAngle(new THREE.Vector3(1, 0, 0), -deltaY * sensitivity);
+    camera.lookAt(target);
   };
 
-  // Обработчик pointerUp: заканчиваем перетаскивание и проверяем двойной клик
+  // Завершаем перетаскивание
   const onPointerUp = () => {
     setIsDragging(false);
     const now = Date.now();
-    if (now - lastClickTimeRef.current < DOUBLE_CLICK_THRESHOLD) {
-      // Двойной клик: сбрасываем камеру
-      resetCamera();
-      lastClickTimeRef.current = 0;
-    } else {
-      lastClickTimeRef.current = now;
+    if (now - lastClickTimeRef.current < 300) {
+      setCameraResetProgress(0); // Начинаем сброс камеры
     }
+    lastClickTimeRef.current = now;
   };
-
 
   useEffect(() => {
     if (isDragging) {
@@ -107,7 +82,7 @@ const CameraTrackballControl: React.FC = () => {
         onPointerDown={onPointerDown}
         style={{
           position: "absolute",
-          bottom: "120px", // как у вас задано
+          bottom: "120px",
           right: "20px",
           width: "100px",
           height: "100px",
@@ -121,32 +96,16 @@ const CameraTrackballControl: React.FC = () => {
           zIndex: 100,
         }}
       >
-        {/* Рендерим оси внутри круга */}
-        <div
-          style={{
-            position: "absolute",
-            width: "80%",
-            height: "2px",
-            background: "#00FFFF", // Ось X: бирюзовый
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            height: "80%",
-            width: "2px",
-            background: "#0000FF", // Ось Y: синий
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            width: "60%",
-            height: "60%",
-            border: "2px solid #9400D3", // Ось Z: фиолетовый (окружность)
-            borderRadius: "50%",
-          }}
-        />
+        {/* Оси внутри круга */}
+        <div style={{ position: "absolute", width: "80%", height: "2px", background: "#00FFFF" }} />
+        <div style={{ position: "absolute", height: "80%", width: "2px", background: "#0000FF" }} />
+        <div style={{
+          position: "absolute",
+          width: "60%",
+          height: "60%",
+          border: "2px solid #9400D3",
+          borderRadius: "50%",
+        }} />
       </div>
     </Html>
   );

@@ -1,12 +1,11 @@
 import React, { useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import * as THREE from "three";
 import { ScaleProvider, useScale } from "../context/ScaleContext";
 import { ScaleFunctions } from "../types/scale";
 import { CandleData } from "../types/candles";
 import GraphModes from "./GraphModes";
-import CameraTrackballControl from "./CameraTrackballControl";
+import * as THREE from "three";
 
 interface SceneProps {
   children: React.ReactNode;
@@ -14,6 +13,7 @@ interface SceneProps {
   data: CandleData[];
   onScaleReady: (scaleFunctions: ScaleFunctions) => void;
   style?: React.CSSProperties;
+  // Пропсы для GraphModes:
   previousBetEnd: THREE.Vector3;
   userPreviousBet: THREE.Vector3;
   setUserPreviousBet: (value: THREE.Vector3) => void;
@@ -23,13 +23,15 @@ interface SceneProps {
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
-  // Эти пропсы передаются в GraphModes:
   currentMode: number;
   betsFetched: boolean;
+  betAmount: number;
+  setBetAmount: (newAmount: number) => void;
 }
 
 const Scene: React.FC<SceneProps> = ({
                                        children,
+                                       orbitControlsEnabled,
                                        data,
                                        onScaleReady,
                                        style,
@@ -44,15 +46,19 @@ const Scene: React.FC<SceneProps> = ({
                                      }) => {
   return (
     <Canvas camera={{ position: [10, 10, 10], fov: 60 }} style={style}>
-      {/* Отключаем стандартное вращение — камера будет управляться нашим кастомным трекболом */}
-      <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
+      {/* Используем orbitControlsEnabled для управления OrbitControls */}
+      <OrbitControls
+        enableRotate={orbitControlsEnabled}
+        enablePan={orbitControlsEnabled}
+        enableZoom={orbitControlsEnabled}
+      />
       <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
+      <directionalLight position={[10, 10, 10]} intensity={1} castShadow={true} />
       <ScaleProvider data={data}>
         {/* Рендерим график (children) */}
         {children}
         <ScaleHandler onScaleReady={onScaleReady} />
-        {/* Рендерим GraphModes, который получает все необходимые пропсы */}
+        {/* Рендерим GraphModes – здесь передаются все необходимые пропсы */}
         <GraphModes
           currentMode={currentMode}
           data={data}
@@ -65,8 +71,6 @@ const Scene: React.FC<SceneProps> = ({
           betsFetched={betsFetched}
         />
       </ScaleProvider>
-      {/* Компонент управления камерой с осями */}
-      <CameraTrackballControl />
     </Canvas>
   );
 };
