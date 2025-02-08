@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+// import { OrbitControls } from "@react-three/drei";
 import { ScaleProvider, useScale } from "../context/ScaleContext";
 import { ScaleFunctions } from "../types/scale";
 import { CandleData } from "../types/candles";
