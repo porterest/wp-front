@@ -30,7 +30,7 @@ interface SceneProps {
 
 const Scene: React.FC<SceneProps> = ({
                                        children,
-                                       // orbitControlsEnabled, // можно убрать этот пропс, если он не используется
+                                       // orbitControlsEnabled,
                                        data,
                                        onScaleReady,
                                        style,
