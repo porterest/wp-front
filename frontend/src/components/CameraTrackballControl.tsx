@@ -12,17 +12,21 @@ const CameraTrackballControl: React.FC = () => {
   const initialTheta = Math.atan2(camera.position.z, camera.position.x);
   const initialPhi = Math.acos(camera.position.y / initialRadius);
 
-  // Состояния для углов
+  // Состояния для углов (theta, phi)
   const [theta, setTheta] = useState(initialTheta);
   const [phi, setPhi] = useState(initialPhi);
   const [isDragging, setIsDragging] = useState(false);
   const startPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
+  // Для детекции двойного клика: запоминаем время последнего pointerUp
+  const lastClickTimeRef = useRef<number>(0);
+  const DOUBLE_CLICK_THRESHOLD = 300; // миллисекунд
+
   const target = new THREE.Vector3(0, 0, 0); // точка, на которую камера смотрит
 
-  // Функция обновления позиции камеры
+  // Функция обновления позиции камеры на основе углов theta и phi
   const updateCameraPosition = useCallback(() => {
-    const radius = initialRadius; // можно добавить управление зумом
+    const radius = initialRadius;
     const x = radius * Math.sin(phi) * Math.cos(theta);
     const y = radius * Math.cos(phi);
     const z = radius * Math.sin(phi) * Math.sin(theta);
@@ -34,6 +38,18 @@ const CameraTrackballControl: React.FC = () => {
     updateCameraPosition();
   }, [theta, phi, updateCameraPosition]);
 
+  // Функция сброса камеры к начальному положению
+  const resetCamera = useCallback(() => {
+    setTheta(initialTheta);
+    setPhi(initialPhi);
+    camera.position.set(
+      initialRadius * Math.sin(initialPhi) * Math.cos(initialTheta),
+      initialRadius * Math.cos(initialPhi),
+      initialRadius * Math.sin(initialPhi) * Math.sin(initialTheta)
+    );
+    camera.lookAt(target);
+  }, [camera, initialPhi, initialRadius, initialTheta, target]);
+
   // Обработчик pointerDown: начинаем перетаскивание
   const onPointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
@@ -41,7 +57,7 @@ const CameraTrackballControl: React.FC = () => {
     startPosRef.current = { x: e.clientX, y: e.clientY };
   };
 
-  // Обработчик pointerMove: обновляем углы на основе перемещения
+  // Обработчик pointerMove: обновляем углы на основе перемещения мыши
   const onPointerMove = (e: PointerEvent) => {
     if (!isDragging) return;
     const deltaX = e.clientX - startPosRef.current.x;
@@ -56,10 +72,19 @@ const CameraTrackballControl: React.FC = () => {
     });
   };
 
-  // Обработчик pointerUp: заканчиваем перетаскивание
+  // Обработчик pointerUp: заканчиваем перетаскивание и проверяем двойной клик
   const onPointerUp = () => {
     setIsDragging(false);
+    const now = Date.now();
+    if (now - lastClickTimeRef.current < DOUBLE_CLICK_THRESHOLD) {
+      // Двойной клик: сбрасываем камеру
+      resetCamera();
+      lastClickTimeRef.current = 0;
+    } else {
+      lastClickTimeRef.current = now;
+    }
   };
+
 
   useEffect(() => {
     if (isDragging) {
@@ -75,27 +100,14 @@ const CameraTrackballControl: React.FC = () => {
     };
   }, [isDragging]);
 
-  // Обработчик двойного клика: сбрасываем положение камеры
-  const onDoubleClick = useCallback(() => {
-    setTheta(initialTheta);
-    setPhi(initialPhi);
-    camera.position.set(
-      initialRadius * Math.sin(initialPhi) * Math.cos(initialTheta),
-      initialRadius * Math.cos(initialPhi),
-      initialRadius * Math.sin(initialPhi) * Math.sin(initialTheta)
-    );
-    camera.lookAt(target);
-  }, [camera, initialPhi, initialRadius, initialTheta, target]);
-
   return (
     <Html fullscreen>
       <div
         ref={controlRef}
         onPointerDown={onPointerDown}
-        onDoubleClick={onDoubleClick}
         style={{
           position: "absolute",
-          bottom: "120px", // не меняем – как у вас задано
+          bottom: "120px", // как у вас задано
           right: "20px",
           width: "100px",
           height: "100px",
