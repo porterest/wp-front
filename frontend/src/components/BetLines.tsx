@@ -72,6 +72,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     })();
   }, []);
 
+
   // ===== aggregatorClipped (Жёлтая стрелка) =====
   const aggregatorClipped = useMemo(() => {
     const agg = previousBetEnd.clone();
@@ -365,6 +366,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, []);
 
   const handlePointerDown = useCallback((evt: PointerEvent) => {
+    evt.stopPropagation(); // предотвращаем дальнейшую обработку события
     console.log("[BetLines] handlePointerDown", evt.clientX, evt.clientY);
     if (isClickOnSphere(evt)) {
       console.log("[BetLines] Нажатие на сферу");
@@ -373,15 +375,21 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
   }, [isClickOnSphere, onDragging]);
 
+
   const handlePointerMove = useCallback((evt: PointerEvent) => {
     if (!isDragging) return;
-    console.log("[BetLines] handlePointerMove", evt.clientX, evt.clientY);
     const rect = gl.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(
       ((evt.clientX - rect.left) / rect.width) * 2 - 1,
       -((evt.clientY - rect.top) / rect.height) * 2 + 1
     );
     raycaster.current.setFromCamera(mouse, camera);
+
+    // Обновляем плоскость на основе текущего направления камеры
+    plane.current.setFromNormalAndCoplanarPoint(
+      camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
+      aggregatorClipped
+    );
 
     const intersect = new THREE.Vector3();
     const intersectExists = raycaster.current.ray.intersectPlane(plane.current, intersect);
@@ -428,7 +436,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     setBetAmount
   ]);
 
+
   const handlePointerUp = useCallback(() => {
+    console.log("[BetLines] handlePointerUp");
     if (!isDragging) return;
     console.log("[BetLines] handlePointerUp");
     setIsDragging(false);
@@ -453,6 +463,46 @@ const BetLines: React.FC<BetLinesProps> = ({
     onShowConfirmButton,
     setBetAmount
   ]);
+
+  // Обновление betPosition при изменении userPreviousBet
+  useEffect(() => {
+    console.log("[BetLines] userPreviousBet изменился:", userPreviousBet.toArray());
+
+    // Если начинается перетаскивание, очищаем localStorage,
+    // чтобы не было конфликта со старыми значениями
+    if (isDragging) {
+      localStorage.removeItem(LOCAL_KEY);
+      console.log("[BetLines] Drag начат, LS очищен");
+    }
+
+    // Если userPreviousBet равен (0, 0, 1) – считаем, что ставок ещё нет,
+    // поэтому устанавливаем betPosition как aggregatorClipped со смещением
+    if (
+      userPreviousBet.x === 0 &&
+      userPreviousBet.y === 0 &&
+      userPreviousBet.z === 1
+    ) {
+      console.log("[BetLines] userPreviousBet равен (0,0,1) – устанавливаем betPosition как aggregatorClipped + смещение");
+      if (axisMode === "X") {
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0, 1)));
+      } else if (axisMode === "Y") {
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0, 0.001, 1)));
+      } else {
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0.001, 1)));
+      }
+      return;
+    }
+
+    // Если LS не мешает (или он уже очищен), рассчитываем новую позицию
+    const offset = userPreviousBet.clone().sub(aggregatorClipped);
+    if (offset.length() > maxWhiteLength) {
+      offset.setLength(maxWhiteLength);
+      userPreviousBet.copy(aggregatorClipped).add(offset);
+    }
+    console.log("[BetLines] Обновлён betPosition:", userPreviousBet.toArray());
+    setBetPosition(userPreviousBet.clone());
+  }, [userPreviousBet, aggregatorClipped, maxWhiteLength, axisMode, isDragging]);
+
 
   useEffect(() => {
     const c = gl.domElement;
