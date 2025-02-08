@@ -1,3 +1,4 @@
+// CameraTrackballControl.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -5,61 +6,60 @@ import * as THREE from "three";
 const CameraTrackballControl: React.FC = () => {
   const { camera } = useThree();
   const controlRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [prevVector, setPrevVector] = useState<THREE.Vector3 | null>(null);
-  const radius = 50;
 
-  const getTrackballVector = (
-    clientX: number,
-    clientY: number,
-  ): THREE.Vector3 => {
-    if (!controlRef.current) return new THREE.Vector3();
-    const rect = controlRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    let x = (clientX - centerX) / radius;
-    let y = (centerY - clientY) / radius; // инвертируем Y
-    const lengthSq = x * x + y * y;
-    let z = 0;
-    if (lengthSq > 1) {
-      const norm = 1 / Math.sqrt(lengthSq);
-      x *= norm;
-      y *= norm;
-      z = 0;
-    } else {
-      z = Math.sqrt(1 - lengthSq);
-    }
-    return new THREE.Vector3(x, y, z).normalize();
+  // Получаем начальные сферические координаты камеры
+  const initialRadius = camera.position.length();
+  const initialTheta = Math.atan2(camera.position.z, camera.position.x);
+  const initialPhi = Math.acos(camera.position.y / initialRadius);
+
+  // Состояния для углов (theta, phi) — определяют направление камеры
+  const [theta, setTheta] = useState(initialTheta);
+  const [phi, setPhi] = useState(initialPhi);
+  const [isDragging, setIsDragging] = useState(false);
+  const startPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const target = new THREE.Vector3(0, 0, 0); // точка, на которую будет смотреть камера
+
+  // Функция обновления позиции камеры на основе углов theta и phi
+  const updateCameraPosition = () => {
+    const radius = initialRadius; // можно добавить управление зумом, если нужно
+    const x = radius * Math.sin(phi) * Math.cos(theta);
+    const y = radius * Math.cos(phi);
+    const z = radius * Math.sin(phi) * Math.sin(theta);
+    camera.position.set(x, y, z);
+    camera.lookAt(target);
   };
+
+  // Обновляем позицию камеры при изменении углов
+  useEffect(() => {
+    updateCameraPosition();
+  }, [theta, phi]);
 
   const onMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
-    const vector = getTrackballVector(e.clientX, e.clientY);
-    setPrevVector(vector);
     setIsDragging(true);
+    startPosRef.current = { x: e.clientX, y: e.clientY };
   };
 
   const onMouseMove = (e: MouseEvent) => {
-    if (!isDragging || !prevVector) return;
-    const currVector = getTrackballVector(e.clientX, e.clientY);
-    const dot = prevVector.dot(currVector);
-    const angle = Math.acos(Math.min(1, Math.max(-1, dot)));
-    if (angle) {
-      const axis = new THREE.Vector3()
-        .crossVectors(prevVector, currVector)
-        .normalize();
-      if (axis.lengthSq() < 1e-6) return;
-      const quaternion = new THREE.Quaternion();
-      quaternion.setFromAxisAngle(axis, angle);
-      // Обновляем ориентацию камеры, изменяя её quaternion:
-      camera.quaternion.premultiply(quaternion);
-    }
-    setPrevVector(currVector);
+    if (!isDragging) return;
+    const deltaX = e.clientX - startPosRef.current.x;
+    const deltaY = e.clientY - startPosRef.current.y;
+    startPosRef.current = { x: e.clientX, y: e.clientY };
+
+    // Чувствительность вращения (подберите по вкусу)
+    const sensitivity = 0.005;
+    setTheta((prev) => prev - deltaX * sensitivity);
+    setPhi((prev) => {
+      let newPhi = prev - deltaY * sensitivity;
+      // Ограничиваем phi, чтобы избежать переворота камеры
+      newPhi = Math.max(0.1, Math.min(Math.PI - 0.1, newPhi));
+      return newPhi;
+    });
   };
 
   const onMouseUp = () => {
     setIsDragging(false);
-    setPrevVector(null);
   };
 
   useEffect(() => {
@@ -74,18 +74,25 @@ const CameraTrackballControl: React.FC = () => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [isDragging, prevVector]);
+  }, [isDragging]);
+
+  // По двойному клику можно сбросить положение камеры к начальному
+  const onDoubleClick = () => {
+    setTheta(initialTheta);
+    setPhi(initialPhi);
+  };
 
   return (
     <div
       ref={controlRef}
       onMouseDown={onMouseDown}
+      onDoubleClick={onDoubleClick}
       style={{
         position: "absolute",
-        bottom: "80px",
+        bottom: "80px", // можно настроить по необходимости
         right: "20px",
-        width: `${radius * 2}px`,
-        height: `${radius * 2}px`,
+        width: "100px",
+        height: "100px",
         borderRadius: "50%",
         background: "radial-gradient(circle, #4B0082 10%, #000099 90%)",
         cursor: "grab",
@@ -93,6 +100,7 @@ const CameraTrackballControl: React.FC = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        zIndex: 100,
       }}
     >
       <span style={{ color: "#fff", fontSize: "20px" }}>⟳</span>

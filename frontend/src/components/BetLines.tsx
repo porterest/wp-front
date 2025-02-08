@@ -150,12 +150,12 @@ const BetLines: React.FC<BetLinesProps> = ({
     ) {
       console.log("[BetLines] userPreviousBet равен (0,0,0) – устанавливаем betPosition как aggregatorClipped + минимальное смещение (0.001) по оси");
       if (axisMode === "X") {
-        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0, 0)));
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0, 1)));
       } else if (axisMode === "Y") {
-        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0, 0.001, 0)));
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0, 0.001, 1)));
       } else {
         // Если по каким-то причинам axisMode не задан, добавляем смещение по обоим осям
-        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0.001, 0)));
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0.001, 1)));
       }
       return;
     }
@@ -197,7 +197,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     yCone.position.copy(aggregatorClipped);
     const dir = aggregatorClipped.clone().normalize();
     if (dir.length() > 0) {
-      const up = new THREE.Vector3(0, 1, 0);
+      const up = new THREE.Vector3(0, 1, 1);
       const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
       yCone.setRotationFromQuaternion(quat);
     }
@@ -233,7 +233,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       aggregatorClipped.z,
       betPosition.x,
       betPosition.y,
-      betPosition.z
+      1
     ]);
     const wMat = new LineMaterial({
       color: "white",
@@ -304,7 +304,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         0, 0, 0,
         aggregatorClipped.x,
         aggregatorClipped.y,
-        aggregatorClipped.z
+        1
       ]);
       geom.computeBoundingSphere?.();
     }
