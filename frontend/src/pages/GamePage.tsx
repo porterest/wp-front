@@ -275,14 +275,14 @@ const GamePage: React.FC = () => {
       <Scene
         orbitControlsEnabled={orbitControlsEnabled}
         data={data.candles || []}
-        previousBetEnd={previousBetEnd}
-        userPreviousBet={userPreviousBet}
-        setUserPreviousBet={setUserPreviousBet}
-        axisMode={axisMode}
-        onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
-        onShowConfirmButton={(show, betData) => handleShowConfirmButton(show, betData)}
-        betAmount={betAmount}
-        setBetAmount={setBetAmount}
+        // previousBetEnd={previousBetEnd}
+        // userPreviousBet={userPreviousBet}
+        // setUserPreviousBet={setUserPreviousBet}
+        // axisMode={axisMode}
+        // onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
+        // onShowConfirmButton={(show, betData) => handleShowConfirmButton(show, betData)}
+        // betAmount={betAmount}
+        // setBetAmount={setBetAmount}
         onScaleReady={(scales) => {
           console.log("Scales from Scene:", scales);
           setScaleFunctions(scales);
