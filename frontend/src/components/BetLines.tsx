@@ -230,7 +230,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     wGeom.setPositions([
       aggregatorClipped.x,
       aggregatorClipped.y,
-      aggregatorClipped.z,
+      1,
       betPosition.x,
       betPosition.y,
       1
@@ -323,7 +323,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       geom.setPositions([
         aggregatorClipped.x,
         aggregatorClipped.y,
-        aggregatorClipped.z,
+        1,
         betPosition.x,
         betPosition.y,
         1
