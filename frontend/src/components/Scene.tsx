@@ -25,8 +25,8 @@ interface SceneProps {
   ) => void;
   currentMode: number;
   betsFetched: boolean;
-  betAmount: number;
-  setBetAmount: (newAmount: number) => void;
+  // betAmount: number;
+  // setBetAmount: (newAmount: number) => void;
 }
 
 const Scene: React.FC<SceneProps> = ({
