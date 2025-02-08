@@ -5,6 +5,7 @@ import { ScaleProvider, useScale } from "../context/ScaleContext";
 import { ScaleFunctions } from "../types/scale";
 import { CandleData } from "../types/candles";
 import GraphModes from "./GraphModes";
+import CameraTrackballControl from "./CameraTrackballControl";
 import * as THREE from "three";
 
 interface SceneProps {
@@ -25,8 +26,7 @@ interface SceneProps {
   ) => void;
   currentMode: number;
   betsFetched: boolean;
-  // betAmount: number;
-  // setBetAmount: (newAmount: number) => void;
+  // Если вам нужны betAmount и setBetAmount, их можно добавить здесь, но в данном примере они не используются
 }
 
 const Scene: React.FC<SceneProps> = ({
@@ -46,19 +46,19 @@ const Scene: React.FC<SceneProps> = ({
                                      }) => {
   return (
     <Canvas camera={{ position: [10, 10, 10], fov: 60 }} style={style}>
-      {/* Используем orbitControlsEnabled для управления OrbitControls */}
+      {/* Управление OrbitControls на основе orbitControlsEnabled */}
       <OrbitControls
         enableRotate={orbitControlsEnabled}
         enablePan={orbitControlsEnabled}
         enableZoom={orbitControlsEnabled}
       />
       <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 10]} intensity={1} castShadow={true} />
+      <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
       <ScaleProvider data={data}>
         {/* Рендерим график (children) */}
         {children}
         <ScaleHandler onScaleReady={onScaleReady} />
-        {/* Рендерим GraphModes – здесь передаются все необходимые пропсы */}
+        {/* Рендерим GraphModes с переданными пропсами */}
         <GraphModes
           currentMode={currentMode}
           data={data}
@@ -71,6 +71,8 @@ const Scene: React.FC<SceneProps> = ({
           betsFetched={betsFetched}
         />
       </ScaleProvider>
+      {/* Рендерим компонент управления камерой */}
+      <CameraTrackballControl />
     </Canvas>
   );
 };
