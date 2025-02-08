@@ -253,14 +253,14 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (isUserBetZero) {
       const dirAgg = aggregatorClipped.clone().normalize();
       if (dirAgg.length() > 0) {
-        const up = new THREE.Vector3(0, 1, 0);
+        const up = new THREE.Vector3(0, 1, 1);
         const quat = new THREE.Quaternion().setFromUnitVectors(up, dirAgg);
         wCone.setRotationFromQuaternion(quat);
       }
     } else {
       const dirW = betPosition.clone().sub(aggregatorClipped).normalize();
       if (dirW.length() > 0) {
-        const up = new THREE.Vector3(0, 1, 0);
+        const up = new THREE.Vector3(0, 1, 1);
         const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
         wCone.setRotationFromQuaternion(quatW);
       }
@@ -336,14 +336,14 @@ const BetLines: React.FC<BetLinesProps> = ({
         // Если нет пользовательской ставки, ориентируем белый конус как жёлтый
         const dirAgg = aggregatorClipped.clone().normalize();
         if (dirAgg.length() > 0) {
-          const up = new THREE.Vector3(0, 1, 0);
+          const up = new THREE.Vector3(0, 1, 1);
           const quat = new THREE.Quaternion().setFromUnitVectors(up, dirAgg);
           whiteConeRef.current.setRotationFromQuaternion(quat);
         }
       } else {
         const dirW = betPosition.clone().sub(aggregatorClipped).normalize();
         if (dirW.length() > 0) {
-          const up = new THREE.Vector3(0, 1, 0);
+          const up = new THREE.Vector3(0, 1, 1);
           const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
           whiteConeRef.current.setRotationFromQuaternion(quatW);
         }

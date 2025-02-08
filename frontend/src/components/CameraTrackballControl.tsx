@@ -19,14 +19,11 @@ const CameraTrackballControl: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const startPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Для детекции двойного клика
-  const clickTimeoutRef = useRef<number | null>(null);
-
   const target = new THREE.Vector3(0, 0, 0); // точка, на которую камера смотрит
 
-  // Функция обновления позиции камеры на основе theta и phi
+  // Функция обновления позиции камеры по углам theta и phi
   const updateCameraPosition = useCallback(() => {
-    const radius = initialRadius; // можно добавить зум
+    const radius = initialRadius;
     const x = radius * Math.sin(phi) * Math.cos(theta);
     const y = radius * Math.cos(phi);
     const z = radius * Math.sin(phi) * Math.sin(theta);
@@ -38,8 +35,25 @@ const CameraTrackballControl: React.FC = () => {
     updateCameraPosition();
   }, [theta, phi, updateCameraPosition]);
 
+  // Функция сброса камеры к начальному положению
+  const onDoubleClick = useCallback(() => {
+    setTheta(initialTheta);
+    setPhi(initialPhi);
+    camera.position.set(
+      initialRadius * Math.sin(initialPhi) * Math.cos(initialTheta),
+      initialRadius * Math.cos(initialPhi),
+      initialRadius * Math.sin(initialPhi) * Math.sin(initialTheta)
+    );
+    camera.lookAt(target);
+  }, [camera, initialPhi, initialRadius, initialTheta, target]);
+
+  // Обработчик мыши – если e.detail равен 2, считаем это двойным кликом
   const onMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (e.detail === 2) {
+      onDoubleClick();
+      return; // не начинаем перетаскивание при двойном клике
+    }
     setIsDragging(true);
     startPosRef.current = { x: e.clientX, y: e.clientY };
   };
@@ -76,39 +90,11 @@ const CameraTrackballControl: React.FC = () => {
     };
   }, [isDragging]);
 
-  // Обработчик двойного клика: сброс камеры к начальному положению
-  const onDoubleClick = useCallback(() => {
-    setTheta(initialTheta);
-    setPhi(initialPhi);
-    camera.position.set(
-      initialRadius * Math.sin(initialPhi) * Math.cos(initialTheta),
-      initialRadius * Math.cos(initialPhi),
-      initialRadius * Math.sin(initialPhi) * Math.sin(initialTheta)
-    );
-    camera.lookAt(target);
-  }, [camera, initialPhi, initialRadius, initialTheta, target]);
-
-  // Обработчик клика с таймером для детекции двойного клика
-  const handleClick = useCallback(() => {
-    if (clickTimeoutRef.current !== null) {
-      // Второй клик — считаем, что это двойной клик
-      window.clearTimeout(clickTimeoutRef.current);
-      clickTimeoutRef.current = null;
-      onDoubleClick();
-    } else {
-      // Первый клик – ожидаем второй
-      clickTimeoutRef.current = window.setTimeout(() => {
-        clickTimeoutRef.current = null;
-      }, 300);
-    }
-  }, [onDoubleClick]);
-
   return (
     <Html fullscreen>
       <div
         ref={controlRef}
         onMouseDown={onMouseDown}
-        onClick={handleClick}
         style={{
           position: "absolute",
           bottom: "80px",
@@ -125,7 +111,7 @@ const CameraTrackballControl: React.FC = () => {
           zIndex: 100,
         }}
       >
-        {/* Рисуем оси внутри круга */}
+        {/* Рендерим оси внутри круга */}
         <div
           style={{
             position: "absolute",
