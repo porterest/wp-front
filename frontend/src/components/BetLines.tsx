@@ -243,6 +243,15 @@ const BetLines: React.FC<BetLinesProps> = ({
       betPosition.y,
       1
     ]);
+    console.log('белая линия')
+    console.log([
+      aggregatorClipped.x,
+      aggregatorClipped.y,
+      1,
+      betPosition.x,
+      betPosition.y,
+      1
+    ])
     const wMat = new LineMaterial({
       color: "white",
       linewidth: 3,
