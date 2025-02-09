@@ -36,8 +36,12 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = (props) => {
     betsFetched,
   } = props;
 
+  // Используем useMemo для оптимизации повторного рендеринга.
+  // При изменении currentMode компоненты, которые не удовлетворяют условию, не будут рендериться,
+  // а ранее смонтированные компоненты (например, BetArrow) размонтируются, и их функции очистки вызовутся.
   return useMemo(() => {
     if (!betsFetched) return null;
+
     if (currentMode === 1) {
       return (
         <BetArrow
@@ -51,11 +55,9 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = (props) => {
           setBetAmount={setBetAmount}
         />
       );
-    }
-    if (currentMode === 2 && data) {
+    } else if (currentMode === 2 && data) {
       return <CandlestickChart data={data} mode="Candles" />;
-    }
-    if (currentMode === 3 && data) {
+    } else if (currentMode === 3 && data) {
       return (
         <>
           <CandlestickChart data={data} mode="Both" />
