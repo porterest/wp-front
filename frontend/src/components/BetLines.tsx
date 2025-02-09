@@ -322,6 +322,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     if (whiteConeRef.current && betPosition) {
       whiteConeRef.current.position.copy(betPosition);
+      whiteConeRef.current.position.z = 1;
       {
         const defaultDir = new THREE.Vector3(0, 1, 0);
         let desiredDir: THREE.Vector3;
