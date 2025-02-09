@@ -17,7 +17,14 @@ export const ScaleProvider: React.FC<{
 }> = ({ children, data }) => {
   const { viewport, scene } = useThree();
 
-  console.log("Scene position:", scene.position, "Scene scale:", scene.scale, "Viewport:", viewport);
+  console.log(
+    "Scene position:",
+    scene.position,
+    "Scene scale:",
+    scene.scale,
+    "Viewport:",
+    viewport
+  );
 
   useEffect(() => {
     console.log("Viewport changed:", viewport);
@@ -27,36 +34,45 @@ export const ScaleProvider: React.FC<{
   const minPrice = useMemo(() => Math.min(...data.map((d) => d.low)), [data]);
   const maxPrice = useMemo(() => Math.max(...data.map((d) => d.high)), [data]);
 
-  // Для временной оси задаём больший диапазон, чтобы свечи не слипались
-  const timeAxisRange = 15; // диапазон для оси времени (X), можно менять по вкусу
-
   /**
-   * Нормализация по оси X:
-   * Преобразуем индекс свечи (от 0 до length-1) в значение в диапазоне [0, timeAxisRange].
-   */
-  const normalizeX = useCallback(
-    (index: number, length: number) => {
-      return (index / (length - 1)) * timeAxisRange;
-    },
-    [timeAxisRange]
-  );
-
-  /**
-   * Нормализация по оси Y:
-   * Преобразуем цену (от minPrice до maxPrice) в значение в диапазоне [0, 5].
+   * Нормализация по оси Y с отступами:
+   * Результат будет в диапазоне [margin, 5 - margin] (например, [0.5, 4.5]),
+   * что гарантирует, что свечи не выйдут за пределы графика.
    */
   const normalizeY = useCallback(
     (value: number) => {
       const graphHeight = 5;
-      return ((value - minPrice) / (maxPrice - minPrice)) * graphHeight;
+      const margin = 0.5; // отступ сверху и снизу
+      return margin + (((value - minPrice) / (maxPrice - minPrice)) * (graphHeight - 2 * margin));
     },
     [minPrice, maxPrice]
   );
 
-  useEffect(() => {
-    console.log("Normalized minY:", normalizeY(minPrice));
-    console.log("Normalized maxY:", normalizeY(maxPrice));
-  }, [minPrice, maxPrice, normalizeY]);
+  const denormalizeY = useCallback(
+    (sceneValue: number) => {
+      const graphHeight = 5;
+      const margin = 0.5;
+      return ((sceneValue - margin) / (graphHeight - 2 * margin)) * (maxPrice - minPrice) + minPrice;
+    },
+    [minPrice, maxPrice]
+  );
+
+  /**
+   * Нормализация по оси X (временная ось):
+   * Преобразуем индекс свечи (от 0 до length-1) в значение в диапазоне [0, 5].
+   */
+  const normalizeX = useCallback(
+    (index: number, length: number) => {
+      const range = 5;
+      return (index / (length - 1)) * range;
+    },
+    []
+  );
+
+  const denormalizeX = useCallback((sceneValue: number, length: number) => {
+    const range = 5;
+    return (sceneValue / range) * (length - 1);
+  }, []);
 
   /**
    * Нормализация по оси Z (объём):
@@ -66,30 +82,6 @@ export const ScaleProvider: React.FC<{
     return (volume / maxVolume) * 5;
   }, []);
 
-  /**
-   * Денормализация по оси X:
-   * Преобразуем значение из диапазона [0, timeAxisRange] обратно в индекс (от 0 до length-1).
-   */
-  const denormalizeX = useCallback((sceneValue: number, length: number) => {
-    return (sceneValue / timeAxisRange) * (length - 1);
-  }, [timeAxisRange]);
-
-  /**
-   * Денормализация по оси Y:
-   * Преобразуем значение из диапазона [0, 5] обратно в цену (от minPrice до maxPrice).
-   */
-  const denormalizeY = useCallback(
-    (sceneValue: number) => {
-      const graphHeight = 5;
-      return (sceneValue / graphHeight) * (maxPrice - minPrice) + minPrice;
-    },
-    [minPrice, maxPrice]
-  );
-
-  /**
-   * Денормализация по оси Z:
-   * Преобразуем значение из диапазона [0, 5] обратно в объём.
-   */
   const denormalizeZ = useCallback((sceneValue: number, maxVolume: number) => {
     return (sceneValue / 5) * maxVolume;
   }, []);
