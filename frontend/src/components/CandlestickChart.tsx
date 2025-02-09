@@ -15,7 +15,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(
       return null;
     }
 
-    // Находим максимальный объём для нормализации по оси Z (объём)
+    // Находим максимальный объём для нормализации (ось X для объёма)
     const maxVolume = Math.max(...data.map((candle) => candle.volume));
 
     const getColor = (isBullish: boolean): string =>
@@ -29,22 +29,22 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(
           const isBullish = candle.close >= candle.open;
           const color = getColor(isBullish);
 
-          // Нормализуем значения цены (ось Y)
+          // Нормализуем цены по оси Y (диапазон [0,5])
           const normalizedOpen = normalizeY(candle.open);
           const normalizedClose = normalizeY(candle.close);
           const normalizedHigh = normalizeY(candle.high);
           const normalizedLow = normalizeY(candle.low);
 
-          // Если open == close, тело свечи будет нулевой высоты,
-          // поэтому задаём минимальную высоту для видимости (например, 0.1)
-          const minBodyHeight = 0.1;
           const rawBodyHeight = Math.abs(normalizedClose - normalizedOpen);
-          const bodyHeight =
-            rawBodyHeight < minBodyHeight ? minBodyHeight : rawBodyHeight;
-          const bodyY =
-            rawBodyHeight < minBodyHeight
-              ? normalizedOpen + minBodyHeight / 2
-              : (normalizedOpen + normalizedClose) / 2;
+          let bodyHeight, bodyY;
+          if (rawBodyHeight < 0.01) {
+            // Если open ≈ close (doji), задаём тело свечи равным 20% от полной высоты (shadow)
+            bodyHeight = (normalizedHigh - normalizedLow) * 0.2;
+            bodyY = normalizedLow + (normalizedHigh - normalizedLow) / 2;
+          } else {
+            bodyHeight = rawBodyHeight;
+            bodyY = (normalizedOpen + normalizedClose) / 2;
+          }
 
           const shadowHeight = normalizedHigh - normalizedLow;
           const shadowY = (normalizedHigh + normalizedLow) / 2;
@@ -54,19 +54,16 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(
           // Позиция по оси Z для временной оси (через normalizeX)
           const positionZ = normalizeX(index, slicedData.length);
 
-          // Вычисляем расстояние между свечами вдоль оси Z.
-          // Так как timeAxisRange = 15, spacing = 15 / (кол-во свечей - 1)
-          const spacing = 15 / (slicedData.length - 1);
-          // Задаём ширину свечи как 80% от доступного слота
-          const candleWidth = spacing * 0.8;
+          // Вычисляем расстояние между свечами вдоль оси Z (в диапазоне [0, 5])
+          const spacing = 5 / (slicedData.length - 1);
+          // Задаём ширину свечи как 50% от расстояния между свечами
+          const candleWidth = spacing * 0.5;
 
           return (
             <group key={index}>
               {/* Тело свечи */}
               <mesh position={[positionX, bodyY, positionZ]}>
-                <boxGeometry
-                  args={[candleWidth, bodyHeight, candleWidth]}
-                />
+                <boxGeometry args={[candleWidth, bodyHeight, candleWidth]} />
                 <meshStandardMaterial
                   color={color}
                   transparent={mode === "Both"}
@@ -74,7 +71,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(
                 />
               </mesh>
 
-              {/* Фитиль свечи */}
+              {/* Фитиль (тень) свечи */}
               <mesh position={[positionX, shadowY, positionZ]}>
                 <boxGeometry
                   args={[candleWidth * 0.25, shadowHeight, candleWidth * 0.25]}
