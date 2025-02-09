@@ -17,26 +17,28 @@ export const ScaleProvider: React.FC<{
 }> = ({ children, data }) => {
   const { viewport, scene } = useThree();
 
-  // Выводим отладочную информацию
   console.log("Scene position:", scene.position, "Scene scale:", scene.scale, "Viewport:", viewport);
 
   useEffect(() => {
     console.log("Viewport changed:", viewport);
   }, [viewport]);
 
-  // Вычисляем минимальное и максимальное значения цены из данных свечей
+  // Вычисляем минимальную и максимальную цену
   const minPrice = useMemo(() => Math.min(...data.map((d) => d.low)), [data]);
   const maxPrice = useMemo(() => Math.max(...data.map((d) => d.high)), [data]);
 
+  // Для временной оси задаём больший диапазон, чтобы свечи не слипались
+  const timeAxisRange = 15; // диапазон для оси времени (X), можно менять по вкусу
+
   /**
    * Нормализация по оси X:
-   * Преобразуем индекс (от 0 до length-1) в значение в диапазоне [0, 5].
+   * Преобразуем индекс свечи (от 0 до length-1) в значение в диапазоне [0, timeAxisRange].
    */
   const normalizeX = useCallback(
     (index: number, length: number) => {
-      return (index / (length - 1)) * 5; // диапазон [0, 5]
+      return (index / (length - 1)) * timeAxisRange;
     },
-    []
+    [timeAxisRange]
   );
 
   /**
@@ -57,20 +59,20 @@ export const ScaleProvider: React.FC<{
   }, [minPrice, maxPrice, normalizeY]);
 
   /**
-   * Нормализация по оси Z:
+   * Нормализация по оси Z (объём):
    * Преобразуем объём (от 0 до maxVolume) в значение в диапазоне [0, 5].
    */
   const normalizeZ = useCallback((volume: number, maxVolume: number) => {
-    return (volume / maxVolume) * 5; // диапазон [0, 5]
+    return (volume / maxVolume) * 5;
   }, []);
 
   /**
    * Денормализация по оси X:
-   * Преобразуем значение из диапазона [0, 5] обратно в индекс (от 0 до length-1).
+   * Преобразуем значение из диапазона [0, timeAxisRange] обратно в индекс (от 0 до length-1).
    */
   const denormalizeX = useCallback((sceneValue: number, length: number) => {
-    return (sceneValue / 5) * (length - 1);
-  }, []);
+    return (sceneValue / timeAxisRange) * (length - 1);
+  }, [timeAxisRange]);
 
   /**
    * Денормализация по оси Y:
@@ -86,7 +88,7 @@ export const ScaleProvider: React.FC<{
 
   /**
    * Денормализация по оси Z:
-   * Преобразуем значение из диапазона [0, 5] обратно в объём (от 0 до maxVolume).
+   * Преобразуем значение из диапазона [0, 5] обратно в объём.
    */
   const denormalizeZ = useCallback((sceneValue: number, maxVolume: number) => {
     return (sceneValue / 5) * maxVolume;
