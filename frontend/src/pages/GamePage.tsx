@@ -303,8 +303,6 @@ const GamePage: React.FC = () => {
         />
       </Scene>
 
-
-
       {showConfirmButton && (
         <div className="absolute bottom-[20px] right-[20px] z-10">
           <ConfirmBetButton onConfirm={handleConfirmBet} />
