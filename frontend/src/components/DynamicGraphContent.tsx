@@ -21,38 +21,35 @@ interface DynamicGraphContentProps {
   betsFetched: boolean;
 }
 
-const DynamicGraphContent: React.FC<DynamicGraphContentProps> = (props) => {
-  const {
-    currentMode,
-    data,
-    previousBetEnd,
-    userPreviousBet,
-    setUserPreviousBet,
-    axisMode,
-    onDragging,
-    onShowConfirmButton,
-    betAmount,
-    setBetAmount,
-    betsFetched,
-  } = props;
-
-  // Если данные не загружены, ничего не рендерим.
+const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
+                                                                   currentMode,
+                                                                   data,
+                                                                   previousBetEnd,
+                                                                   userPreviousBet,
+                                                                   setUserPreviousBet,
+                                                                   axisMode,
+                                                                   onDragging,
+                                                                   onShowConfirmButton,
+                                                                   betAmount,
+                                                                   setBetAmount,
+                                                                   betsFetched,
+                                                                 }) => {
   if (!betsFetched) return null;
+
+  const showCandles = (currentMode === 2 || currentMode === 3) && data;
+  const showArrows = currentMode === 1 || currentMode === 3;
 
   return (
     <>
-      {/* Если режим Candles или Both, отрисовываем график свечей */}
-      {(currentMode === 2 || currentMode === 3) && data && (
+      {showCandles && (
         <CandlestickChart
-          data={data}
+          data={data!}
           mode={currentMode === 2 ? "Candles" : "Both"}
-          // Использование уникального ключа помогает корректно размонтировать компонент при смене режима или данных.
-          key={`chart-${currentMode}-${data.length}`}
+          key={`chart-${currentMode}-${data!.length}`}
         />
       )}
 
-      {/* Если режим Axes или Both, отрисовываем стрелку (BetArrow) */}
-      {(currentMode === 1 || currentMode === 3) && (
+      {showArrows && (
         <BetArrow
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
@@ -62,8 +59,8 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = (props) => {
           onShowConfirmButton={onShowConfirmButton}
           betAmount={betAmount}
           setBetAmount={setBetAmount}
-          // Уникальный ключ для корректного размонтирования
-          key={`arrow-${currentMode}-${previousBetEnd.toArray().join("-")}`}
+          key={`arrow-${currentMode}`}
+          showArrows={showArrows} // Передаём флаг управления отображением стрелок
         />
       )}
     </>
