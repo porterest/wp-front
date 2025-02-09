@@ -50,6 +50,10 @@ const Scene: React.FC<SceneProps> = ({
       <directionalLight position={[10, 10, 10]} intensity={1} castShadow={true} />
 
       <ScaleProvider data={data}>
+        {children}
+        <ScaleHandler onScaleReady={onScaleReady} />
+      </ScaleProvider>
+      <ScaleProvider data={data}>
         {/* Добавляем компонент CandlestickChart */}
         <CandlestickChart data={data} mode="Candles" />
 
@@ -78,14 +82,17 @@ const Scene: React.FC<SceneProps> = ({
   );
 };
 
-const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) => void }> = ({
-                                                                                              onScaleReady,
-                                                                                            }) => {
+
+const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) => void }> = ({ onScaleReady }) => {
   const scaleFunctions = useScale();
+
   useEffect(() => {
     onScaleReady(scaleFunctions);
+    // console.log('scales exposed', scaleFunctions);
   }, [onScaleReady, scaleFunctions]);
+
   return null;
 };
+
 
 export default Scene;
