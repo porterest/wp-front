@@ -113,15 +113,19 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     if (isUserBetZero && isVectorZero(aggregatorClipped)) {
       console.log("[BetLines] Нет ни агрегатора, ни ставки. Устанавливаем default (3,3,1)");
-      return new THREE.Vector3(3, 3, 1);
+      return new THREE.Vector3(3, 3, 3);
     }
     if (isUserBetZero && !isVectorZero(aggregatorClipped)) {
       console.log("[BetLines] Нет userPreviousBet, но есть агрегатор. Добавляем минимальное смещение.");
+      const agg = previousBetEnd.clone()
+      if (agg.length() > maxYellowLength) {
+        agg.setLength(maxYellowLength);
+      }
       const minDelta = 0.0001;
       if (axisMode === "X") {
-        return aggregatorClipped.clone().add(new THREE.Vector3(minDelta, 0, 1));
+        return aggregatorClipped.clone().add(new THREE.Vector3(agg.x+minDelta, 0, 1));
       } else if (axisMode === "Y") {
-        return aggregatorClipped.clone().add(new THREE.Vector3(0, minDelta, 1));
+        return aggregatorClipped.clone().add(new THREE.Vector3(0, agg.y+minDelta, 1));
       }
       return aggregatorClipped.clone();
     }
@@ -172,6 +176,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (!groupRef.current) return;
     // Желтая линия
     const yGeom = new LineGeometry();
+    console.log("aggregatorClipped")
+    console.log(aggregatorClipped)
     yGeom.setPositions([
       0, 0, 0,
       aggregatorClipped.x,
