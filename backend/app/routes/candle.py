@@ -26,8 +26,9 @@ async def get_candles(pair_id: str, n: int) -> Optional[list[Candle]]:
         volume = sum([bet.amount for bet in block.bets])
         bet_prices = [bet.vector[0] for bet in block.bets]
         if not bet_prices and volume == 0:
-            low_price = 0
-            high_price = 0
+            low_price = 8
+            high_price = 14
+            volume = 100
         else:
             low_price = min(bet_prices)
             high_price = max(bet_prices)
