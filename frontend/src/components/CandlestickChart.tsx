@@ -58,7 +58,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(
           // Вычисляем расстояние между свечами вдоль оси Z (при диапазоне [0,5])
           const spacing = 5 / (slicedData.length - 1);
           // Уменьшаем ширину свечи, чтобы они не слипались: берем 30% от spacing
-          const candleWidth = spacing * 0.65;
+          const candleWidth = spacing * 0.52;
 
           return (
             <group key={index}>
