@@ -17,61 +17,73 @@ export const ScaleProvider: React.FC<{
 }> = ({ children, data }) => {
   const { viewport, scene } = useThree();
 
-  console.log(scene.position, scene.scale, viewport.height, viewport.width);
+  console.log(
+    "Scene position:",
+    scene.position,
+    "Scene scale:",
+    scene.scale,
+    "Viewport:",
+    viewport
+  );
 
   useEffect(() => {
-    console.log("viewport changed", viewport);
+    console.log("Viewport changed:", viewport);
   }, [viewport]);
 
+  // Вычисляем минимальную и максимальную цену
   const minPrice = useMemo(() => Math.min(...data.map((d) => d.low)), [data]);
   const maxPrice = useMemo(() => Math.max(...data.map((d) => d.high)), [data]);
 
-  const normalizeX = useCallback(
-    (index: number, length: number) => {
-      return (index / (length - 1)) * 10 - 5; // Растягиваем на диапазон [-5, 5]
-    },
-    [viewport.width],
-  );
-
+  /**
+   * Нормализация по оси Y с отступами:
+   * Результат будет в диапазоне [margin, 5 - margin] (например, [0.5, 4.5]),
+   * что гарантирует, что свечи не выйдут за пределы графика.
+   */
   const normalizeY = useCallback(
     (value: number) => {
-      const graphHeight = 5; // Берем полную высоту куба
-      const paddedMin = minPrice; // Убираем padding, чтобы жестко вписать в куб
-      const paddedMax = maxPrice; // Используем реальные границы
-
-      // Нормализуем значения в диапазон от 0 до graphHeight
-      return ((value - paddedMin) / (paddedMax - paddedMin)) * graphHeight;
+      const graphHeight = 5;
+      const margin = 0.5; // отступ сверху и снизу
+      return margin + (((value - minPrice) / (maxPrice - minPrice)) * (graphHeight - 2 * margin));
     },
-    [minPrice, maxPrice, viewport.height],
+    [minPrice, maxPrice]
   );
-  useEffect(() => {
-    console.log("Normalized minY:", normalizeY(minPrice));
-    console.log("Normalized maxY:", normalizeY(maxPrice));
-  }, [minPrice, maxPrice, normalizeY]);
-
-  const normalizeZ = useCallback((volume: number, maxVolume: number) => {
-    return (volume / maxVolume) * 2 - 1; // Сжимаем в диапазон [-1, 1]
-  }, []);
-
-  const denormalizeX = useCallback((sceneValue: number, length: number) => {
-    return ((sceneValue + 5) / 10) * (length - 1);
-  }, []);
 
   const denormalizeY = useCallback(
     (sceneValue: number) => {
       const graphHeight = 5;
-      return (sceneValue / graphHeight) * (maxPrice - minPrice) + minPrice;
+      const margin = 0.5;
+      return ((sceneValue - margin) / (graphHeight - 2 * margin)) * (maxPrice - minPrice) + minPrice;
     },
-    [minPrice, maxPrice],
+    [minPrice, maxPrice]
   );
 
-  useEffect(() => {
-    console.log("Min line Y:", normalizeY(minPrice));
-    console.log("Max line Y:", normalizeY(maxPrice));
-  }, [normalizeY, minPrice, maxPrice]);
+  /**
+   * Нормализация по оси X (временная ось):
+   * Преобразуем индекс свечи (от 0 до length-1) в значение в диапазоне [0, 5].
+   */
+  const normalizeX = useCallback(
+    (index: number, length: number) => {
+      const range = 5;
+      return (index / (length - 1)) * range;
+    },
+    []
+  );
+
+  const denormalizeX = useCallback((sceneValue: number, length: number) => {
+    const range = 5;
+    return (sceneValue / range) * (length - 1);
+  }, []);
+
+  /**
+   * Нормализация по оси Z (объём):
+   * Преобразуем объём (от 0 до maxVolume) в значение в диапазоне [0, 5].
+   */
+  const normalizeZ = useCallback((volume: number, maxVolume: number) => {
+    return (volume / maxVolume) * 5;
+  }, []);
 
   const denormalizeZ = useCallback((sceneValue: number, maxVolume: number) => {
-    return (sceneValue / 5) * maxVolume; // 5 — это масштаб из normalizeZ
+    return (sceneValue / 5) * maxVolume;
   }, []);
 
   const scaleFunctions = useMemo(
@@ -83,14 +95,7 @@ export const ScaleProvider: React.FC<{
       denormalizeY,
       denormalizeZ,
     }),
-    [
-      normalizeX,
-      normalizeY,
-      normalizeZ,
-      denormalizeX,
-      denormalizeY,
-      denormalizeZ,
-    ],
+    [normalizeX, normalizeY, normalizeZ, denormalizeX, denormalizeY, denormalizeZ]
   );
 
   return (
