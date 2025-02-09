@@ -37,7 +37,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(
 
           const rawBodyHeight = Math.abs(normalizedClose - normalizedOpen);
           // Увеличиваем минимальную высоту тела свечи
-          const minBodyHeight = 0.3; // увеличено с 0.1 до 0.3
+          const minBodyHeight = 2; //
           let bodyHeight, bodyY;
           if (rawBodyHeight < minBodyHeight) {
             bodyHeight = minBodyHeight;

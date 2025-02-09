@@ -47,8 +47,8 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              visible,
                                            }) => {
   const { gl, camera } = useThree();
-  // Создаем группу – она будет декларативно добавлена в сцену через JSX
-  const groupRef = useRef<THREE.Group>(null!);
+  // Создаем группу – она будет добавлена в сцену через JSX
+  const groupRef = useRef<THREE.Group>(null);
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
 
@@ -205,8 +205,12 @@ const BetLines: React.FC<BetLinesProps> = ({
     groupRef.current.add(yCone);
 
     return () => {
-      if (yellowLineRef.current) groupRef.current.remove(yellowLineRef.current);
-      if (yellowConeRef.current) groupRef.current.remove(yellowConeRef.current);
+      if (groupRef.current && yellowLineRef.current) {
+        groupRef.current.remove(yellowLineRef.current);
+      }
+      if (groupRef.current && yellowConeRef.current) {
+        groupRef.current.remove(yellowConeRef.current);
+      }
     };
   }, [aggregatorClipped, visible]);
 
@@ -216,9 +220,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (!groupRef.current) return;
     if (!betPosition) {
       console.log("[BetLines] НЕТ betPosition – не создаём белые объекты");
-      if (whiteLineRef.current) groupRef.current.remove(whiteLineRef.current);
-      if (whiteConeRef.current) groupRef.current.remove(whiteConeRef.current);
-      if (sphereRef.current) groupRef.current.remove(sphereRef.current);
+      if (groupRef.current && whiteLineRef.current) groupRef.current.remove(whiteLineRef.current);
+      if (groupRef.current && whiteConeRef.current) groupRef.current.remove(whiteConeRef.current);
+      if (groupRef.current && sphereRef.current) groupRef.current.remove(sphereRef.current);
       whiteLineRef.current = null;
       whiteConeRef.current = null;
       sphereRef.current = null;
@@ -282,13 +286,19 @@ const BetLines: React.FC<BetLinesProps> = ({
     groupRef.current.add(sph);
 
     return () => {
-      if (whiteLineRef.current) groupRef.current.remove(whiteLineRef.current);
-      if (whiteConeRef.current) groupRef.current.remove(whiteConeRef.current);
-      if (sphereRef.current) groupRef.current.remove(sphereRef.current);
+      if (groupRef.current && whiteLineRef.current) {
+        groupRef.current.remove(whiteLineRef.current);
+      }
+      if (groupRef.current && whiteConeRef.current) {
+        groupRef.current.remove(whiteConeRef.current);
+      }
+      if (groupRef.current && sphereRef.current) {
+        groupRef.current.remove(sphereRef.current);
+      }
     };
   }, [aggregatorClipped, betPosition, visible, isUserBetZero]);
 
-  // ===== Обновление геометрии/позиции объектов при изменении агрегатора или betPosition =====
+  // ===== Обновление геометрии/позиции объектов =====
   useEffect(() => {
     if (!visible) return;
     if (yellowLineRef.current?.geometry) {
@@ -481,7 +491,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Если visible === false, ничего не рендерим
   if (!visible) return null;
-  // Рендерим группу, в которую в useEffect добавляются все объекты
+  // Рендерим группу, в которую добавляются все объекты
   return <group ref={groupRef} />;
 };
 
