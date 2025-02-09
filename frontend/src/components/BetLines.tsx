@@ -146,13 +146,11 @@ const BetLines: React.FC<BetLinesProps> = ({
       userPreviousBet.z === 1
     ) {
       console.log("[BetLines] userPreviousBet равен (0,0,1) – устанавливаем betPosition как aggregatorClipped + смещение");
-      if (axisMode === "X") {
-        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0, 1)));
-      } else if (axisMode === "Y") {
-        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0, 0.001, 1)));
-      } else {
-        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0.001, 1)));
-      }
+      const minDelta = 0.0001;
+      // Вычисляем смещение вдоль направления агрегатора
+      const offset = aggregatorClipped.clone().normalize().multiplyScalar(minDelta);
+      // Устанавливаем betPosition как конец агрегатора плюс небольшое смещение, гарантируя, что z = 1
+      setBetPosition(aggregatorClipped.clone().add(offset).setZ(1));
       return;
     }
     const offset = userPreviousBet.clone().sub(aggregatorClipped);
@@ -162,7 +160,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     console.log("[BetLines] Обновлён betPosition:", userPreviousBet.toArray());
     setBetPosition(userPreviousBet.clone());
-  }, [userPreviousBet, aggregatorClipped, maxWhiteLength, axisMode, isDragging]);
+  }, [userPreviousBet, aggregatorClipped, maxWhiteLength, isDragging]);
 
   // ===== Создание жёлтых объектов (линия и конус) =====
   useEffect(() => {
