@@ -35,15 +35,15 @@ export const ScaleProvider: React.FC<{
   const maxPrice = useMemo(() => Math.max(...data.map((d) => d.high)), [data]);
 
   /**
-   * Нормализация по оси Y с отступами:
-   * Результат будет в диапазоне [margin, 5 - margin] (например, [0.5, 4.5]),
-   * что гарантирует, что свечи не выйдут за пределы графика.
+   * Нормализация по оси Y (цены)
+   * Отображает диапазон [minPrice, maxPrice] → [0.5, 4.5] (с запасом сверху и снизу).
    */
   const normalizeY = useCallback(
     (value: number) => {
       const graphHeight = 5;
-      const margin = 0.5; // отступ сверху и снизу
-      return margin + (((value - minPrice) / (maxPrice - minPrice)) * (graphHeight - 2 * margin));
+      const margin = 0.5; // Минимальный отступ сверху и снизу
+      const priceRange = maxPrice - minPrice || 1; // Чтобы не делить на 0
+      return margin + ((value - minPrice) / priceRange) * (graphHeight - 2 * margin);
     },
     [minPrice, maxPrice]
   );
@@ -52,38 +52,37 @@ export const ScaleProvider: React.FC<{
     (sceneValue: number) => {
       const graphHeight = 5;
       const margin = 0.5;
-      return ((sceneValue - margin) / (graphHeight - 2 * margin)) * (maxPrice - minPrice) + minPrice;
+      const priceRange = maxPrice - minPrice || 1;
+      return ((sceneValue - margin) / (graphHeight - 2 * margin)) * priceRange + minPrice;
     },
     [minPrice, maxPrice]
   );
 
   /**
-   * Нормализация по оси X (временная ось):
-   * Преобразуем индекс свечи (от 0 до length-1) в значение в диапазоне [0, 5].
+   * Нормализация по оси X (временная ось, индекс свечи)
+   * Индексы [0, length - 1] → [0, 5]
    */
   const normalizeX = useCallback(
     (index: number, length: number) => {
-      const range = 5;
-      return (index / (length - 1)) * range;
+      return length > 1 ? (index / (length - 1)) * 5 : 0; // Если 1 свеча — ставим 0
     },
     []
   );
 
   const denormalizeX = useCallback((sceneValue: number, length: number) => {
-    const range = 5;
-    return (sceneValue / range) * (length - 1);
+    return length > 1 ? (sceneValue / 5) * (length - 1) : 0;
   }, []);
 
   /**
-   * Нормализация по оси Z (объём):
-   * Преобразуем объём (от 0 до maxVolume) в значение в диапазоне [0, 5].
+   * Нормализация по оси Z (объём)
+   * Значения [0, maxVolume] → [0, 5]
    */
   const normalizeZ = useCallback((volume: number, maxVolume: number) => {
-    return (volume / maxVolume) * 5;
+    return maxVolume > 0 ? (volume / maxVolume) * 5 : 0; // Чтобы не делить на 0
   }, []);
 
   const denormalizeZ = useCallback((sceneValue: number, maxVolume: number) => {
-    return (sceneValue / 5) * maxVolume;
+    return maxVolume > 0 ? (sceneValue / 5) * maxVolume : 0;
   }, []);
 
   const scaleFunctions = useMemo(

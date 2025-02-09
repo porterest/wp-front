@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import BetArrow from "./BetArrow";
 import CandlestickChart from "./CandlestickChart";
 import * as THREE from "three";
@@ -21,25 +21,48 @@ interface DynamicGraphContentProps {
   betsFetched: boolean;
 }
 
-const DynamicGraphContent: React.FC<DynamicGraphContentProps> = (props) => {
-  const {
-    currentMode,
-    data,
-    previousBetEnd,
-    userPreviousBet,
-    setUserPreviousBet,
-    axisMode,
-    onDragging,
-    onShowConfirmButton,
-    betAmount,
-    setBetAmount,
-    betsFetched,
-  } = props;
+const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
+                                                                   currentMode,
+                                                                   data,
+                                                                   previousBetEnd,
+                                                                   userPreviousBet,
+                                                                   setUserPreviousBet,
+                                                                   axisMode,
+                                                                   onDragging,
+                                                                   onShowConfirmButton,
+                                                                   betAmount,
+                                                                   setBetAmount,
+                                                                   betsFetched,
+                                                                 }) => {
+  if (!betsFetched) return null;
 
-  return useMemo(() => {
-    if (!betsFetched) return null;
-    if (currentMode === 1) {
-      return (
+  // Если режим только "Candles", рендерим только график свечей
+  if (currentMode === 2 && data) {
+    return <CandlestickChart data={data} mode="Candles" />;
+  }
+
+  // Если режим только "Axes", рендерим только стрелку
+  if (currentMode === 1) {
+    return (
+      <BetArrow
+        previousBetEnd={previousBetEnd}
+        userPreviousBet={userPreviousBet}
+        setUserPreviousBet={setUserPreviousBet}
+        axisMode={axisMode}
+        onDragging={onDragging}
+        onShowConfirmButton={onShowConfirmButton}
+        betAmount={betAmount}
+        setBetAmount={setBetAmount}
+        visitable={true}
+      />
+    );
+  }
+
+  // Если режим "Both", рендерим и график, и стрелку
+  if (currentMode === 3 && data) {
+    return (
+      <>
+        <CandlestickChart data={data} mode="Both" />
         <BetArrow
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
@@ -49,43 +72,13 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = (props) => {
           onShowConfirmButton={onShowConfirmButton}
           betAmount={betAmount}
           setBetAmount={setBetAmount}
+          visitable={true}
         />
-      );
-    }
-    if (currentMode === 2 && data) {
-      return <CandlestickChart data={data} mode="Candles" />;
-    }
-    if (currentMode === 3 && data) {
-      return (
-        <>
-          <CandlestickChart data={data} mode="Both" />
-          <BetArrow
-            previousBetEnd={previousBetEnd}
-            userPreviousBet={userPreviousBet}
-            setUserPreviousBet={setUserPreviousBet}
-            axisMode={axisMode}
-            onDragging={onDragging}
-            onShowConfirmButton={onShowConfirmButton}
-            betAmount={betAmount}
-            setBetAmount={setBetAmount}
-          />
-        </>
-      );
-    }
-    return null;
-  }, [
-    betsFetched,
-    currentMode,
-    data,
-    previousBetEnd,
-    userPreviousBet,
-    setUserPreviousBet,
-    axisMode,
-    onDragging,
-    onShowConfirmButton,
-    betAmount,
-    setBetAmount,
-  ]);
+      </>
+    );
+  }
+
+  return null;
 };
 
 export default DynamicGraphContent;
