@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import BetArrow from "./BetArrow";
 import CandlestickChart from "./CandlestickChart";
 import * as THREE from "three";
@@ -36,14 +36,23 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = (props) => {
     betsFetched,
   } = props;
 
-  // Используем useMemo для оптимизации повторного рендеринга.
-  // При изменении currentMode компоненты, которые не удовлетворяют условию, не будут рендериться,
-  // а ранее смонтированные компоненты (например, BetArrow) размонтируются, и их функции очистки вызовутся.
-  return useMemo(() => {
-    if (!betsFetched) return null;
+  // Если данные не загружены, ничего не рендерим.
+  if (!betsFetched) return null;
 
-    if (currentMode === 1) {
-      return (
+  return (
+    <>
+      {/* Если режим Candles или Both, отрисовываем график свечей */}
+      {(currentMode === 2 || currentMode === 3) && data && (
+        <CandlestickChart
+          data={data}
+          mode={currentMode === 2 ? "Candles" : "Both"}
+          // Использование уникального ключа помогает корректно размонтировать компонент при смене режима или данных.
+          key={`chart-${currentMode}-${data.length}`}
+        />
+      )}
+
+      {/* Если режим Axes или Both, отрисовываем стрелку (BetArrow) */}
+      {(currentMode === 1 || currentMode === 3) && (
         <BetArrow
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
@@ -53,41 +62,12 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = (props) => {
           onShowConfirmButton={onShowConfirmButton}
           betAmount={betAmount}
           setBetAmount={setBetAmount}
+          // Уникальный ключ для корректного размонтирования
+          key={`arrow-${currentMode}-${previousBetEnd.toArray().join("-")}`}
         />
-      );
-    } else if (currentMode === 2 && data) {
-      return <CandlestickChart data={data} mode="Candles" />;
-    } else if (currentMode === 3 && data) {
-      return (
-        <>
-          <CandlestickChart data={data} mode="Both" />
-          <BetArrow
-            previousBetEnd={previousBetEnd}
-            userPreviousBet={userPreviousBet}
-            setUserPreviousBet={setUserPreviousBet}
-            axisMode={axisMode}
-            onDragging={onDragging}
-            onShowConfirmButton={onShowConfirmButton}
-            betAmount={betAmount}
-            setBetAmount={setBetAmount}
-          />
-        </>
-      );
-    }
-    return null;
-  }, [
-    betsFetched,
-    currentMode,
-    data,
-    previousBetEnd,
-    userPreviousBet,
-    setUserPreviousBet,
-    axisMode,
-    onDragging,
-    onShowConfirmButton,
-    betAmount,
-    setBetAmount,
-  ]);
+      )}
+    </>
+  );
 };
 
 export default DynamicGraphContent;
