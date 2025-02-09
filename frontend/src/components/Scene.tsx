@@ -50,10 +50,6 @@ const Scene: React.FC<SceneProps> = ({
       <directionalLight position={[10, 10, 10]} intensity={1} castShadow={true} />
 
       <ScaleProvider data={data}>
-        {children}
-        <ScaleHandler onScaleReady={onScaleReady} />
-      </ScaleProvider>
-      <ScaleProvider data={data}>
         {/* Добавляем компонент CandlestickChart */}
         <CandlestickChart data={data} mode="Candles" />
 
