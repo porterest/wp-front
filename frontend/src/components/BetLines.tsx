@@ -242,14 +242,14 @@ const BetLines: React.FC<BetLinesProps> = ({
       new THREE.MeshStandardMaterial({ color: "white" })
     );
     // Устанавливаем позицию конуса как betPosition (уже с z = 1)
-    wCone.position.copy(betPosition);
+    wGeom.setPositions([betPosition.x, betPosition.y, 1]);
     // Для ориентации вычисляем направление от конца желтой стрелки до белой
     const aggForWhite = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1);
     const betPosForWhite = new THREE.Vector3(betPosition.x, betPosition.y, 1);
     const whiteDir = betPosForWhite.clone().sub(aggForWhite).normalize();
     if (whiteDir.length() > 0) {
-      const up = new THREE.Vector3(0, 0, 1);
-      const quat = new THREE.Quaternion().setFromUnitVectors(up, whiteDir);
+      // const up = new THREE.Vector3(0, 0, 1);
+      const quat = new THREE.Quaternion().setFromUnitVectors(whiteDir, betPosForWhite);
       wCone.setRotationFromQuaternion(quat);
     }
     whiteConeRef.current = wCone;
