@@ -36,7 +36,6 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(
           const normalizedLow = normalizeY(candle.low);
 
           const rawBodyHeight = Math.abs(normalizedClose - normalizedOpen);
-          // Увеличиваем минимальную высоту тела свечи
           const minBodyHeight = 2; //
           let bodyHeight, bodyY;
           if (rawBodyHeight < minBodyHeight) {
@@ -59,7 +58,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(
           // Вычисляем расстояние между свечами вдоль оси Z (при диапазоне [0,5])
           const spacing = 5 / (slicedData.length - 1);
           // Уменьшаем ширину свечи, чтобы они не слипались: берем 30% от spacing
-          const candleWidth = spacing * 0.3;
+          const candleWidth = spacing * 0.65;
 
           return (
             <group key={index}>
