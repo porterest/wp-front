@@ -219,7 +219,7 @@ export async function fetchCandles(pairId: string): Promise<CandleData[]> {
         });
 
         console.log('свечи');
-        console.log(pairId);
+        console.log(response.data);
 
         return response.data.map((candle: BackendCandle) => {
             // Log each field of the candle
