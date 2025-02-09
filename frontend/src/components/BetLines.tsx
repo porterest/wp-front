@@ -274,6 +274,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       })
     );
     sph.position.copy(betPosition);
+    sph.position.z = 1;
     sphereRef.current = sph;
     scene.add(sph);
 
