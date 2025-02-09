@@ -17,6 +17,7 @@ interface BetArrowProps {
   betAmount: number;
   setBetAmount: (amount: number) => void;
   showArrows?: boolean;
+  visitable?: boolean;
 }
 
 const BetArrow: React.FC<BetArrowProps> = ({
@@ -29,6 +30,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
                                              betAmount,
                                              setBetAmount,
                                              showArrows = true, // по умолчанию стрелки отображаются
+                                             visitable = false,
                                            }) => {
   // Если стрелки не нужно отображать, сразу возвращаем null.
   if (!showArrows) {
@@ -101,6 +103,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         handleDrag={handleDrag}
         axisMode={axisMode}
         setBetAmount={setBetAmount}
+        visible={visitable}
       />
 
       {/* Отрисовка текста с депозитом */}

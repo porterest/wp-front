@@ -25,6 +25,7 @@ interface BetLinesProps {
   handleDrag: (newPosition: THREE.Vector3) => void;
   axisMode: "X" | "Y";
   setBetAmount: (newAmount: number) => void;
+  visible: boolean;
 }
 
 const LOCAL_KEY = "userBetVector";
@@ -43,6 +44,7 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              handleDrag,
                                              axisMode,
                                              setBetAmount,
+                                             visible,
                                            }) => {
   // ===== THREE & ссылки =====
   const { gl, camera, scene } = useThree();
@@ -161,6 +163,17 @@ const BetLines: React.FC<BetLinesProps> = ({
     console.log("[BetLines] Обновлён betPosition:", userPreviousBet.toArray());
     setBetPosition(userPreviousBet.clone());
   }, [userPreviousBet, aggregatorClipped, maxWhiteLength, axisMode, isDragging]);
+
+
+  useEffect(() => {
+    if (!visible) {
+      if (yellowLineRef.current) scene.remove(yellowLineRef.current);
+      if (yellowConeRef.current) scene.remove(yellowConeRef.current);
+      if (whiteLineRef.current) scene.remove(whiteLineRef.current);
+      if (whiteConeRef.current) scene.remove(whiteConeRef.current);
+      if (sphereRef.current) scene.remove(sphereRef.current);
+    }
+  }, [visible, scene]);
 
   // ===== Создание жёлтых объектов (один раз) =====
   useEffect(() => {

@@ -36,12 +36,12 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
                                                                  }) => {
   if (!betsFetched) return null;
 
-  // Если режим только "Candles" (2), то рендерим только график свечей
+  // Если режим только "Candles", рендерим только график свечей
   if (currentMode === 2 && data) {
     return <CandlestickChart data={data} mode="Candles" />;
   }
 
-  // Если режим только "Axes" (1), то рендерим только стрелку
+  // Если режим только "Axes", рендерим только стрелку
   if (currentMode === 1) {
     return (
       <BetArrow
@@ -53,11 +53,12 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
         onShowConfirmButton={onShowConfirmButton}
         betAmount={betAmount}
         setBetAmount={setBetAmount}
+        visitable={true}
       />
     );
   }
 
-  // Если режим "Both" (3) и данные есть, то рендерим и график, и стрелку
+  // Если режим "Both", рендерим и график, и стрелку
   if (currentMode === 3 && data) {
     return (
       <>
@@ -71,6 +72,7 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
           onShowConfirmButton={onShowConfirmButton}
           betAmount={betAmount}
           setBetAmount={setBetAmount}
+          visitable={true}
         />
       </>
     );
