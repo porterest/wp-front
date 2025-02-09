@@ -98,6 +98,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Инициализация белого вектора (betPosition)
   const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(() => {
+    // Проверяем наличие сохранённого вектора в localStorage
     try {
       const stored = localStorage.getItem(LOCAL_KEY);
       console.log("[BetLines] Проверяем localStorage, содержимое:", stored);
@@ -111,18 +112,30 @@ const BetLines: React.FC<BetLinesProps> = ({
     } catch (err) {
       console.error("[BetLines] Ошибка парсинга LS:", err);
     }
-    if (isUserBetZero && isVectorZero(aggregatorClipped)) {
-      console.log("[BetLines] Нет ни агрегатора, ни ставки. Устанавливаем default (3,3,1)");
-      return new THREE.Vector3(3, 3, 3);
-    }
-    if (isUserBetZero && !isVectorZero(aggregatorClipped)) {
-      console.log("[BetLines] Нет userPreviousBet, но есть агрегатор. Добавляем минимальное смещение.");
+
+    // Если пользовательской ставки нет, вне зависимости от того, есть ли агрегатор,
+    // устанавливаем белый вектор как: конец жёлтого вектора + минимальное смещение.
+    if (isUserBetZero) {
+      console.log("[BetLines] Нет userPreviousBet. Используем конец жёлтого вектора с маленьким смещением.");
       const minDelta = 0.0001;
-      // Вычисляем смещение вдоль направления агрегатора.
-      const offset = aggregatorClipped.clone().normalize().multiplyScalar(minDelta);
-      // Возвращаем вектор, который начинается с конца жёлтого вектора и смещён на offset.
-      return aggregatorClipped.clone().add(offset).setZ(1);
+      // Начинаем со значения агрегатора
+      let baseVector = aggregatorClipped.clone();
+      // Если агрегатора нет (нулевой вектор), задаём значение по умолчанию.
+      if (isVectorZero(baseVector)) {
+        baseVector = new THREE.Vector3(3, 3, 1);
+      }
+      // Вычисляем направление для смещения: нормализуем базовый вектор.
+      const direction = baseVector.clone().normalize();
+      // На случай, если нормализация дала нулевой вектор (для защиты)
+      if (direction.length() === 0) {
+        direction.set(1, 0, 0);
+      }
+      const offset = direction.multiplyScalar(minDelta);
+      // Итоговый белый вектор: конец жёлтого вектора + offset, с фиксированным z = 1.
+      return baseVector.add(offset).setZ(1);
     }
+
+    // Если же userPreviousBet задан, то используем его, ограничивая по длине вектора.
     console.log("[BetLines] Есть и агрегатор, и userPreviousBet.");
     const dir = userPreviousBet.clone().sub(aggregatorClipped);
     if (dir.length() > maxWhiteLength) {
@@ -131,6 +144,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     return userPreviousBet.clone();
   });
+
 
   // Обновление betPosition при изменении userPreviousBet
   useEffect(() => {
