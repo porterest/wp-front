@@ -17,8 +17,8 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(
     const maxVolume = Math.max(...data.map(candle => candle.volume));
 
     // Границы графика по оси Y (как заданы в normalizeY)
-    const graphMinY = 0.5;
-    const graphMaxY = 4.5;
+    const graphMinY = 0.1;
+    const graphMaxY = 4.9;
     const minBodyHeight = 2;
 
     return (
