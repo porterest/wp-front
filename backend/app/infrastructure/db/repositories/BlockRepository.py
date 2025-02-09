@@ -119,7 +119,8 @@ class BlockRepository(
                 .where(and_(
                     self.entity.chain_id == chain.id,
                     self.entity.result_vector != [0.0, 0.0],
-                    self.entity.status == BlockStatus.COMPLETED
+                    self.entity.status == BlockStatus.COMPLETED,
+                    self.entity.bets.any()
                 ))
                 .order_by(desc(self.entity.created_at, ))
                 .limit(n)

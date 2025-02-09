@@ -48,7 +48,7 @@ class AggregateBetsService(AggregateBetsServiceInterface):
             aggregate_x = 0
             aggregate_y = 0
 
-        aggregated_quaternion = aggregate_x, aggregate_y
+        aggregated_quaternion = aggregate_x, aggregate_y #todo: aa
 
         logger.info("aggregated_quaternion")
         logger.info(aggregated_quaternion)
