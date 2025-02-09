@@ -77,6 +77,8 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Нормализуем вектор агрегатора
   const aggregatorClipped = useMemo(() => {
+    console.log("previousBetEnd");
+    console.log(previousBetEnd);
     const agg = previousBetEnd.clone();
     if (agg.length() > maxYellowLength) {
       agg.setLength(maxYellowLength);
