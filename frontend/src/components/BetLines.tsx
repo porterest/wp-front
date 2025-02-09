@@ -202,8 +202,12 @@ const BetLines: React.FC<BetLinesProps> = ({
     scene.add(yCone);
 
     return () => {
-      if (yellowLineRef.current) scene.remove(yellowLineRef.current);
-      if (yellowConeRef.current) scene.remove(yellowConeRef.current);
+      if (yellowLineRef.current) {
+        scene.remove(yellowLineRef.current);
+      }
+      if (yellowConeRef.current) {
+        scene.remove(yellowConeRef.current);
+      }
     };
   }, [aggregatorClipped, scene]);
 

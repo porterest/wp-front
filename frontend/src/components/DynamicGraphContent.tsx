@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import BetArrow from "./BetArrow";
 import CandlestickChart from "./CandlestickChart";
 import * as THREE from "three";
@@ -36,13 +36,12 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = (props) => {
     betsFetched,
   } = props;
 
-  // Используем useMemo для оптимизации повторного рендеринга.
-  // При изменении currentMode компоненты, которые не удовлетворяют условию, не будут рендериться,
-  // а ранее смонтированные компоненты (например, BetArrow) размонтируются, и их функции очистки вызовутся.
-  return useMemo(() => {
-    if (!betsFetched) return null;
+  // Если данные ещё не загружены – ничего не рендерим
+  if (!betsFetched) return null;
 
-    if (currentMode === 1) {
+  // В зависимости от режима рендерим нужные компоненты
+  switch (currentMode) {
+    case 1:
       return (
         <BetArrow
           previousBetEnd={previousBetEnd}
@@ -55,9 +54,11 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = (props) => {
           setBetAmount={setBetAmount}
         />
       );
-    } else if (currentMode === 2 && data) {
+    case 2:
+      if (!data) return null;
       return <CandlestickChart data={data} mode="Candles" />;
-    } else if (currentMode === 3 && data) {
+    case 3:
+      if (!data) return null;
       return (
         <>
           <CandlestickChart data={data} mode="Both" />
@@ -73,21 +74,9 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = (props) => {
           />
         </>
       );
-    }
-    return null;
-  }, [
-    betsFetched,
-    currentMode,
-    data,
-    previousBetEnd,
-    userPreviousBet,
-    setUserPreviousBet,
-    axisMode,
-    onDragging,
-    onShowConfirmButton,
-    betAmount,
-    setBetAmount,
-  ]);
+    default:
+      return null;
+  }
 };
 
 export default DynamicGraphContent;
