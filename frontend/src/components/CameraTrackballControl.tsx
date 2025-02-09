@@ -86,7 +86,7 @@ const CameraTrackballControl: React.FC = () => {
           pointerEvents: "all",
           position: "absolute",
           bottom: "120px",
-          right: "20px",
+          left: "20px",
           width: "100px",
           height: "100px",
           borderRadius: "50%",
