@@ -340,6 +340,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     if (sphereRef.current && betPosition) {
       sphereRef.current.position.copy(betPosition);
+      sphereRef.current.position.z = 1;
     }
   }, [aggregatorClipped, betPosition, isUserBetZero]);
 
