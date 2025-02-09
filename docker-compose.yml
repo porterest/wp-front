@@ -27,6 +27,8 @@ services:
     depends_on:
       - app
       - frontend
+    networks:
+      - wp_network
 
 #  prometheus:
 #    image: prom/prometheus:latest
