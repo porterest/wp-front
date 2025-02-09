@@ -72,13 +72,13 @@ const BetLines: React.FC<BetLinesProps> = ({
     })();
   }, []);
 
-
   // ===== aggregatorClipped (Жёлтая стрелка) =====
   const aggregatorClipped = useMemo(() => {
     const agg = previousBetEnd.clone();
     if (agg.length() > maxYellowLength) {
       agg.setLength(maxYellowLength);
     }
+    // Если требуется, можно здесь установить agg.z = 1, но в нашем коде при отрисовке мы принудительно используем z=1
     console.log("[BetLines] aggregatorClipped =", agg.toArray());
     return agg;
   }, [previousBetEnd, maxYellowLength]);
@@ -160,7 +160,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     console.log("[BetLines] Обновлён betPosition:", userPreviousBet.toArray());
     setBetPosition(userPreviousBet.clone());
-  }, [userPreviousBet, aggregatorClipped, maxWhiteLength]);
+  }, [userPreviousBet, aggregatorClipped, maxWhiteLength, axisMode, isDragging]);
 
   // ===== Создание жёлтых объектов (один раз) =====
   useEffect(() => {
@@ -170,7 +170,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       0, 0, 0,
       aggregatorClipped.x,
       aggregatorClipped.y,
-      1
+      1  // принудительно z = 1
     ]);
     const yMat = new LineMaterial({
       color: "yellow",
@@ -186,13 +186,17 @@ const BetLines: React.FC<BetLinesProps> = ({
       new THREE.ConeGeometry(0.1, 0.3, 12),
       new THREE.MeshStandardMaterial({ color: "yellow" })
     );
+    // Помещаем конус в конец жёлтой стрелки
     yCone.position.copy(aggregatorClipped);
     yCone.position.z = 1;
-    const dir = aggregatorClipped.clone().normalize();
-    if (dir.length() > 0) {
-      const up = new THREE.Vector3(0, 0, 1);
-      const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
-      yCone.setRotationFromQuaternion(quat);
+    {
+      // Вычисляем желаемое направление: от (0,0,0) до (aggregatorClipped.x,aggregatorClipped.y,1)
+      const desiredDir = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1).normalize();
+      const defaultDir = new THREE.Vector3(0, 1, 0); // по умолчанию ConeGeometry смотрит вдоль +Y
+      if (desiredDir.length() > 0) {
+        const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
+        yCone.setRotationFromQuaternion(quat);
+      }
     }
     yellowConeRef.current = yCone;
     scene.add(yCone);
@@ -218,6 +222,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       console.log("[BetLines] Есть и агрегатор, и betPosition – создаём белые объекты:", betPosition.toArray());
     }
 
+    // Белая линия
     const wGeom = new LineGeometry();
     wGeom.setPositions([
       aggregatorClipped.x,
@@ -241,38 +246,36 @@ const BetLines: React.FC<BetLinesProps> = ({
       new THREE.ConeGeometry(0.1, 0.3, 12),
       new THREE.MeshStandardMaterial({ color: "white" })
     );
-    // Устанавливаем позицию конуса как betPosition (уже с z = 1)
-    wGeom.setPositions([betPosition.x, betPosition.y, 1]);
-    // Для ориентации вычисляем направление от конца желтой стрелки до белой
-    const aggForWhite = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1);
-    const betPosForWhite = new THREE.Vector3(betPosition.x, betPosition.y, 1);
-    const whiteDir = betPosForWhite.clone().sub(aggForWhite).normalize();
-    if (whiteDir.length() > 0) {
-      // const up = new THREE.Vector3(0, 0, 1);
-      const quat = new THREE.Quaternion().setFromUnitVectors(whiteDir, betPosForWhite);
-      wCone.setRotationFromQuaternion(quat);
+    wCone.position.copy(betPosition);
+    {
+      const defaultDir = new THREE.Vector3(0, 1, 0);
+      let desiredDir: THREE.Vector3;
+      if (isUserBetZero) {
+        // Если ставка не установлена, белый конус будет ориентироваться так же, как и жёлтый
+        desiredDir = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1).normalize();
+      } else {
+        desiredDir = betPosition.clone().sub(aggregatorClipped).normalize();
+      }
+      if (desiredDir.length() > 0) {
+        const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
+        wCone.setRotationFromQuaternion(quat);
+      }
     }
     whiteConeRef.current = wCone;
     scene.add(wCone);
 
-    if (!isVectorZero(betPosition)) {
-      const sph = new THREE.Mesh(
-        new THREE.SphereGeometry(0.5, 16, 16),
-        new THREE.MeshStandardMaterial({
-          color: "blue",
-          opacity: 0.5,
-          transparent: true
-        })
-      );
-      sph.position.copy(betPosition);
-      sphereRef.current = sph;
-      scene.add(sph);
-    } else {
-      if (sphereRef.current) {
-        scene.remove(sphereRef.current);
-        sphereRef.current = null;
-      }
-    }
+    // Сфера в точке betPosition
+    const sph = new THREE.Mesh(
+      new THREE.SphereGeometry(0.5, 16, 16),
+      new THREE.MeshStandardMaterial({
+        color: "blue",
+        opacity: 0.5,
+        transparent: true
+      })
+    );
+    sph.position.copy(betPosition);
+    sphereRef.current = sph;
+    scene.add(sph);
 
     return () => {
       if (whiteLineRef.current) scene.remove(whiteLineRef.current);
@@ -296,11 +299,13 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (yellowConeRef.current) {
       yellowConeRef.current.position.copy(aggregatorClipped);
       yellowConeRef.current.position.z = 1;
-      const dir = aggregatorClipped.clone().normalize();
-      if (dir.length() > 0) {
-        const up = new THREE.Vector3(0, 0, 1);
-        const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
-        yellowConeRef.current.setRotationFromQuaternion(quat);
+      {
+        const desiredDir = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1).normalize();
+        const defaultDir = new THREE.Vector3(0, 1, 0);
+        if (desiredDir.length() > 0) {
+          const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
+          yellowConeRef.current.setRotationFromQuaternion(quat);
+        }
       }
     }
     if (whiteLineRef.current?.geometry && betPosition) {
@@ -317,19 +322,17 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     if (whiteConeRef.current && betPosition) {
       whiteConeRef.current.position.copy(betPosition);
-      if (isUserBetZero) {
-        const dirAgg = aggregatorClipped.clone().normalize();
-        if (dirAgg.length() > 0) {
-          const up = new THREE.Vector3(0, 1, 1);
-          const quat = new THREE.Quaternion().setFromUnitVectors(up, dirAgg);
-          whiteConeRef.current.setRotationFromQuaternion(quat);
+      {
+        const defaultDir = new THREE.Vector3(0, 1, 0);
+        let desiredDir: THREE.Vector3;
+        if (isUserBetZero) {
+          desiredDir = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1).normalize();
+        } else {
+          desiredDir = betPosition.clone().sub(aggregatorClipped).normalize();
         }
-      } else {
-        const dirW = betPosition.clone().sub(aggregatorClipped).normalize();
-        if (dirW.length() > 0) {
-          const up = new THREE.Vector3(0, 1, 1);
-          const quatW = new THREE.Quaternion().setFromUnitVectors(up, dirW);
-          whiteConeRef.current.setRotationFromQuaternion(quatW);
+        if (desiredDir.length() > 0) {
+          const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
+          whiteConeRef.current.setRotationFromQuaternion(quat);
         }
       }
     }
@@ -355,14 +358,12 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Устанавливаем фиксированную плоскость: все объекты расположены на z = 1
   useEffect(() => {
-    // TS2554: для set() требуется 2 аргумента: нормаль и constant.
-    // Используем copy() вместо set(), чтобы избежать ошибки.
     plane.current.copy(new THREE.Plane(new THREE.Vector3(0, 0, 1), -1));
     console.log("[BetLines] Установлена фиксированная плоскость: z = 1");
   }, []);
 
   const handlePointerDown = useCallback((evt: PointerEvent) => {
-    evt.stopPropagation(); // предотвращаем дальнейшую обработку события
+    evt.stopPropagation();
     console.log("[BetLines] handlePointerDown", evt.clientX, evt.clientY);
     if (isClickOnSphere(evt)) {
       console.log("[BetLines] Нажатие на сферу");
@@ -370,7 +371,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       onDragging(true);
     }
   }, [isClickOnSphere, onDragging]);
-
 
   const handlePointerMove = useCallback((evt: PointerEvent) => {
     if (!isDragging) return;
@@ -432,7 +432,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     setBetAmount
   ]);
 
-
   const handlePointerUp = useCallback(() => {
     console.log("[BetLines] handlePointerUp");
     if (!isDragging) return;
@@ -463,16 +462,10 @@ const BetLines: React.FC<BetLinesProps> = ({
   // Обновление betPosition при изменении userPreviousBet
   useEffect(() => {
     console.log("[BetLines] userPreviousBet изменился:", userPreviousBet.toArray());
-
-    // Если начинается перетаскивание, очищаем localStorage,
-    // чтобы не было конфликта со старыми значениями
     if (isDragging) {
       localStorage.removeItem(LOCAL_KEY);
       console.log("[BetLines] Drag начат, LS очищен");
     }
-
-    // Если userPreviousBet равен (0, 0, 1) – считаем, что ставок ещё нет,
-    // поэтому устанавливаем betPosition как aggregatorClipped со смещением
     if (
       userPreviousBet.x === 0 &&
       userPreviousBet.y === 0 &&
@@ -488,8 +481,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
       return;
     }
-
-    // Если LS не мешает (или он уже очищен), рассчитываем новую позицию
     const offset = userPreviousBet.clone().sub(aggregatorClipped);
     if (offset.length() > maxWhiteLength) {
       offset.setLength(maxWhiteLength);
@@ -498,7 +489,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     console.log("[BetLines] Обновлён betPosition:", userPreviousBet.toArray());
     setBetPosition(userPreviousBet.clone());
   }, [userPreviousBet, aggregatorClipped, maxWhiteLength, axisMode, isDragging]);
-
 
   useEffect(() => {
     const c = gl.domElement;
@@ -515,13 +505,12 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   return (
     <>
-      {/* Желтый конус */}
+      {/* Рендерим жёлтый и белый конусы */}
       <mesh ref={yellowConeRef}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="yellow" />
       </mesh>
 
-      {/* Белый конус */}
       <mesh ref={whiteConeRef}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color="white" />
