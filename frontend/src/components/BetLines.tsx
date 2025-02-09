@@ -117,17 +117,11 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     if (isUserBetZero && !isVectorZero(aggregatorClipped)) {
       console.log("[BetLines] Нет userPreviousBet, но есть агрегатор. Добавляем минимальное смещение.");
-      const agg = previousBetEnd.clone()
-      if (agg.length() > maxYellowLength) {
-        agg.setLength(maxYellowLength);
-      }
       const minDelta = 0.0001;
-      if (axisMode === "X") {
-        return aggregatorClipped.clone().add(new THREE.Vector3(agg.x+minDelta, 0, 1));
-      } else if (axisMode === "Y") {
-        return aggregatorClipped.clone().add(new THREE.Vector3(0, agg.y+minDelta, 1));
-      }
-      return aggregatorClipped.clone();
+      // Вычисляем смещение вдоль направления агрегатора.
+      const offset = aggregatorClipped.clone().normalize().multiplyScalar(minDelta);
+      // Возвращаем вектор, который начинается с конца жёлтого вектора и смещён на offset.
+      return aggregatorClipped.clone().add(offset).setZ(1);
     }
     console.log("[BetLines] Есть и агрегатор, и userPreviousBet.");
     const dir = userPreviousBet.clone().sub(aggregatorClipped);
