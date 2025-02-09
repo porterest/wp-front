@@ -5,6 +5,8 @@ services:
     ports:
       - "8080:80"
     restart: unless-stopped
+    networks:
+      - wp_network
 
   bot:
     build:
@@ -50,6 +52,9 @@ services:
 #  grafana-storage:
 #
 
+networks:
+  wp_network:
+    driver: bridge
 
 
 include:
