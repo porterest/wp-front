@@ -11,75 +11,100 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(
   ({ data, mode }) => {
     const { normalizeX, normalizeY, normalizeZ } = useScale();
 
-    if (!data || data.length === 0) {
-      return null;
-    }
+    if (!data || data.length === 0) return null;
 
-    // Находим максимальный объём для нормализации (ось Z)
-    const maxVolume = Math.max(...data.map((candle) => candle.volume));
+    // Максимальный объём для нормализации оси Z
+    const maxVolume = Math.max(...data.map(candle => candle.volume));
 
-    const getColor = (isBullish: boolean): string =>
-      isBullish ? "#32CD32" : "#ff4f4f";
-
-    const getOpacity = (): number => (mode === "Both" ? 0.5 : 1);
+    // Границы графика по оси Y (как заданы в normalizeY)
+    const graphMinY = 0.5;
+    const graphMaxY = 4.5;
+    const minBodyHeight = 2;
 
     return (
       <group>
         {data.slice(-144).map((candle, index, slicedData) => {
+          // Определяем тип свечи: бычья или медвежья
           const isBullish = candle.close >= candle.open;
-          const color = getColor(isBullish);
+          const color = isBullish ? "#32CD32" : "#ff4f4f";
 
-          // Нормализуем цены по оси Y (результат в диапазоне [0.5, 4.5])
-          const normalizedOpen = normalizeY(candle.open);
-          const normalizedClose = normalizeY(candle.close);
-          const normalizedHigh = normalizeY(candle.high);
-          const normalizedLow = normalizeY(candle.low);
+          // Нормализованные цены
+          const normOpen = normalizeY(candle.open);
+          const normClose = normalizeY(candle.close);
+          const normHigh = normalizeY(candle.high);
+          const normLow = normalizeY(candle.low);
 
-          const rawBodyHeight = Math.abs(normalizedClose - normalizedOpen);
-          const minBodyHeight = 2; //
-          let bodyHeight, bodyY;
-          if (rawBodyHeight < minBodyHeight) {
-            bodyHeight = minBodyHeight;
-            // Если open ≈ close, центруем тело вокруг среднего значения
-            bodyY = (normalizedOpen + normalizedClose) / 2;
+          // Для отрисовки тела свечи не будем использовать среднее значение.
+          // Для бычьей свечи нижняя граница = normOpen, верхняя = normClose.
+          // Если высота меньше minBodyHeight, то расширяем тело вверх, при этом не выходим за graphMaxY.
+          // Для медвежьей свечи верхняя граница = normOpen, нижняя = normClose.
+          // Если высота меньше minBodyHeight, то расширяем тело вниз, при этом не выходим за graphMinY.
+          let bodyBottom: number, bodyTop: number;
+          if (isBullish) {
+            bodyBottom = normOpen;
+            bodyTop = normClose;
+            if (bodyTop - bodyBottom < minBodyHeight) {
+              // Расширяем тело вверх
+              bodyTop = bodyBottom + minBodyHeight;
+              if (bodyTop > graphMaxY) {
+                // Если получившийся верх выходит за пределы графика, сдвигаем тело вниз
+                bodyTop = graphMaxY;
+                bodyBottom = graphMaxY - minBodyHeight;
+              }
+            }
           } else {
-            bodyHeight = rawBodyHeight;
-            bodyY = (normalizedOpen + normalizedClose) / 2;
+            // Для медвежьей свечи верх = normOpen, ниж = normClose
+            bodyTop = normOpen;
+            bodyBottom = normClose;
+            if (bodyTop - bodyBottom < minBodyHeight) {
+              // Расширяем тело вниз
+              bodyBottom = bodyTop - minBodyHeight;
+              if (bodyBottom < graphMinY) {
+                // Если нижняя граница выходит за пределы графика, сдвигаем тело вверх
+                bodyBottom = graphMinY;
+                bodyTop = graphMinY + minBodyHeight;
+              }
+            }
           }
 
-          const shadowHeight = normalizedHigh - normalizedLow;
-          const shadowY = (normalizedHigh + normalizedLow) / 2;
+          // Для BoxGeometry в Three.js позиция задаётся центром.
+          // Вычисляем центр тела свечи как (bodyBottom + bodyTop) / 2
+          const bodyHeight = bodyTop - bodyBottom;
+          const bodyY = bodyBottom + bodyHeight / 2;
 
-          // Позиция по оси X для объёма (через normalizeZ)
-          const positionX = normalizeZ(candle.volume, maxVolume);
-          // Позиция по оси Z для временной оси (через normalizeX)
-          const positionZ = normalizeX(index, slicedData.length);
+          // Для фитиля (тени) используем нормализованные максимумы и минимумы
+          const wickHeight = normHigh - normLow;
+          const wickY = normLow + wickHeight / 2;
 
-          // Вычисляем расстояние между свечами вдоль оси Z (при диапазоне [0,5])
+          // По оси X для объёма и оси Z для времени используем функции нормализации
+          const posX = normalizeZ(candle.volume, maxVolume);
+          const posZ = normalizeX(index, slicedData.length);
+
+          // Расстояние между свечами по оси Z
           const spacing = 5 / (slicedData.length - 1);
-          // Уменьшаем ширину свечи, чтобы они не слипались: берем 30% от spacing
+          // Ширина свечи уменьшена, чтобы не слипались
           const candleWidth = spacing * 0.52;
 
           return (
             <group key={index}>
               {/* Тело свечи */}
-              <mesh position={[positionX, bodyY, positionZ]}>
+              <mesh position={[posX, bodyY, posZ]}>
                 <boxGeometry args={[candleWidth, bodyHeight, candleWidth]} />
                 <meshStandardMaterial
                   color={color}
                   transparent={mode === "Both"}
-                  opacity={getOpacity()}
+                  opacity={mode === "Both" ? 0.5 : 1}
                 />
               </mesh>
               {/* Фитиль (тень) свечи */}
-              <mesh position={[positionX, shadowY, positionZ]}>
+              <mesh position={[posX, wickY, posZ]}>
                 <boxGeometry
-                  args={[candleWidth * 0.25, shadowHeight, candleWidth * 0.25]}
+                  args={[candleWidth * 0.25, wickHeight, candleWidth * 0.25]}
                 />
                 <meshStandardMaterial
                   color={color}
                   transparent={mode === "Both"}
-                  opacity={getOpacity()}
+                  opacity={mode === "Both" ? 0.5 : 1}
                 />
               </mesh>
             </group>
