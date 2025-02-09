@@ -48,6 +48,7 @@ const BetLines: React.FC<BetLinesProps> = ({
                                            }) => {
   // ===== THREE & ссылки =====
   const { gl, camera, scene } = useThree();
+  const groupRef = useRef(new THREE.Group());
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
 
@@ -167,16 +168,18 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   useEffect(() => {
     if (!visible) {
-      if (yellowLineRef.current) scene.remove(yellowLineRef.current);
-      if (yellowConeRef.current) scene.remove(yellowConeRef.current);
-      if (whiteLineRef.current) scene.remove(whiteLineRef.current);
-      if (whiteConeRef.current) scene.remove(whiteConeRef.current);
-      if (sphereRef.current) scene.remove(sphereRef.current);
+      scene.remove(groupRef.current);
+    } else {
+      // Если группа ещё не добавлена, добавляем её
+      if (!scene.children.includes(groupRef.current)) {
+        scene.add(groupRef.current);
+      }
     }
   }, [visible, scene]);
 
   // ===== Создание жёлтых объектов (один раз) =====
   useEffect(() => {
+    if (!visible) return;
     // Желтая линия
     const yGeom = new LineGeometry();
     yGeom.setPositions([
@@ -215,17 +218,14 @@ const BetLines: React.FC<BetLinesProps> = ({
     scene.add(yCone);
 
     return () => {
-      if (yellowLineRef.current) {
-        scene.remove(yellowLineRef.current);
-      }
-      if (yellowConeRef.current) {
-        scene.remove(yellowConeRef.current);
-      }
+      if (yellowLineRef.current) groupRef.current.remove(yellowLineRef.current);
+      if (yellowConeRef.current) groupRef.current.remove(yellowConeRef.current);
     };
-  }, [aggregatorClipped, scene]);
+  }, [aggregatorClipped, visible]);
 
   // ===== Создание белых объектов (один раз) =====
   useEffect(() => {
+    if (!visible) return;
     if (!betPosition) {
       console.log("[BetLines] НЕТ betPosition – не создаём белые объекты");
       if (whiteLineRef.current) scene.remove(whiteLineRef.current);
@@ -296,14 +296,16 @@ const BetLines: React.FC<BetLinesProps> = ({
     scene.add(sph);
 
     return () => {
-      if (whiteLineRef.current) scene.remove(whiteLineRef.current);
-      if (whiteConeRef.current) scene.remove(whiteConeRef.current);
-      if (sphereRef.current) scene.remove(sphereRef.current);
+      if (whiteLineRef.current) groupRef.current.remove(whiteLineRef.current);
+      if (whiteConeRef.current) groupRef.current.remove(whiteConeRef.current);
+      if (sphereRef.current) groupRef.current.remove(sphereRef.current);
     };
-  }, [aggregatorClipped, betPosition, scene, isUserBetZero]);
+  }, [aggregatorClipped, betPosition, visible, isUserBetZero]);
+
 
   // ===== Обновление объектов при изменении aggregatorClipped или betPosition =====
   useEffect(() => {
+    if (!visible) return;
     if (yellowLineRef.current?.geometry) {
       const geom = yellowLineRef.current.geometry as LineGeometry;
       geom.setPositions([
