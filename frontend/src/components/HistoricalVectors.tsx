@@ -13,19 +13,20 @@ interface HistoricalVectorsProps {
   /** Массив векторов, например: [[x, y], [x, y], …] */
   vectors: Array<[number, number]>;
   /**
-   * Шаг по времени между стрелками (ось Y). По умолчанию 1.
+   * Временной шаг между стрелками (ось Y). Каждая стрелка будет рисоваться в точке (0, i*deltaTime, 1).
+   * По умолчанию 1.
    */
   deltaTime?: number;
   /**
-   * Коэффициент масштабирования для первой компоненты result vector (ось X).
-   * По умолчанию 1000.
+   * Коэффициент масштабирования для входного result vector (одинаковый для обеих компонент).
+   * По умолчанию 1.
    */
-  scaleX?: number;
+  scaleFactor?: number;
   /**
-   * Коэффициент масштабирования для второй компоненты result vector (ось Z).
-   * По умолчанию 60.
+   * (Опционально) Общая длина цепочки – если хотите, чтобы вся цепочка имела фиксированную длину.
+   * Если не задан, используется просто положение стрелок по времени.
    */
-  scaleZ?: number;
+  totalChainLength?: number;
 }
 
 interface ArrowProps {
@@ -61,7 +62,7 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow", 
   }, [color]);
 
   const coneQuaternion = useMemo(() => {
-    const defaultDir = new THREE.Vector3(0, 1, 0); // по умолчанию конус смотрит вдоль оси Y
+    const defaultDir = new THREE.Vector3(0, 1, 0);
     const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
     console.log("Computed cone quaternion:", quat);
     return quat;
@@ -81,37 +82,34 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow", 
 const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
                                                                deltaTime = 1,
-                                                               scaleX = 1000,
-                                                               scaleZ = 60,
+                                                               scaleFactor = 1,
+                                                               totalChainLength,
                                                              }) => {
   console.log("HistoricalVectors received vectors:", vectors);
 
-  // Каждая стрелка будет рисоваться на своей временной позиции вдоль оси Y.
-  // Фиксируем базовую точку: x = 0, y = i * deltaTime, z = 1.
+  // Каждый historical-вектор будет использоваться для задания смещения по осям X и Z.
+  // Стартовая точка для стрелки i: (0, i * deltaTime, 1)
+  // Смещение = (vec[0]*scaleFactor, 0, vec[1]*scaleFactor)
+  // Таким образом, направление стрелки соответствует направлению от (0,0) до (vec[0], vec[1]),
+  // а временной компонент (ось Y) определяется её порядковым номером.
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
     vectors.forEach((vec, i) => {
-      // Стартовая точка для вектора i
       const start = new THREE.Vector3(0, i * deltaTime, 1);
-      // Смещение определяется масштабированными значениями входного вектора:
-      // первая компонента result vector отображается по оси X, вторая – по оси Z.
-      const offset = new THREE.Vector3(vec[0] * scaleX, 0, vec[1] * scaleZ);
-      // Конечная точка: старт + смещение
+      const offset = new THREE.Vector3(vec[0] * scaleFactor, 0, vec[1] * scaleFactor);
       const end = start.clone().add(offset);
-      // Направление – это нормализованный offset
       const direction = offset.clone().normalize();
       chain.push({ start, end, direction });
       console.log(`Vector ${i}: start=${start.toArray()}, offset=${offset.toArray()}, end=${end.toArray()}, direction=${direction.toArray()}`);
     });
-    console.log("Computed arrowChain:", chain.map(item => ({
-      start: item.start.toArray(),
-      end: item.end.toArray(),
-      direction: item.direction.toArray(),
-    })));
     return chain;
-  }, [vectors, deltaTime, scaleX, scaleZ]);
+  }, [vectors, deltaTime, scaleFactor]);
 
-  // Вычисляем масштаб для наконечников. Можно уменьшать его при большом количестве векторов.
+  // Если задан totalChainLength, можно масштабировать все смещения так, чтобы общая длина цепочки была равна totalChainLength.
+  // Например, вычисляем текущую общую длину по оси Y (или по сумме длины смещений) и затем масштабируем offset.
+  // Здесь покажем базовый вариант без дополнительного масштабирования, но его можно расширить.
+
+  // Вычисляем масштаб для наконечников; например, уменьшаем размер при большом количестве векторов.
   const coneScale = Math.max(0.3, Math.sqrt(20 / vectors.length));
   console.log("Computed coneScale:", coneScale);
 
