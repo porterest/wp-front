@@ -1,11 +1,10 @@
+// HistoricalVectors.tsx
 import React, { useMemo } from "react";
 import * as THREE from "three";
 import { extend } from "@react-three/fiber";
 import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
-// (Используем useScale, если потребуется для других преобразований)
-// import { useScale } from "../context/ScaleContext";
 
 // Регистрируем классы для использования в JSX
 extend({ Line2, LineGeometry, LineMaterial });
@@ -81,25 +80,15 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     totalChainLength,
   });
 
-  // --- Локальная нормализация для исторических данных ---
-  // Задаем min и max для графика (эти значения подберите под реальные данные)
-  const minPriceForChart = 100;
-  const maxPriceForChart = 140;
-  const graphHeight = 5;
-  const margin = 0.5;
+  // Вводим коэффициенты масштабирования:
+  const xScale = 1000; // Для увеличения горизонтального смещения
+  const yScale = 60;   // Для уменьшения цены до диапазона графика (например, 117 → ~1.95)
 
-  // Функция для нормализации цены в диапазон [margin, graphHeight - margin]
-  const normalizePrice = (price: number) => {
-    const ratio = (price - minPriceForChart) / (maxPriceForChart - minPriceForChart);
-    return margin + ratio * (graphHeight - 2 * margin);
-  };
-
-  // Приводим startPoint к нужной плоскости: оставляем x, нормализуем y и принудительно z = 1
-  const adjustedStart = startPoint.clone();
-  adjustedStart.y = normalizePrice(startPoint.y);
-  adjustedStart.z = 1;
+  // Корректируем стартовую точку: оставляем x, делим y на yScale, устанавливаем z = 1
+  const adjustedStart = new THREE.Vector3(startPoint.x, startPoint.y / yScale, 1);
   console.log("Adjusted startPoint:", adjustedStart.toArray());
 
+  // Вычисляем цепочку стрелок:
   const arrowChain = useMemo(() => {
     console.log("Computing arrowChain with vectors:", vectors);
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
@@ -114,11 +103,11 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     for (let i = 0; i < count; i++) {
       console.log(`Processing vector index ${i}:`, vectors[i]);
       const vec = vectors[i];
-      // Нормализуем только вторую компоненту (цена) с использованием локальной функции normalizePrice
-      const normY = normalizePrice(vec[1]);
-      console.log(`Normalized Y for index ${i}: ${normY}`);
-      // Формируем вектор направления: X берем как есть, Y нормализуем, z = 0
-      const direction = new THREE.Vector3(vec[0], normY, 0);
+      // Применяем коэффициенты масштабирования:
+      const scaledX = vec[0] * xScale;
+      const scaledY = vec[1] / yScale;
+      console.log(`Scaled components for index ${i}: x=${scaledX}, y=${scaledY}`);
+      const direction = new THREE.Vector3(scaledX, scaledY, 0);
       if (direction.length() === 0) {
         direction.set(1, 0, 0);
         console.log(`Vector at index ${i} had zero length. Defaulting direction to:`, direction.toArray());
@@ -126,7 +115,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       direction.normalize();
       console.log(`Normalized direction for index ${i}:`, direction.toArray());
       const arrowEnd = currentStart.clone().add(direction.clone().multiplyScalar(arrowLength));
-      // Принудительно устанавливаем z = 1 для корректного отображения поверх графика
+      // Принудительно устанавливаем z = 1 для корректного отображения
       currentStart.z = 1;
       arrowEnd.z = 1;
       console.log(`Arrow ${i} computed start:`, currentStart.toArray(), "end:", arrowEnd.toArray());
