@@ -64,7 +64,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         extra='ignore',
-        json_file=Path(__file__).parent / 'dev.settings.json',
+        json_file=Path(__file__).parent / 'settings.json',
         json_file_encoding='utf-8',
     )
 

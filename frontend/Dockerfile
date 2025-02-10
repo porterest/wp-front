@@ -12,11 +12,7 @@ RUN yarn build
 
 # Stage 3: Serve with Nginx
 FROM nginx:latest
-
-# Copy custom Nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copy build output to Nginx
 COPY --from=build /app/build /usr/share/nginx/html
 
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
