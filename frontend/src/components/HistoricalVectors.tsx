@@ -117,25 +117,28 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       currentPoint = clampVector(currentPoint, 0, 5);
       for (let i = 0; i < count; i++) {
         console.log(`Arrow ${i} input vector: [${vectors[i][0]}, ${vectors[i][1]}]`);
-        // В режиме accumulate не сбрасываем координату времени – каждая стрелка строится от текущей точки
-        // Вычисляем смещение:
-        //   offset[offsetAxes[0]] получит значение resultVector[1] (transactions) с масштабированием scaleA,
-        //   offset[offsetAxes[1]] получит resultVector[0] (price) с масштабированием scaleB.
-        const offset = new THREE.Vector3(0, 0, 0);
+
+        // Сначала задаём базовый offset с шагом по оси времени (в нашем случае по оси Z)
+        const offset = new THREE.Vector3(0, 0, delta);
+        // Затем прибавляем смещение по другим осям:
+        // offset[offsetAxes[0]] (при timeAxis = "z" это ось "x") получит transactions * scaleA,
+        // offset[offsetAxes[1]] (при timeAxis = "z" это ось "y") получит price * scaleB.
         offset[offsetAxes[0]] = vectors[i][1] * scaleA;
         offset[offsetAxes[1]] = vectors[i][0] * scaleB;
-        // Вычисляем конечную точку стрелки: это сумма текущей точки и смещения
+
         const nextPoint = currentPoint.clone().add(offset);
-        // Ограничиваем обе точки значениями от 0 до 5:
+        console.log(
+          `Arrow ${i} before clamp: start: ${currentPoint.toArray()}, offset: ${offset.toArray()}, nextPoint: ${nextPoint.toArray()}`
+        );
+
         const clampedStart = clampVector(currentPoint.clone(), 0, 5);
         const clampedEnd = clampVector(nextPoint.clone(), 0, 5);
-        // Вычисляем направление стрелки (если смещение 0, то по умолчанию вверх):
         const direction =
           offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
         console.log(
-          `Arrow ${i} computed: start: ${clampedStart.toArray()}, offset: ${offset.toArray()}, ` +
-          `end: ${clampedEnd.toArray()}, direction: ${direction.toArray()}`
+          `Arrow ${i} computed: start: ${clampedStart.toArray()}, offset: ${offset.toArray()}, end: ${clampedEnd.toArray()}, direction: ${direction.toArray()}`
         );
+
         chain.push({
           start: clampedStart,
           end: clampedEnd,
@@ -149,15 +152,17 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       for (let i = 0; i < count; i++) {
         const basePoint = startPoint.clone();
         basePoint[timeAxis] = i * delta;
-        const offset = new THREE.Vector3(0, 0, 0);
+        const offset = new THREE.Vector3(0, 0, delta);
         offset[offsetAxes[0]] = vectors[i][1] * scaleA;
         offset[offsetAxes[1]] = vectors[i][0] * scaleB;
         const endPoint = basePoint.clone().add(offset);
-        endPoint[timeAxis] = i * delta;
         const clampedBase = clampVector(basePoint, 0, 5);
         const clampedEnd = clampVector(endPoint, 0, 5);
         const direction =
           offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
+        console.log(
+          `Independent Arrow ${i}: base: ${clampedBase.toArray()}, offset: ${offset.toArray()}, end: ${clampedEnd.toArray()}, direction: ${direction.toArray()}`
+        );
         chain.push({
           start: clampedBase,
           end: clampedEnd,
