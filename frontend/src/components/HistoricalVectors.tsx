@@ -12,13 +12,20 @@ extend({ Line2, LineGeometry, LineMaterial });
 interface HistoricalVectorsProps {
   /** Массив векторов, например: [[x, y], [x, y], …] */
   vectors: Array<[number, number]>;
-  /** Точка, откуда начинается цепочка стрелок (по умолчанию (0, 0, 1)) */
-  startPoint?: THREE.Vector3;
   /**
-   * Общая длина цепочки. Цепочка растягивается от startPoint до startPoint + totalChainLength.
-   * По умолчанию 5.
+   * Шаг по времени между стрелками (ось Y). По умолчанию 1.
    */
-  totalChainLength?: number;
+  deltaTime?: number;
+  /**
+   * Коэффициент масштабирования для первой компоненты result vector (ось X).
+   * По умолчанию 1000.
+   */
+  scaleX?: number;
+  /**
+   * Коэффициент масштабирования для второй компоненты result vector (ось Z).
+   * По умолчанию 60.
+   */
+  scaleZ?: number;
 }
 
 interface ArrowProps {
@@ -54,7 +61,7 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow", 
   }, [color]);
 
   const coneQuaternion = useMemo(() => {
-    const defaultDir = new THREE.Vector3(0, 1, 0);
+    const defaultDir = new THREE.Vector3(0, 1, 0); // по умолчанию конус смотрит вдоль оси Y
     const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
     console.log("Computed cone quaternion:", quat);
     return quat;
@@ -73,65 +80,40 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow", 
 
 const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
-                                                               startPoint = new THREE.Vector3(0, 0, 1),
-                                                               totalChainLength = 5,
+                                                               deltaTime = 1,
+                                                               scaleX = 1000,
+                                                               scaleZ = 60,
                                                              }) => {
-  console.log("HistoricalVectors received props:", {
-    vectors,
-    startPoint: startPoint.toArray(),
-    totalChainLength,
-  });
+  console.log("HistoricalVectors received vectors:", vectors);
 
-  // Приводим стартовую точку к нужной плоскости: оставляем x, y без изменений, устанавливаем z = 1
-  const adjustedStart = new THREE.Vector3(startPoint.x, startPoint.y, 1);
-  console.log("Adjusted startPoint:", adjustedStart.toArray());
-
-  // Вычисляем масштаб для наконечников: пусть базовый масштаб равен 1 при 5 векторах;
-  // для большего количества уменьшаем по формуле: scale = Math.max(0.3, sqrt(5 / count))
-  const coneScale = Math.max(0.3, Math.sqrt(5 / vectors.length));
-  console.log("Computed coneScale:", coneScale);
-
-  // Вычисляем цепочку стрелок:
+  // Каждая стрелка будет рисоваться на своей временной позиции вдоль оси Y.
+  // Фиксируем базовую точку: x = 0, y = i * deltaTime, z = 1.
   const arrowChain = useMemo(() => {
-    console.log("Computing arrowChain with vectors:", vectors);
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    if (!vectors || vectors.length === 0) {
-      console.log("No vectors provided, returning empty chain.");
-      return chain;
-    }
-    const count = vectors.length;
-    const arrowLength = totalChainLength / count;
-    console.log(`TotalChainLength: ${totalChainLength}, count: ${count}, computed arrowLength: ${arrowLength}`);
-    let currentStart = adjustedStart.clone();
-    for (let i = 0; i < count; i++) {
-      console.log(`Processing vector index ${i}:`, vectors[i]);
-      const vec = vectors[i];
-      // Вычисляем угол по входному вектору (без дополнительного масштабирования)
-      const angle = Math.atan2(vec[1], vec[0]);
-      console.log(`Computed angle for index ${i}: ${angle} rad (${(angle * 180) / Math.PI}°)`);
-      // Создаем единичный вектор направления по этому углу
-      const direction = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
-      direction.normalize();
-      console.log(`Normalized direction for index ${i}:`, direction.toArray());
-      const arrowEnd = currentStart.clone().add(direction.clone().multiplyScalar(arrowLength));
-      // Устанавливаем z = 1 для обеих точек
-      currentStart.z = 1;
-      arrowEnd.z = 1;
-      console.log(`Arrow ${i} computed start:`, currentStart.toArray(), "end:", arrowEnd.toArray());
-      chain.push({
-        start: currentStart.clone(),
-        end: arrowEnd.clone(),
-        direction: direction.clone(),
-      });
-      currentStart = arrowEnd.clone();
-    }
+    vectors.forEach((vec, i) => {
+      // Стартовая точка для вектора i
+      const start = new THREE.Vector3(0, i * deltaTime, 1);
+      // Смещение определяется масштабированными значениями входного вектора:
+      // первая компонента result vector отображается по оси X, вторая – по оси Z.
+      const offset = new THREE.Vector3(vec[0] * scaleX, 0, vec[1] * scaleZ);
+      // Конечная точка: старт + смещение
+      const end = start.clone().add(offset);
+      // Направление – это нормализованный offset
+      const direction = offset.clone().normalize();
+      chain.push({ start, end, direction });
+      console.log(`Vector ${i}: start=${start.toArray()}, offset=${offset.toArray()}, end=${end.toArray()}, direction=${direction.toArray()}`);
+    });
     console.log("Computed arrowChain:", chain.map(item => ({
       start: item.start.toArray(),
       end: item.end.toArray(),
       direction: item.direction.toArray(),
     })));
     return chain;
-  }, [vectors, adjustedStart, totalChainLength]);
+  }, [vectors, deltaTime, scaleX, scaleZ]);
+
+  // Вычисляем масштаб для наконечников. Можно уменьшать его при большом количестве векторов.
+  const coneScale = Math.max(0.3, Math.sqrt(20 / vectors.length));
+  console.log("Computed coneScale:", coneScale);
 
   return (
     <group>
