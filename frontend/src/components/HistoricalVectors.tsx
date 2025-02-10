@@ -9,33 +9,23 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 // Регистрируем компоненты для использования в JSX
 extend({ Line2, LineGeometry, LineMaterial });
 
-/**
- * Свойства компонента:
- * - vectors: массив векторов-результатов для блока в виде [price, transactions]
- * - totalTime: общая длина оси времени (по умолчанию 5)
- * - accumulate: если true – стрелки строятся цепочкой (одна начинается там, где закончилась предыдущая)
- * - startPoint: стартовая точка цепочки (по умолчанию (0,0,0))
- * - timeAxis: ось, отвечающая за время (по умолчанию "z")
- * - scaleA и scaleB: коэффициенты масштабирования для смещения;
- *   по соглашению здесь значение с индексом 0 (price) пойдёт на offsetAxes[1] (например, ось y),
- *   а с индексом 1 (transactions) – на offsetAxes[0] (например, ось x)
- * - color: цвет стрелок
- */
+/** Свойства компонента HistoricalVectors */
 interface HistoricalVectorsProps {
+  /** Массив векторов, например: [[price, transactions], [price, transactions], …] */
   vectors: Array<[number, number]>;
-  totalTime?: number;
-  accumulate?: boolean;
+  /** Максимальное значение по любой оси (по умолчанию 5) */
+  maxValue?: number;
+  /** Стартовая точка цепочки (по умолчанию (0, 0, 0)) */
   startPoint?: THREE.Vector3;
-  timeAxis?: "x" | "y" | "z";
-  scaleA?: number;
-  scaleB?: number;
+  /** Коэффициент масштабирования для компоненты, которая пойдёт по оси X (price) */
+  scaleX?: number;
+  /** Коэффициент масштабирования для компоненты, которая пойдёт по оси Y (transactions) */
+  scaleY?: number;
+  /** Цвет стрелок (по умолчанию "yellow") */
   color?: string;
 }
 
-/**
- * Свойства для стрелки.
- * Каждая стрелка рисуется как линия от start до end с наконечником, ориентированным вдоль direction.
- */
+/** Свойства для отрисовки одной стрелки */
 interface ArrowProps {
   start: THREE.Vector3;
   end: THREE.Vector3;
@@ -44,7 +34,7 @@ interface ArrowProps {
   coneScale?: number;
 }
 
-/** Функция для «зажима» значений в диапазоне [min, max] */
+/** Функция для зажатия координат в диапазоне [min, max] */
 const clampVector = (v: THREE.Vector3, min: number, max: number): THREE.Vector3 =>
   new THREE.Vector3(
     Math.min(max, Math.max(min, v.x)),
@@ -52,6 +42,7 @@ const clampVector = (v: THREE.Vector3, min: number, max: number): THREE.Vector3 
     Math.min(max, Math.max(min, v.z))
   );
 
+/** Компонент, отрисовывающий одну стрелку (линия + наконечник) */
 const Arrow: React.FC<ArrowProps> = ({
                                        start,
                                        end,
@@ -74,7 +65,8 @@ const Arrow: React.FC<ArrowProps> = ({
   }, [color]);
 
   const coneQuaternion = useMemo(() => {
-    const defaultDir = new THREE.Vector3(0, 1, 0); // по умолчанию конус смотрит вверх
+    // По умолчанию конус смотрит вверх (ось Y)
+    const defaultDir = new THREE.Vector3(0, 1, 0);
     return new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
   }, [direction]);
 
@@ -89,86 +81,61 @@ const Arrow: React.FC<ArrowProps> = ({
   );
 };
 
+/**
+ * Компонент HistoricalVectors
+ *
+ * Каждая стрелка строится как цепочка: следующая стрелка начинается от того места,
+ * где закончилась предыдущая. Для каждого шага выполняется логирование значений.
+ */
 const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
-                                                               totalTime = 5,
-                                                               accumulate = true,
+                                                               maxValue = 5,
                                                                startPoint = new THREE.Vector3(0, 0, 0),
-                                                               timeAxis = "z",
-                                                               // По соглашению:
-                                                               //   scaleA применяется к компоненте с индексом 1 (transactions) – попадёт на offsetAxes[0]
-                                                               //   scaleB применяется к компоненте с индексом 0 (price) – попадёт на offsetAxes[1]
-                                                               scaleA = 1,
-                                                               scaleB = 1,
+                                                               scaleX = 1,
+                                                               scaleY = 1,
                                                                color = "yellow",
                                                              }) => {
   const count = vectors.length;
-  const delta = count > 1 ? totalTime / (count - 1) : 0;
-
-  // Определяем, какая ось отвечает за время, а оставшиеся – за смещения.
-  const allAxes: ("x" | "y" | "z")[] = ["x", "y", "z"];
-  const offsetAxes = allAxes.filter((ax) => ax !== timeAxis) as ("x" | "y" | "z")[];
 
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    if (accumulate) {
-      // Режим цепочки с накоплением: каждая следующая стрелка начинается там, где закончилась предыдущая.
-      let currentPoint = startPoint.clone();
-      currentPoint = clampVector(currentPoint, 0, 5);
-      for (let i = 0; i < count; i++) {
-        // Задаём координату времени для текущего блока:
-        currentPoint[timeAxis] = i * delta;
-        // Вычисляем смещение:
-        // — ВАЖНО: «переставляем» компоненты:
-        //   offset[offsetAxes[0]] получит значение resultVector[1] (transactions) с масштабированием scaleA,
-        //   offset[offsetAxes[1]] получит resultVector[0] (price) с масштабированием scaleB.
-        const offset = new THREE.Vector3(0, 0, 0);
-        offset[offsetAxes[0]] = vectors[i][1] * scaleA;
-        offset[offsetAxes[1]] = vectors[i][0] * scaleB;
-        // Вычисляем конечную точку стрелки:
-        const nextPoint = currentPoint.clone().add(offset);
-        // Чтобы сохранить ось времени неизменной для данного блока:
-        nextPoint[timeAxis] = i * delta;
-        // Ограничиваем обе точки значениями от 0 до 5:
-        const clampedStart = clampVector(currentPoint.clone(), 0, 5);
-        const clampedEnd = clampVector(nextPoint.clone(), 0, 5);
-        // Определяем направление стрелки (если смещение 0, то по умолчанию вверх):
-        const direction =
-          offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
-        chain.push({
-          start: clampedStart,
-          end: clampedEnd,
-          direction,
-        });
-        // Для следующей стрелки начинаем с точки nextPoint (уже ограниченной):
-        currentPoint = clampedEnd.clone();
-      }
-    } else {
-      // Независимый режим: каждая стрелка отрисовывается отдельно.
-      for (let i = 0; i < count; i++) {
-        const basePoint = startPoint.clone();
-        basePoint[timeAxis] = i * delta;
-        const offset = new THREE.Vector3(0, 0, 0);
-        offset[offsetAxes[0]] = vectors[i][1] * scaleA;
-        offset[offsetAxes[1]] = vectors[i][0] * scaleB;
-        const endPoint = basePoint.clone().add(offset);
-        endPoint[timeAxis] = i * delta;
-        const clampedBase = clampVector(basePoint, 0, 5);
-        const clampedEnd = clampVector(endPoint, 0, 5);
-        const direction =
-          offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
-        chain.push({
-          start: clampedBase,
-          end: clampedEnd,
-          direction,
-        });
-      }
+    // Начинаем с начальной точки (она зажата в диапазоне [0, maxValue])
+    let currentPoint = clampVector(startPoint.clone(), 0, maxValue);
+
+    for (let i = 0; i < count; i++) {
+      const vec = vectors[i];
+      console.log(`Arrow ${i} input vector: [${vec[0]}, ${vec[1]}]`);
+
+      // Вычисляем смещение по входному вектору:
+      // Первая компонента (price) влияет на ось X, вторая (transactions) – на ось Y
+      const offset = new THREE.Vector3(vec[0] * scaleX, vec[1] * scaleY, 0);
+
+      // Следующая точка = текущая точка + смещение
+      const nextPoint = currentPoint.clone().add(offset);
+
+      // Зажимаем обе точки, чтобы не выйти за пределы [0, maxValue]
+      const clampedStart = clampVector(currentPoint.clone(), 0, maxValue);
+      const clampedEnd = clampVector(nextPoint.clone(), 0, maxValue);
+
+      // Вычисляем направление стрелки
+      const direction =
+        offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
+
+      console.log(
+        `Arrow ${i} computed: start: ${clampedStart.toArray()}, offset: ${offset.toArray()}, ` +
+        `end: ${clampedEnd.toArray()}, direction: ${direction.toArray()}`
+      );
+
+      chain.push({ start: clampedStart, end: clampedEnd, direction });
+
+      // Для следующей стрелки начало – это конец текущей
+      currentPoint = clampedEnd.clone();
     }
     return chain;
-  }, [vectors, accumulate, count, delta, startPoint, timeAxis, offsetAxes, scaleA, scaleB]);
+  }, [vectors, count, startPoint, scaleX, scaleY, maxValue]);
 
-  // Масштаб для наконечников (уменьшается при большом числе стрелок, но не меньше 0.3)
-  const coneScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
+  // Масштаб наконечников – уменьшается при большом количестве стрелок, но не меньше 0.3
+  const coneScale = count > 1 ? Math.max(0.3, Math.sqrt(maxValue / (count - 1))) : 1;
 
   return (
     <group>
