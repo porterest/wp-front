@@ -23,7 +23,6 @@ interface BetLinesProps {
   maxYellowLength: number;
   maxWhiteLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
-  axisMode: "X" | "Y";
   setBetAmount: (newAmount: number) => void;
   visible: boolean;
 }
@@ -42,7 +41,6 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              maxYellowLength,
                                              maxWhiteLength,
                                              handleDrag,
-                                             axisMode,
                                              setBetAmount,
                                              visible,
                                            }) => {
@@ -97,7 +95,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     [userPreviousBet]
   );
 
-  // Инициализация белого вектора (betPosition)
+// Инициализация белого вектора (betPosition)
   const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(() => {
     // Проверяем наличие сохранённого вектора в localStorage
     try {
@@ -114,8 +112,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       console.error("[BetLines] Ошибка парсинга LS:", err);
     }
 
-    // Если пользовательской ставки нет, вне зависимости от того, есть ли агрегатор,
-    // устанавливаем белый вектор как: конец жёлтого вектора + минимальное смещение.
+    // Если пользовательской ставки нет, используем конец жёлтого вектора + минимальное смещение
     if (isUserBetZero) {
       console.log("[BetLines] Нет userPreviousBet. Используем конец жёлтого вектора с маленьким смещением.");
       const minDelta = 0.0001;
@@ -125,18 +122,17 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (isVectorZero(baseVector)) {
         baseVector = new THREE.Vector3(3, 3, 1);
       }
-      // Вычисляем направление для смещения: нормализуем базовый вектор.
+      // Вычисляем направление смещения, нормализуя базовый вектор
       const direction = baseVector.clone().normalize();
-      // На случай, если нормализация дала нулевой вектор (для защиты)
       if (direction.length() === 0) {
         direction.set(1, 0, 0);
       }
       const offset = direction.multiplyScalar(minDelta);
-      // Итоговый белый вектор: конец жёлтого вектора + offset, с фиксированным z = 1.
+      // Итоговый белый вектор: конец агрегатора + offset, с z = 1
       return baseVector.add(offset).setZ(1);
     }
 
-    // Если же userPreviousBet задан, то используем его, ограничивая по длине вектора.
+    // Если же ставка задана – используем её, ограничивая по длине вектора.
     console.log("[BetLines] Есть и агрегатор, и userPreviousBet.");
     const dir = userPreviousBet.clone().sub(aggregatorClipped);
     if (dir.length() > maxWhiteLength) {
@@ -146,7 +142,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     return userPreviousBet.clone();
   });
 
+
   // Обновление betPosition при изменении userPreviousBet
+// Обновление betPosition при изменении userPreviousBet
   useEffect(() => {
     console.log("[BetLines] userPreviousBet изменился:", userPreviousBet.toArray());
     const stored = localStorage.getItem(LOCAL_KEY);
@@ -158,9 +156,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (isUserBetZero) {
       console.log("[BetLines] userPreviousBet равен нулевому вектору – устанавливаем betPosition как aggregatorClipped + смещение");
       const minDelta = 0.0001;
-      // Вычисляем смещение вдоль направления агрегатора
       const offset = aggregatorClipped.clone().normalize().multiplyScalar(minDelta);
-      // Устанавливаем betPosition: конец агрегатора + offset, с z = 1
       setBetPosition(aggregatorClipped.clone().add(offset).setZ(1));
       return;
     }
@@ -438,15 +434,8 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     // Вычисляем новое положение: direction = intersect - aggregatorClipped
     const direction = intersect.clone().sub(aggregatorClipped);
-    let newPos = betPosition ? betPosition.clone() : new THREE.Vector3();
-
-    if (axisMode === "X") {
-      newPos.x = aggregatorClipped.x + direction.x;
-    } else if (axisMode === "Y") {
-      newPos.y = aggregatorClipped.y + direction.y;
-    } else {
-      newPos = aggregatorClipped.clone().add(direction);
-    }
+    // Просто вычисляем новое положение: начало - aggregatorClipped, плюс направление
+    let newPos = aggregatorClipped.clone().add(direction);
 
     // Ограничиваем длину вектора, если он превышает maxWhiteLength
     const finalDir = newPos.clone().sub(aggregatorClipped);
@@ -464,7 +453,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     isDragging,
     aggregatorClipped,
     betPosition,
-    axisMode,
     camera,
     gl.domElement,
     maxWhiteLength,

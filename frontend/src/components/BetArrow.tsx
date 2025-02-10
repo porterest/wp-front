@@ -101,7 +101,6 @@ const BetArrow: React.FC<BetArrowProps> = ({
         maxYellowLength={maxArrowLength}
         maxWhiteLength={maxArrowLength}
         handleDrag={handleDrag}
-        axisMode={axisMode}
         setBetAmount={setBetAmount}
         visible={visitable}
       />
