@@ -93,7 +93,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
   const deltaZ = count > 1 ? totalTime / (count - 1) : 0;
 
   // Начальная точка цепочки (на оси времени — Z)
-  const startPoint = new THREE.Vector3(0, 0, 0); // время начинается с 0
+  // const startPoint = new THREE.Vector3(0, 0, 0); // время начинается с 0
 
   // Вычисляем масштаб для наконечников; пусть базовый масштаб равен 1 при 5 векторах,
   // и уменьшается при большем количестве, но не меньше 0.3
