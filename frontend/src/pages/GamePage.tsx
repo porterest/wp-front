@@ -293,7 +293,6 @@ const GamePage: React.FC = () => {
         historicalVectors={historicalVectors}
       >
         <GraphModes
-          axisMode={axisMode}
           currentMode={currentMode}
           // selectedPair={selectedPair}
           data={data.candles || []}

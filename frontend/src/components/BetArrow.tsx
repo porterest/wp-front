@@ -13,7 +13,6 @@ interface BetArrowProps {
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
-  axisMode: "X" | "Y";
   betAmount: number;
   setBetAmount: (amount: number) => void;
   showArrows?: boolean;
@@ -26,7 +25,6 @@ const BetArrow: React.FC<BetArrowProps> = ({
                                              setUserPreviousBet,
                                              onDragging,
                                              onShowConfirmButton,
-                                             axisMode,
                                              betAmount,
                                              setBetAmount,
                                              showArrows = true, // по умолчанию стрелки отображаются
