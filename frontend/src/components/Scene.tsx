@@ -44,6 +44,8 @@ const Scene: React.FC<SceneProps> = ({
                                        betsFetched,
                                        historicalVectors,
                                      }) => {
+  console.log("betsFetched в сцене")
+  console.log(betsFetched)
   return (
     <Canvas camera={{ position: [10, 10, 10], fov: 60 }} style={style}>
       <OrbitControls enableRotate={false} enablePan={false} enableZoom={false} />
@@ -51,29 +53,25 @@ const Scene: React.FC<SceneProps> = ({
       <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
       <ScaleProvider data={data}>
         <ScaleHandler onScaleReady={onScaleReady} />
-        {/* Если historicalVectors не пустой, отрисовываем только HistoricalVectors */}
-        {historicalVectors && historicalVectors.length > 0 ? (
+        {children}
+        <GraphModes
+          currentMode={currentMode}
+          data={data}
+          previousBetEnd={previousBetEnd}
+          userPreviousBet={userPreviousBet}
+          setUserPreviousBet={setUserPreviousBet}
+          axisMode={axisMode}
+          onDragging={onDragging}
+          onShowConfirmButton={onShowConfirmButton}
+          betsFetched={betsFetched}
+        />
+        {/* Отрисовка исторических стрелок поверх остальных объектов */}
+        {historicalVectors && historicalVectors.length > 0 && (
           <HistoricalVectors
             vectors={historicalVectors}
             startPoint={previousBetEnd}
-            totalChainLength={5}
+            totalChainLength={5}  // Попробуйте поэкспериментировать с этим значением
           />
-        ) : (
-          <>
-            {/* Отрисовка стандартного графика (children) и GraphModes */}
-            {children}
-            <GraphModes
-              currentMode={currentMode}
-              data={data}
-              previousBetEnd={previousBetEnd}
-              userPreviousBet={userPreviousBet}
-              setUserPreviousBet={setUserPreviousBet}
-              axisMode={axisMode}
-              onDragging={onDragging}
-              onShowConfirmButton={onShowConfirmButton}
-              betsFetched={betsFetched}
-            />
-          </>
         )}
       </ScaleProvider>
       <CameraTrackballControl />

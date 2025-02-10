@@ -134,6 +134,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     setFetchError(null);
     try {
       const vectors = await fetchLastVectors(selectedPair.value, historicalCount);
+      console.log("vectors");
       console.log(vectors);
       setIsFetchingHistorical(false);
       // Передаём полученные данные через пропс
