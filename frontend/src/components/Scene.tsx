@@ -1,3 +1,4 @@
+// Scene.tsx
 import React, { useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -7,14 +8,14 @@ import { CandleData } from "../types/candles";
 import GraphModes from "./GraphModes";
 import CameraTrackballControl from "./CameraTrackballControl";
 import * as THREE from "three";
+import HistoricalVectors from "./HistoricalVectors";
 
 interface SceneProps {
   children: React.ReactNode;
-  // orbitControlsEnabled: boolean;
   data: CandleData[];
   onScaleReady: (scaleFunctions: ScaleFunctions) => void;
   style?: React.CSSProperties;
-  // Пропсы для GraphModes:
+  // Props для GraphModes:
   previousBetEnd: THREE.Vector3;
   userPreviousBet: THREE.Vector3;
   setUserPreviousBet: (value: THREE.Vector3) => void;
@@ -26,11 +27,11 @@ interface SceneProps {
   ) => void;
   currentMode: number;
   betsFetched: boolean;
+  historicalVectors: Array<[number, number]>;
 }
 
 const Scene: React.FC<SceneProps> = ({
                                        children,
-                                       // orbitControlsEnabled,
                                        data,
                                        onScaleReady,
                                        style,
@@ -42,18 +43,16 @@ const Scene: React.FC<SceneProps> = ({
                                        onShowConfirmButton,
                                        currentMode,
                                        betsFetched,
+                                       historicalVectors,
                                      }) => {
   return (
     <Canvas camera={{ position: [10, 10, 10], fov: 60 }} style={style}>
-      {/* Отключаем OrbitControls, чтобы управление камерой выполнялось только через CameraTrackballControl */}
       <OrbitControls enableRotate={false} enablePan={false} enableZoom={false} />
       <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 10]} intensity={1} castShadow={true} />
+      <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
       <ScaleProvider data={data}>
-        {/* Рендерим график (children) */}
         {children}
         <ScaleHandler onScaleReady={onScaleReady} />
-        {/* Рендерим GraphModes, который обрабатывает ставки */}
         <GraphModes
           currentMode={currentMode}
           data={data}
@@ -65,8 +64,13 @@ const Scene: React.FC<SceneProps> = ({
           onShowConfirmButton={onShowConfirmButton}
           betsFetched={betsFetched}
         />
+        {/* Передаем реальные исторические векторы в HistoricalVectors */}
+        <HistoricalVectors
+          vectors={historicalVectors}
+          startPoint={previousBetEnd}
+          totalChainLength={5}
+        />
       </ScaleProvider>
-      {/* Рендерим компонент управления камерой */}
       <CameraTrackballControl />
     </Canvas>
   );
