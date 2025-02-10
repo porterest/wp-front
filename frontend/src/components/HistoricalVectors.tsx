@@ -27,9 +27,11 @@ interface ArrowProps {
   /** Нормализованный вектор направления стрелки */
   direction: THREE.Vector3;
   color?: string;
+  /** Масштаб для размеров наконечника стрелки */
+  coneScale?: number;
 }
 
-const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow" }) => {
+const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow", coneScale = 1 }) => {
   console.log("Rendering Arrow:");
   console.log("  start:", start.toArray());
   console.log("  end:", end.toArray());
@@ -62,7 +64,8 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow" }
     <group>
       <line2 geometry={lineGeometry} material={lineMaterial} />
       <mesh position={end} quaternion={coneQuaternion}>
-        <coneGeometry args={[0.1, 0.3, 12]} />
+        {/* Размеры конуса зависят от coneScale */}
+        <coneGeometry args={[0.1 * coneScale, 0.3 * coneScale, 12]} />
         <meshStandardMaterial color={color} />
       </mesh>
     </group>
@@ -80,13 +83,19 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     totalChainLength,
   });
 
-  // Вводим коэффициенты масштабирования:
-  const xScale = 1000; // Для увеличения горизонтального смещения
-  const yScale = 60;   // Для уменьшения цены до диапазона графика (например, 117 → ~1.95)
+  // Для сохранения направления мы вычисляем угол через Math.atan2.
+  // Если входной вектор [x, y] – его угол равен atan2(y, x)
+  // Если соотношение очень маленькое, угол будет почти 90° (то есть стрелка почти вертикальная).
+  // Если нужно, можно добавить дополнительное смещение или иной метод.
 
-  // Корректируем стартовую точку: оставляем x, делим y на yScale, устанавливаем z = 1
-  const adjustedStart = new THREE.Vector3(startPoint.x, startPoint.y / yScale, 1);
-  console.log("Adjusted startPoint:", adjustedStart.toArray());
+  // Если необходимо «опустить» стрелки на график, корректируем startPoint.
+  const adjustedStart = new THREE.Vector3(startPoint.x, startPoint.y, 1);
+  console.log("Adjusted startPoint (before chain):", adjustedStart.toArray());
+
+  // Вычисляем масштаб для наконечников: чем больше векторов, тем меньше размер.
+  // Например, можно задать: base размер для 5 векторов, и для count векторов масштаб = (5 / count) с нижней границей 0.3.
+  const coneScale = Math.max(0.3, 5 / vectors.length);
+  console.log("Computed coneScale:", coneScale);
 
   // Вычисляем цепочку стрелок:
   const arrowChain = useMemo(() => {
@@ -103,11 +112,11 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     for (let i = 0; i < count; i++) {
       console.log(`Processing vector index ${i}:`, vectors[i]);
       const vec = vectors[i];
-      // Применяем коэффициенты масштабирования:
-      const scaledX = vec[0] * xScale;
-      const scaledY = vec[1] / yScale;
-      console.log(`Scaled components for index ${i}: x=${scaledX}, y=${scaledY}`);
-      const direction = new THREE.Vector3(scaledX, scaledY, 0);
+      // Вычисляем угол из входных данных:
+      const angle = Math.atan2(vec[1], vec[0]);
+      console.log(`Computed angle for index ${i}: ${angle} rad (${(angle * 180) / Math.PI}°)`);
+      const direction = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
+      // Если вектор слишком маленький, задаем направление по умолчанию
       if (direction.length() === 0) {
         direction.set(1, 0, 0);
         console.log(`Vector at index ${i} had zero length. Defaulting direction to:`, direction.toArray());
@@ -115,7 +124,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       direction.normalize();
       console.log(`Normalized direction for index ${i}:`, direction.toArray());
       const arrowEnd = currentStart.clone().add(direction.clone().multiplyScalar(arrowLength));
-      // Принудительно устанавливаем z = 1 для корректного отображения
+      // Принудительно устанавливаем z = 1 для корректного отображения поверх графика
       currentStart.z = 1;
       arrowEnd.z = 1;
       console.log(`Arrow ${i} computed start:`, currentStart.toArray(), "end:", arrowEnd.toArray());
@@ -143,6 +152,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
           end={arrow.end}
           direction={arrow.direction}
           color="yellow"
+          coneScale={coneScale}
         />
       ))}
     </group>
