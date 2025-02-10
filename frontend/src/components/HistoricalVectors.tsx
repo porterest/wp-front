@@ -1,7 +1,6 @@
-// HistoricalVectors.tsx
 import React, { useMemo } from "react";
 import * as THREE from "three";
-import { extend } from "@react-three/fiber";
+import { extend, useFrame } from "@react-three/fiber";
 import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
@@ -31,37 +30,37 @@ interface ArrowProps {
 }
 
 const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow" }) => {
-  // Создаем геометрию линии стрелки
+  console.log("Rendering Arrow:");
+  console.log("  start:", start.toArray());
+  console.log("  end:", end.toArray());
+  console.log("  direction:", direction.toArray());
+
   const lineGeometry = useMemo(() => {
+    console.log("Creating LineGeometry for Arrow with start:", start.toArray(), "and end:", end.toArray());
     const geometry = new LineGeometry();
-    geometry.setPositions([
-      start.x, start.y, start.z,
-      end.x, end.y, end.z,
-    ]);
+    geometry.setPositions([start.x, start.y, start.z, end.x, end.y, end.z]);
     return geometry;
   }, [start, end]);
 
-  // Материал для линии стрелки
   const lineMaterial = useMemo(() => {
+    console.log("Creating LineMaterial for Arrow with color:", color);
     return new LineMaterial({
-      color,
+      color: color,
       linewidth: 2,
       resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
     });
   }, [color]);
 
-  // Вычисляем кватернион для поворота конуса (наконечника стрелки).
-  // По умолчанию конус ориентирован вдоль оси Y, поэтому поворачиваем его по направлению стрелки.
   const coneQuaternion = useMemo(() => {
     const defaultDir = new THREE.Vector3(0, 1, 0);
-    return new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
+    const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
+    console.log("Computed cone quaternion:", quat);
+    return quat;
   }, [direction]);
 
   return (
     <group>
-      {/* Отрисовка линии стрелки через <line2> */}
       <line2 geometry={lineGeometry} material={lineMaterial} />
-      {/* Отрисовка наконечника стрелки */}
       <mesh position={end} quaternion={coneQuaternion}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color={color} />
@@ -75,43 +74,60 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                startPoint = new THREE.Vector3(0, 0, 1),
                                                                totalChainLength = 5,
                                                              }) => {
+  console.log("HistoricalVectors received props:", {
+    vectors,
+    startPoint: startPoint.toArray(),
+    totalChainLength,
+  });
+
   // Получаем функции нормализации из контекста
   const scale = useScale();
+  console.log("Using scale functions from context:", scale);
 
-  // Приводим startPoint к нужной плоскости (например, z = 1)
+  // Приводим startPoint к нужной плоскости: принудительно устанавливаем z = 1
   const adjustedStart = startPoint.clone();
   adjustedStart.z = 1;
+  console.log("Adjusted startPoint:", adjustedStart.toArray());
 
-  // Вычисляем цепочку стрелок: для каждого вектора нормализуем Y через useScale,
-  // затем вычисляем направление и конечную точку стрелки.
   const arrowChain = useMemo(() => {
+    console.log("Computing arrowChain with vectors:", vectors);
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    if (!vectors || vectors.length === 0) return chain;
+    if (!vectors || vectors.length === 0) {
+      console.log("No vectors provided, returning empty chain.");
+      return chain;
+    }
     const count = vectors.length;
     const arrowLength = totalChainLength / count;
+    console.log(`TotalChainLength: ${totalChainLength}, count: ${count}, computed arrowLength: ${arrowLength}`);
     let currentStart = adjustedStart.clone();
     for (let i = 0; i < count; i++) {
+      console.log(`Processing vector index ${i}:`, vectors[i]);
       const vec = vectors[i];
-      // Нормализуем только вторую компоненту (например, цену) с помощью функции normalizeY
-      const normalizedY = scale.normalizeY(vec[1]);
-      // Сохраняем первую компоненту (например, объём или другую характеристику) как есть
-      const normalizedVec = new THREE.Vector3(vec[0], normalizedY, 0);
-      if (normalizedVec.length() === 0) {
-        normalizedVec.set(1, 0, 0);
+      // Создаем вектор направления, фиксируя z = 0
+      const direction = new THREE.Vector3(vec[0], vec[1], 0);
+      if (direction.length() === 0) {
+        direction.set(1, 0, 0);
+        console.log(`Vector at index ${i} had zero length. Defaulting direction to:`, direction.toArray());
       }
-      normalizedVec.normalize();
-      const arrowEnd = currentStart.clone().add(normalizedVec.clone().multiplyScalar(arrowLength));
-      // Устанавливаем z = 1 для корректного отображения поверх плоскостей
+      direction.normalize();
+      console.log(`Normalized direction for index ${i}:`, direction.toArray());
+      const arrowEnd = currentStart.clone().add(direction.clone().multiplyScalar(arrowLength));
+      // Принудительно устанавливаем z = 1 для корректного отображения
       currentStart.z = 1;
       arrowEnd.z = 1;
+      console.log(`Arrow ${i} computed start:`, currentStart.toArray(), "end:", arrowEnd.toArray());
       chain.push({
         start: currentStart.clone(),
         end: arrowEnd.clone(),
-        direction: normalizedVec.clone(),
+        direction: direction.clone(),
       });
       currentStart = arrowEnd.clone();
     }
-    console.log("Computed arrowChain:", chain);
+    console.log("Computed arrowChain:", chain.map(item => ({
+      start: item.start.toArray(),
+      end: item.end.toArray(),
+      direction: item.direction.toArray(),
+    })));
     return chain;
   }, [vectors, adjustedStart, totalChainLength, scale]);
 

@@ -1,3 +1,4 @@
+// Scene.tsx
 import React, { useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -14,7 +15,6 @@ interface SceneProps {
   data: CandleData[];
   onScaleReady: (scaleFunctions: ScaleFunctions) => void;
   style?: React.CSSProperties;
-  // Props для GraphModes:
   previousBetEnd: THREE.Vector3;
   userPreviousBet: THREE.Vector3;
   setUserPreviousBet: (value: THREE.Vector3) => void;
@@ -44,10 +44,12 @@ const Scene: React.FC<SceneProps> = ({
                                        betsFetched,
                                        historicalVectors,
                                      }) => {
-  console.log("betsFetched в сцене")
-  console.log(betsFetched)
+  console.log("Rendering Scene with historicalVectors:", historicalVectors);
   return (
-    <Canvas camera={{ position: [10, 10, 10], fov: 60 }} style={style}>
+    <Canvas
+      camera={{ position: [10, 10, 10], fov: 60 }}
+      style={{ width: "100vw", height: "100vh", ...style }}
+    >
       <OrbitControls enableRotate={false} enablePan={false} enableZoom={false} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
@@ -65,13 +67,14 @@ const Scene: React.FC<SceneProps> = ({
           onShowConfirmButton={onShowConfirmButton}
           betsFetched={betsFetched}
         />
-        {/* Отрисовка исторических стрелок поверх остальных объектов */}
         {historicalVectors && historicalVectors.length > 0 && (
-          <HistoricalVectors
-            vectors={historicalVectors}
-            startPoint={previousBetEnd}
-            totalChainLength={5}  // Попробуйте поэкспериментировать с этим значением
-          />
+          <>
+            <HistoricalVectors
+              vectors={historicalVectors}
+              startPoint={previousBetEnd}
+              totalChainLength={5}
+            />
+          </>
         )}
       </ScaleProvider>
       <CameraTrackballControl />
@@ -85,6 +88,7 @@ const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) =>
   const scaleFunctions = useScale();
   useEffect(() => {
     onScaleReady(scaleFunctions);
+    console.log("Scale functions from Scene:", scaleFunctions);
   }, [onScaleReady, scaleFunctions]);
   return null;
 };
