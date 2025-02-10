@@ -68,8 +68,8 @@ const Scene: React.FC<SceneProps> = ({
         {historicalVectors && historicalVectors.length > 0 && (
           <HistoricalVectors
             vectors={historicalVectors}
-            startPoint={previousBetEnd}
-            totalChainLength={5}
+            // startPoint={previousBetEnd}
+            // totalChainLength={5}
           />
         )}
       </ScaleProvider>
