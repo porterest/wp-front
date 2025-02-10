@@ -1,0 +1,44 @@
+{
+  "db": {
+    "host": "185.171.81.169",
+    "port": 5432,
+    "name": "default_db",
+    "user": "gen_user",
+    "password": "b)1V.=fDvWa5~}"
+  },
+  "jwt": {
+    "secret_key": "very-secret-wipi-key-innit",
+    "issuer": "wipi-back",
+    "audience": "wipi-front",
+    "access_expire": 600,
+    "refresh_expire": 6000
+  },
+  "ton": {
+    "tonconnect": {
+      "payload_ttl": 600,
+      "allowed_domains": [
+        "wp-dev-app.duckdns.org",
+        "wp-dev-api.duckdns.org"
+      ]
+    },
+    "tonapi_key": "AEYXT62MFZXBA3YAAAAB5MVXIDNV6X7MNL6NPHJRQYBF5CFAGYRRD5GAZTQPUSOEPVEHFRI"
+  },
+  "vault": {
+    "host": "vault",
+    "port": 8200,
+    "token": "root"
+  },
+  "allowed_domains": [
+    "https://wp-dev-app.duckdns.org",
+    "https://wp-dev-api.duckdns.org",
+    "https://web.telegram.org"
+  ],
+  "inner_token": {
+    "symbol": "DD",
+    "minter_address": "EQBrltnukNOtAPgUwUO5o6VlDuFv2pkzEkOPvnqmOe2OmdB3"
+  },
+  "secrets": {
+    "expected_path": "awpk",
+    "expected_key": "46b83ad7-d3e2-4f52-b30e-ce2231464cd0"
+  }
+}
