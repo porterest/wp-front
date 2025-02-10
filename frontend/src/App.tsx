@@ -16,11 +16,11 @@ import { DataPrefetchProvider } from "./context/DataPrefetchContext"; // Доб�
 import WalletHandler from "./components/WalletHandler";
 
 const App: React.FC = () => {
+
   return (
     <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/porterest/wp-front/refs/heads/main/frontend/public/tonconnect-manifest.json">
       <AuthProvider>
         <UserBalanceProvider>
-          {/*<CandleDataProvider>*/}
             <DataPrefetchProvider>
               <Router>
                 <Layout>
@@ -35,7 +35,6 @@ const App: React.FC = () => {
                 <WalletHandler />
               </Router>
             </DataPrefetchProvider>
-          {/*</CandleDataProvider>*/}
         </UserBalanceProvider>
       </AuthProvider>
     </TonConnectUIProvider>

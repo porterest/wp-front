@@ -8,12 +8,14 @@ interface SymbolSelectorProps {
   onSwitchMode: (mode: "Candles" | "Axes" | "Both") => void;
   onAxisModeChange: (axis: "X" | "Y") => void;
   onSymbolChange: (pair: PairOption) => void;
+  onHistoricalFetched: (vectors: Array<[number, number]>) => void;
 }
 
 const SymbolSelector: React.FC<SymbolSelectorProps> = ({
                                                          onSwitchMode,
                                                          onAxisModeChange,
                                                          onSymbolChange,
+                                                         onHistoricalFetched,
                                                        }) => {
   const { data, setData } = useDataPrefetch();
   const pairs = data.pairs || []; // Пары из контекста
@@ -24,7 +26,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   // --- Новые состояния для работы с историческими векторами ---
   const [showHistoricalInput, setShowHistoricalInput] = useState<boolean>(false);
   const [historicalCount, setHistoricalCount] = useState<number>(5);
-  const [historicalVectors, setHistoricalVectors] = useState<Array<[number, number]>>([]);
+  // const [historicalVectors, setHistoricalVectors] = useState<Array<[number, number]>>([]);
   const [isFetchingHistorical, setIsFetchingHistorical] = useState<boolean>(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
@@ -132,18 +134,16 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     setFetchError(null);
     try {
       const vectors = await fetchLastVectors(selectedPair.value, historicalCount);
-      console.log("Historical vectors fetched:", vectors);
-      setHistoricalVectors(vectors);
-      console.log("Historical vectors fetched:", historicalVectors);
-      // Здесь можно добавить callback или изменить состояние родительского компонента,
-      // чтобы отобразить полученные данные на графике.
+      setIsFetchingHistorical(false);
+      // Передаём полученные данные через пропс
+      onHistoricalFetched(vectors);
     } catch (error) {
       console.error("Ошибка загрузки исторических векторов:", error);
       setFetchError("Ошибка загрузки исторических данных.");
-    } finally {
       setIsFetchingHistorical(false);
     }
-  }, [selectedPair, historicalCount]);
+  }, [selectedPair, historicalCount, onHistoricalFetched]);
+
 
   return (
     <div className="relative w-[180px] p-2 rounded-lg bg-[rgba(0,255,255,0.2)] text-white shadow-md">
