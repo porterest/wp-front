@@ -5,12 +5,13 @@ import { extend } from "@react-three/fiber";
 import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
+import { useScale } from "../context/ScaleContext";
 
 // Регистрируем классы для использования в JSX
 extend({ Line2, LineGeometry, LineMaterial });
 
 interface HistoricalVectorsProps {
-  /** Массив векторов, например: [[x1, y1], [x2, y2], …] */
+  /** Массив векторов, например: [[x, y], [x, y], …] */
   vectors: Array<[number, number]>;
   /** Точка, откуда начинается цепочка стрелок (по умолчанию (0, 0, 1)) */
   startPoint?: THREE.Vector3;
@@ -30,7 +31,7 @@ interface ArrowProps {
 }
 
 const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow" }) => {
-  // Создаем геометрию для линии (стрелки)
+  // Создаем геометрию линии стрелки
   const lineGeometry = useMemo(() => {
     const geometry = new LineGeometry();
     geometry.setPositions([
@@ -40,17 +41,17 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow" }
     return geometry;
   }, [start, end]);
 
-  // Материал для линии
+  // Материал для линии стрелки
   const lineMaterial = useMemo(() => {
     return new LineMaterial({
-      color: color,
+      color,
       linewidth: 2,
       resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
     });
   }, [color]);
 
-  // Вычисляем кватернион для поворота наконечника (конуса).
-  // По умолчанию конус ориентирован вдоль оси Y, поэтому поворачиваем его так, чтобы он смотрел по направлению стрелки.
+  // Вычисляем кватернион для поворота конуса (наконечника стрелки).
+  // По умолчанию конус ориентирован вдоль оси Y, поэтому поворачиваем его по направлению стрелки.
   const coneQuaternion = useMemo(() => {
     const defaultDir = new THREE.Vector3(0, 1, 0);
     return new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
@@ -58,9 +59,9 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow" }
 
   return (
     <group>
-      {/* Отрисовка линии стрелки */}
+      {/* Отрисовка линии стрелки через <line2> */}
       <line2 geometry={lineGeometry} material={lineMaterial} />
-      {/* Отрисовка наконечника стрелки – конуса */}
+      {/* Отрисовка наконечника стрелки */}
       <mesh position={end} quaternion={coneQuaternion}>
         <coneGeometry args={[0.1, 0.3, 12]} />
         <meshStandardMaterial color={color} />
@@ -71,16 +72,18 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow" }
 
 const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
-                                                               // Если startPoint не задан, используем (0, 0, 1); если задан, принудительно задаем z = 1
                                                                startPoint = new THREE.Vector3(0, 0, 1),
                                                                totalChainLength = 5,
                                                              }) => {
-  // Если переданная startPoint имеет z = 0, принудительно делаем z = 1, чтобы стрелки отображались поверх
+  // Получаем функции нормализации из контекста
+  const scale = useScale();
+
+  // Приводим startPoint к нужной плоскости (например, z = 1)
   const adjustedStart = startPoint.clone();
   adjustedStart.z = 1;
 
-  // Вычисляем цепочку стрелок: делим totalChainLength на количество векторов,
-  // и для каждой стрелки вычисляем конечную точку, прибавляя направление, умноженное на длину стрелки.
+  // Вычисляем цепочку стрелок: для каждого вектора нормализуем Y через useScale,
+  // затем вычисляем направление и конечную точку стрелки.
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
     if (!vectors || vectors.length === 0) return chain;
@@ -89,27 +92,28 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     let currentStart = adjustedStart.clone();
     for (let i = 0; i < count; i++) {
       const vec = vectors[i];
-      // Создаем вектор направления из данных; фиксируем z = 0
-      const direction = new THREE.Vector3(vec[0], vec[1], 0);
-      if (direction.length() === 0) {
-        direction.set(1, 0, 0);
+      // Нормализуем только вторую компоненту (например, цену) с помощью функции normalizeY
+      const normalizedY = scale.normalizeY(vec[1]);
+      // Сохраняем первую компоненту (например, объём или другую характеристику) как есть
+      const normalizedVec = new THREE.Vector3(vec[0], normalizedY, 0);
+      if (normalizedVec.length() === 0) {
+        normalizedVec.set(1, 0, 0);
       }
-      direction.normalize();
-      // Вычисляем конечную точку стрелки
-      const arrowEnd = currentStart.clone().add(direction.clone().multiplyScalar(arrowLength));
-      // Принудительно устанавливаем z = 1 для корректного отображения
+      normalizedVec.normalize();
+      const arrowEnd = currentStart.clone().add(normalizedVec.clone().multiplyScalar(arrowLength));
+      // Устанавливаем z = 1 для корректного отображения поверх плоскостей
       currentStart.z = 1;
       arrowEnd.z = 1;
       chain.push({
         start: currentStart.clone(),
         end: arrowEnd.clone(),
-        direction: direction.clone(),
+        direction: normalizedVec.clone(),
       });
       currentStart = arrowEnd.clone();
     }
     console.log("Computed arrowChain:", chain);
     return chain;
-  }, [vectors, adjustedStart, totalChainLength]);
+  }, [vectors, adjustedStart, totalChainLength, scale]);
 
   return (
     <group>
