@@ -41,6 +41,8 @@ const GamePage: React.FC = () => {
   const [currentBet, setCurrentBet] = useState<PlaceBetRequest | null>(null);
 
   const [betsFetched, setBetsFetched] = useState<boolean>(false);
+  const [historicalVectors, setHistoricalVectors] = useState<Array<[number, number]>>([]);
+
 
   useEffect(() => {
     // Инициализация Telegram Web App
@@ -244,7 +246,7 @@ const GamePage: React.FC = () => {
           onSymbolChange={(pair) => {
             console.log("Symbol changed in GamePage:", pair);
             setSelectedPair(pair);
-            setData((prev) => ({ ...prev, selectedPair: pair })); // Сохранение выбранной пары в контексте
+            setData((prev) => ({ ...prev, selectedPair: pair }));
           }}
           onSwitchMode={(mode: "Candles" | "Axes" | "Both") => {
             console.log("Switch mode:", mode);
@@ -261,16 +263,19 @@ const GamePage: React.FC = () => {
                 break;
             }
             setCurrentMode(modeToSet);
-            console.log(currentMode)
           }}
           onAxisModeChange={(axis: "X" | "Y") => {
             console.log("AxisModeChange:", axis);
             setAxisMode(axis);
           }}
+          // передача полученных исторических векторов в GamePage
+          onHistoricalFetched={(vectors) => {
+            console.log("Historical vectors received in GamePage:", vectors);
+            setHistoricalVectors(vectors);
+          }}
         />
       </div>
       <Scene
-        // orbitControlsEnabled={orbitControlsEnabled}
         data={data.candles || []}
         previousBetEnd={previousBetEnd}
         userPreviousBet={userPreviousBet}
@@ -284,6 +289,8 @@ const GamePage: React.FC = () => {
           console.log("Scales from Scene:", scales);
           setScaleFunctions(scales);
         }}
+        // Передача реальных исторических векторов в Scene
+        historicalVectors={historicalVectors}
       >
         <GraphModes
           axisMode={axisMode}
