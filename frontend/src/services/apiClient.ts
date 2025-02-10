@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import createAuthRefreshInterceptor from "axios-auth-refresh";
 
 const BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || "https://abchaaa.duckdns.org";
+  process.env.REACT_APP_API_BASE_URL || "https://wp-dev-api.duckdns.org";
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,

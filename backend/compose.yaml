@@ -12,13 +12,13 @@ services:
       - ./app/.env:/app/.env
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
+    networks:
+      - wp_network
 #    depends_on:
 #      db:
 #        condition: service_healthy
-    ports:
-      - "8000:8080"
 
 
-include:
+#include:
 #  - ./database/db-compose.yaml
-  - ./vault/vault-compose.yaml
+#  - ./vault/vault-compose.yaml

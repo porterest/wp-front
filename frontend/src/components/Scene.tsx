@@ -6,11 +6,11 @@ import { ScaleFunctions } from "../types/scale";
 import { CandleData } from "../types/candles";
 import GraphModes from "./GraphModes";
 import CameraTrackballControl from "./CameraTrackballControl";
+import CandlestickChart from "./CandlestickChart"; // Импортируем CandlestickChart
 import * as THREE from "three";
 
 interface SceneProps {
-  children: React.ReactNode;
-  // orbitControlsEnabled: boolean;
+  children?: React.ReactNode;
   data: CandleData[];
   onScaleReady: (scaleFunctions: ScaleFunctions) => void;
   style?: React.CSSProperties;
@@ -30,7 +30,6 @@ interface SceneProps {
 
 const Scene: React.FC<SceneProps> = ({
                                        children,
-                                       // orbitControlsEnabled,
                                        data,
                                        onScaleReady,
                                        style,
@@ -49,10 +48,16 @@ const Scene: React.FC<SceneProps> = ({
       <OrbitControls enableRotate={false} enablePan={false} enableZoom={false} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 10]} intensity={1} castShadow={true} />
+
       <ScaleProvider data={data}>
-        {/* Рендерим график (children) */}
+        {/* Добавляем компонент CandlestickChart */}
+        <CandlestickChart data={data} mode="Candles" />
+
+        {/* Если есть дополнительные дочерние элементы */}
         {children}
+
         <ScaleHandler onScaleReady={onScaleReady} />
+
         {/* Рендерим GraphModes, который обрабатывает ставки */}
         <GraphModes
           currentMode={currentMode}
@@ -66,20 +71,24 @@ const Scene: React.FC<SceneProps> = ({
           betsFetched={betsFetched}
         />
       </ScaleProvider>
+
       {/* Рендерим компонент управления камерой */}
       <CameraTrackballControl />
     </Canvas>
   );
 };
 
-const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) => void }> = ({
-                                                                                              onScaleReady,
-                                                                                            }) => {
+
+const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) => void }> = ({ onScaleReady }) => {
   const scaleFunctions = useScale();
+
   useEffect(() => {
     onScaleReady(scaleFunctions);
+    // console.log('scales exposed', scaleFunctions);
   }, [onScaleReady, scaleFunctions]);
+
   return null;
 };
+
 
 export default Scene;
