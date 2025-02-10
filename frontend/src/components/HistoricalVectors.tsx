@@ -1,4 +1,4 @@
-// HistoricalVectors.tsx (вариант цепочки с накоплением)
+// HistoricalVectors.tsx
 import React, { useMemo } from "react";
 import * as THREE from "three";
 import { extend } from "@react-three/fiber";
@@ -6,30 +6,18 @@ import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 
+// Регистрируем компоненты для использования в JSX
 extend({ Line2, LineGeometry, LineMaterial });
 
 interface HistoricalVectorsProps {
-  /** Массив векторов, например: [[a, b], [a, b], …] – смещения result vector */
+  /** Массив входных векторов, например: [[a, b], [a, b], …] – каждый result vector */
   vectors: Array<[number, number]>;
-  /**
-   * Временной диапазон (ось X) для распределения стрелок.
-   * По умолчанию 5.
-   */
-  totalTime?: number;
-  /**
-   * Начальная точка цепочки (по умолчанию (0, 0, 0)).
-   */
+  /** Исходная точка цепочки (например, previousBetEnd). По умолчанию (0, 0, 1). */
   startPoint?: THREE.Vector3;
-  /**
-   * Коэффициент масштабирования для первой компоненты смещения (ось Y).
-   * По умолчанию 1.
-   */
+  /** Коэффициент масштабирования для компоненты a (ось X смещения) – по умолчанию 1. */
+  scaleX?: number;
+  /** Коэффициент масштабирования для компоненты b (ось Y смещения) – по умолчанию 1. */
   scaleY?: number;
-  /**
-   * Коэффициент масштабирования для второй компоненты смещения (ось Z).
-   * По умолчанию 1.
-   */
-  scaleZ?: number;
 }
 
 interface ArrowProps {
@@ -41,6 +29,7 @@ interface ArrowProps {
 }
 
 const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow", coneScale = 1 }) => {
+  // Создаем линию стрелки
   const lineGeometry = useMemo(() => {
     const geometry = new LineGeometry();
     geometry.setPositions([start.x, start.y, start.z, end.x, end.y, end.z]);
@@ -55,6 +44,7 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow", 
     });
   }, [color]);
 
+  // Поворачиваем конус так, чтобы он смотрел в направлении offset
   const coneQuaternion = useMemo(() => {
     const defaultDir = new THREE.Vector3(0, 1, 0);
     return new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
@@ -73,42 +63,48 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow", 
 
 const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
-                                                               totalTime = 5,
-                                                               startPoint = new THREE.Vector3(0, 0, 0),
+                                                               startPoint = new THREE.Vector3(0, 0, 1),
+                                                               scaleX = 1,
                                                                scaleY = 1,
-                                                               scaleZ = 1,
                                                              }) => {
   console.log("HistoricalVectors received vectors:", vectors);
-  // Горизонтальное распределение: суммарное время = totalTime, с N стрелками => deltaX = totalTime / (N - 1)
-  const count = vectors.length;
-  const deltaX = count > 1 ? totalTime / (count - 1) : 0;
+  // Используем startPoint (например, previousBetEnd) и фиксируем z = 1:
+  const adjustedStart = useMemo(() => {
+    const pt = startPoint.clone();
+    pt.z = 1;
+    return pt;
+  }, [startPoint]);
+  console.log("Adjusted startPoint:", adjustedStart.toArray());
 
-  // Начальная точка: берём startPoint и устанавливаем z = 1 (для отрисовки на графике)
-  const initialPoint = startPoint.clone();
-  initialPoint.z = 1;
-
-  // Строим цепочку: P₀ = initialPoint, затем для каждого вектора Pᵢ₊₁ = Pᵢ + (deltaX, a_i * scaleY, b_i * scaleZ)
+  // Вычисляем цепочку стрелок: каждая стрелка начинается там, где закончилась предыдущая.
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    let currentPoint = initialPoint.clone();
+    let currentPoint = adjustedStart.clone();
     vectors.forEach((vec, i) => {
-      const offset = new THREE.Vector3(deltaX, vec[0] * scaleY, vec[1] * scaleZ);
+      // Смещение = (a * scaleX, b * scaleY, 0)
+      const offset = new THREE.Vector3(vec[0] * scaleX, vec[1] * scaleY, 0);
       const nextPoint = currentPoint.clone().add(offset);
-      // Фиксируем z = 1 для каждой точки
+      // Фиксируем z = 1 для всех точек
       currentPoint.z = 1;
       nextPoint.z = 1;
       const direction = offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
       chain.push({ start: currentPoint.clone(), end: nextPoint.clone(), direction });
-      console.log(
-        `Arrow ${i}: start=${currentPoint.toArray()}, offset=${offset.toArray()}, end=${nextPoint.toArray()}, direction=${direction.toArray()}`
-      );
+      console.log(`Arrow ${i}: start=${currentPoint.toArray()}, offset=${offset.toArray()}, end=${nextPoint.toArray()}, direction=${direction.toArray()}`);
       currentPoint = nextPoint.clone();
     });
+    console.log("Computed arrowChain:", chain.map(item => ({
+      start: item.start.toArray(),
+      end: item.end.toArray(),
+      direction: item.direction.toArray(),
+    })));
     return chain;
-  }, [vectors, deltaX, scaleY, scaleZ, initialPoint]);
+  }, [vectors, adjustedStart, scaleX, scaleY]);
 
-  // Масштаб для наконечников: можно уменьшать их при большом количестве векторов
-  const coneScale = Math.max(0.3, Math.sqrt(5 / (count - 1)));
+  // Вычисляем масштаб для наконечников: например, базовый масштаб равен 1 при 5 векторах, уменьшается при увеличении числа.
+  const coneScale = useMemo(() => {
+    const n = vectors.length;
+    return Math.max(0.3, Math.sqrt(5 / n));
+  }, [vectors.length]);
   console.log("Computed coneScale:", coneScale);
 
   return (
