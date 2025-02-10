@@ -83,7 +83,6 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
                                                                deltaTime = 1,
                                                                scaleFactor = 1,
-                                                               totalChainLength,
                                                              }) => {
   console.log("HistoricalVectors received vectors:", vectors);
 
