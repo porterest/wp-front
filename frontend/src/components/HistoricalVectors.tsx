@@ -126,7 +126,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
         offset[offsetAxes[0]] = vectors[i][1] * scaleA;
         offset[offsetAxes[1]] = vectors[i][0] * scaleB;
         // Вычисляем конечную точку стрелки:
-        let nextPoint = currentPoint.clone().add(offset);
+        const nextPoint = currentPoint.clone().add(offset);
         // Чтобы сохранить ось времени неизменной для данного блока:
         nextPoint[timeAxis] = i * delta;
         // Ограничиваем обе точки значениями от 0 до 5:
@@ -151,7 +151,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
         const offset = new THREE.Vector3(0, 0, 0);
         offset[offsetAxes[0]] = vectors[i][1] * scaleA;
         offset[offsetAxes[1]] = vectors[i][0] * scaleB;
-        let endPoint = basePoint.clone().add(offset);
+        const endPoint = basePoint.clone().add(offset);
         endPoint[timeAxis] = i * delta;
         const clampedBase = clampVector(basePoint, 0, 5);
         const clampedEnd = clampVector(endPoint, 0, 5);
