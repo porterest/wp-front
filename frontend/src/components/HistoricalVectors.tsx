@@ -24,7 +24,7 @@ interface HistoricalVectorsProps {
 interface ArrowProps {
   start: THREE.Vector3;
   end: THREE.Vector3;
-  /** Нормализованный вектор направления стрелки */
+  /** Единичный вектор направления стрелки */
   direction: THREE.Vector3;
   color?: string;
   /** Масштаб для размеров наконечника стрелки */
@@ -82,18 +82,16 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     totalChainLength,
   });
 
-  // Коэффициенты масштабирования:
-  const xScale = 1000; // Увеличиваем горизонтальное смещение
-  const yScale = 60;   // Делим цену на этот коэффициент, чтобы привести её к диапазону графика
-
-  // Приводим стартовую точку: оставляем x, нормализуем y, z = 1.
-  const adjustedStart = new THREE.Vector3(startPoint.x, startPoint.y / yScale, 1);
+  // Приводим стартовую точку к нужной плоскости: оставляем x, y без изменений, устанавливаем z = 1
+  const adjustedStart = new THREE.Vector3(startPoint.x, startPoint.y, 1);
   console.log("Adjusted startPoint:", adjustedStart.toArray());
 
-  // Вычисляем масштаб для наконечников: чем больше векторов, тем меньше размер
-  const coneScale = Math.sqrt(5 / vectors.length);
+  // Вычисляем масштаб для наконечников: пусть базовый масштаб равен 1 при 5 векторах;
+  // для большего количества уменьшаем по формуле: scale = Math.max(0.3, sqrt(5 / count))
+  const coneScale = Math.max(0.3, Math.sqrt(5 / vectors.length));
   console.log("Computed coneScale:", coneScale);
 
+  // Вычисляем цепочку стрелок:
   const arrowChain = useMemo(() => {
     console.log("Computing arrowChain with vectors:", vectors);
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
@@ -108,19 +106,15 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     for (let i = 0; i < count; i++) {
       console.log(`Processing vector index ${i}:`, vectors[i]);
       const vec = vectors[i];
-      // Масштабируем входные данные:
-      const scaledX = vec[0] * xScale;
-      const scaledY = vec[1] / yScale;
-      console.log(`Scaled components for index ${i}: x=${scaledX}, y=${scaledY}`);
-      // Вычисляем угол на основе масштабированных значений:
-      const angle = Math.atan2(scaledY, scaledX);
+      // Вычисляем угол по входному вектору (без дополнительного масштабирования)
+      const angle = Math.atan2(vec[1], vec[0]);
       console.log(`Computed angle for index ${i}: ${angle} rad (${(angle * 180) / Math.PI}°)`);
-      // Создаем единичный вектор направления по этому углу:
+      // Создаем единичный вектор направления по этому углу
       const direction = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
       direction.normalize();
       console.log(`Normalized direction for index ${i}:`, direction.toArray());
       const arrowEnd = currentStart.clone().add(direction.clone().multiplyScalar(arrowLength));
-      // Устанавливаем z = 1 для обеих точек:
+      // Устанавливаем z = 1 для обеих точек
       currentStart.z = 1;
       arrowEnd.z = 1;
       console.log(`Arrow ${i} computed start:`, currentStart.toArray(), "end:", arrowEnd.toArray());
@@ -137,7 +131,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       direction: item.direction.toArray(),
     })));
     return chain;
-  }, [vectors, adjustedStart, totalChainLength, xScale, yScale]);
+  }, [vectors, adjustedStart, totalChainLength]);
 
   return (
     <group>
