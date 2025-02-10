@@ -13,6 +13,7 @@ import { UserInfo } from "../types/user";
 import { CandleData } from "../types/candles";
 import { apiClient } from "./apiClient";
 import { ProofData } from "../types/tonProof";
+import { List } from "postcss/lib/list";
 
 export async function getPayload(): Promise<TonProofPayloadResponse> {
     try {
@@ -202,6 +203,23 @@ export async function fetchPreviousBetEnd(pairId: string): Promise<number[]> {
         return response.data; // Возвращаем данные с координатами
     } catch (error) {
         console.error("Ошибка загрузки предыдущей ставки:", error);
+        throw error;
+    }
+}
+
+export async function fetchLastVectors(pairId: string, count: number): Promise<Array<[number, number]>> {
+    try {
+        const response = await apiClient.get<[number, number][]>(
+          "/block/last_vectors",
+          {
+              params: {
+                  pair_id: pairId,
+                  count: count
+              }
+          });
+        return response.data; // Возвращаем данные с координатами
+    } catch (error) {
+        console.error("Ошибка загрузки предыдущих векторов:", error);
         throw error;
     }
 }

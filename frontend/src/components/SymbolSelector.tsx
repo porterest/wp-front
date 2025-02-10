@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useEffect, useState } from "react";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
 import Select, { StylesConfig } from "react-select";
 import { PairOption } from "../types/pair";
+import { fetchLastVectors } from "../services/api"; // Импорт функции запроса
 
 interface SymbolSelectorProps {
   onSwitchMode: (mode: "Candles" | "Axes" | "Both") => void;
@@ -19,6 +20,13 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   const [globalMode, setGlobalMode] = useState<"Candles" | "Axes" | "Both">("Axes");
   const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
+
+  // --- Новые состояния для работы с историческими векторами ---
+  const [showHistoricalInput, setShowHistoricalInput] = useState<boolean>(false);
+  const [historicalCount, setHistoricalCount] = useState<number>(5);
+  const [historicalVectors, setHistoricalVectors] = useState<Array<[number, number]>>([]);
+  const [isFetchingHistorical, setIsFetchingHistorical] = useState<boolean>(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Стили для компонента Select
   const selectStyles: StylesConfig<PairOption, false> = useMemo(
@@ -105,14 +113,37 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     // Если список загружен и ни одна пара ещё не выбрана
     if (pairs.length > 0 && !selectedPair) {
       // Ищем пару с нужным label (например, "DD/TON")
-      const defaultPair = pairs.find(pair => pair.label === "DD/TON");
+      const defaultPair = pairs.find((pair) => pair.label === "DD/TON");
       if (defaultPair) {
         setSelectedPair(defaultPair);
-        setData(prev => ({ ...prev, selectedPair: defaultPair }));
+        setData((prev) => ({ ...prev, selectedPair: defaultPair }));
         onSymbolChange(defaultPair);
       }
     }
   }, [pairs, selectedPair, setData, onSymbolChange]);
+
+  // --- Обработчик загрузки исторических векторов ---
+  const handleFetchHistoricalVectors = useCallback(async () => {
+    if (!selectedPair) {
+      alert("Сначала выберите валютную пару.");
+      return;
+    }
+    setIsFetchingHistorical(true);
+    setFetchError(null);
+    try {
+      const vectors = await fetchLastVectors(selectedPair.value, historicalCount);
+      console.log("Historical vectors fetched:", vectors);
+      setHistoricalVectors(vectors);
+      console.log("Historical vectors fetched:", historicalVectors);
+      // Здесь можно добавить callback или изменить состояние родительского компонента,
+      // чтобы отобразить полученные данные на графике.
+    } catch (error) {
+      console.error("Ошибка загрузки исторических векторов:", error);
+      setFetchError("Ошибка загрузки исторических данных.");
+    } finally {
+      setIsFetchingHistorical(false);
+    }
+  }, [selectedPair, historicalCount]);
 
   return (
     <div className="relative w-[180px] p-2 rounded-lg bg-[rgba(0,255,255,0.2)] text-white shadow-md">
@@ -161,6 +192,36 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
         >
           Y-axis
         </button>
+      </div>
+
+      {/* --- Новый блок для загрузки исторических векторов --- */}
+      <div className="mt-2">
+        <button
+          onClick={() => setShowHistoricalInput((prev) => !prev)}
+          className="px-3 py-2 w-full bg-purple-500 text-white font-bold text-sm rounded-md shadow-lg hover:bg-purple-600 transition"
+        >
+          {showHistoricalInput ? "Скрыть исторические данные" : "Показать исторические данные"}
+        </button>
+        {showHistoricalInput && (
+          <div className="mt-2">
+            <input
+              type="number"
+              value={historicalCount}
+              onChange={(e) => setHistoricalCount(Number(e.target.value))}
+              className="w-full p-1 rounded-md bg-gray-200 text-black"
+              min={1}
+            />
+            <button
+              onClick={handleFetchHistoricalVectors}
+              className="mt-2 px-3 py-2 w-full bg-green-500 text-white font-bold text-sm rounded-md shadow-lg hover:bg-green-600 transition"
+            >
+              {isFetchingHistorical ? "Загрузка..." : "Загрузить"}
+            </button>
+            {fetchError && (
+              <div className="mt-1 text-red-500 text-sm">{fetchError}</div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
