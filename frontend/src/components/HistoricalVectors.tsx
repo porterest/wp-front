@@ -64,7 +64,6 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow", 
     <group>
       <line2 geometry={lineGeometry} material={lineMaterial} />
       <mesh position={end} quaternion={coneQuaternion}>
-        {/* Размеры конуса зависят от coneScale */}
         <coneGeometry args={[0.1 * coneScale, 0.3 * coneScale, 12]} />
         <meshStandardMaterial color={color} />
       </mesh>
@@ -83,21 +82,18 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     totalChainLength,
   });
 
-  // Для сохранения направления мы вычисляем угол через Math.atan2.
-  // Если входной вектор [x, y] – его угол равен atan2(y, x)
-  // Если соотношение очень маленькое, угол будет почти 90° (то есть стрелка почти вертикальная).
-  // Если нужно, можно добавить дополнительное смещение или иной метод.
+  // Коэффициенты масштабирования:
+  const xScale = 1000; // Увеличиваем горизонтальное смещение
+  const yScale = 60;   // Делим цену на этот коэффициент, чтобы привести её к диапазону графика
 
-  // Если необходимо «опустить» стрелки на график, корректируем startPoint.
-  const adjustedStart = new THREE.Vector3(startPoint.x, startPoint.y, 1);
-  console.log("Adjusted startPoint (before chain):", adjustedStart.toArray());
+  // Приводим стартовую точку: оставляем x, нормализуем y, z = 1.
+  const adjustedStart = new THREE.Vector3(startPoint.x, startPoint.y / yScale, 1);
+  console.log("Adjusted startPoint:", adjustedStart.toArray());
 
-  // Вычисляем масштаб для наконечников: чем больше векторов, тем меньше размер.
-  // Например, можно задать: base размер для 5 векторов, и для count векторов масштаб = (5 / count) с нижней границей 0.3.
-  const coneScale = Math.max(0.3, 5 / vectors.length);
+  // Вычисляем масштаб для наконечников: чем больше векторов, тем меньше размер
+  const coneScale = Math.sqrt(5 / vectors.length);
   console.log("Computed coneScale:", coneScale);
 
-  // Вычисляем цепочку стрелок:
   const arrowChain = useMemo(() => {
     console.log("Computing arrowChain with vectors:", vectors);
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
@@ -112,19 +108,19 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     for (let i = 0; i < count; i++) {
       console.log(`Processing vector index ${i}:`, vectors[i]);
       const vec = vectors[i];
-      // Вычисляем угол из входных данных:
-      const angle = Math.atan2(vec[1], vec[0]);
+      // Масштабируем входные данные:
+      const scaledX = vec[0] * xScale;
+      const scaledY = vec[1] / yScale;
+      console.log(`Scaled components for index ${i}: x=${scaledX}, y=${scaledY}`);
+      // Вычисляем угол на основе масштабированных значений:
+      const angle = Math.atan2(scaledY, scaledX);
       console.log(`Computed angle for index ${i}: ${angle} rad (${(angle * 180) / Math.PI}°)`);
+      // Создаем единичный вектор направления по этому углу:
       const direction = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
-      // Если вектор слишком маленький, задаем направление по умолчанию
-      if (direction.length() === 0) {
-        direction.set(1, 0, 0);
-        console.log(`Vector at index ${i} had zero length. Defaulting direction to:`, direction.toArray());
-      }
       direction.normalize();
       console.log(`Normalized direction for index ${i}:`, direction.toArray());
       const arrowEnd = currentStart.clone().add(direction.clone().multiplyScalar(arrowLength));
-      // Принудительно устанавливаем z = 1 для корректного отображения поверх графика
+      // Устанавливаем z = 1 для обеих точек:
       currentStart.z = 1;
       arrowEnd.z = 1;
       console.log(`Arrow ${i} computed start:`, currentStart.toArray(), "end:", arrowEnd.toArray());
@@ -141,7 +137,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       direction: item.direction.toArray(),
     })));
     return chain;
-  }, [vectors, adjustedStart, totalChainLength]);
+  }, [vectors, adjustedStart, totalChainLength, xScale, yScale]);
 
   return (
     <group>
