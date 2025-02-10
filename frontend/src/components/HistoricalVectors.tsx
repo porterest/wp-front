@@ -1,3 +1,4 @@
+// HistoricalVectors.tsx
 import React, { useMemo } from "react";
 import * as THREE from "three";
 import { extend } from "@react-three/fiber";
@@ -45,7 +46,7 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow" }
   const lineMaterial = useMemo(() => {
     console.log("Creating LineMaterial for Arrow with color:", color);
     return new LineMaterial({
-      color: color,
+      color,
       linewidth: 2,
       resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
     });
@@ -80,12 +81,12 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     totalChainLength,
   });
 
-  // Получаем функции нормализации из контекста
   const scale = useScale();
   console.log("Using scale functions from context:", scale);
 
-  // Приводим startPoint к нужной плоскости: принудительно устанавливаем z = 1
+  // Приводим startPoint к нормализованной оси Y
   const adjustedStart = startPoint.clone();
+  adjustedStart.y = scale.normalizeY(startPoint.y);
   adjustedStart.z = 1;
   console.log("Adjusted startPoint:", adjustedStart.toArray());
 
@@ -103,8 +104,11 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     for (let i = 0; i < count; i++) {
       console.log(`Processing vector index ${i}:`, vectors[i]);
       const vec = vectors[i];
-      // Создаем вектор направления, фиксируя z = 0
-      const direction = new THREE.Vector3(vec[0], vec[1], 0);
+      // Применяем нормализацию для второй компоненты (например, цена)
+      const normY = scale.normalizeY(vec[1]);
+      console.log(`Normalized Y for index ${i}: ${normY}`);
+      // Формируем вектор направления с X как есть и Y нормализованным
+      const direction = new THREE.Vector3(vec[0], normY, 0);
       if (direction.length() === 0) {
         direction.set(1, 0, 0);
         console.log(`Vector at index ${i} had zero length. Defaulting direction to:`, direction.toArray());
@@ -112,7 +116,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       direction.normalize();
       console.log(`Normalized direction for index ${i}:`, direction.toArray());
       const arrowEnd = currentStart.clone().add(direction.clone().multiplyScalar(arrowLength));
-      // Принудительно устанавливаем z = 1 для корректного отображения
+      // Принудительно устанавливаем z = 1 для корректного отображения поверх графика
       currentStart.z = 1;
       arrowEnd.z = 1;
       console.log(`Arrow ${i} computed start:`, currentStart.toArray(), "end:", arrowEnd.toArray());

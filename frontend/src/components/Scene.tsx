@@ -68,13 +68,11 @@ const Scene: React.FC<SceneProps> = ({
           betsFetched={betsFetched}
         />
         {historicalVectors && historicalVectors.length > 0 && (
-          <>
-            <HistoricalVectors
-              vectors={historicalVectors}
-              startPoint={previousBetEnd}
-              totalChainLength={5}
-            />
-          </>
+          <HistoricalVectors
+            vectors={historicalVectors}
+            startPoint={previousBetEnd}
+            totalChainLength={5}
+          />
         )}
       </ScaleProvider>
       <CameraTrackballControl />
