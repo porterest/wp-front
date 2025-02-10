@@ -210,7 +210,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     {
       // Вычисляем направление от (0,0,0) до (aggregatorClipped.x, aggregatorClipped.y, 1)
       const desiredDir = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1).normalize();
-      const defaultDir = new THREE.Vector3(0, 1, 0);
+      const defaultDir = new THREE.Vector3(0, 0, 0);
       if (desiredDir.length() > 0) {
         const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
         yCone.setRotationFromQuaternion(quat);
@@ -280,10 +280,10 @@ const BetLines: React.FC<BetLinesProps> = ({
       new THREE.MeshStandardMaterial({ color: "white" })
     );
     {
-      const defaultDir = new THREE.Vector3(0, 1, 0);
+      const defaultDir = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1);
       let desiredDir: THREE.Vector3;
       if (isUserBetZero) {
-        desiredDir = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1).normalize();
+        desiredDir = new THREE.Vector3(betPosition.x, betPosition.y, 1).normalize();
       } else {
         desiredDir = betPosition.clone().sub(aggregatorClipped).normalize();
       }
