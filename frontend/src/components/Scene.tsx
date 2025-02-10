@@ -1,4 +1,3 @@
-// Scene.tsx
 import React, { useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -51,25 +50,31 @@ const Scene: React.FC<SceneProps> = ({
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
       <ScaleProvider data={data}>
-        {children}
         <ScaleHandler onScaleReady={onScaleReady} />
-        <GraphModes
-          currentMode={currentMode}
-          data={data}
-          previousBetEnd={previousBetEnd}
-          userPreviousBet={userPreviousBet}
-          setUserPreviousBet={setUserPreviousBet}
-          axisMode={axisMode}
-          onDragging={onDragging}
-          onShowConfirmButton={onShowConfirmButton}
-          betsFetched={betsFetched}
-        />
-        {/* Передаем реальные исторические векторы в HistoricalVectors */}
-        <HistoricalVectors
-          vectors={historicalVectors}
-          startPoint={previousBetEnd}
-          totalChainLength={5}
-        />
+        {/* Если historicalVectors не пустой, отрисовываем только HistoricalVectors */}
+        {historicalVectors && historicalVectors.length > 0 ? (
+          <HistoricalVectors
+            vectors={historicalVectors}
+            startPoint={previousBetEnd}
+            totalChainLength={5}
+          />
+        ) : (
+          <>
+            {/* Отрисовка стандартного графика (children) и GraphModes */}
+            {children}
+            <GraphModes
+              currentMode={currentMode}
+              data={data}
+              previousBetEnd={previousBetEnd}
+              userPreviousBet={userPreviousBet}
+              setUserPreviousBet={setUserPreviousBet}
+              axisMode={axisMode}
+              onDragging={onDragging}
+              onShowConfirmButton={onShowConfirmButton}
+              betsFetched={betsFetched}
+            />
+          </>
+        )}
       </ScaleProvider>
       <CameraTrackballControl />
     </Canvas>
