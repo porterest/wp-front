@@ -79,6 +79,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const aggregatorClipped = useMemo(() => {
     console.log("previousBetEnd");
     console.log(previousBetEnd);
+
     const agg = previousBetEnd.clone();
     if (agg.length() > maxYellowLength) {
       agg.setLength(maxYellowLength);
@@ -186,8 +187,10 @@ const BetLines: React.FC<BetLinesProps> = ({
       0, 0, 0,
       aggregatorClipped.x,
       aggregatorClipped.y,
-      1  // принудительно z = 1
+      1
     ]);
+    console.log("aggregatorClipped.x,aggregatorClipped.y,1");
+    console.log(yGeom);
     const yMat = new LineMaterial({
       color: "yellow",
       linewidth: 3,
