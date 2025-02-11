@@ -8,138 +8,97 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 extend({ Line2, LineGeometry, LineMaterial });
 
 interface HistoricalVectorsProps {
+  /** Массив векторов в формате [transactionDelta, priceDelta] */
   vectors: Array<[number, number]>;
+  /** Общая длительность (не используется для смещения по Z, оставляем для совместимости) */
   totalTime?: number;
+  /** Если true – смещения накапливаются, иначе каждый вектор отрисовывается от начальной точки */
   accumulate?: boolean;
-  startPoint?: THREE.Vector3;
-  timeAxis?: "x" | "y" | "z";
+  /** Начальная точка, обычно это конец агрегированного вектора (BetLines) */
+  startPoint: THREE.Vector3;
+  /** Масштаб для смещения по оси транзакций (X) */
   scaleA?: number;
+  /** Масштаб для смещения по оси цены (Y) */
   scaleB?: number;
+  /** Цвет стрелок */
   color?: string;
 }
-
-const clampVectorExcludingAxis = (
-  v: THREE.Vector3,
-  min: number,
-  max: number,
-  excludeAxis: "x" | "y" | "z"
-): THREE.Vector3 =>
-  new THREE.Vector3(
-    excludeAxis === "x" ? v.x : Math.min(max, Math.max(min, v.x)),
-    excludeAxis === "y" ? v.y : Math.min(max, Math.max(min, v.y)),
-    excludeAxis === "z" ? v.z : Math.min(max, Math.max(min, v.z))
-  );
 
 interface ArrowProps {
   start: THREE.Vector3;
   end: THREE.Vector3;
   direction: THREE.Vector3;
   color?: string;
-  coneScale?: number;
 }
 
-const Arrow: React.FC<ArrowProps> = ({
-                                       start,
-                                       end,
-                                       direction,
-                                       color = "yellow",
-                                       coneScale = 1,
-                                     }) => {
+const Arrow: React.FC<ArrowProps> = ({ start, end, color = "yellow" }) => {
   const lineGeometry = useMemo(() => {
     const geometry = new LineGeometry();
-    geometry.setPositions([start.x, start.y, start.z, end.x, end.y, end.z]);
+    geometry.setPositions([
+      start.x, start.y, start.z,
+      end.x, end.y, end.z
+    ]);
     return geometry;
   }, [start, end]);
-  const lineMaterial = useMemo(
-    () =>
-      new LineMaterial({
-        color,
-        linewidth: 2,
-        resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-      }),
-    [color]
-  );
-  const coneQuaternion = useMemo(
-    () => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction),
-    [direction]
-  );
-  const coneGeom = useMemo(() => new THREE.ConeGeometry(0.1 * coneScale, 0.3 * coneScale, 12), [coneScale]);
-  return (
-    <group>
-      <line2 geometry={lineGeometry} material={lineMaterial} />
-      <mesh position={end} quaternion={coneQuaternion}>
-        <primitive object={coneGeom} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-    </group>
-  );
+
+  const lineMaterial = useMemo(() => {
+    return new LineMaterial({
+      color,
+      linewidth: 2,
+      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
+    });
+  }, [color]);
+
+  return <line2 geometry={lineGeometry} material={lineMaterial} />;
 };
 
 const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
-                                                               startPoint,
-                                                               totalTime = 4.5,
                                                                accumulate = true,
-                                                               timeAxis = "z",
+                                                               startPoint,
                                                                scaleA = 1,
                                                                scaleB = 1,
                                                                color = "yellow",
                                                              }) => {
+  // Общее число исторических векторов
   const count = vectors.length;
-  const fixedPrice = 0.38313094359425115;
-  const fixedTransaction = 0;
-  const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
-  const coneHeight = 0.3 * computedConeScale;
-  const delta = timeAxis === "z"
-    ? count > 1 ? (totalTime - coneHeight) / (count - 1) : 0
-    : count > 1 ? totalTime / (count - 1) : 0;
+
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    if (timeAxis === "z") {
-      let currentPoint = new THREE.Vector3(fixedTransaction, fixedPrice, 0);
-      for (let i = 0; i < count; i++) {
-        const offset = new THREE.Vector3(0, 0, delta);
-        const nextPoint = currentPoint.clone().add(offset);
-        const direction = new THREE.Vector3(0, 0, 1);
-        chain.push({ start: currentPoint.clone(), end: nextPoint.clone(), direction });
-        currentPoint = nextPoint.clone();
-      }
-    } else {
-      const allAxes: ("x" | "y" | "z")[] = ["x", "y", "z"];
-      const offsetAxes = allAxes.filter((ax) => ax !== timeAxis) as ("x" | "y" | "z")[];
-      if (accumulate && startPoint) {
-        let currentPoint = clampVectorExcludingAxis(startPoint.clone(), 0, 5, timeAxis);
-        for (let i = 0; i < count; i++) {
-          const offset = new THREE.Vector3(0, 0, delta);
-          offset[offsetAxes[0]] = vectors[i][1] * scaleA;
-          offset[offsetAxes[1]] = vectors[i][0] * scaleB;
-          const nextPoint = currentPoint.clone().add(offset);
-          const clampedStart = clampVectorExcludingAxis(currentPoint.clone(), 0, 5, timeAxis);
-          const clampedEnd = clampVectorExcludingAxis(nextPoint.clone(), 0, 5, timeAxis);
-          const direction = offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
-          chain.push({ start: clampedStart, end: clampedEnd, direction });
-          currentPoint = nextPoint.clone();
-        }
-      } else {
-        for (let i = 0; i < count; i++) {
-          if (startPoint){
-            const basePoint = startPoint.clone();
-            basePoint[timeAxis] = i * delta;
-            const offset = new THREE.Vector3(0, 0, delta);
-            offset[offsetAxes[0]] = vectors[i][1] * scaleA;
-            offset[offsetAxes[1]] = vectors[i][0] * scaleB;
-            const endPoint = basePoint.clone().add(offset);
-            const clampedBase = clampVectorExcludingAxis(basePoint, 0, 5, timeAxis);
-            const clampedEnd = clampVectorExcludingAxis(endPoint, 0, 5, timeAxis);
-            const direction = offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
-            chain.push({ start: clampedBase, end: clampedEnd, direction });
-          }
+    // Начинаем именно с переданной точки (конца агрегатора)
+    let currentPoint = startPoint.clone();
 
-        }
-      }
+    for (let i = 0; i < count; i++) {
+      // Предполагаем, что каждый вектор имеет вид [transactionDelta, priceDelta].
+      // Таким образом, ось X (транзакции) смещается на vectors[i][0] * scaleA,
+      // а ось Y (цена) – на vectors[i][1] * scaleB.
+      // Ось Z фиксирована (например, равна 0), чтобы все объекты лежали на одной плоскости.
+      const offset = new THREE.Vector3(
+        vectors[i][0] * scaleA, // смещение по X (транзакции)
+        vectors[i][1] * scaleB, // смещение по Y (цена)
+        0                     // смещение по Z – оставляем на уровне startPoint
+      );
+
+      const nextPoint = currentPoint.clone().add(offset);
+
+      const direction = offset.lengthSq() > 0
+        ? offset.clone().normalize()
+        : new THREE.Vector3(0, 1, 0);
+
+      chain.push({
+        start: currentPoint.clone(),
+        end: nextPoint.clone(),
+        direction,
+      });
+
+      // Если накапливаем смещения, следующая стрелка будет идти от конца предыдущей
+      // Иначе каждая стрелка начинается от startPoint
+      currentPoint = accumulate ? nextPoint.clone() : startPoint.clone();
     }
+
     return chain;
-  }, [vectors, accumulate, count, delta, startPoint, timeAxis, scaleA, scaleB]);
+  }, [vectors, count, startPoint, scaleA, scaleB, accumulate]);
+
   return (
     <group>
       {arrowChain.map((arrow, i) => (
@@ -149,7 +108,6 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
           end={arrow.end}
           direction={arrow.direction}
           color={color}
-          coneScale={computedConeScale}
         />
       ))}
     </group>
