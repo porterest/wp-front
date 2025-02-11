@@ -1,3 +1,4 @@
+// HistoricalVectors.tsx
 import React, { useMemo } from "react";
 import * as THREE from "three";
 import { extend } from "@react-three/fiber";
@@ -8,15 +9,30 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 // Регистрируем компоненты для использования в JSX
 extend({ Line2, LineGeometry, LineMaterial });
 
+/**
+ * Свойства компонента HistoricalVectors:
+ * - vectors: массив векторов-результатов для блока в виде [price, transactions]
+ * - totalTime: общая длина оси времени (по умолчанию 5)
+ * - aggregatorVector: базовый вектор для агрегирования (например, результат предыдущего блока)
+ * - timeAxis: ось, отвечающая за время (по умолчанию "z")
+ * - color: цвет стрелок
+ */
 interface HistoricalVectorsProps {
-  // Массив векторов-результатов в виде [price, transactions]
   vectors: Array<[number, number]>;
-  totalTime?: number; // общая длина оси времени (например, 5)
-  aggregatorVector?: THREE.Vector3; // базовый вектор, с которого начинается цепочка
-  timeAxis?: "x" | "y" | "z"; // ось времени (по умолчанию "z")
+  totalTime?: number;
+  aggregatorVector?: THREE.Vector3;
+  timeAxis?: "x" | "y" | "z";
   color?: string;
 }
 
+/**
+ * Свойства для стрелки (Arrow):
+ * - start: начальная точка стрелки ("начало вектора")
+ * - end: конечная точка стрелки ("конец вектора")
+ * - direction: направление стрелки (вычисляется как разность end - start, нормализованная)
+ * - color: цвет стрелки
+ * - coneScale: масштаб наконечника стрелки
+ */
 interface ArrowProps {
   start: THREE.Vector3;
   end: THREE.Vector3;
@@ -32,7 +48,7 @@ const Arrow: React.FC<ArrowProps> = ({
                                        color = "yellow",
                                        coneScale = 1,
                                      }) => {
-  // Создаём геометрию линии
+  // Создаем геометрию линии от "начала вектора" (start) до "конца вектора" (end)
   const lineGeometry = useMemo(() => {
     const geometry = new LineGeometry();
     console.log("Координаты линии: начало вектора", start.toArray(), "конец вектора", end.toArray());
@@ -40,7 +56,7 @@ const Arrow: React.FC<ArrowProps> = ({
     return geometry;
   }, [start, end]);
 
-  // Создаём материал для линии
+  // Создаем материал для линии
   const lineMaterial = useMemo(() => {
     return new LineMaterial({
       color,
@@ -49,16 +65,18 @@ const Arrow: React.FC<ArrowProps> = ({
     });
   }, [color]);
 
-  // Вычисляем кватернион для поворота конуса, чтобы он указывал по направлению стрелки
+  // Вычисляем кватернион для ориентации конуса (наконечника стрелки)
+  // Здесь конус поворачивается так, чтобы его направление совпадало с направлением (end - start)
   const coneQuaternion = useMemo(() => {
-    const defaultDir = new THREE.Vector3(0, 1, 0); // базовое направление для конуса
-    console.log("Направление стрелки:", direction.toArray());
+    const defaultDir = new THREE.Vector3(0, 1, 0); // по умолчанию конус смотрит вверх
+    console.log(direction)
     return new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
   }, [direction]);
 
   return (
     <group>
       <line2 geometry={lineGeometry} material={lineMaterial} />
+      {/* Здесь конус устанавливается в точке "конец вектора" (end) */}
       <mesh position={end} quaternion={coneQuaternion}>
         <coneGeometry args={[0.1 * coneScale, 0.3 * coneScale, 12]} />
         <meshStandardMaterial color={color} />
@@ -76,64 +94,48 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                              }) => {
   const count = vectors.length;
 
-  // Если цепочка состоит более чем из одного вектора, вычисляем шаг по оси времени (delta)
-  const delta = count > 1 ? totalTime / (count - 1) : 0;
-  // Масштаб для наконечников стрелок (можете подбирать по необходимости)
+  // Вычисляем масштаб для наконечников (coneScale)
   const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
-  // Коэффициент масштабирования для значений price и transactions из векторов
-  const scaleFactor = 0.01; // ПОДБЕРИТЕ ЭТО ЗНАЧЕНИЕ, чтобы historical vectors имели нужный размер
+  // Расчет шага по оси времени (delta) - равномерное распределение по totalTime
+  const delta = count > 1 ? totalTime / (count - 1) : 0;
 
+  // Формируем цепочку стрелок (векторов)
   const arrowChain = useMemo(() => {
+    // chain: массив объектов, где каждый объект содержит:
+    // - start: "начало вектора"
+    // - end: "конец вектора"
+    // - direction: направление вектора (вычисляется как (end - start).normalize())
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    // Используем переданный aggregatorVector целиком (если его нет – стартуем из (0,0,0))
-    let currentPoint = aggregatorVector ? aggregatorVector.clone() : new THREE.Vector3(0, 0, 0);
+    // Начинаем с базового вектора aggregatorVector
+    let currentPoint = new THREE.Vector3(
+      aggregatorVector?.x,
+      aggregatorVector?.y,
+      1
+    );
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
-      // Вычисляем смещение.
-      // Если timeAxis === "z", то прибавляем delta по оси Z,
-      // а компоненты price и transactions (взятые из vectors) умножаем на scaleFactor.
-      let offset: THREE.Vector3;
-      if (timeAxis === "z") {
-        offset = new THREE.Vector3(
-          vectors[i][0] * scaleFactor,
-          vectors[i][1] * scaleFactor,
-          delta
-        );
-      } else if (timeAxis === "x") {
-        offset = new THREE.Vector3(
-          delta,
-          vectors[i][0] * scaleFactor,
-          vectors[i][1] * scaleFactor
-        );
-      } else if (timeAxis === "y") {
-        offset = new THREE.Vector3(
-          vectors[i][0] * scaleFactor,
-          delta,
-          vectors[i][1] * scaleFactor
-        );
-      } else {
-        offset = new THREE.Vector3(
-          vectors[i][0] * scaleFactor,
-          vectors[i][1] * scaleFactor,
-          delta
-        );
-      }
+      // Вычисляем смещение: компоненты берутся из vectors, по оси Z задаем delta
+      const offset = new THREE.Vector3(vectors[i][0], vectors[i][1], delta);
       console.log("Вектор смещения (offset):", offset.toArray());
-      // Следующая точка цепочки – сумма текущей точки и offset
+      // Вычисляем "конец вектора" как сумму текущей точки и offset
       const nextPoint = currentPoint.clone().add(offset);
-      console.log(`Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`);
+      console.log(
+        `Вектор ${i}: начало вектора: ${currentPoint.toArray()}, конец вектора: ${nextPoint.toArray()}`
+      );
+      // Вычисляем направление стрелки как (end - start)
       const direction = nextPoint.clone().sub(currentPoint).normalize();
       chain.push({
-        start: currentPoint.clone(),
-        end: nextPoint.clone(),
+        start: currentPoint.clone(), // "начало вектора"
+        end: nextPoint.clone(),       // "конец вектора"
         direction,
       });
-      console.log("Координаты вектора:", currentPoint.toArray(), nextPoint.toArray(), direction.toArray());
+      console.log("координаты вектора");
+      console.log(currentPoint.clone(), nextPoint.clone(), direction);
       currentPoint = nextPoint.clone();
     }
     return chain;
-  }, [vectors, count, delta, aggregatorVector, timeAxis, scaleFactor]);
+  }, [vectors, count, delta, timeAxis, aggregatorVector]);
 
   return (
     <group>
