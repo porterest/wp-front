@@ -90,12 +90,23 @@ const Arrow: React.FC<ArrowProps> = ({
     return new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
   }, [direction]);
 
+  // Создаём геометрию конуса и сдвигаем её так, чтобы его верхушка (наконечник)
+  // находилась в локальной точке (0, 0, 0). По умолчанию ConeGeometry строится с вершиной в (0, height/2, 0),
+  // поэтому сдвигаем его вниз на половину высоты.
+  const coneGeom = useMemo(() => {
+    const height = 0.3 * coneScale;
+    const geom = new THREE.ConeGeometry(0.1 * coneScale, height, 12);
+    // Перемещаем геометрию так, чтобы верхушка оказалась в (0, 0, 0)
+    geom.translate(0, -height / 2, 0);
+    return geom;
+  }, [coneScale]);
+
   return (
     <group>
       <line2 geometry={lineGeometry} material={lineMaterial} />
-      {/* Здесь конус устанавливается в точке end */}
+      {/* Конус устанавливается в точке end; благодаря смещению геометрии его верхушка совпадает с end */}
       <mesh position={end} quaternion={coneQuaternion}>
-        <coneGeometry args={[0.1 * coneScale, 0.3 * coneScale, 12]} />
+        <primitive object={coneGeom} />
         <meshStandardMaterial color={color} />
       </mesh>
     </group>
@@ -117,19 +128,19 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                              }) => {
   const count = vectors.length;
 
-  // Для режима timeAxis === "z" мы игнорируем входные данные по ценам и транзакциям
-  // и задаём фиксированные значения:
+  // Для режима timeAxis === "z" игнорируем входные данные по цене и транзакциям
+  // и задаём фиксированные значения для осей X и Y.
   const fixedPrice = 0.38313094359425115;
   const fixedTransaction = 0;
 
-  // Вычисляем масштаб для наконечников заранее, чтобы можно было скорректировать шаг по оси Z.
+  // Вычисляем масштаб для наконечников (coneScale)
   const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
 
-  // Если ось времени равна "z", то нам нужно, чтобы весь ряд стрелок (цепочка)
-  // занимал не более totalTime единиц по оси Z, включая конус.
-  // При этом конус имеет высоту 0.3 * coneScale.
-  // Поэтому effectiveTotalTime = totalTime - coneHeight,
-  // и шаг delta = effectiveTotalTime / (count - 1).
+  // Если ось времени равна "z", то хотим, чтобы полная длина цепочки (с учётом конуса)
+  // была равна totalTime.
+  // Пусть у конуса высота равна: coneHeight = 0.3 * computedConeScale.
+  // Тогда длина линии должна быть totalTime - coneHeight, а шаг между стрелками:
+  // delta = (totalTime - coneHeight) / (count - 1)
   let delta: number;
   if (timeAxis === "z") {
     const coneHeight = 0.3 * computedConeScale;
@@ -143,8 +154,8 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
     if (timeAxis === "z") {
       // Режим: ось времени Z, фиксированные значения по X и Y.
-      // Все стрелки будут иметь: X = fixedTransaction, Y = fixedPrice,
-      // а по оси Z они будут накапливаться с шагом delta (так, чтобы последний вектор не выходил за totalTime - coneHeight).
+      // Все стрелки будут иметь:
+      //   X = fixedTransaction, Y = fixedPrice, а по оси Z они накапливаются с шагом delta.
       let currentPoint = new THREE.Vector3(fixedTransaction, fixedPrice, startPoint.z);
       console.log("Starting point (fixed):", currentPoint.toArray());
       for (let i = 0; i < count; i++) {
