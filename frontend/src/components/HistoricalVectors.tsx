@@ -77,9 +77,9 @@ const Arrow: React.FC<ArrowProps> = ({
 
 const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
+                                                               startPoint,
                                                                totalTime = 4.5,
                                                                accumulate = true,
-                                                               startPoint = new THREE.Vector3(0, 0, 0),
                                                                timeAxis = "z",
                                                                scaleA = 1,
                                                                scaleB = 1,
@@ -122,16 +122,19 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
         }
       } else {
         for (let i = 0; i < count; i++) {
-          const basePoint = startPoint.clone();
-          basePoint[timeAxis] = i * delta;
-          const offset = new THREE.Vector3(0, 0, delta);
-          offset[offsetAxes[0]] = vectors[i][1] * scaleA;
-          offset[offsetAxes[1]] = vectors[i][0] * scaleB;
-          const endPoint = basePoint.clone().add(offset);
-          const clampedBase = clampVectorExcludingAxis(basePoint, 0, 5, timeAxis);
-          const clampedEnd = clampVectorExcludingAxis(endPoint, 0, 5, timeAxis);
-          const direction = offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
-          chain.push({ start: clampedBase, end: clampedEnd, direction });
+          if (startPoint){
+            const basePoint = startPoint.clone();
+            basePoint[timeAxis] = i * delta;
+            const offset = new THREE.Vector3(0, 0, delta);
+            offset[offsetAxes[0]] = vectors[i][1] * scaleA;
+            offset[offsetAxes[1]] = vectors[i][0] * scaleB;
+            const endPoint = basePoint.clone().add(offset);
+            const clampedBase = clampVectorExcludingAxis(basePoint, 0, 5, timeAxis);
+            const clampedEnd = clampVectorExcludingAxis(endPoint, 0, 5, timeAxis);
+            const direction = offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
+            chain.push({ start: clampedBase, end: clampedEnd, direction });
+          }
+
         }
       }
     }
