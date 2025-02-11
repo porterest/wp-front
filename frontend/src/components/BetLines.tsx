@@ -187,7 +187,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       1
     ]);
     console.log("aggregatorClipped.x,aggregatorClipped.y,1");
-    console.log(yGeom);
+    console.log(aggregatorClipped.x, aggregatorClipped.y,);
     const yMat = new LineMaterial({
       color: "yellow",
       linewidth: 3,
@@ -215,7 +215,8 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
     yellowConeRef.current = yCone;
-    console.log(yCone);
+    console.log("yCone.position");
+    console.log(yCone.position);
     groupRef.current.add(yCone);
 
     return () => {
