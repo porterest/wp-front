@@ -87,7 +87,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     setAggregatorClipped(agg);
   }, [previousBetEnd, maxYellowLength]);
 
-
   // Флаг, равен ли userPreviousBet (0,0,0)
   const isUserBetZero = useMemo(
     () =>
@@ -197,6 +196,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     const yLine = new Line2(yGeom, yMat);
     yellowLineRef.current = yLine;
     groupRef.current.add(yLine);
+    console.log(yLine);
 
     // Желтый конус
     const yCone = new THREE.Mesh(
@@ -215,6 +215,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       }
     }
     yellowConeRef.current = yCone;
+    console.log(yCone);
     groupRef.current.add(yCone);
 
     return () => {
