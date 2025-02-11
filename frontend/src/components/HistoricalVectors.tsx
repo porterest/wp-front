@@ -120,7 +120,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
           `Arrow ${i} computed: start: ${currentPoint.toArray()}, offset: ${offset.toArray()}, end: ${nextPoint.toArray()}`
         );
         // Направление стрелки – вдоль оси Z (вверх по времени)
-        const direction = new THREE.Vector3(0, 0, 1);
+        const direction = nextPoint.clone().sub(currentPoint).normalize();
         chain.push({
           start: currentPoint.clone(),
           end: nextPoint.clone(),
@@ -128,37 +128,6 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
         });
         currentPoint = nextPoint.clone();
       }
-    // } else {
-    //   // Если ось времени не Z – используем предыдущий алгоритм
-    //   const allAxes: ("x" | "y" | "z")[] = ["x", "y", "z"];
-    //   const offsetAxes = allAxes.filter((ax) => ax !== timeAxis) as ("x" | "y" | "z")[];
-    //   if (aggregatorVector) {
-    //     let currentPoint = clampVectorExcludingAxis(aggregatorVector.clone(), 0, 5, timeAxis);
-    //     for (let i = 0; i < count; i++) {
-    //       console.log(`Arrow ${i} input vector: [${vectors[i][0]}, ${vectors[i][1]}]`);
-    //       const offset = new THREE.Vector3(0, 0, delta);
-    //       offset[offsetAxes[0]] = vectors[i][1];
-    //       offset[offsetAxes[1]] = vectors[i][0];
-    //       const nextPoint = currentPoint.clone().add(offset);
-    //       console.log(
-    //         `Arrow ${i} before clamp: start: ${currentPoint.toArray()}, offset: ${offset.toArray()}, nextPoint: ${nextPoint.toArray()}`
-    //       );
-    //       const clampedStart = clampVectorExcludingAxis(currentPoint.clone(), 0, 5, timeAxis);
-    //       const clampedEnd = clampVectorExcludingAxis(nextPoint.clone(), 0, 5, timeAxis);
-    //       const direction =
-    //         offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
-    //       console.log(
-    //         `Arrow ${i} computed: start: ${clampedStart.toArray()}, offset: ${offset.toArray()}, end: ${clampedEnd.toArray()}, direction: ${direction.toArray()}`
-    //       );
-    //       chain.push({
-    //         start: clampedStart,
-    //         end: clampedEnd,
-    //         direction,
-    //       });
-    //       currentPoint = nextPoint.clone();
-    //     }
-    //   }
-    // }
     return chain;
   }, [vectors, count, delta, timeAxis, aggregatorVector]);
 
