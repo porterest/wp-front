@@ -56,6 +56,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const whiteLineRef = useRef<Line2 | null>(null);
   const whiteConeRef = useRef<THREE.Mesh | null>(null);
   const sphereRef = useRef<THREE.Mesh | null>(null);
+  const [aggregatorClipped, setAggregatorClipped] = useState<THREE.Vector3>(new THREE.Vector3());
 
   // Состояние перетаскивания
   const [isDragging, setIsDragging] = useState(false);
@@ -74,8 +75,8 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, []);
 
   // Нормализуем вектор агрегатора
-  const aggregatorClipped = useMemo(() => {
-    console.log("previousBetEnd");
+  useEffect(() => {
+    console.log("previousBetEnd изменился:");
     console.log(previousBetEnd);
 
     const agg = previousBetEnd.clone();
@@ -83,8 +84,9 @@ const BetLines: React.FC<BetLinesProps> = ({
       agg.setLength(maxYellowLength);
     }
     console.log("[BetLines] aggregatorClipped =", agg.toArray());
-    return agg;
+    setAggregatorClipped(agg);
   }, [previousBetEnd, maxYellowLength]);
+
 
   // Флаг, равен ли userPreviousBet (0,0,0)
   const isUserBetZero = useMemo(
