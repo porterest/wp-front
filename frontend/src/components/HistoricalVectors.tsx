@@ -102,7 +102,7 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, color }) => {
 const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
                                                                totalTime = 4.5,
-                                                               accumulate = false,
+                                                               accumulate = true,
                                                                startPoint,
                                                                scaleA = 1,
                                                                scaleB = 1,
