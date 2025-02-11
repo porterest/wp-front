@@ -5,7 +5,6 @@ import { extend } from "@react-three/fiber";
 import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
-import { start } from "node:repl";
 
 // Регистрируем компоненты для использования в JSX
 extend({ Line2, LineGeometry, LineMaterial });
