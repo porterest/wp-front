@@ -83,10 +83,10 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (agg.length() > maxYellowLength) {
       agg.setLength(maxYellowLength);
     }
-    console.log("[BetLines] aggregatorClipped =", agg.toArray());
     setAggregatorClipped(agg);
+    console.log("agg.x, agg.y");
+    console.log(agg.x, agg.y);
   }, [previousBetEnd, maxYellowLength]);
-
   // Флаг, равен ли userPreviousBet (0,0,0)
   const isUserBetZero = useMemo(
     () =>

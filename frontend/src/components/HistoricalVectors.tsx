@@ -68,12 +68,14 @@ const Arrow: React.FC<ArrowProps> = ({
                                        color = "yellow",
                                        coneScale = 1,
                                      }) => {
+  // Создаём геометрию линии от start до end
   const lineGeometry = useMemo(() => {
     const geometry = new LineGeometry();
     geometry.setPositions([start.x, start.y, start.z, end.x, end.y, end.z]);
     return geometry;
   }, [start, end]);
 
+  // Создаём материал для линии
   const lineMaterial = useMemo(() => {
     return new LineMaterial({
       color,
@@ -82,6 +84,7 @@ const Arrow: React.FC<ArrowProps> = ({
     });
   }, [color]);
 
+  // Вычисляем кватернион для ориентации конуса (наконечника стрелки)
   const coneQuaternion = useMemo(() => {
     const defaultDir = new THREE.Vector3(0, 1, 0); // по умолчанию конус смотрит вверх
     return new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
@@ -112,77 +115,103 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                color = "yellow",
                                                              }) => {
   const count = vectors.length;
-  // Вычисляем шаг по оси времени: равномерно от 0 до totalTime
+  // Шаг по оси времени (z) – равномерное распределение от 0 до totalTime
   const delta = count > 1 ? totalTime / (count - 1) : 0;
 
-  // Определяем, какая ось отвечает за время, а оставшиеся – за смещения.
-  const allAxes: ("x" | "y" | "z")[] = ["x", "y", "z"];
-  const offsetAxes = allAxes.filter((ax) => ax !== timeAxis) as ("x" | "y" | "z")[];
+  // Если ось времени не z, можно использовать оригинальный алгоритм.
+  // Но для timeAxis === "z" мы будем игнорировать входные данные по ценам и транзакциям
+  // и задавать фиксированные значения:
+  // - по оси транзакций (x) фиксируем 0,
+  // - по оси цены (y) фиксируем 0.38313094359425115.
+  const fixedPrice = 0.38313094359425115;
+  const fixedTransaction = 0; // фиксированное значение для оси транзакций
 
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    if (accumulate) {
-      // Режим накопления: каждая стрелка начинается от конца предыдущей.
-      // Начинаем с стартовой точки – зажимаем все оси, кроме оси времени.
-      let currentPoint = clampVectorExcludingAxis(startPoint.clone(), 0, 5, timeAxis);
+    if (timeAxis === "z") {
+      // Режим: ось времени Z, фиксированные значения по X и Y.
+      // Независимо от входных данных, все стрелки будут иметь:
+      //   X = fixedTransaction, Y = fixedPrice, а по Z они будут накапливаться с шагом delta.
+      let currentPoint = new THREE.Vector3(fixedTransaction, fixedPrice, startPoint.z);
+      console.log("Starting point (fixed):", currentPoint.toArray());
       for (let i = 0; i < count; i++) {
         console.log(`Arrow ${i} input vector: [${vectors[i][0]}, ${vectors[i][1]}]`);
-        // Задаём базовый offset: шаг по оси времени (delta) плюс смещения по остальным осям.
-        // При timeAxis="z": offset.z = delta, offset[offsetAxes[0]] = vectors[i][1] * scaleA,
-        // offset[offsetAxes[1]] = vectors[i][0] * scaleB.
+        // Здесь offset задаётся только по оси Z
         const offset = new THREE.Vector3(0, 0, delta);
-        offset[offsetAxes[0]] = vectors[i][1] * scaleA;
-        offset[offsetAxes[1]] = vectors[i][0] * scaleB;
-
+        // Вычисляем следующую точку как сумму текущей и offset
         const nextPoint = currentPoint.clone().add(offset);
         console.log(
-          `Arrow ${i} before clamp: start: ${currentPoint.toArray()}, offset: ${offset.toArray()}, nextPoint: ${nextPoint.toArray()}`
+          `Arrow ${i} computed: start: ${currentPoint.toArray()}, offset: ${offset.toArray()}, end: ${nextPoint.toArray()}`
         );
-        // Зажимаем только оси, отличные от timeAxis, чтобы сохранить равномерное расстояние по времени.
-        const clampedStart = clampVectorExcludingAxis(currentPoint.clone(), 0, 5, timeAxis);
-        const clampedEnd = clampVectorExcludingAxis(nextPoint.clone(), 0, 5, timeAxis);
-        const direction =
-          offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
-        console.log(
-          `Arrow ${i} computed: start: ${clampedStart.toArray()}, offset: ${offset.toArray()}, end: ${clampedEnd.toArray()}, direction: ${direction.toArray()}`
-        );
+        // Направление стрелки – вдоль оси Z (вверх по времени)
+        const direction = new THREE.Vector3(0, 0, 1);
         chain.push({
-          start: clampedStart,
-          end: clampedEnd,
+          start: currentPoint.clone(),
+          end: nextPoint.clone(),
           direction,
         });
-        // Для следующей стрелки начало – это конец текущей (с сохранением равномерного шага по timeAxis)
+        // Обновляем текущую точку для следующей стрелки
         currentPoint = nextPoint.clone();
       }
     } else {
-      // Независимый режим: каждая стрелка отрисовывается отдельно.
-      for (let i = 0; i < count; i++) {
-        const basePoint = startPoint.clone();
-        // Устанавливаем ось времени равномерно:
-        basePoint[timeAxis] = i * delta;
-        const offset = new THREE.Vector3(0, 0, delta);
-        offset[offsetAxes[0]] = vectors[i][1] * scaleA;
-        offset[offsetAxes[1]] = vectors[i][0] * scaleB;
-        const endPoint = basePoint.clone().add(offset);
-        // Зажимаем только координаты, не относящиеся к оси времени:
-        const clampedBase = clampVectorExcludingAxis(basePoint, 0, 5, timeAxis);
-        const clampedEnd = clampVectorExcludingAxis(endPoint, 0, 5, timeAxis);
-        const direction =
-          offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
-        console.log(
-          `Independent Arrow ${i}: base: ${clampedBase.toArray()}, offset: ${offset.toArray()}, end: ${clampedEnd.toArray()}, direction: ${direction.toArray()}`
-        );
-        chain.push({
-          start: clampedBase,
-          end: clampedEnd,
-          direction,
-        });
+      // Если ось времени не Z – можно использовать предыдущий алгоритм (не изменялся)
+      // Определяем все оси и оставшиеся оси (для смещений)
+      const allAxes: ("x" | "y" | "z")[] = ["x", "y", "z"];
+      const offsetAxes = allAxes.filter((ax) => ax !== timeAxis) as ("x" | "y" | "z")[];
+      if (accumulate) {
+        // Режим накопления: каждая стрелка начинается от конца предыдущей.
+        let currentPoint = clampVectorExcludingAxis(startPoint.clone(), 0, 5, timeAxis);
+        for (let i = 0; i < count; i++) {
+          console.log(`Arrow ${i} input vector: [${vectors[i][0]}, ${vectors[i][1]}]`);
+          const offset = new THREE.Vector3(0, 0, delta);
+          offset[offsetAxes[0]] = vectors[i][1] * scaleA;
+          offset[offsetAxes[1]] = vectors[i][0] * scaleB;
+          const nextPoint = currentPoint.clone().add(offset);
+          console.log(
+            `Arrow ${i} before clamp: start: ${currentPoint.toArray()}, offset: ${offset.toArray()}, nextPoint: ${nextPoint.toArray()}`
+          );
+          const clampedStart = clampVectorExcludingAxis(currentPoint.clone(), 0, 5, timeAxis);
+          const clampedEnd = clampVectorExcludingAxis(nextPoint.clone(), 0, 5, timeAxis);
+          const direction =
+            offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
+          console.log(
+            `Arrow ${i} computed: start: ${clampedStart.toArray()}, offset: ${offset.toArray()}, end: ${clampedEnd.toArray()}, direction: ${direction.toArray()}`
+          );
+          chain.push({
+            start: clampedStart,
+            end: clampedEnd,
+            direction,
+          });
+          currentPoint = nextPoint.clone();
+        }
+      } else {
+        // Независимый режим: каждая стрелка отрисовывается отдельно.
+        for (let i = 0; i < count; i++) {
+          const basePoint = startPoint.clone();
+          basePoint[timeAxis] = i * delta;
+          const offset = new THREE.Vector3(0, 0, delta);
+          offset[offsetAxes[0]] = vectors[i][1] * scaleA;
+          offset[offsetAxes[1]] = vectors[i][0] * scaleB;
+          const endPoint = basePoint.clone().add(offset);
+          const clampedBase = clampVectorExcludingAxis(basePoint, 0, 5, timeAxis);
+          const clampedEnd = clampVectorExcludingAxis(endPoint, 0, 5, timeAxis);
+          const direction =
+            offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
+          console.log(
+            `Independent Arrow ${i}: base: ${clampedBase.toArray()}, offset: ${offset.toArray()}, end: ${clampedEnd.toArray()}, direction: ${direction.toArray()}`
+          );
+          chain.push({
+            start: clampedBase,
+            end: clampedEnd,
+            direction,
+          });
+        }
       }
     }
     return chain;
-  }, [vectors, accumulate, count, delta, startPoint, timeAxis, offsetAxes, scaleA, scaleB]);
+  }, [vectors, accumulate, count, delta, startPoint, timeAxis, scaleA, scaleB]);
 
-  // Масштаб для наконечников (уменьшается при большом числе стрелок, но не меньше 0.3)
+  // Вычисляем масштаб для наконечников стрелок (уменьшается при большом числе стрелок, но не меньше 0.3)
   const coneScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
 
   return (
