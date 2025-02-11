@@ -68,7 +68,7 @@ const Scene: React.FC<SceneProps> = ({
         {historicalVectors && historicalVectors.length > 0 && (
           <HistoricalVectors
             vectors={historicalVectors}
-            startPoint={previousBetEnd.setLength(5)}
+            aggregatorVector={previousBetEnd.setLength(5)}
             // totalChainLength={5}
           />
         )}
