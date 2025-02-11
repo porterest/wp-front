@@ -117,7 +117,7 @@ const Arrow: React.FC<ArrowProps> = ({
 
 const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
-                                                               totalTime = 5,
+                                                               totalTime = 4.5,
                                                                accumulate = true,
                                                                startPoint = new THREE.Vector3(0, 0, 0),
                                                                timeAxis = "z",
