@@ -90,21 +90,23 @@ const Arrow: React.FC<ArrowProps> = ({
     return new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
   }, [direction]);
 
-  // Создаём геометрию конуса и сдвигаем её так, чтобы его верхушка (наконечник)
-  // находилась в локальной точке (0, 0, 0). По умолчанию ConeGeometry строится с вершиной в (0, height/2, 0),
-  // поэтому сдвигаем его вниз на половину высоты.
+  // Создаём геометрию конуса. Здесь мы НЕ сдвигаем геометрию,
+  // чтобы ее базовая конфигурация была: база в (0,0,0) и вершина в (0, height, 0).
+  // При последующем вращении (через coneQuaternion) и позиционировании mesh,
+  // конус будет добавляться вперед (в направлении стрелки).
   const coneGeom = useMemo(() => {
     const height = 0.3 * coneScale;
     const geom = new THREE.ConeGeometry(0.1 * coneScale, height, 12);
-    // Перемещаем геометрию так, чтобы верхушка оказалась в (0, 0, 0)
-    geom.translate(0, -height / 2, 0);
+    // Не переводим геометрию – оставляем базовое положение: база в (0,0,0), вершина в (0, height, 0)
     return geom;
   }, [coneScale]);
 
   return (
     <group>
       <line2 geometry={lineGeometry} material={lineMaterial} />
-      {/* Конус устанавливается в точке end; благодаря смещению геометрии его верхушка совпадает с end */}
+      {/* Конус устанавливается в точке end.
+          При этом после вращения его вершина (из (0, height, 0)) окажется в направлении стрелки.
+          Таким образом, tip = end + (0, 0, coneHeight) */}
       <mesh position={end} quaternion={coneQuaternion}>
         <primitive object={coneGeom} />
         <meshStandardMaterial color={color} />
@@ -128,24 +130,22 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                              }) => {
   const count = vectors.length;
 
-  // Для режима timeAxis === "z" игнорируем входные данные по цене и транзакциям
+  // В режиме timeAxis === "z" мы игнорируем входные данные по ценам и транзакциям
   // и задаём фиксированные значения для осей X и Y.
   const fixedPrice = 0.38313094359425115;
   const fixedTransaction = 0;
 
-  // Вычисляем масштаб для наконечников (coneScale)
+  // Вычисляем масштаб для наконечников
   const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
+  const coneHeight = 0.3 * computedConeScale;
 
-  // Если ось времени равна "z", то хотим, чтобы полная длина цепочки (с учётом конуса)
-  // была равна totalTime.
-  // Пусть у конуса высота равна: coneHeight = 0.3 * computedConeScale.
-  // Тогда длина линии должна быть totalTime - coneHeight, а шаг между стрелками:
+  // Если ось времени равна "z", хотим, чтобы общая длина цепочки была totalTime.
+  // Пусть эффективная длина линии (без конуса) равна totalTime - coneHeight.
+  // Тогда шаг между стрелками (delta) вычисляем как:
   // delta = (totalTime - coneHeight) / (count - 1)
   let delta: number;
   if (timeAxis === "z") {
-    const coneHeight = 0.3 * computedConeScale;
-    const effectiveTotalTime = totalTime - coneHeight;
-    delta = count > 1 ? effectiveTotalTime / (count - 1) : 0;
+    delta = count > 1 ? (totalTime - coneHeight) / (count - 1) : 0;
   } else {
     delta = count > 1 ? totalTime / (count - 1) : 0;
   }
@@ -153,20 +153,18 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
     if (timeAxis === "z") {
-      // Режим: ось времени Z, фиксированные значения по X и Y.
-      // Все стрелки будут иметь:
-      //   X = fixedTransaction, Y = fixedPrice, а по оси Z они накапливаются с шагом delta.
-      let currentPoint = new THREE.Vector3(fixedTransaction, fixedPrice, startPoint.z);
+      // Для оси Z устанавливаем начальную точку с Z = 0 (чтобы общая длина была точно totalTime)
+      let currentPoint = new THREE.Vector3(fixedTransaction, fixedPrice, 0);
       console.log("Starting point (fixed):", currentPoint.toArray());
       for (let i = 0; i < count; i++) {
         console.log(`Arrow ${i} input vector: [${vectors[i][0]}, ${vectors[i][1]}]`);
-        // Здесь offset задаётся только по оси Z (с шагом delta)
+        // Здесь offset задаётся только по оси Z, равный delta
         const offset = new THREE.Vector3(0, 0, delta);
         const nextPoint = currentPoint.clone().add(offset);
         console.log(
           `Arrow ${i} computed: start: ${currentPoint.toArray()}, offset: ${offset.toArray()}, end: ${nextPoint.toArray()}`
         );
-        // Направление стрелки – вдоль оси Z (вверх по времени)
+        // Направление стрелки – вдоль оси Z
         const direction = new THREE.Vector3(0, 0, 1);
         chain.push({
           start: currentPoint.clone(),
@@ -176,7 +174,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
         currentPoint = nextPoint.clone();
       }
     } else {
-      // Если ось времени не Z – используем предыдущий алгоритм
+      // Если ось времени не Z – используем предыдущий алгоритм (без изменений)
       const allAxes: ("x" | "y" | "z")[] = ["x", "y", "z"];
       const offsetAxes = allAxes.filter((ax) => ax !== timeAxis) as ("x" | "y" | "z")[];
       if (accumulate) {
