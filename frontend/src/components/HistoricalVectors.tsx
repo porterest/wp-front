@@ -93,6 +93,7 @@ const Arrow: React.FC<ArrowProps> = ({
   return (
     <group>
       <line2 geometry={lineGeometry} material={lineMaterial} />
+      {/* Здесь конус устанавливается в точке end */}
       <mesh position={end} quaternion={coneQuaternion}>
         <coneGeometry args={[0.1 * coneScale, 0.3 * coneScale, 12]} />
         <meshStandardMaterial color={color} />
@@ -115,30 +116,41 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                color = "yellow",
                                                              }) => {
   const count = vectors.length;
-  // Шаг по оси времени (z) – равномерное распределение от 0 до totalTime
-  const delta = count > 1 ? totalTime / (count - 1) : 0;
 
-  // Если ось времени не z, можно использовать оригинальный алгоритм.
-  // Но для timeAxis === "z" мы будем игнорировать входные данные по ценам и транзакциям
-  // и задавать фиксированные значения:
-  // - по оси транзакций (x) фиксируем 0,
-  // - по оси цены (y) фиксируем 0.38313094359425115.
+  // Для режима timeAxis === "z" мы игнорируем входные данные по ценам и транзакциям
+  // и задаём фиксированные значения:
   const fixedPrice = 0.38313094359425115;
-  const fixedTransaction = 0; // фиксированное значение для оси транзакций
+  const fixedTransaction = 0;
+
+  // Вычисляем масштаб для наконечников заранее, чтобы можно было скорректировать шаг по оси Z.
+  const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
+
+  // Если ось времени равна "z", то нам нужно, чтобы весь ряд стрелок (цепочка)
+  // занимал не более totalTime единиц по оси Z, включая конус.
+  // При этом конус имеет высоту 0.3 * coneScale.
+  // Поэтому effectiveTotalTime = totalTime - coneHeight,
+  // и шаг delta = effectiveTotalTime / (count - 1).
+  let delta: number;
+  if (timeAxis === "z") {
+    const coneHeight = 0.3 * computedConeScale;
+    const effectiveTotalTime = totalTime - coneHeight;
+    delta = count > 1 ? effectiveTotalTime / (count - 1) : 0;
+  } else {
+    delta = count > 1 ? totalTime / (count - 1) : 0;
+  }
 
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
     if (timeAxis === "z") {
       // Режим: ось времени Z, фиксированные значения по X и Y.
-      // Независимо от входных данных, все стрелки будут иметь:
-      //   X = fixedTransaction, Y = fixedPrice, а по Z они будут накапливаться с шагом delta.
+      // Все стрелки будут иметь: X = fixedTransaction, Y = fixedPrice,
+      // а по оси Z они будут накапливаться с шагом delta (так, чтобы последний вектор не выходил за totalTime - coneHeight).
       let currentPoint = new THREE.Vector3(fixedTransaction, fixedPrice, startPoint.z);
       console.log("Starting point (fixed):", currentPoint.toArray());
       for (let i = 0; i < count; i++) {
         console.log(`Arrow ${i} input vector: [${vectors[i][0]}, ${vectors[i][1]}]`);
-        // Здесь offset задаётся только по оси Z
+        // Здесь offset задаётся только по оси Z (с шагом delta)
         const offset = new THREE.Vector3(0, 0, delta);
-        // Вычисляем следующую точку как сумму текущей и offset
         const nextPoint = currentPoint.clone().add(offset);
         console.log(
           `Arrow ${i} computed: start: ${currentPoint.toArray()}, offset: ${offset.toArray()}, end: ${nextPoint.toArray()}`
@@ -150,16 +162,13 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
           end: nextPoint.clone(),
           direction,
         });
-        // Обновляем текущую точку для следующей стрелки
         currentPoint = nextPoint.clone();
       }
     } else {
-      // Если ось времени не Z – можно использовать предыдущий алгоритм (не изменялся)
-      // Определяем все оси и оставшиеся оси (для смещений)
+      // Если ось времени не Z – используем предыдущий алгоритм
       const allAxes: ("x" | "y" | "z")[] = ["x", "y", "z"];
       const offsetAxes = allAxes.filter((ax) => ax !== timeAxis) as ("x" | "y" | "z")[];
       if (accumulate) {
-        // Режим накопления: каждая стрелка начинается от конца предыдущей.
         let currentPoint = clampVectorExcludingAxis(startPoint.clone(), 0, 5, timeAxis);
         for (let i = 0; i < count; i++) {
           console.log(`Arrow ${i} input vector: [${vectors[i][0]}, ${vectors[i][1]}]`);
@@ -185,7 +194,6 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
           currentPoint = nextPoint.clone();
         }
       } else {
-        // Независимый режим: каждая стрелка отрисовывается отдельно.
         for (let i = 0; i < count; i++) {
           const basePoint = startPoint.clone();
           basePoint[timeAxis] = i * delta;
@@ -211,9 +219,6 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     return chain;
   }, [vectors, accumulate, count, delta, startPoint, timeAxis, scaleA, scaleB]);
 
-  // Вычисляем масштаб для наконечников стрелок (уменьшается при большом числе стрелок, но не меньше 0.3)
-  const coneScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
-
   return (
     <group>
       {arrowChain.map((arrow, i) => (
@@ -223,7 +228,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
           end={arrow.end}
           direction={arrow.direction}
           color={color}
-          coneScale={coneScale}
+          coneScale={computedConeScale}
         />
       ))}
     </group>
