@@ -41,23 +41,6 @@ interface ArrowProps {
   coneScale?: number;
 }
 
-/**
- * Функция для зажатия (clamp) координат в диапазоне [min, max] для всех осей,
- * кроме указанной в excludeAxis.
- */
-const clampVectorExcludingAxis = (
-  v: THREE.Vector3,
-  min: number,
-  max: number,
-  excludeAxis: "x" | "y" | "z"
-): THREE.Vector3 => {
-  return new THREE.Vector3(
-    excludeAxis === "x" ? v.x : Math.min(max, Math.max(min, v.x)),
-    excludeAxis === "y" ? v.y : Math.min(max, Math.max(min, v.y)),
-    excludeAxis === "z" ? v.z : Math.min(max, Math.max(min, v.z))
-  );
-};
-
 const Arrow: React.FC<ArrowProps> = ({
                                        start,
                                        end,
@@ -117,18 +100,11 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
   // При этом конус имеет высоту 0.3 * coneScale.
   // Поэтому effectiveTotalTime = totalTime - coneHeight,
   // и шаг delta = effectiveTotalTime / (count - 1).
-  let delta: number;
-  if (timeAxis === "z") {
-    const coneHeight = 0.3 * computedConeScale;
-    const effectiveTotalTime = totalTime - coneHeight;
-    delta = count > 1 ? effectiveTotalTime / (count - 1) : 0;
-  } else {
-    delta = count > 1 ? totalTime / (count - 1) : 0;
-  }
+  const delta = count > 1 ? totalTime / (count - 1) : 0;
+
 
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    if (timeAxis === "z") {
       // Режим: ось времени Z, фиксированные значения по X и Y.
       // Все стрелки будут иметь: X = fixedTransaction, Y = fixedPrice,
       // а по оси Z они будут накапливаться с шагом delta (так, чтобы последний вектор не выходил за totalTime - coneHeight).
@@ -137,7 +113,9 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       for (let i = 0; i < count; i++) {
         console.log(`Arrow ${i} input vector: [${vectors[i][0]}, ${vectors[i][1]}]`);
         const offset = new THREE.Vector3(vectors[i][0], vectors[i][1], delta);
+        console.log("offset", offset);
         const nextPoint = currentPoint.clone().add(offset);
+        console.log("next point", nextPoint);
         console.log(
           `Arrow ${i} computed: start: ${currentPoint.toArray()}, offset: ${offset.toArray()}, end: ${nextPoint.toArray()}`
         );
@@ -150,37 +128,37 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
         });
         currentPoint = nextPoint.clone();
       }
-    } else {
-      // Если ось времени не Z – используем предыдущий алгоритм
-      const allAxes: ("x" | "y" | "z")[] = ["x", "y", "z"];
-      const offsetAxes = allAxes.filter((ax) => ax !== timeAxis) as ("x" | "y" | "z")[];
-      if (aggregatorVector) {
-        let currentPoint = clampVectorExcludingAxis(aggregatorVector.clone(), 0, 5, timeAxis);
-        for (let i = 0; i < count; i++) {
-          console.log(`Arrow ${i} input vector: [${vectors[i][0]}, ${vectors[i][1]}]`);
-          const offset = new THREE.Vector3(0, 0, delta);
-          offset[offsetAxes[0]] = vectors[i][1];
-          offset[offsetAxes[1]] = vectors[i][0];
-          const nextPoint = currentPoint.clone().add(offset);
-          console.log(
-            `Arrow ${i} before clamp: start: ${currentPoint.toArray()}, offset: ${offset.toArray()}, nextPoint: ${nextPoint.toArray()}`
-          );
-          const clampedStart = clampVectorExcludingAxis(currentPoint.clone(), 0, 5, timeAxis);
-          const clampedEnd = clampVectorExcludingAxis(nextPoint.clone(), 0, 5, timeAxis);
-          const direction =
-            offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
-          console.log(
-            `Arrow ${i} computed: start: ${clampedStart.toArray()}, offset: ${offset.toArray()}, end: ${clampedEnd.toArray()}, direction: ${direction.toArray()}`
-          );
-          chain.push({
-            start: clampedStart,
-            end: clampedEnd,
-            direction,
-          });
-          currentPoint = nextPoint.clone();
-        }
-      }
-    }
+    // } else {
+    //   // Если ось времени не Z – используем предыдущий алгоритм
+    //   const allAxes: ("x" | "y" | "z")[] = ["x", "y", "z"];
+    //   const offsetAxes = allAxes.filter((ax) => ax !== timeAxis) as ("x" | "y" | "z")[];
+    //   if (aggregatorVector) {
+    //     let currentPoint = clampVectorExcludingAxis(aggregatorVector.clone(), 0, 5, timeAxis);
+    //     for (let i = 0; i < count; i++) {
+    //       console.log(`Arrow ${i} input vector: [${vectors[i][0]}, ${vectors[i][1]}]`);
+    //       const offset = new THREE.Vector3(0, 0, delta);
+    //       offset[offsetAxes[0]] = vectors[i][1];
+    //       offset[offsetAxes[1]] = vectors[i][0];
+    //       const nextPoint = currentPoint.clone().add(offset);
+    //       console.log(
+    //         `Arrow ${i} before clamp: start: ${currentPoint.toArray()}, offset: ${offset.toArray()}, nextPoint: ${nextPoint.toArray()}`
+    //       );
+    //       const clampedStart = clampVectorExcludingAxis(currentPoint.clone(), 0, 5, timeAxis);
+    //       const clampedEnd = clampVectorExcludingAxis(nextPoint.clone(), 0, 5, timeAxis);
+    //       const direction =
+    //         offset.length() === 0 ? new THREE.Vector3(0, 1, 0) : offset.clone().normalize();
+    //       console.log(
+    //         `Arrow ${i} computed: start: ${clampedStart.toArray()}, offset: ${offset.toArray()}, end: ${clampedEnd.toArray()}, direction: ${direction.toArray()}`
+    //       );
+    //       chain.push({
+    //         start: clampedStart,
+    //         end: clampedEnd,
+    //         direction,
+    //       });
+    //       currentPoint = nextPoint.clone();
+    //     }
+    //   }
+    // }
     return chain;
   }, [vectors, count, delta, timeAxis, aggregatorVector]);
 
