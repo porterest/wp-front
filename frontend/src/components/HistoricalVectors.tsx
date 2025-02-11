@@ -107,7 +107,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     } else {
       const allAxes: ("x" | "y" | "z")[] = ["x", "y", "z"];
       const offsetAxes = allAxes.filter((ax) => ax !== timeAxis) as ("x" | "y" | "z")[];
-      if (accumulate) {
+      if (accumulate && startPoint) {
         let currentPoint = clampVectorExcludingAxis(startPoint.clone(), 0, 5, timeAxis);
         for (let i = 0; i < count; i++) {
           const offset = new THREE.Vector3(0, 0, delta);
