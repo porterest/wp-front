@@ -174,7 +174,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // ===== Создание жёлтых объектов (линия и конус) =====
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || isVectorZero(aggregatorClipped)) return;
     if (!groupRef.current) return;
     // Желтая линия
     const yGeom = new LineGeometry();
