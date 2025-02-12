@@ -90,8 +90,6 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                color = "yellow",
                                                              }) => {
   const count = vectors.length;
-  // Вычисляем шаг по оси времени (delta)
-  const delta = count > 1 ? totalTime / (count - 1) : 0;
   // Пример вычисления coneScale (можете оставить, как есть)
   const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
 
@@ -101,31 +99,43 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     let currentPoint = aggregatorVector ? aggregatorVector.clone() : new THREE.Vector3(0, 0, 1);
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
 
-    // Задаем максимальную длину для смещения (например, 2)
-    const maxLength = 2;
+    // Задаем общую желаемую длину стрелки (например, L)
+    const L = 2; // общая длина стрелки, которую вы хотите получить
+    // delta — фиксированное смещение по оси z (рассчитанное как totalTime/(count-1))
+    const delta = count > 1 ? totalTime / (count - 1) : 0;
+    // Если L меньше delta, это бессмысленно, поэтому убедимся, что L > delta
+    const horizontalLength = L > delta ? Math.sqrt(L * L - delta * delta) : 0;
 
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
-      // Вычисляем «сырую» конечную точку на основе входных данных.
-      // Здесь компоненты подставляются в том порядке, который вы хотите (например,
-      // если price на y, а транзакции на x, то можно поменять местами).
-      const rawPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z + delta);
-      // Вычисляем offset как разность между rawPoint и currentPoint
-      const rawOffset = rawPoint.clone().sub(currentPoint);
-      // Если длина rawOffset больше maxLength, укорачиваем его до maxLength
-      const offset = rawOffset.clone();
-      if (offset.length() > maxLength) {
-        offset.setLength(maxLength);
+      // Здесь предположим, что:
+      // - vectors[i][0] отвечает за одну горизонтальную ось (например, price) — пойдёт на y,
+      // - vectors[i][1] отвечает за другую (например, transactions) — пойдёт на x.
+      // Вычисляем горизонтальное направление:
+      const horizontal = new THREE.Vector2(vectors[i][1], vectors[i][0]);
+      // Если горизонтальное значение равно 0, оставим смещение 0
+      let horizontalOffset = new THREE.Vector2(0, 0);
+      if (horizontal.length() > 0) {
+        horizontalOffset = horizontal.clone().normalize().multiplyScalar(horizontalLength);
       }
-      // Новая точка = текущая точка + (возможно укораченное) смещение
-      const nextPoint = currentPoint.clone().add(offset);
-      // Направление стрелки – это нормализованный offset (с сохранением исходного отношения)
-      const direction = offset.clone().normalize();
+      // Новая точка:
+      // x = currentPoint.x + горизонтальное смещение.x
+      // y = currentPoint.y + горизонтальное смещение.y
+      // z = currentPoint.z + delta (фиксированное смещение по времени)
+      const nextPoint = new THREE.Vector3(
+        currentPoint.x + horizontalOffset.x,
+        currentPoint.y + horizontalOffset.y,
+        currentPoint.z + delta
+      );
+
+      // Направление стрелки – разность между nextPoint и currentPoint
+      const direction = nextPoint.clone().sub(currentPoint).normalize();
 
       console.log(
         `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
       );
       console.log("координаты вектора", currentPoint.toArray(), nextPoint.toArray(), direction.toArray());
+
       chain.push({
         start: currentPoint.clone(),
         end: nextPoint.clone(),
@@ -134,7 +144,8 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       currentPoint = nextPoint.clone();
     }
     return chain;
-  }, [vectors, count, delta, aggregatorVector]);
+  }, [vectors, count, aggregatorVector, totalTime]);
+
 
   return (
     <group>
