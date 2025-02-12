@@ -90,52 +90,39 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                color = "yellow",
                                                              }) => {
   const count = vectors.length;
+  // Вычисляем шаг по оси времени (delta)
   // Пример вычисления coneScale (можете оставить, как есть)
   const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
 
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    // Стартовая точка: если aggregatorVector не передан, используем (0,0,1)
+    // Стартовая точка: если aggregatorVector не передан – (0,0,1)
     let currentPoint = aggregatorVector ? aggregatorVector.clone() : new THREE.Vector3(0, 0, 1);
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
 
-    // Задаем общую желаемую длину стрелки (например, L)
-    const L = 2; // общая длина стрелки, которую вы хотите получить
-    // delta — фиксированное смещение по оси z (рассчитанное как totalTime/(count-1))
+    // Задаем фиксированное смещение по z
     const delta = count > 1 ? totalTime / (count - 1) : 0;
-    // Если L меньше delta, это бессмысленно, поэтому убедимся, что L > delta
-    const horizontalLength = L > delta ? Math.sqrt(L * L - delta * delta) : 0;
+    // Подберите scaleFactor так, чтобы горизонтальное смещение попадало в нужный диапазон
+    const scaleFactor = 0.001;
 
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
-      // Здесь предположим, что:
-      // - vectors[i][0] отвечает за одну горизонтальную ось (например, price) — пойдёт на y,
-      // - vectors[i][1] отвечает за другую (например, transactions) — пойдёт на x.
-      // Вычисляем горизонтальное направление:
-      const horizontal = new THREE.Vector2(vectors[i][1], vectors[i][0]);
-      // Если горизонтальное значение равно 0, оставим смещение 0
-      let horizontalOffset = new THREE.Vector2(0, 0);
-      if (horizontal.length() > 0) {
-        horizontalOffset = horizontal.clone().normalize().multiplyScalar(horizontalLength);
-      }
-      // Новая точка:
-      // x = currentPoint.x + горизонтальное смещение.x
-      // y = currentPoint.y + горизонтальное смещение.y
-      // z = currentPoint.z + delta (фиксированное смещение по времени)
-      const nextPoint = new THREE.Vector3(
-        currentPoint.x + horizontalOffset.x,
-        currentPoint.y + horizontalOffset.y,
-        currentPoint.z + delta
+      // Здесь мы предполагаем, что:
+      //   - vectors[i][0] соответствует цене (будет отложена по y),
+      //   - vectors[i][1] соответствует транзакциям (по x).
+      // Если у вас наоборот – поменяйте порядок.
+      const offset = new THREE.Vector3(
+        vectors[i][1] * scaleFactor, // горизонтальная компонента x
+        vectors[i][0] * scaleFactor, // горизонтальная компонента y
+        delta                      // фиксированное смещение по z
       );
-
-      // Направление стрелки – разность между nextPoint и currentPoint
-      const direction = nextPoint.clone().sub(currentPoint).normalize();
-
+      const nextPoint = currentPoint.clone().add(offset);
+      // Вычисляем направление по смещению (оно сохраняет пропорции входного вектора)
+      const direction = offset.clone().normalize();
       console.log(
         `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
       );
-      console.log("координаты вектора", currentPoint.toArray(), nextPoint.toArray(), direction.toArray());
-
+      console.log("Направление:", direction.toArray());
       chain.push({
         start: currentPoint.clone(),
         end: nextPoint.clone(),
@@ -144,7 +131,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       currentPoint = nextPoint.clone();
     }
     return chain;
-  }, [vectors, count, aggregatorVector, totalTime]);
+  }, [vectors, count, totalTime, aggregatorVector]);
 
 
   return (
