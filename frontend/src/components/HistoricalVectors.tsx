@@ -95,6 +95,30 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
   // Пример вычисления coneScale (можете оставить, как есть)
   const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
 
+  const minValueX = Math.min(...vectors.map(x => x[0]));
+  const maxValueX = Math.max(...vectors.map(x => x[0]));
+  const minValueY = Math.min(...vectors.map(x => x[1]));
+  const maxValueY = Math.max(...vectors.map(x => x[1]));
+
+  const minX = 0;
+  const maxX = 5;
+  const minY = 0;
+  const maxY = 5;
+
+  const normalizeX = (x: number) => {
+    return ((x - minValueX) / (maxValueX - minValueX)) * (maxX - minX) + minX;
+  };
+
+  const normalizeY = (y: number) => {
+    return ((y - minValueY) / (maxValueY - minValueY)) * (maxY - minY) + minY;
+  };
+
+  const normalizeArrow = (arrow: [number, number]) => {
+    const newX = normalizeX(arrow[0]);
+    const newY = normalizeY(arrow[1]);
+    return [newX, newY];
+  };
+
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
     // Стартовая точка: если aggregatorVector не передан, используем (0,0,1)
@@ -122,7 +146,8 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       // // Направление стрелки – это нормализованный offset (с сохранением исходного отношения)
       // const direction = offset.clone().normalize();
 // Создаем горизонтальный вектор из x и y
-      const horizontal = new THREE.Vector2(vectors[i][1], vectors[i][0]);
+      const newArrow = normalizeArrow(vectors[i]);
+      const horizontal = new THREE.Vector2(newArrow[1], newArrow[0]);
 // Устанавливаем его длину равной 2
 //       horizontal.setLength(delta);
 // Собираем итоговый offset, где z остаётся без изменений
