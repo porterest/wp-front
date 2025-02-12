@@ -102,25 +102,27 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
 
     // Задаем максимальную длину для смещения (например, 2)
-    const maxLength = 2;
+    // const maxLength = 2;
 
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
       // Вычисляем «сырую» конечную точку на основе входных данных.
       // Здесь компоненты подставляются в том порядке, который вы хотите (например,
       // если price на y, а транзакции на x, то можно поменять местами).
-      const rawPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z + delta);
-      // Вычисляем offset как разность между rawPoint и currentPoint
-      const rawOffset = rawPoint.clone().sub(currentPoint);
-      // Если длина rawOffset больше maxLength, укорачиваем его до maxLength
-      const offset = rawOffset.clone();
-      if (offset.length() > maxLength) {
-        offset.setLength(maxLength);
-      }
-      // Новая точка = текущая точка + (возможно укораченное) смещение
-      const nextPoint = currentPoint.clone().add(offset);
-      // Направление стрелки – это нормализованный offset (с сохранением исходного отношения)
-      const direction = offset.clone().normalize();
+      // const rawPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z + delta);
+      // // Вычисляем offset как разность между rawPoint и currentPoint
+      // const rawOffset = rawPoint.clone().sub(currentPoint);
+      // // Если длина rawOffset больше maxLength, укорачиваем его до maxLength
+      // const offset = rawOffset.clone();
+      // if (offset.length() > maxLength) {
+      //   offset.setLength(maxLength);
+      // }
+      // // Новая точка = текущая точка + (возможно укораченное) смещение
+      // const nextPoint = currentPoint.clone().add(offset);
+      // // Направление стрелки – это нормализованный offset (с сохранением исходного отношения)
+      // const direction = offset.clone().normalize();
+      const nextPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z + delta);
+      const direction = nextPoint.clone().sub(currentPoint).normalize();
 
       console.log(
         `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
