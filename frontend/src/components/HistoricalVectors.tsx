@@ -1,4 +1,3 @@
-// HistoricalVectors.tsx
 import React, { useMemo } from "react";
 import * as THREE from "three";
 import { extend } from "@react-three/fiber";
@@ -116,7 +115,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
       // Вычисляем смещение: компоненты берутся из vectors, по оси Z задаем delta
-      const offset = new THREE.Vector3(vectors[i][0], vectors[i][1], delta);
+      const offset = new THREE.Vector3(vectors[i][0] - currentPoint.x, vectors[i][1]-currentPoint.y, delta);
       console.log("Вектор смещения (offset):", offset.toArray());
       // Вычисляем "конец вектора" как сумму текущей точки и offset
       const nextPoint = currentPoint.clone().add(offset);
