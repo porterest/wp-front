@@ -107,12 +107,16 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
 
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
-      // Сначала вычисляем "сырую" точку, используя входные данные и шаг по оси времени
-      const rawPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z + delta);
-      // Вычисляем направление от currentPoint до rawPoint
-      const direction = rawPoint.clone().sub(currentPoint).normalize();
-      // Задаем длину стрелки равной 2: конечная точка = currentPoint + (direction * 2)
-      const nextPoint = currentPoint.clone().add(direction.clone().setLength(delta));
+      // Считаем смещение из входных данных:
+// Здесь мы предполагаем, что x = transactions, y = price, z = delta (смещение по времени)
+      const offset = new THREE.Vector3(vectors[i][1], vectors[i][0], delta);
+// «Укорачиваем» смещение до длины 2, сохраняя направление
+      const shortenedOffset = offset.clone().setLength(2);
+// Новая точка — это текущая точка плюс укораченное смещение
+      const nextPoint = currentPoint.clone().add(shortenedOffset);
+      // Вычисляем направление как нормализованный uкороченный offset
+      const direction = shortenedOffset.clone().normalize();
+
 
       console.log(
         `Вектор ${i}: начало вектора: ${currentPoint.toArray()}, конец вектора: ${nextPoint.toArray()}`
