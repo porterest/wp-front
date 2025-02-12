@@ -91,38 +91,41 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                              }) => {
   const count = vectors.length;
   // Вычисляем шаг по оси времени (delta)
+  const delta = count > 1 ? totalTime / (count - 1) : 0;
   // Пример вычисления coneScale (можете оставить, как есть)
   const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
 
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    // Стартовая точка: если aggregatorVector не передан – (0,0,1)
+    // Стартовая точка: если aggregatorVector не передан, используем (0,0,1)
     let currentPoint = aggregatorVector ? aggregatorVector.clone() : new THREE.Vector3(0, 0, 1);
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
 
-    // Задаем фиксированное смещение по z
-    const delta = count > 1 ? totalTime / (count - 1) : 0;
-    // Подберите scaleFactor так, чтобы горизонтальное смещение попадало в нужный диапазон
-    const scaleFactor = 0.001;
+    // Задаем максимальную длину для смещения (например, 2)
+    const maxLength = 2;
 
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
-      // Здесь мы предполагаем, что:
-      //   - vectors[i][0] соответствует цене (будет отложена по y),
-      //   - vectors[i][1] соответствует транзакциям (по x).
-      // Если у вас наоборот – поменяйте порядок.
-      const offset = new THREE.Vector3(
-        vectors[i][1] * scaleFactor, // горизонтальная компонента x
-        vectors[i][0] * scaleFactor, // горизонтальная компонента y
-        delta                      // фиксированное смещение по z
-      );
+      // Вычисляем «сырую» конечную точку на основе входных данных.
+      // Здесь компоненты подставляются в том порядке, который вы хотите (например,
+      // если price на y, а транзакции на x, то можно поменять местами).
+      const rawPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z + delta);
+      // Вычисляем offset как разность между rawPoint и currentPoint
+      const rawOffset = rawPoint.clone().sub(currentPoint);
+      // Если длина rawOffset больше maxLength, укорачиваем его до maxLength
+      const offset = rawOffset.clone();
+      if (offset.length() > maxLength) {
+        offset.setLength(maxLength);
+      }
+      // Новая точка = текущая точка + (возможно укораченное) смещение
       const nextPoint = currentPoint.clone().add(offset);
-      // Вычисляем направление по смещению (оно сохраняет пропорции входного вектора)
+      // Направление стрелки – это нормализованный offset (с сохранением исходного отношения)
       const direction = offset.clone().normalize();
+
       console.log(
         `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
       );
-      console.log("Направление:", direction.toArray());
+      console.log("координаты вектора", currentPoint.toArray(), nextPoint.toArray(), direction.toArray());
       chain.push({
         start: currentPoint.clone(),
         end: nextPoint.clone(),
@@ -131,8 +134,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       currentPoint = nextPoint.clone();
     }
     return chain;
-  }, [vectors, count, totalTime, aggregatorVector]);
-
+  }, [vectors, count, delta, aggregatorVector]);
 
   return (
     <group>
