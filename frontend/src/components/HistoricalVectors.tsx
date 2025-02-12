@@ -121,8 +121,12 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       // const nextPoint = currentPoint.clone().add(offset);
       // // Направление стрелки – это нормализованный offset (с сохранением исходного отношения)
       // const direction = offset.clone().normalize();
-      const nextPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z + delta);
-      const direction = nextPoint.clone().sub(currentPoint).normalize();
+      const rawOffset = new THREE.Vector3(vectors[i][1], vectors[i][0], delta);
+      // Добавляем setLength(delta)
+      // Новая точка = текущая точка + offset
+      const nextPoint = rawOffset.setLength(2);
+      // Направление стрелки – нормализованный offset (с сохранением направления)
+      const direction = rawOffset.clone().normalize();
 
       console.log(
         `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
