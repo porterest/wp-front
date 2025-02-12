@@ -124,7 +124,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
 // Создаем горизонтальный вектор из x и y
       const horizontal = new THREE.Vector2(vectors[i][1], vectors[i][0]);
 // Устанавливаем его длину равной 2
-      horizontal.setLength(delta);
+//       horizontal.setLength(delta);
 // Собираем итоговый offset, где z остаётся без изменений
 // Вычисляем nextPoint как текущая точка плюс newOffset
       const nextPoint = new THREE.Vector3(horizontal.x, horizontal.y, currentPoint.z + delta);
