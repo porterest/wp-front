@@ -106,7 +106,8 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
 
     for (let i = 0; i < count; i++) {
-      console.log('Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]');
+      console.log("Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]");
+      console.log(vectors[i][0], vectors[i][1]);
       // Сначала вычисляем "сырую" точку, используя входные данные и шаг по оси времени
       const rawPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z + delta);
       // Вычисляем направление от currentPoint до rawPoint
@@ -115,8 +116,10 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       const nextPoint = currentPoint.clone().add(direction.clone().setLength(delta));
 
       console.log(
-        'Вектор ${i}: начало вектора: ${currentPoint.toArray()}, конец вектора: ${nextPoint.toArray()}'
+        "Вектор ${i}: начало вектора: ${currentPoint.toArray()}, конец вектора: ${nextPoint.toArray()}"
     );
+      console.log(currentPoint.toArray(), nextPoint.toArray())
+
       chain.push({
         start: currentPoint.clone(),
         end: nextPoint.clone(),
