@@ -106,11 +106,8 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     // - direction: направление вектора (вычисляется как (end - start).normalize())
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
     // Начинаем с базового вектора aggregatorVector
-    let currentPoint = new THREE.Vector3(
-      aggregatorVector?.x,
-      aggregatorVector?.y,
-      1
-    );
+    let currentPoint = aggregatorVector ? aggregatorVector.clone() : new THREE.Vector3(0, 0, 1);
+
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
@@ -120,7 +117,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       // console.log("Вектор смещения (offset):", offset.toArray());
       // Вычисляем "конец вектора" как сумму текущей точки и offset
       // const nextPoint = currentPoint.clone().add(offset);
-      const nextPoint = new THREE.Vector3(vectors[i][0], vectors[i][1], currentPoint.z+delta);
+      const nextPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z+delta);
       console.log(
         `Вектор ${i}: начало вектора: ${currentPoint.toArray()}, конец вектора: ${nextPoint.toArray()}`
       );
