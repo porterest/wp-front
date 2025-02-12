@@ -90,10 +90,12 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                color = "yellow",
                                                              }) => {
   const count = vectors.length;
-  // Вычисляем шаг по оси времени (delta)
-  const delta = count > 1 ? totalTime / (count - 1) : 0;
-  // Пример вычисления coneScale (можете оставить, как есть)
+  // Шаг по оси времени (delta) здесь используется для суммарного смещения по z между сегментами
+  // const delta = count > 1 ? totalTime / (count - 1) : 0;
   const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
+
+  // Задаём желаемую длину каждого вектора (смещения)
+  const desiredLength = totalTime/count; // Подберите это значение под вашу задачу
 
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
@@ -101,41 +103,29 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     let currentPoint = aggregatorVector ? aggregatorVector.clone() : new THREE.Vector3(0, 0, 1);
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
 
-    // Задаем максимальную длину для смещения (например, 2)
-    // const maxLength = 2;
-
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
-      // Вычисляем «сырую» конечную точку на основе входных данных.
-      // Здесь компоненты подставляются в том порядке, который вы хотите (например,
-      // если price на y, а транзакции на x, то можно поменять местами).
-      // const rawPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z + delta);
-      // // Вычисляем offset как разность между rawPoint и currentPoint
-      // const rawOffset = rawPoint.clone().sub(currentPoint);
-      // // Если длина rawOffset больше maxLength, укорачиваем его до maxLength
-      // const offset = rawOffset.clone();
-      // if (offset.length() > maxLength) {
-      //   offset.setLength(maxLength);
-      // }
-      // // Новая точка = текущая точка + (возможно укораченное) смещение
-      // const nextPoint = currentPoint.clone().add(offset);
-      // // Направление стрелки – это нормализованный offset (с сохранением исходного отношения)
-      // const direction = offset.clone().normalize();
-// Создаем горизонтальный вектор из x и y
-      const horizontal = new THREE.Vector2(vectors[i][1], vectors[i][0]);
-// Устанавливаем его длину равной 2
-      horizontal.setLength(delta);
-// Собираем итоговый offset, где z остаётся без изменений
-// Вычисляем nextPoint как текущая точка плюс newOffset
-      const nextPoint = new THREE.Vector3(horizontal.x, horizontal.y, currentPoint.z + delta);
-// Направление — нормализованный newOffset (по всем осям)
-      const direction = nextPoint.clone().normalize();
+      // Сохраняем горизонтальные координаты напрямую:
+      // Предположим, что vectors[i][0] - это price (y), а vectors[i][1] - это transactions (x).
+      const horizontalX = vectors[i][1];
+      const horizontalY = vectors[i][0];
+      // Вычисляем горизонтальную длину (без изменения)
+      const horizontalLengthSquared = horizontalX * horizontalX + horizontalY * horizontalY;
+      let computedZ = 0;
+      if (desiredLength * desiredLength >= horizontalLengthSquared) {
+        computedZ = Math.sqrt(desiredLength * desiredLength - horizontalLengthSquared);
+      } else {
+        // Если горизонтальная длина превышает desiredLength, оставляем z = 0
+        // (либо можно масштабировать x и y, если нужно)
+        computedZ = 0;
+      }
+      // Теперь задаем следующую точку: x и y из vectors, а z = currentPoint.z + computedZ.
+      const nextPoint = new THREE.Vector3(horizontalX, horizontalY, currentPoint.z + computedZ);
+      // Направление стрелки — нормализованный вектор от currentPoint до nextPoint.
+      const direction = nextPoint.clone().sub(currentPoint).normalize();
 
-
-      console.log(
-        `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
-      );
-      console.log("координаты вектора", currentPoint.toArray(), nextPoint.toArray(), direction.toArray());
+      console.log(`Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`);
+      console.log("Направление:", direction.toArray());
       chain.push({
         start: currentPoint.clone(),
         end: nextPoint.clone(),
@@ -144,7 +134,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       currentPoint = nextPoint.clone();
     }
     return chain;
-  }, [vectors, count, delta, aggregatorVector]);
+  }, [vectors, count, aggregatorVector]);
 
   return (
     <group>
