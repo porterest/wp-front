@@ -112,7 +112,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       // Вычисляем направление от currentPoint до rawPoint
       const direction = rawPoint.clone().sub(currentPoint).normalize();
       // Задаем длину стрелки равной 2: конечная точка = currentPoint + (direction * 2)
-      const nextPoint = currentPoint.clone().add(direction.clone().setLength(2));
+      const nextPoint = currentPoint.clone().add(direction.clone().setLength(delta));
 
       console.log(
         `Вектор ${i}: начало вектора: ${currentPoint.toArray()}, конец вектора: ${nextPoint.toArray()}`
