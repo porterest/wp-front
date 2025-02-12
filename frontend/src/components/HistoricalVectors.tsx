@@ -105,7 +105,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     // const maxLength = 2;
 
     for (let i = 0; i < count; i++) {
-      console.log('Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]');
+      console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
       // Вычисляем «сырую» конечную точку на основе входных данных.
       // Здесь компоненты подставляются в том порядке, который вы хотите (например,
       // если price на y, а транзакции на x, то можно поменять местами).
@@ -133,7 +133,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
 
 
       console.log(
-        'Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}'
+        `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
     );
       console.log("координаты вектора", currentPoint.toArray(), nextPoint.toArray(), direction.toArray());
       chain.push({
