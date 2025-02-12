@@ -88,7 +88,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
                                                                aggregatorVector,
                                                                totalTime = 5,
-                                                               timeAxis = "z",
+                                                               // timeAxis = "z",
                                                                color = "yellow",
                                                              }) => {
   const count = vectors.length;
@@ -101,25 +101,20 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
   // Формируем цепочку стрелок (векторов)
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    // Используем aggregatorVector, если он передан, иначе задаем дефолтный вектор (0,0,1)
     let currentPoint = aggregatorVector ? aggregatorVector.clone() : new THREE.Vector3(0, 0, 1);
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
 
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
-      // Считаем смещение из входных данных:
-// Здесь мы предполагаем, что x = transactions, y = price, z = delta (смещение по времени)
-      const offset = new THREE.Vector3(vectors[i][1], vectors[i][0], delta);
-// «Укорачиваем» смещение до длины 2, сохраняя направление
-      const shortenedOffset = offset.clone().setLength(2);
-// Новая точка — это текущая точка плюс укораченное смещение
+      // Считаем rawOffset (при этом порядок компонентов – ваш выбор; например, если price на y, а транзакции на x)
+      const rawOffset = new THREE.Vector3(vectors[i][1], vectors[i][0], delta);
+      // Получаем направление без изменения ориентации
+      const direction = rawOffset.clone().normalize();
+      // Устанавливаем фиксированную длину равной 2
+      const shortenedOffset = direction.clone().multiplyScalar(2);
       const nextPoint = currentPoint.clone().add(shortenedOffset);
-      // Вычисляем направление как нормализованный uкороченный offset
-      const direction = shortenedOffset.clone().normalize();
-
-
       console.log(
-        `Вектор ${i}: начало вектора: ${currentPoint.toArray()}, конец вектора: ${nextPoint.toArray()}`
+        `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
       );
       chain.push({
         start: currentPoint.clone(),
@@ -130,7 +125,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       currentPoint = nextPoint.clone();
     }
     return chain;
-  }, [vectors, count, delta, timeAxis, aggregatorVector]);
+  }, [vectors, count, delta, aggregatorVector]);
 
   return (
     <group>
