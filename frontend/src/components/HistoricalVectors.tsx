@@ -47,7 +47,7 @@ const Arrow: React.FC<ArrowProps> = ({
                                        color = "yellow",
                                        coneScale = 1,
                                      }) => {
-  // Создаем геометрию линии от "начала вектора" (start) до "конца вектора" (end)
+  // Создаем геометрию линии от "начала вектора" до "конца вектора"
   const lineGeometry = useMemo(() => {
     const geometry = new LineGeometry();
     console.log("Координаты линии: начало вектора", start.toArray(), "конец вектора", end.toArray());
@@ -65,17 +65,16 @@ const Arrow: React.FC<ArrowProps> = ({
   }, [color]);
 
   // Вычисляем кватернион для ориентации конуса (наконечника стрелки)
-  // Здесь конус поворачивается так, чтобы его направление совпадало с направлением (end - start)
   const coneQuaternion = useMemo(() => {
     const defaultDir = new THREE.Vector3(0, 1, 0); // по умолчанию конус смотрит вверх
-    console.log(direction)
+    console.log("Направление стрелки:", direction.toArray());
     return new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
   }, [direction]);
 
   return (
     <group>
       <line2 geometry={lineGeometry} material={lineMaterial} />
-      {/* Здесь конус устанавливается в точке "конец вектора" (end) */}
+      {/* Конус размещается в точке end */}
       <mesh position={end} quaternion={coneQuaternion}>
         <coneGeometry args={[0.1 * coneScale, 0.3 * coneScale, 12]} />
         <meshStandardMaterial color={color} />
@@ -91,42 +90,51 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                color = "yellow",
                                                              }) => {
   const count = vectors.length;
-
-  // Вычисляем масштаб для наконечников (coneScale)
-  const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
-  // Расчет шага по оси времени (delta) - равномерное распределение по totalTime
+  // Вычисляем шаг по оси времени (delta)
   const delta = count > 1 ? totalTime / (count - 1) : 0;
+  // Пример вычисления coneScale (можете оставить, как есть)
+  const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
 
-  // Формируем цепочку стрелок (векторов)
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
+    // Стартовая точка: если aggregatorVector не передан, используем (0,0,1)
     let currentPoint = aggregatorVector ? aggregatorVector.clone() : new THREE.Vector3(0, 0, 1);
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
 
-    // Подберите scaleFactor так, чтобы векторы оказались нужной длины
-    const scaleFactor = 1e-54;
+    // Задаем максимальную длину для смещения (например, 2)
+    const maxLength = 2;
 
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
-      // Здесь порядок компонентов зависит от того, какая ось для чего (например, price на y, транзакции на x)
-      const offset = new THREE.Vector3(vectors[i][1], vectors[i][0], delta).multiplyScalar(scaleFactor);
+      // Вычисляем «сырую» конечную точку на основе входных данных.
+      // Здесь компоненты подставляются в том порядке, который вы хотите (например,
+      // если price на y, а транзакции на x, то можно поменять местами).
+      const rawPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z + delta);
+      // Вычисляем offset как разность между rawPoint и currentPoint
+      const rawOffset = rawPoint.clone().sub(currentPoint);
+      // Если длина rawOffset больше maxLength, укорачиваем его до maxLength
+      const offset = rawOffset.clone();
+      if (offset.length() > maxLength) {
+        offset.setLength(maxLength);
+      }
+      // Новая точка = текущая точка + (возможно укораченное) смещение
       const nextPoint = currentPoint.clone().add(offset);
-      // Вычисляем направление как нормализованный offset (оно сохраняет исходное соотношение компонентов)
+      // Направление стрелки – это нормализованный offset (с сохранением исходного отношения)
       const direction = offset.clone().normalize();
+
       console.log(
         `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
       );
+      console.log("координаты вектора", currentPoint.toArray(), nextPoint.toArray(), direction.toArray());
       chain.push({
         start: currentPoint.clone(),
         end: nextPoint.clone(),
         direction,
       });
-      console.log("координаты вектора", currentPoint.toArray(), nextPoint.toArray(), direction.toArray());
       currentPoint = nextPoint.clone();
     }
     return chain;
   }, [vectors, count, delta, aggregatorVector]);
-
 
   return (
     <group>
