@@ -88,7 +88,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
                                                                aggregatorVector,
                                                                totalTime = 5,
-                                                               // timeAxis = "z",
+                                                               timeAxis = "z",
                                                                color = "yellow",
                                                              }) => {
   const count = vectors.length;
@@ -101,21 +101,21 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
   // Формируем цепочку стрелок (векторов)
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
+    // Используем aggregatorVector, если он передан, иначе задаем дефолтный вектор (0,0,1)
     let currentPoint = aggregatorVector ? aggregatorVector.clone() : new THREE.Vector3(0, 0, 1);
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
 
-    // Подберите scaleFactor так, чтобы векторы оказались нужной длины
-    const scaleFactor = 1e-54;
-
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
-      // Здесь порядок компонентов зависит от того, какая ось для чего (например, price на y, транзакции на x)
-      const offset = new THREE.Vector3(vectors[i][1], vectors[i][0], delta).multiplyScalar(scaleFactor);
-      const nextPoint = currentPoint.clone().add(offset);
-      // Вычисляем направление как нормализованный offset (оно сохраняет исходное соотношение компонентов)
-      const direction = offset.clone().normalize();
+      // Сначала вычисляем "сырую" точку, используя входные данные и шаг по оси времени
+      const rawPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z + delta);
+      // Вычисляем направление от currentPoint до rawPoint
+      const direction = rawPoint.clone().sub(currentPoint).normalize();
+      // Задаем длину стрелки равной 2: конечная точка = currentPoint + (direction * 2)
+      const nextPoint = currentPoint.clone().add(direction.clone().setLength(delta));
+
       console.log(
-        `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
+        `Вектор ${i}: начало вектора: ${currentPoint.toArray()}, конец вектора: ${nextPoint.toArray()}`
       );
       chain.push({
         start: currentPoint.clone(),
@@ -126,8 +126,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       currentPoint = nextPoint.clone();
     }
     return chain;
-  }, [vectors, count, delta, aggregatorVector]);
-
+  }, [vectors, count, delta, timeAxis, aggregatorVector]);
 
   return (
     <group>
