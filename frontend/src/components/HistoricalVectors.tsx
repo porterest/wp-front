@@ -104,15 +104,16 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     let currentPoint = aggregatorVector ? aggregatorVector.clone() : new THREE.Vector3(0, 0, 1);
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
 
+    // Подберите scaleFactor так, чтобы векторы оказались нужной длины
+    const scaleFactor = 1e-54;
+
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
-      // Считаем rawOffset (при этом порядок компонентов – ваш выбор; например, если price на y, а транзакции на x)
-      const rawOffset = new THREE.Vector3(vectors[i][1], vectors[i][0], delta);
-      // Получаем направление без изменения ориентации
-      const direction = rawOffset.clone().normalize();
-      // Устанавливаем фиксированную длину равной 2
-      const shortenedOffset = direction.clone().multiplyScalar(2);
-      const nextPoint = currentPoint.clone().add(shortenedOffset);
+      // Здесь порядок компонентов зависит от того, какая ось для чего (например, price на y, транзакции на x)
+      const offset = new THREE.Vector3(vectors[i][1], vectors[i][0], delta).multiplyScalar(scaleFactor);
+      const nextPoint = currentPoint.clone().add(offset);
+      // Вычисляем направление как нормализованный offset (оно сохраняет исходное соотношение компонентов)
+      const direction = offset.clone().normalize();
       console.log(
         `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
       );
@@ -126,6 +127,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     }
     return chain;
   }, [vectors, count, delta, aggregatorVector]);
+
 
   return (
     <group>
