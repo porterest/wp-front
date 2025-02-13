@@ -5,7 +5,6 @@ import { BetResult } from "../types/apiTypes";
 interface BetResultCardProps {
   className?: string;
 }
-
 const BetResultCard: React.FC<BetResultCardProps> = ({ className }) => {
   const [betResult, setBetResult] = useState<BetResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +25,7 @@ const BetResultCard: React.FC<BetResultCardProps> = ({ className }) => {
 
   if (error) {
     return (
-      <div className="absolute top-4 left-4 p-4 bg-red-500 bg-opacity-70 text-white rounded shadow">
+      <div className={`absolute top-4 left-4 p-4 bg-red-500 bg-opacity-70 text-white rounded shadow ${className || ''}`}>
         {error}
       </div>
     );
@@ -34,14 +33,14 @@ const BetResultCard: React.FC<BetResultCardProps> = ({ className }) => {
 
   if (!betResult) {
     return (
-      <div className="absolute top-4 left-4 p-4 bg-gray-200 bg-opacity-70 rounded shadow">
+      <div className={`absolute top-4 left-4 p-4 bg-gray-200 bg-opacity-70 rounded shadow ${className || ''}`}>
         Загрузка результата ставки...
       </div>
     );
   }
 
   return (
-    <div className="absolute top-4 left-4 p-4 bg-white bg-opacity-70 backdrop-blur-md rounded shadow-lg">
+    <div className={`absolute top-4 left-4 p-4 bg-white bg-opacity-70 backdrop-blur-md rounded shadow-lg ${className || ''}`}>
       <h3 className="text-lg font-bold mb-2">Результат ставки</h3>
       <p>
         <strong>Пара:</strong> {betResult.pair_name}
@@ -50,8 +49,7 @@ const BetResultCard: React.FC<BetResultCardProps> = ({ className }) => {
         <strong>Сумма:</strong> {betResult.amount}
       </p>
       <p>
-        <strong>Дата:</strong>{" "}
-        {new Date(betResult.created_at).toLocaleString()}
+        <strong>Дата:</strong> {new Date(betResult.created_at).toLocaleString()}
       </p>
       <p>
         <strong>Точность:</strong> {betResult.accuracy}%
@@ -62,5 +60,6 @@ const BetResultCard: React.FC<BetResultCardProps> = ({ className }) => {
     </div>
   );
 };
+
 
 export default BetResultCard;
