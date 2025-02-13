@@ -15,6 +15,7 @@ interface SceneProps {
   data: CandleData[];
   onScaleReady: (scaleFunctions: ScaleFunctions) => void;
   style?: React.CSSProperties;
+
   previousBetEnd: THREE.Vector3;
   userPreviousBet: THREE.Vector3;
   setUserPreviousBet: (value: THREE.Vector3) => void;
@@ -49,12 +50,14 @@ const Scene: React.FC<SceneProps> = ({
       camera={{ position: [10, 10, 10], fov: 60 }}
       style={{ width: "100vw", height: "100vh", ...style }}
     >
+
       <OrbitControls enableRotate={false} enablePan={false} enableZoom={false} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
       <ScaleProvider data={data}>
         <ScaleHandler onScaleReady={onScaleReady} />
         {children}
+
         <GraphModes
           currentMode={currentMode}
           data={data}
@@ -72,6 +75,7 @@ const Scene: React.FC<SceneProps> = ({
             // totalChainLength={5}
           />
         )}
+
       </ScaleProvider>
       <CameraTrackballControl />
     </Canvas>
@@ -85,6 +89,7 @@ const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) =>
   useEffect(() => {
     onScaleReady(scaleFunctions);
     console.log("Scale functions from Scene:", scaleFunctions);
+
   }, [onScaleReady, scaleFunctions]);
   return null;
 };

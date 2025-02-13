@@ -25,4 +25,4 @@ yarn-error.log*
 **/.idea
 **/__pycache__
 **/.env
-**/settings.json
+**/*settings.json

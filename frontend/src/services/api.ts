@@ -13,6 +13,7 @@ import { UserInfo } from "../types/user";
 import { CandleData } from "../types/candles";
 import { apiClient } from "./apiClient";
 import { ProofData } from "../types/tonProof";
+import { List } from "postcss/lib/list";
 
 export async function getPayload(): Promise<TonProofPayloadResponse> {
     try {

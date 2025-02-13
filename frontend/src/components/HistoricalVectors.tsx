@@ -59,15 +59,17 @@ const Arrow: React.FC<ArrowProps> = ({
   const lineMaterial = useMemo(() => {
     return new LineMaterial({
       color,
+
       linewidth: 2,
       resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
     });
   }, [color]);
 
-  // Вычисляем кватернион для ориентации конуса (наконечника стрелки)
+
   const coneQuaternion = useMemo(() => {
     const defaultDir = new THREE.Vector3(0, 1, 0); // по умолчанию конус смотрит вверх
     console.log("Направление стрелки:", direction.toArray());
+
     return new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
   }, [direction]);
 
@@ -77,6 +79,7 @@ const Arrow: React.FC<ArrowProps> = ({
       {/* Конус размещается в точке end */}
       <mesh position={end} quaternion={coneQuaternion}>
         <coneGeometry args={[0.1 * coneScale, 0.3 * coneScale, 12]} />
+
         <meshStandardMaterial color={color} />
       </mesh>
     </group>
@@ -189,6 +192,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
           direction={arrow.direction}
           color={color}
           coneScale={computedConeScale}
+   
         />
       ))}
     </group>
