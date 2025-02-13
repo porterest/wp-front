@@ -89,7 +89,7 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
                 {new Date(betResult.created_at).toLocaleString()}
               </p>
               <p>
-                <strong>Accuracy:</strong> {betResult.accuracy}%
+                <strong>Accuracy:</strong> {betResult.accuracy}
               </p>
               <p>
                 <strong>Reward:</strong> {betResult.reward}
