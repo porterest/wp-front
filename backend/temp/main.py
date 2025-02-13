@@ -90,7 +90,7 @@ async def validation_exception_handler(
 # TODO: move to main
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://ab328c6h7.duckdns.org", "https://abchaaa.duckdns.org", "https://web.telegram.org"],
+    allow_origins=["https://wp-dev-app.duckdns.org", "https://wp-dev-api.duckdns.org", "https://web.telegram.org"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
