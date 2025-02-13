@@ -66,6 +66,8 @@ class UserRepository(
                 amount=b.amount,
                 vector=b.vector,
                 status=b.status,
+                reward=b.reward,
+                accuracy=b.accuracy,
                 created_at=b.created_at,
                 updated_at=b.updated_at,
             ) for b in entity.bets],  # type: Bet

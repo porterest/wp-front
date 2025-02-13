@@ -95,6 +95,8 @@ class BetRepository(
             block_number=entity.block.block_number,
             vector=entity.vector,
             status=entity.status,
+            reward=entity.reward,
+            accuracy=entity.accuracy,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
         )

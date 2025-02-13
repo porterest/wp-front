@@ -25,5 +25,5 @@ class Bet(BaseModel):
     vector: BetVector
     status: BetStatus
     reward: Optional[float]
-
+    accuracy: Optional[float]
     user_id: Optional[UUID] = None
