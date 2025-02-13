@@ -89,6 +89,8 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                totalTime = 5,
                                                                color = "yellow",
                                                              }) => {
+  console.log("vectors");
+  console.log(vectors);
   const count = vectors.length;
   // Вычисляем шаг по оси времени (delta)
   const delta = count > 1 ? totalTime / (count - 1) : 0;
