@@ -16,8 +16,8 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
       try {
         const result = await getUserBetResult();
         setBetResult(result);
-      } catch (error) {
-        console.error("Error loading bet result", error);
+      } catch (err) {
+        console.error("Error loading bet result", err);
         setError("Failed to load bet result");
       }
     };
@@ -26,18 +26,18 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
   }, []);
 
   return (
-    <div className={`fixed top-12 left-4 z-50 ${className || ""}`}>
-      {/* Небольшая кнопка в виде расплывчатого фиолетового облака */}
+    <div className={`fixed top-32 left-4 z-50 ${className || ""}`}>
+      {/* Кнопка в виде небольшого облачка */}
       <button
-        className="flex items-center justify-center w-28 p-2 bg-purple-900 bg-opacity-80 backdrop-blur-md text-white font-medium rounded-full shadow hover:bg-purple-800 transition-colors"
+        className="flex items-center justify-center w-28 p-2 bg-teal-800 bg-opacity-80 backdrop-blur-md text-white font-medium rounded-full shadow hover:bg-teal-700 transition-colors"
         onClick={() => setIsOpen(!isOpen)}
       >
         Last Bet
       </button>
 
-      {/* Панель с результатом ставки */}
+      {/* Панель с результатом, которая выпадает под кнопкой */}
       {isOpen && (
-        <div className="mt-2 p-3 w-64 bg-purple-900 bg-opacity-80 backdrop-blur-md rounded shadow-lg text-white transition-all">
+        <div className="mt-2 p-3 w-64 bg-teal-800 bg-opacity-80 backdrop-blur-md rounded shadow-lg text-white transition-all">
           {error ? (
             <div className="text-red-300 text-sm">{error}</div>
           ) : !betResult ? (
@@ -52,7 +52,8 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
                 <strong>Amount:</strong> {betResult.amount}
               </p>
               <p className="text-sm">
-                <strong>Date:</strong> {new Date(betResult.created_at).toLocaleString()}
+                <strong>Date:</strong>{" "}
+                {new Date(betResult.created_at).toLocaleString()}
               </p>
               <p className="text-sm">
                 <strong>Accuracy:</strong> {betResult.accuracy}%
