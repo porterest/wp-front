@@ -25,7 +25,7 @@ const BetResultCard: React.FC<BetResultCardProps> = ({ className }) => {
 
   if (error) {
     return (
-      <div className={`absolute top-4 left-4 p-4 bg-red-500 bg-opacity-70 text-white rounded shadow ${className || ''}`}>
+      <div className={`absolute top-8 left-4 p-4 bg-red-500 bg-opacity-70 text-white rounded shadow ${className || ''}`}>
         {error}
       </div>
     );
@@ -33,7 +33,7 @@ const BetResultCard: React.FC<BetResultCardProps> = ({ className }) => {
 
   if (!betResult) {
     return (
-      <div className={`absolute top-4 left-4 p-4 bg-gray-200 bg-opacity-70 rounded shadow ${className || ''}`}>
+      <div className={`absolute top-8 left-4 p-4 bg-gray-200 bg-opacity-70 rounded shadow ${className || ''}`}>
         Загрузка результата ставки...
       </div>
     );
