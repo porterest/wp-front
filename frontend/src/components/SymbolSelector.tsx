@@ -200,24 +200,31 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
       {/* --- Новый блок для загрузки исторических векторов --- */}
       <div className="mt-2">
         <button
-          onClick={() => setShowHistoricalInput((prev) => !prev)}
+          onClick={() => {
+            setShowHistoricalInput((prev) => {
+              if (prev) {
+                // Если мы скрываем данные, очищаем исторические данные
+                onHistoricalFetched([]);
+              }
+              return !prev;
+            });
+          }}
           className="px-2 py-1 w-full bg-cyan-400 text-white font-bold text-sm rounded-md shadow-lg hover:bg-cyan-500 transition"
         >
           {showHistoricalInput ? "Hide Historical Data" : "Show Historical Data"}
-
         </button>
-        {showHistoricalInput && (
-          <div className="mt-2">
-            <input
-              type="number"
-              value={historicalCount}
-              onChange={(e) => setHistoricalCount(Number(e.target.value))}
-              className="w-full p-1 rounded-md bg-gray-200 text-black"
-              min={1}
-            />
-            <button
-              onClick={handleFetchHistoricalVectors}
-              className="mt-2 px-3 py-2 w-full bg-purple-500 text-white font-bold text-sm rounded-md shadow-lg hover:bg-purple-600 transition"
+        lInput && (
+        <div className="mt-2">
+          <input
+            type="number"
+            value={historicalCount}
+            onChange={(e) => setHistoricalCount(Number(e.target.value))}
+            className="w-full p-1 rounded-md bg-gray-200 text-black"
+            min={1}
+          />
+          <button
+            onClick={handleFetchHistoricalVectors}
+            className="mt-2 px-3 py-2 w-full bg-purple-500 text-white font-bold text-sm rounded-md shadow-lg hover:bg-purple-600 transition"
             >
               {isFetchingHistorical ? "Loading..." : "Load"}
 
@@ -226,7 +233,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
               <div className="mt-1 text-red-500 text-sm">{fetchError}</div>
             )}
           </div>
-        )}
+        )
       </div>
     </div>
   );
