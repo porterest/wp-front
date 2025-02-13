@@ -26,39 +26,72 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
   }, []);
 
   return (
-    <div className={`fixed top-64 left-4 z-50 ${className || ""}`}>
-      {/* Кнопка с бирюзовым фоном */}
+    <div
+      style={{
+        position: "fixed",
+        top: "200px", // Точное позиционирование по вертикали
+        left: "16px",
+        zIndex: 50,
+      }}
+      className={className}
+    >
+      {/* Кнопка */}
       <button
-        className="flex items-center justify-center w-28 p-2 bg-cyan-400 text-white font-medium rounded-full shadow-lg hover:bg-cyan-500 transition-colors"
+        style={{
+          width: "140px",
+          padding: "8px",
+          backgroundColor: "rgba(0,255,255,0.6)", // бирюзовый оттенок
+          color: "#fff",
+          border: "none",
+          borderRadius: "50px",
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+          backdropFilter: "blur(5px)",
+          cursor: "pointer",
+        }}
         onClick={() => setIsOpen(!isOpen)}
       >
-        Last Bet
+        Last Bet Result
       </button>
 
-      {/* Панель с результатом, прозрачная и размытая, с синей обводкой */}
+      {/* Панель с результатом */}
       {isOpen && (
-        <div className="mt-2 p-3 w-64 bg-[rgba(0,255,255,0.2)] backdrop-blur-lg rounded shadow-lg border border-blue-900 text-white transition-all">
+        <div
+          style={{
+            marginTop: "8px",
+            width: "240px",
+            padding: "12px",
+            backgroundColor: "rgba(0,255,255,0.2)", // базовый бирюзовый оттенок с прозрачностью
+            color: "#fff",
+            borderRadius: "12px",
+            boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
+            backdropFilter: "blur(10px)", // размытый фон
+            border: "1px solid rgba(0,0,255,0.5)", // синяя обводка
+            fontSize: "14px",
+          }}
+        >
           {error ? (
-            <div className="text-red-300 text-sm">{error}</div>
+            <div style={{ color: "rgba(255,0,0,0.8)" }}>{error}</div>
           ) : !betResult ? (
-            <div className="text-sm">Loading...</div>
+            <div>Loading...</div>
           ) : (
             <div>
-              <h3 className="text-base font-bold mb-1">Bet Result</h3>
-              <p className="text-sm">
+              <h3 style={{ fontWeight: "bold", marginBottom: "4px" }}>
+                Bet Result
+              </h3>
+              <p>
                 <strong>Pair:</strong> {betResult.pair_name}
               </p>
-              <p className="text-sm">
+              <p>
                 <strong>Amount:</strong> {betResult.amount}
               </p>
-              <p className="text-sm">
+              <p>
                 <strong>Date:</strong>{" "}
                 {new Date(betResult.created_at).toLocaleString()}
               </p>
-              <p className="text-sm">
+              <p>
                 <strong>Accuracy:</strong> {betResult.accuracy}%
               </p>
-              <p className="text-sm">
+              <p>
                 <strong>Reward:</strong> {betResult.reward}
               </p>
             </div>
