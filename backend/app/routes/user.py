@@ -82,6 +82,8 @@ async def get_last_user_bet(
             vector=user_bet.vector,
             pair_name=user_bet.pair.name,
             status=user_bet.status.value,
+            reward=user_bet.reward,
+            accuracy=user_bet.accuracy,
             created_at=user_bet.created_at
         )
         return bet
