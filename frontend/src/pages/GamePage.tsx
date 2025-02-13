@@ -13,6 +13,7 @@ import { PairOption } from "../types/pair";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
 import { CandleData } from "../types/candles";
 import GraphModes from "../components/GraphModes";
+import BetResultCard from "../components/BetResultCard";
 
 const GamePage: React.FC = () => {
   const context = useDataPrefetch();
@@ -231,91 +232,94 @@ const GamePage: React.FC = () => {
   console.log(orbitControlsEnabled)
   return (
     <div className="relative w-screen h-screen overflow-hidden touch-none">
-      {showInstructions && (
-        <Instructions onClose={() => setShowInstructions(false) } />
-      )}
-      <Timer
-        onTimerEnd={() => {}}
-        className="absolute top-[50px] left-1/2 transform -translate-x-1/2 z-10"
-      />
-      <div className="relative top-[5px] left-1/2 transform -translate-x-1/2 z-10">
-        <Legend items={legendItems} />
-      </div>
-      <div className="absolute top-[100px] right-[20px] z-10">
-        <SymbolSelector
-          onSymbolChange={(pair) => {
-            console.log("Symbol changed in GamePage:", pair);
-            setSelectedPair(pair);
-            setData((prev) => ({ ...prev, selectedPair: pair }));
+      {/* Компонент результата ставки в левом верхнем углу */}
+      <BetResultCard />
+       {showInstructions && (
+          <Instructions onClose={() => setShowInstructions(false)} />
+        )}
+        <Timer
+          onTimerEnd={() => {
           }}
-          onSwitchMode={(mode: "Candles" | "Axes" | "Both") => {
-            console.log("Switch mode:", mode);
-            let modeToSet = 1;
-            switch (mode) {
-              case "Axes":
-                modeToSet = 1;
-                break;
-              case "Candles":
-                modeToSet = 2;
-                break;
-              case "Both":
-                modeToSet = 3;
-                break;
-            }
-            setCurrentMode(modeToSet);
-          }}
-          onAxisModeChange={(axis: "X" | "Y") => {
-            console.log("AxisModeChange:", axis);
-            setAxisMode(axis);
-          }}
-          // передача полученных исторических векторов в GamePage
-          onHistoricalFetched={(vectors) => {
-            console.log("Historical vectors received in GamePage:", vectors);
-            setHistoricalVectors(vectors);
-          }}
+          className="absolute top-[50px] left-1/2 transform -translate-x-1/2 z-10"
         />
-      </div>
-      <Scene
-        data={data.candles || []}
-        previousBetEnd={previousBetEnd}
-        userPreviousBet={userPreviousBet}
-        setUserPreviousBet={setUserPreviousBet}
-        axisMode={axisMode}
-        onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
-        onShowConfirmButton={(show, betData) => handleShowConfirmButton(show, betData)}
-        currentMode={currentMode}
-        betsFetched={betsFetched}
-        onScaleReady={(scales) => {
-          console.log("Scales from Scene:", scales);
-          setScaleFunctions(scales);
-        }}
-        // Передача реальных исторических векторов в Scene
-        historicalVectors={historicalVectors}
-      >
-        <GraphModes
-          currentMode={currentMode}
-          // selectedPair={selectedPair}
+        <div className="relative top-[5px] left-1/2 transform -translate-x-1/2 z-10">
+          <Legend items={legendItems} />
+        </div>
+        <div className="absolute top-[100px] right-[20px] z-10">
+          <SymbolSelector
+            onSymbolChange={(pair) => {
+              console.log("Symbol changed in GamePage:", pair);
+              setSelectedPair(pair);
+              setData((prev) => ({ ...prev, selectedPair: pair }));
+            }}
+            onSwitchMode={(mode: "Candles" | "Axes" | "Both") => {
+              console.log("Switch mode:", mode);
+              let modeToSet = 1;
+              switch (mode) {
+                case "Axes":
+                  modeToSet = 1;
+                  break;
+                case "Candles":
+                  modeToSet = 2;
+                  break;
+                case "Both":
+                  modeToSet = 3;
+                  break;
+              }
+              setCurrentMode(modeToSet);
+            }}
+            onAxisModeChange={(axis: "X" | "Y") => {
+              console.log("AxisModeChange:", axis);
+              setAxisMode(axis);
+            }}
+            // передача полученных исторических векторов в GamePage
+            onHistoricalFetched={(vectors) => {
+              console.log("Historical vectors received in GamePage:", vectors);
+              setHistoricalVectors(vectors);
+            }}
+          />
+        </div>
+        <Scene
           data={data.candles || []}
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
           setUserPreviousBet={setUserPreviousBet}
+          axisMode={axisMode}
           onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
-
-          onShowConfirmButton={(show, betData) => {
-            console.log("onShowConfirmButton called with:", show, betData);
-            handleShowConfirmButton(show, betData);
-          }}
+          onShowConfirmButton={(show, betData) => handleShowConfirmButton(show, betData)}
+          currentMode={currentMode}
           betsFetched={betsFetched}
-        />
-      </Scene>
+          onScaleReady={(scales) => {
+            console.log("Scales from Scene:", scales);
+            setScaleFunctions(scales);
+          }}
+          // Передача реальных исторических векторов в Scene
+          historicalVectors={historicalVectors}
+        >
+          <GraphModes
+            currentMode={currentMode}
+            // selectedPair={selectedPair}
+            data={data.candles || []}
+            previousBetEnd={previousBetEnd}
+            userPreviousBet={userPreviousBet}
+            setUserPreviousBet={setUserPreviousBet}
+            onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
 
-      {showConfirmButton && (
-        <div className="absolute bottom-[20px] right-[20px] z-10">
-          <ConfirmBetButton onConfirm={handleConfirmBet} />
-        </div>
-      )}
-    </div>
-  );
-};
+            onShowConfirmButton={(show, betData) => {
+              console.log("onShowConfirmButton called with:", show, betData);
+              handleShowConfirmButton(show, betData);
+            }}
+            betsFetched={betsFetched}
+          />
+        </Scene>
 
-export default GamePage;
+        {showConfirmButton && (
+          <div className="absolute bottom-[20px] right-[20px] z-10">
+            <ConfirmBetButton onConfirm={handleConfirmBet} />
+          </div>
+        )}
+      </div>
+      );
+      };
+
+      export default GamePage;

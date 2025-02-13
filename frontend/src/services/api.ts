@@ -1,7 +1,7 @@
 import { AxiosError } from "axios";
 import {
     BackendCandle,
-    BetResponse, CheckProofResponse,
+    BetResponse, BetResult, CheckProofResponse,
     // BackendCandle,
     PairResponse,
     PlaceBetRequest, TonProofPayloadResponse,
@@ -219,6 +219,20 @@ export async function fetchLastVectors(pairId: string, count: number): Promise<A
         return response.data; // Возвращаем данные с координатами
     } catch (error) {
         console.error("Ошибка загрузки предыдущих векторов:", error);
+        throw error;
+    }
+}
+
+export async function getUserBetResult(): Promise<BetResult> {
+    try {
+        const response = await fetch("/result_bet");
+        if (!response.ok) {
+            throw new Error("Failed to fetch bet result");
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Error fetching bet result", error);
         throw error;
     }
 }

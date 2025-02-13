@@ -96,3 +96,13 @@ export interface BackendCandle {
   volume: number;
   block_number: number;
 }
+
+export interface BetResult {
+  id: number;
+  amount: number;
+  pair_name: string;
+  status: string;
+  reward: number;
+  accuracy: number;
+  created_at: string;
+}
