@@ -12,14 +12,14 @@ extend({ Line2, LineGeometry, LineMaterial });
  * Свойства компонента HistoricalVectors:
  * - vectors: массив векторов-результатов для блока в виде [price, transactions]
  * - totalTime: общая длина оси времени (по умолчанию 5)
- * - aggregatorVector: базовый вектор для агрегирования (например, результат предыдущего блока)
+ * - start: базовый вектор для агрегирования (например, результат предыдущего блока)
  * - timeAxis: ось, отвечающая за время (по умолчанию "z")
  * - color: цвет стрелок
  */
 interface HistoricalVectorsProps {
   vectors: Array<[number, number]>;
   totalTime?: number;
-  aggregatorVector?: THREE.Vector3;
+  start?: THREE.Vector3;
   timeAxis?: "x" | "y" | "z";
   color?: string;
 }
@@ -85,7 +85,7 @@ const Arrow: React.FC<ArrowProps> = ({
 
 const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
-                                                               aggregatorVector,
+                                                               start,
                                                                totalTime = 5,
                                                                color = "yellow",
                                                              }) => {
@@ -128,8 +128,8 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
 
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    // Стартовая точка: если aggregatorVector не передан, используем (0,0,1)
-    let currentPoint = aggregatorVector ? aggregatorVector.clone() : new THREE.Vector3(0, 0, 1);
+    // Стартовая точка: если start не передан, используем (0,0,1)
+    let currentPoint = start ? start.clone() : new THREE.Vector3(0, 0, 1);
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
 
     // Задаем максимальную длину для смещения (например, 2)
@@ -177,7 +177,7 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
       currentPoint = nextPoint.clone();
     }
     return chain;
-  }, [vectors, count, delta, aggregatorVector]);
+  }, [vectors, count, delta, start]);
 
   return (
     <group>
