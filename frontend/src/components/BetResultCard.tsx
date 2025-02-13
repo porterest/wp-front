@@ -2,61 +2,104 @@ import React, { useEffect, useState } from "react";
 import { getUserBetResult } from "../services/api";
 import { BetResult } from "../types/apiTypes";
 
-const BetResultCard: React.FC = () => {
+interface BetResultCloudProps {
+  className?: string;
+}
+
+const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
   const [betResult, setBetResult] = useState<BetResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const fetchBetResult = async () => {
       try {
         const result = await getUserBetResult();
         setBetResult(result);
-      } catch (error) {
-        console.error("Ошибка загрузки результата ставки", error);
-        setError("Не удалось загрузить результат ставки");
+      } catch (err) {
+        console.error("Error loading bet result", err);
+        setError("Failed to load bet result");
       }
     };
 
     fetchBetResult();
   }, []);
 
-  if (error) {
-    return (
-      <div className="absolute top-4 left-4 p-4 bg-red-500 bg-opacity-70 text-white rounded shadow">
-        {error}
-      </div>
-    );
-  }
-
-  if (!betResult) {
-    return (
-      <div className="absolute top-4 left-4 p-4 bg-gray-200 bg-opacity-70 rounded shadow">
-        Загрузка результата ставки...
-      </div>
-    );
-  }
-
   return (
-    <div className="absolute top-4 left-4 p-4 bg-white bg-opacity-70 backdrop-blur-md rounded shadow-lg">
-      <h3 className="text-lg font-bold mb-2">Результат ставки</h3>
-      <p>
-        <strong>Пара:</strong> {betResult.pair_name}
-      </p>
-      <p>
-        <strong>Сумма:</strong> {betResult.amount}
-      </p>
-      <p>
-        <strong>Дата:</strong>{" "}
-        {new Date(betResult.created_at).toLocaleString()}
-      </p>
-      <p>
-        <strong>Точность:</strong> {betResult.accuracy}%
-      </p>
-      <p>
-        <strong>Вознаграждение:</strong> {betResult.reward}
-      </p>
+    <div
+      style={{
+        position: "fixed",
+        top: "100px", // Точное позиционирование по вертикали
+        left: "16px",
+        zIndex: 50,
+      }}
+      className={className}
+    >
+      {/* Кнопка */}
+      <button
+        style={{
+          width: "140px",
+          padding: "8px",
+          backgroundColor: "rgba(34, 211, 238)", // Соответствует bg-cyan-400 с прозрачностью
+          color: "#fff",
+          border: "none",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+          backdropFilter: "blur(5px)",
+          cursor: "pointer",
+        }}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        Last Bet Result
+      </button>
+
+      {/* Панель с результатом */}
+      {isOpen && (
+        <div
+          style={{
+            marginTop: "8px",
+            width: "240px",
+            padding: "12px",
+            backgroundColor: "rgba(0,255,255,0.2)", // базовый бирюзовый оттенок с прозрачностью
+            color: "#fff",
+            borderRadius: "12px",
+            boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
+            backdropFilter: "blur(10px)", // размытый фон
+            border: "1px solid rgba(0,0,255,0.5)", // синяя обводка
+            fontSize: "14px",
+          }}
+        >
+          {error ? (
+            <div style={{ color: "rgba(255,0,0,0.8)" }}>{error}</div>
+          ) : !betResult ? (
+            <div>Loading...</div>
+          ) : (
+            <div>
+              <h3 style={{ fontWeight: "bold", marginBottom: "4px" }}>
+                Bet Result
+              </h3>
+              <p>
+                <strong>Pair:</strong> {betResult.pair_name}
+              </p>
+              <p>
+                <strong>Amount:</strong> {betResult.amount}
+              </p>
+              <p>
+                <strong>Date:</strong>{" "}
+                {new Date(betResult.created_at).toLocaleString()}
+              </p>
+              <p>
+                <strong>Accuracy:</strong> {betResult.accuracy}
+              </p>
+              <p>
+                <strong>Reward:</strong> {betResult.reward}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-export default BetResultCard;
+export default BetResultCloud;

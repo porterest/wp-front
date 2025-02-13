@@ -225,17 +225,14 @@ export async function fetchLastVectors(pairId: string, count: number): Promise<A
 
 export async function getUserBetResult(): Promise<BetResult> {
     try {
-        const response = await fetch("/result_bet");
-        if (!response.ok) {
-            throw new Error("Failed to fetch bet result");
-        }
-        const data = await response.json();
-        return data;
+        const response = await apiClient.get<BetResult>("/user/result_bet");
+        return response.data;
     } catch (error) {
         console.error("Error fetching bet result", error);
         throw error;
     }
 }
+
 
 /**
  * Запрос данных свечей с бекенда

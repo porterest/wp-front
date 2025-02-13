@@ -212,6 +212,8 @@ class BlockRepository(
                 amount=bet.amount,
                 block_number=entity.block_number,
                 user_id=bet.user_id,
+                reward=bet.reward,
+                accuracy=bet.accuracy,
                 created_at=bet.created_at,
                 updated_at=bet.updated_at,
                 pair=PairModel(

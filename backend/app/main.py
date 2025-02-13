@@ -27,7 +27,7 @@ from settings import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    subprocess.call("alembic upgrade head")
+    subprocess.call(["alembic", "upgrade", "head"])
 
     chain = get_chain_service()
     await chain.start_block_generation()
