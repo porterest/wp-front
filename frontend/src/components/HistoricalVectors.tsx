@@ -108,12 +108,17 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
   const maxY = 5;
 
   const normalizeX = (x: number) => {
-    return ((x - minValueX) / (maxValueX - minValueX)) * (maxX - minX) + minX;
+    const range = maxValueX - minValueX;
+    if (range === 0) return minX; // или другое значение по умолчанию
+    return ((x - minValueX) / range) * (maxX - minX) + minX;
   };
 
   const normalizeY = (y: number) => {
-    return ((y - minValueY) / (maxValueY - minValueY)) * (maxY - minY) + minY;
+    const range = maxValueY - minValueY;
+    if (range === 0) return minY; // или другое значение по умолчанию
+    return ((y - minValueY) / range) * (maxY - minY) + minY;
   };
+
 
   const normalizeArrow = (arrow: [number, number]) => {
     const newX = normalizeX(arrow[0]);
