@@ -26,7 +26,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   // --- Новые состояния для работы с историческими векторами ---
   const [showHistoricalInput, setShowHistoricalInput] = useState<boolean>(false);
   const [historicalCount, setHistoricalCount] = useState<number>(5);
-  // const [historicalVectors, setHistoricalVectors] = useState<Array<[number, number]>>([]);
+
   const [isFetchingHistorical, setIsFetchingHistorical] = useState<boolean>(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
@@ -127,30 +127,33 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   // --- Обработчик загрузки исторических векторов ---
   const handleFetchHistoricalVectors = useCallback(async () => {
     if (!selectedPair) {
-      alert("Сначала выберите валютную пару.");
+      alert("Please select a currency pair first.");
+
       return;
     }
     setIsFetchingHistorical(true);
     setFetchError(null);
     try {
       const vectors = await fetchLastVectors(selectedPair.value, historicalCount);
+      console.log("vectors");
+      console.log(vectors);
+
       setIsFetchingHistorical(false);
       // Передаём полученные данные через пропс
       onHistoricalFetched(vectors);
     } catch (error) {
-      console.error("Ошибка загрузки исторических векторов:", error);
-      setFetchError("Ошибка загрузки исторических данных.");
+      console.error("Error fetching historical vectors:", error);
+      setFetchError("Error loading historical data.");
+
       setIsFetchingHistorical(false);
     }
   }, [selectedPair, historicalCount, onHistoricalFetched]);
-
-
   return (
     <div className="relative w-[180px] p-2 rounded-lg bg-[rgba(0,255,255,0.2)] text-white shadow-md">
       {/* Выпадающий список для выбора валютной пары */}
       <div>
         {pairs.length === 0 ? (
-          <div className="text-gray-400 text-sm">Загрузка...</div>
+          <div className="text-gray-400 text-sm">Loading...</div>
         ) : (
           <Select
             options={pairs}
@@ -198,9 +201,10 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
       <div className="mt-2">
         <button
           onClick={() => setShowHistoricalInput((prev) => !prev)}
-          className="px-3 py-2 w-full bg-purple-500 text-white font-bold text-sm rounded-md shadow-lg hover:bg-purple-600 transition"
+          className="px-2 py-1 w-full bg-cyan-400 text-white font-bold text-sm rounded-md shadow-lg hover:bg-cyan-500 transition"
         >
-          {showHistoricalInput ? "Скрыть исторические данные" : "Показать исторические данные"}
+          {showHistoricalInput ? "Hide Historical Data" : "Show Historical Data"}
+
         </button>
         {showHistoricalInput && (
           <div className="mt-2">
@@ -213,9 +217,10 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
             />
             <button
               onClick={handleFetchHistoricalVectors}
-              className="mt-2 px-3 py-2 w-full bg-green-500 text-white font-bold text-sm rounded-md shadow-lg hover:bg-green-600 transition"
+              className="mt-2 px-3 py-2 w-full bg-purple-500 text-white font-bold text-sm rounded-md shadow-lg hover:bg-purple-600 transition"
             >
-              {isFetchingHistorical ? "Загрузка..." : "Загрузить"}
+              {isFetchingHistorical ? "Loading..." : "Load"}
+
             </button>
             {fetchError && (
               <div className="mt-1 text-red-500 text-sm">{fetchError}</div>

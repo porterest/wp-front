@@ -62,7 +62,7 @@ class OrchestratorService(OrchestratorServiceInterface):
         prediction_dto = Prediction(
             user_predictions=user_predictions,
             actual_price_change=aggregated_bets[0],
-            actual_tx_count=aggregated_bets[1],
+            actual_tx_count=len(block.bets),
             block_id=block.id,
         )
 

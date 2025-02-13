@@ -1,4 +1,3 @@
-// HistoricalVectors.tsx
 import React, { useMemo } from "react";
 import * as THREE from "three";
 import { extend } from "@react-three/fiber";
@@ -6,58 +5,81 @@ import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 
-// Регистрируем классы для использования в JSX
+// Регистрируем компоненты для использования в JSX
 extend({ Line2, LineGeometry, LineMaterial });
 
+/**
+ * Свойства компонента HistoricalVectors:
+ * - vectors: массив векторов-результатов для блока в виде [price, transactions]
+ * - totalTime: общая длина оси времени (по умолчанию 5)
+ * - start: базовый вектор для агрегирования (например, результат предыдущего блока)
+ * - timeAxis: ось, отвечающая за время (по умолчанию "z")
+ * - color: цвет стрелок
+ */
 interface HistoricalVectorsProps {
-  /** Массив векторов, например: [[x1, y1], [x2, y2], …] */
   vectors: Array<[number, number]>;
-  /** Точка, откуда начинается цепочка стрелок (по умолчанию (0, 0, 1)) */
-  startPoint?: THREE.Vector3;
-  /**
-   * Общая длина цепочки. Цепочка растягивается от startPoint до startPoint + totalChainLength.
-   * По умолчанию 5.
-   */
-  totalChainLength?: number;
-}
-
-interface ArrowProps {
-  start: THREE.Vector3;
-  end: THREE.Vector3;
-  /** Нормализованный вектор направления стрелки */
-  direction: THREE.Vector3;
+  totalTime?: number;
+  start?: THREE.Vector3;
+  timeAxis?: "x" | "y" | "z";
   color?: string;
 }
 
-const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow" }) => {
+/**
+ * Свойства для стрелки (Arrow):
+ * - start: начальная точка стрелки ("начало вектора")
+ * - end: конечная точка стрелки ("конец вектора")
+ * - direction: направление стрелки (вычисляется как разность end - start, нормализованная)
+ * - color: цвет стрелки
+ * - coneScale: масштаб наконечника стрелки
+ */
+interface ArrowProps {
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  direction: THREE.Vector3;
+  color?: string;
+  coneScale?: number;
+}
+
+const Arrow: React.FC<ArrowProps> = ({
+                                       start,
+                                       end,
+                                       direction,
+                                       color = "yellow",
+                                       coneScale = 1,
+                                     }) => {
+  // Создаем геометрию линии от "начала вектора" до "конца вектора"
   const lineGeometry = useMemo(() => {
     const geometry = new LineGeometry();
-    geometry.setPositions([
-      start.x, start.y, start.z,
-      end.x, end.y, end.z,
-    ]);
+    console.log("Координаты линии: начало вектора", start.toArray(), "конец вектора", end.toArray());
+    geometry.setPositions([start.x, start.y, start.z, end.x, end.y, end.z]);
     return geometry;
   }, [start, end]);
 
+  // Создаем материал для линии
   const lineMaterial = useMemo(() => {
     return new LineMaterial({
-      color: color,
+      color,
+
       linewidth: 2,
       resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
     });
   }, [color]);
 
+
   const coneQuaternion = useMemo(() => {
-    const defaultDir = new THREE.Vector3(0, 1, 0); // Конус по умолчанию смотрит вдоль оси Y
+    const defaultDir = new THREE.Vector3(0, 1, 0); // по умолчанию конус смотрит вверх
+    console.log("Направление стрелки:", direction.toArray());
+
     return new THREE.Quaternion().setFromUnitVectors(defaultDir, direction);
   }, [direction]);
 
   return (
     <group>
-      {/* Используем зарегистрированный JSX-компонент <line2> */}
       <line2 geometry={lineGeometry} material={lineMaterial} />
+      {/* Конус размещается в точке end */}
       <mesh position={end} quaternion={coneQuaternion}>
-        <coneGeometry args={[0.1, 0.3, 12]} />
+        <coneGeometry args={[0.1 * coneScale, 0.3 * coneScale, 12]} />
+
         <meshStandardMaterial color={color} />
       </mesh>
     </group>
@@ -66,44 +88,111 @@ const Arrow: React.FC<ArrowProps> = ({ start, end, direction, color = "yellow" }
 
 const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
                                                                vectors,
-                                                               startPoint = new THREE.Vector3(0, 0, 1),
-                                                               totalChainLength = 5,
+                                                               start,
+                                                               totalTime = 5,
+                                                               color = "yellow",
                                                              }) => {
-  // Делим общую длину цепочки на количество векторов
+  console.log("vectors");
+  console.log(vectors);
+  const count = vectors.length;
+  // Вычисляем шаг по оси времени (delta)
+  const delta = count > 1 ? totalTime / (count - 1) : 0;
+  // Пример вычисления coneScale (можете оставить, как есть)
+  const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
+
+  const minValueX = Math.min(...vectors.map(x => x[0]));
+  const maxValueX = Math.max(...vectors.map(x => x[0]));
+  const minValueY = Math.min(...vectors.map(x => x[1]));
+  const maxValueY = Math.max(...vectors.map(x => x[1]));
+
+  const minX = 0;
+  const maxX = 5;
+  const minY = 0;
+  const maxY = 5;
+
+  const normalizeX = (x: number) => {
+    const range = maxValueX - minValueX;
+    if (range === 0) return 2; // или другое значение по умолчанию
+    return ((x - minValueX) / range) * (maxX - minX) + minX;
+  };
+
+  const normalizeY = (y: number) => {
+    const range = maxValueY - minValueY;
+    if (range === 0) return 2; // или другое значение по умолчанию
+    return ((y - minValueY) / range) * (maxY - minY) + minY;
+  };
+
+
+  const normalizeArrow = (arrow: [number, number]) => {
+    const newX = normalizeX(arrow[0]);
+    const newY = normalizeY(arrow[1]);
+    return [newX, newY];
+  };
+
   const arrowChain = useMemo(() => {
     const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    if (!vectors || vectors.length === 0) return chain;
-    const count = vectors.length;
-    const arrowLength = totalChainLength / count;
-    let currentStart = startPoint.clone();
+    // Стартовая точка: если start не передан, используем (0,0,1)
+    let currentPoint = start ? start.clone() : new THREE.Vector3(0, 0, 1);
+    console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
+
+    // Задаем максимальную длину для смещения (например, 2)
+    // const maxLength = 2;
+
     for (let i = 0; i < count; i++) {
-      const vec = vectors[i];
-      // Создаем вектор направления (фиксируем z = 0)
-      const direction = new THREE.Vector3(vec[0], vec[1], 0);
-      if (direction.length() === 0) {
-        direction.set(1, 0, 0);
-      }
-      direction.normalize();
-      const arrowEnd = currentStart.clone().add(direction.clone().multiplyScalar(arrowLength));
+      console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
+      // Вычисляем «сырую» конечную точку на основе входных данных.
+      // Здесь компоненты подставляются в том порядке, который вы хотите (например,
+      // если price на y, а транзакции на x, то можно поменять местами).
+      // const rawPoint = new THREE.Vector3(vectors[i][1], vectors[i][0], currentPoint.z + delta);
+      // // Вычисляем offset как разность между rawPoint и currentPoint
+      // const rawOffset = rawPoint.clone().sub(currentPoint);
+      // // Если длина rawOffset больше maxLength, укорачиваем его до maxLength
+      // const offset = rawOffset.clone();
+      // if (offset.length() > maxLength) {
+      //   offset.setLength(maxLength);
+      // }
+      // // Новая точка = текущая точка + (возможно укораченное) смещение
+      // const nextPoint = currentPoint.clone().add(offset);
+      // // Направление стрелки – это нормализованный offset (с сохранением исходного отношения)
+      // const direction = offset.clone().normalize();
+// Создаем горизонтальный вектор из x и y
+      const newArrow = normalizeArrow(vectors[i]);
+      const horizontal = new THREE.Vector2(newArrow[1], newArrow[0]);
+// Устанавливаем его длину равной 2
+//       horizontal.setLength(delta);
+// Собираем итоговый offset, где z остаётся без изменений
+// Вычисляем nextPoint как текущая точка плюс newOffset
+      const nextPoint = new THREE.Vector3(horizontal.x, horizontal.y, currentPoint.z + delta);
+// Направление — нормализованный newOffset (по всем осям)
+      const direction = nextPoint.clone().sub(currentPoint).normalize();
+
+
+
+      console.log(
+        `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
+    );
+      console.log("координаты вектора", currentPoint.toArray(), nextPoint.toArray(), direction.toArray());
       chain.push({
-        start: currentStart.clone(),
-        end: arrowEnd.clone(),
-        direction: direction.clone(),
+        start: currentPoint.clone(),
+        end: nextPoint.clone(),
+        direction,
       });
-      currentStart = arrowEnd.clone();
+      currentPoint = nextPoint.clone();
     }
     return chain;
-  }, [vectors, startPoint, totalChainLength]);
+  }, [vectors, count, delta, start]);
 
   return (
     <group>
-      {arrowChain.map((arrow, index) => (
+      {arrowChain.map((arrow, i) => (
         <Arrow
-          key={index}
+          key={i}
           start={arrow.start}
           end={arrow.end}
           direction={arrow.direction}
-          color="yellow"
+          color={color}
+          coneScale={computedConeScale}
+   
         />
       ))}
     </group>

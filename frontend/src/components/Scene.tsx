@@ -15,7 +15,7 @@ interface SceneProps {
   data: CandleData[];
   onScaleReady: (scaleFunctions: ScaleFunctions) => void;
   style?: React.CSSProperties;
-  // Props для GraphModes:
+
   previousBetEnd: THREE.Vector3;
   userPreviousBet: THREE.Vector3;
   setUserPreviousBet: (value: THREE.Vector3) => void;
@@ -38,38 +38,44 @@ const Scene: React.FC<SceneProps> = ({
                                        previousBetEnd,
                                        userPreviousBet,
                                        setUserPreviousBet,
-                                       axisMode,
                                        onDragging,
                                        onShowConfirmButton,
                                        currentMode,
                                        betsFetched,
                                        historicalVectors,
                                      }) => {
+  console.log("Rendering Scene with historicalVectors:", historicalVectors);
   return (
-    <Canvas camera={{ position: [10, 10, 10], fov: 60 }} style={style}>
+    <Canvas
+      camera={{ position: [10, 10, 10], fov: 60 }}
+      style={{ width: "100vw", height: "100vh", ...style }}
+    >
+
       <OrbitControls enableRotate={false} enablePan={false} enableZoom={false} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
       <ScaleProvider data={data}>
-        {children}
         <ScaleHandler onScaleReady={onScaleReady} />
+        {children}
+
         <GraphModes
           currentMode={currentMode}
           data={data}
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
           setUserPreviousBet={setUserPreviousBet}
-          axisMode={axisMode}
           onDragging={onDragging}
           onShowConfirmButton={onShowConfirmButton}
           betsFetched={betsFetched}
         />
-        {/* Передаем реальные исторические векторы в HistoricalVectors */}
-        <HistoricalVectors
-          vectors={historicalVectors}
-          startPoint={previousBetEnd}
-          totalChainLength={5}
-        />
+        {historicalVectors && historicalVectors.length > 0 && (
+          <HistoricalVectors
+            vectors={historicalVectors}
+            start={new THREE.Vector3(0, 0, 0)}
+            // totalChainLength={5}
+          />
+        )}
+
       </ScaleProvider>
       <CameraTrackballControl />
     </Canvas>
@@ -82,6 +88,8 @@ const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) =>
   const scaleFunctions = useScale();
   useEffect(() => {
     onScaleReady(scaleFunctions);
+    console.log("Scale functions from Scene:", scaleFunctions);
+
   }, [onScaleReady, scaleFunctions]);
   return null;
 };

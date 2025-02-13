@@ -10,7 +10,6 @@ interface DynamicGraphContentProps {
   previousBetEnd: THREE.Vector3;
   userPreviousBet: THREE.Vector3;
   setUserPreviousBet: (value: THREE.Vector3) => void;
-  axisMode: "X" | "Y";
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
@@ -27,7 +26,6 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
                                                                    previousBetEnd,
                                                                    userPreviousBet,
                                                                    setUserPreviousBet,
-                                                                   axisMode,
                                                                    onDragging,
                                                                    onShowConfirmButton,
                                                                    betAmount,
@@ -48,7 +46,6 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
         previousBetEnd={previousBetEnd}
         userPreviousBet={userPreviousBet}
         setUserPreviousBet={setUserPreviousBet}
-        axisMode={axisMode}
         onDragging={onDragging}
         onShowConfirmButton={onShowConfirmButton}
         betAmount={betAmount}
@@ -67,7 +64,6 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
           setUserPreviousBet={setUserPreviousBet}
-          axisMode={axisMode}
           onDragging={onDragging}
           onShowConfirmButton={onShowConfirmButton}
           betAmount={betAmount}
