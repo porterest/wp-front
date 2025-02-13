@@ -12,7 +12,7 @@ from domain.metaholder.requests.pair import GetUserLastBetRequest
 from domain.metaholder.requests.wallet import WithdrawToExternalWalletRequest
 from domain.metaholder.responses import BetResponse
 from domain.metaholder.responses.user import UserHistoryResponse, UserBetsResponse, UserInfoResponse
-from domain.models.bet_result import BetResult
+from domain.metaholder.responses.bet_result import BetResult
 from routes.helpers import get_user_id_from_request
 from services.exceptions import NotFoundException
 
