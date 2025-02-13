@@ -77,5 +77,3 @@ class RewardDistributionService(RewardDistributionServiceInterface):
             )
             await self.bet_repository.update(obj_id=bet.id, obj=update_bet)
 
-
-
