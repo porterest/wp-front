@@ -23,10 +23,9 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
 
-  // --- Новые состояния для работы с историческими векторами ---
+  // --- Состояния для работы с историческими векторами ---
   const [showHistoricalInput, setShowHistoricalInput] = useState<boolean>(false);
   const [historicalCount, setHistoricalCount] = useState<number>(5);
-
   const [isFetchingHistorical, setIsFetchingHistorical] = useState<boolean>(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
@@ -112,9 +111,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
 
   // Эффект для автоматического выбора нужной пары при загрузке списка
   useEffect(() => {
-    // Если список загружен и ни одна пара ещё не выбрана
     if (pairs.length > 0 && !selectedPair) {
-      // Ищем пару с нужным label (например, "DD/TON")
       const defaultPair = pairs.find((pair) => pair.label === "DD/TON");
       if (defaultPair) {
         setSelectedPair(defaultPair);
@@ -128,26 +125,22 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   const handleFetchHistoricalVectors = useCallback(async () => {
     if (!selectedPair) {
       alert("Please select a currency pair first.");
-
       return;
     }
     setIsFetchingHistorical(true);
     setFetchError(null);
     try {
       const vectors = await fetchLastVectors(selectedPair.value, historicalCount);
-      console.log("vectors");
-      console.log(vectors);
-
+      console.log("vectors", vectors);
       setIsFetchingHistorical(false);
-      // Передаём полученные данные через пропс
       onHistoricalFetched(vectors);
     } catch (error) {
       console.error("Error fetching historical vectors:", error);
       setFetchError("Error loading historical data.");
-
       setIsFetchingHistorical(false);
     }
   }, [selectedPair, historicalCount, onHistoricalFetched]);
+
   return (
     <div className="relative w-[180px] p-2 rounded-lg bg-[rgba(0,255,255,0.2)] text-white shadow-md">
       {/* Выпадающий список для выбора валютной пары */}
@@ -197,13 +190,13 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
         </button>
       </div>
 
-      {/* --- Новый блок для загрузки исторических векторов --- */}
+      {/* --- Блок для загрузки исторических векторов --- */}
       <div className="mt-2">
         <button
           onClick={() => {
             setShowHistoricalInput((prev) => {
               if (prev) {
-                // Если мы скрываем данные, очищаем исторические данные
+                // При скрытии очищаем исторические данные
                 onHistoricalFetched([]);
               }
               return !prev;
@@ -213,27 +206,26 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
         >
           {showHistoricalInput ? "Hide Historical Data" : "Show Historical Data"}
         </button>
-        lInput && (
-        <div className="mt-2">
-          <input
-            type="number"
-            value={historicalCount}
-            onChange={(e) => setHistoricalCount(Number(e.target.value))}
-            className="w-full p-1 rounded-md bg-gray-200 text-black"
-            min={1}
-          />
-          <button
-            onClick={handleFetchHistoricalVectors}
-            className="mt-2 px-3 py-2 w-full bg-purple-500 text-white font-bold text-sm rounded-md shadow-lg hover:bg-purple-600 transition"
+        {showHistoricalInput && (
+          <div className="mt-2">
+            <input
+              type="number"
+              value={historicalCount}
+              onChange={(e) => setHistoricalCount(Number(e.target.value))}
+              className="w-full p-1 rounded-md bg-gray-200 text-black"
+              min={1}
+            />
+            <button
+              onClick={handleFetchHistoricalVectors}
+              className="mt-2 px-3 py-2 w-full bg-purple-500 text-white font-bold text-sm rounded-md shadow-lg hover:bg-purple-600 transition"
             >
               {isFetchingHistorical ? "Loading..." : "Load"}
-
             </button>
             {fetchError && (
               <div className="mt-1 text-red-500 text-sm">{fetchError}</div>
             )}
           </div>
-        )
+        )}
       </div>
     </div>
   );
