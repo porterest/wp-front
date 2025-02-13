@@ -6,6 +6,7 @@ from sqlalchemy import desc, select
 
 from abstractions.repositories.bet import BetRepositoryInterface
 from domain.dto.bet import CreateBetDTO, UpdateBetDTO
+from domain.enums import BetStatus
 from domain.metaholder.responses import BetResponse
 from domain.models.bet import Bet as BetModel
 from domain.models.pair import Pair as PairModel
@@ -42,6 +43,23 @@ class BetRepository(
 
             bet = res.unique().scalars().one_or_none()
         return self.entity_to_model(bet) if bet else None
+
+    async def get_last_user_completed_bet(self, user_id: UUID) -> Bet:
+        async with self.session_maker() as session:
+            res = await session.execute(
+                select(self.entity)
+                .where(
+        self.entity.user_id == user_id,
+                    self.entity.status == BetStatus.RESOLVED,
+                )
+                .order_by(desc(self.entity.created_at, ))
+                .limit(1)
+                .options(*self.options)
+            )
+
+            bet = res.unique().scalars().one_or_none()
+        return self.entity_to_model(bet) if bet else None
+
 
     def create_dto_to_entity(self, dto: CreateBetDTO) -> Bet:
         return Bet(

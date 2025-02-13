@@ -10,7 +10,7 @@ from domain.dto.bet import CreateBetDTO, UpdateBetDTO
 from domain.dto.user import UpdateUserDTO
 from domain.enums import BetStatus
 from domain.metaholder.responses import BetResponse
-
+from infrastructure.db.entities import Bet
 
 logger = logging.getLogger(__name__)
 @dataclass
@@ -50,9 +50,14 @@ class BetService(BetServiceInterface):
         )
         await self.bet_repository.update(bet.id, update_bet)
 
-    async def get_last_user_bet(self, user_id: UUID, pair_id: UUID) -> Optional[BetResponse]:
+    async def get_last_user_bet(self, user_id: UUID, pair_id: UUID) -> Optional[Bet]:
         logger.info('мяу!')
 
         last_bet = await self.bet_repository.get_last_user_bet(user_id, pair_id)
+        logger.info(last_bet)
+        return last_bet
+
+    async def get_last_user_completed_bet(self, user_id: UUID) -> Optional[Bet]:
+        last_bet = await self.bet_repository.get_last_user_completed_bet(user_id)
         logger.info(last_bet)
         return last_bet

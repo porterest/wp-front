@@ -12,6 +12,7 @@ from domain.metaholder.requests.pair import GetUserLastBetRequest
 from domain.metaholder.requests.wallet import WithdrawToExternalWalletRequest
 from domain.metaholder.responses import BetResponse
 from domain.metaholder.responses.user import UserHistoryResponse, UserBetsResponse, UserInfoResponse
+from domain.models.bet_result import BetResult
 from routes.helpers import get_user_id_from_request
 from services.exceptions import NotFoundException
 
@@ -90,6 +91,35 @@ async def get_last_user_bet(
             status_code=404,
             detail=f"No user with ID {user_id}",
         )
+
+@router.get('/result_bet')
+async def get_user_bet_result(
+        request: Request,
+) -> Optional[BetResult]:
+    user_id = get_user_id_from_request(request)
+
+    bets = get_bet_service()
+
+    try:
+        user_bet = await bets.get_last_user_completed_bet(user_id=user_id)
+        bet = BetResult(
+            id=user_bet.id,
+            amount=user_bet.amount,
+            pair_name=user_bet.pair.name,
+            status=user_bet.status.value,
+            reward=user_bet.reward,
+            accuracy=user_bet.accuracy,
+            created_at=user_bet.created_at,
+
+        )
+        return bet
+    except NotFoundException:
+        logger.error(f"No bet with user_id {user_id}", exc_info=True)
+        raise HTTPException(
+            status_code=404,
+            detail=f"No bet with user_id {user_id}",
+        )
+
 
 
 @router.get('/history')

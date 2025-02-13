@@ -21,3 +21,5 @@ class CreateBetDTO(CreateDTO):
 
 class UpdateBetDTO(BaseModel):
     status: Optional[BetStatus] = None
+    reward: Optional[float]
+    accuracy: Optional[float]

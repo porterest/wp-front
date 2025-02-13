@@ -24,5 +24,6 @@ class Bet(BaseModel):
     block_number: int
     vector: BetVector
     status: BetStatus
+    reward: Optional[float]
 
     user_id: Optional[UUID] = None

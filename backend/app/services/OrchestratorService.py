@@ -70,6 +70,7 @@ class OrchestratorService(OrchestratorServiceInterface):
         rewards = await self.reward_service.calculate_rewards(prediction_dto)
         logger.info(f"Rewards: {rewards}")
 
+
         # Stage 4: минт
         reward_mint = rewards.total_reward_pool
 

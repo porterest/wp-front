@@ -15,3 +15,6 @@ class BetRepositoryInterface(
     @abstractmethod
     async def get_last_user_bet(self, user_id: UUID, pair_id: UUID) -> Bet:
         ...
+    @abstractmethod
+    async def get_last_user_completed_bet(self, user_id: UUID) -> Bet:
+        ...

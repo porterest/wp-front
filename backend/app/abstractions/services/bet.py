@@ -4,6 +4,7 @@ from uuid import UUID
 
 from domain.dto.bet import CreateBetDTO
 from domain.metaholder.responses import BetResponse
+from infrastructure.db.entities import Bet
 
 
 class BetServiceInterface(ABC):
@@ -22,5 +23,8 @@ class BetServiceInterface(ABC):
         ...
 
     @abstractmethod
-    async def get_last_user_bet(self, user_id: UUID, pair_id: UUID) -> Optional[BetResponse]:
+    async def get_last_user_bet(self, user_id: UUID, pair_id: UUID) -> Optional[Bet]:
+        ...
+    @abstractmethod
+    async def get_last_user_completed_bet(self, user_id: UUID) -> Optional[Bet]:
         ...

@@ -54,7 +54,8 @@ class Bet(AbstractBase):
     amount: Mapped[float]
     vector: Mapped[BetVector] = mapped_column(JSONB)
     status: Mapped[BetStatus] = mapped_column(SQLEnum(BetStatus), default=BetStatus.PENDING)
-
+    reward: Mapped[Optional[float]]
+    accuracy: Mapped[Optional[float]]
     user: Mapped['User'] = relationship("User", back_populates="bets")
     pair: Mapped['Pair'] = relationship("Pair", back_populates="bets")
     block: Mapped['Block'] = relationship("Block", back_populates='bets')

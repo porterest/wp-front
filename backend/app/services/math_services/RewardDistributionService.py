@@ -1,6 +1,9 @@
 from dataclasses import dataclass
+from uuid import UUID
 
+from abstractions.repositories.bet import BetRepositoryInterface
 from abstractions.services.math.reward_distribution import RewardDistributionServiceInterface
+from domain.dto.bet import UpdateBetDTO
 from domain.models.prediction import Prediction
 from domain.models.reward_model import Rewards
 from domain.models.user_reward import UserReward
@@ -8,6 +11,7 @@ from domain.models.user_reward import UserReward
 
 @dataclass
 class RewardDistributionService(RewardDistributionServiceInterface):
+    bet_repository: BetRepositoryInterface
     FIXED_REWARD: int = 1
     base_multiplier: float = 1.3
 
@@ -60,5 +64,18 @@ class RewardDistributionService(RewardDistributionServiceInterface):
                     accuracy=user_accuracies[user_id],
                 )
             )
+        await self.update_rewards(rewards)
 
         return Rewards(total_reward_pool=sum(r.reward for r in rewards), user_rewards=rewards)
+
+    async def update_rewards(self, rewards: list[UserReward]):
+        for reward in rewards:
+            bet = await self.bet_repository.get_last_user_completed_bet(reward.user_id)
+            update_bet = UpdateBetDTO(
+                reward=reward.reward,
+                accuracy=reward.accuracy
+            )
+            await self.bet_repository.update(obj_id=bet.id, obj=update_bet)
+
+
+
