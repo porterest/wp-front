@@ -1,5 +1,5 @@
 import logging
-import os
+import subprocess
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -9,9 +9,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
+
 # from prometheus_client import Counter, Histogram, generate_latest
-from starlette.middleware.base import BaseHTTPMiddleware
-import time
 from dependencies.services.chain import get_chain_service
 from middlewares import check_for_auth
 from routes import (
@@ -31,10 +30,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     chain = get_chain_service()
     await chain.start_block_generation()
 
+    subprocess.call("alembic upgrade head")
+
     yield
 
     await chain.stop_block_generation()
     logger.info('chains stopped, exiting...')
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -50,6 +52,8 @@ logging.getLogger('apscheduler').setLevel(logging.DEBUG)
 logging.getLogger('LiteClient').setLevel(logging.WARN)
 
 de = load_dotenv(dotenv_path='./.env')
+
+
 # logger.info(de)
 # logger.info(os.environ.keys())
 
