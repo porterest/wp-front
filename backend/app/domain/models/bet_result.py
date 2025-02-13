@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -13,6 +14,6 @@ class BetResult(BaseModel):
     amount: float
     pair_name: str
     status: BetStatus
-    reward: float
-    accuracy: float
+    reward: Optional[float]
+    accuracy: Optional[float]
     created_at: datetime
