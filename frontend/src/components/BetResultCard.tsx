@@ -15,8 +15,8 @@ const BetResultCard: React.FC<BetResultCardProps> = ({ className }) => {
         const result = await getUserBetResult();
         setBetResult(result);
       } catch (error) {
-        console.error("Ошибка загрузки результата ставки", error);
-        setError("Не удалось загрузить результат ставки");
+        console.error("Error loading bet result", error);
+        setError("Failed to load bet result");
       }
     };
 
