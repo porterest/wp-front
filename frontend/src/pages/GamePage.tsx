@@ -233,8 +233,9 @@ const GamePage: React.FC = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden touch-none">
       {/* Компонент результата ставки в левом верхнем углу */}
-      <BetResultCard />
-       {showInstructions && (
+      <BetResultCard className="absolute top-[50px] left-[20px] z-10" />
+
+      {showInstructions && (
           <Instructions onClose={() => setShowInstructions(false)} />
         )}
         <Timer

@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { getUserBetResult } from "../services/api";
 import { BetResult } from "../types/apiTypes";
 
-const BetResultCard: React.FC = () => {
+interface BetResultCardProps {
+  className?: string;
+}
+
+const BetResultCard: React.FC<BetResultCardProps> = ({ className }) => {
   const [betResult, setBetResult] = useState<BetResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
