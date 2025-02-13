@@ -22,3 +22,10 @@ async def get_last_vector(pair_id: UUID) -> Tuple[float, float]:
     logger.info('ебаный вектор')
     logger.info(vector)
     return vector
+
+@router.get('/last_vectors')
+async def get_last_vectors(pair_id: UUID, count: int) -> list[Tuple[float, float]]:
+    service = get_block_service()
+    blocks = await service.get_n_last_active_blocks_by_pair_id(pair_id=pair_id, n=count)
+    vectors = [block.result_vector for block in blocks]
+    return vectors

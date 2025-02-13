@@ -11,7 +11,6 @@ interface GraphModesProps {
   previousBetEnd: THREE.Vector3;
   userPreviousBet: THREE.Vector3;
   setUserPreviousBet: (value: THREE.Vector3) => void;
-  axisMode: "X" | "Y";
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
@@ -26,7 +25,6 @@ const GraphModes: React.FC<GraphModesProps> = ({
                                                  previousBetEnd,
                                                  userPreviousBet,
                                                  setUserPreviousBet,
-                                                 axisMode,
                                                  onDragging,
                                                  onShowConfirmButton,
                                                  betsFetched,
@@ -43,7 +41,6 @@ const GraphModes: React.FC<GraphModesProps> = ({
         previousBetEnd={previousBetEnd}
         userPreviousBet={userPreviousBet}
         setUserPreviousBet={setUserPreviousBet}
-        axisMode={axisMode}
         onDragging={onDragging}
         onShowConfirmButton={onShowConfirmButton}
         betAmount={betAmount}
