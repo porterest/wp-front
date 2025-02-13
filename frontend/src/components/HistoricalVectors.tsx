@@ -161,7 +161,8 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
 // Вычисляем nextPoint как текущая точка плюс newOffset
       const nextPoint = new THREE.Vector3(horizontal.x, horizontal.y, currentPoint.z + delta);
 // Направление — нормализованный newOffset (по всем осям)
-      const direction = nextPoint.clone().normalize();
+      const direction = nextPoint.clone().sub(currentPoint).normalize();
+
 
 
       console.log(
