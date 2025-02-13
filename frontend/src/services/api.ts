@@ -225,7 +225,7 @@ export async function fetchLastVectors(pairId: string, count: number): Promise<A
 
 export async function getUserBetResult(): Promise<BetResult> {
     try {
-        const response = await fetch("/result_bet");
+        const response = await fetch("/user/result_bet");
         if (!response.ok) {
             throw new Error("Failed to fetch bet result");
         }
