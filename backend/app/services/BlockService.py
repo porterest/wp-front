@@ -15,6 +15,7 @@ from domain.dto.bet import CreateBetDTO, UpdateBetDTO
 from domain.dto.block import UpdateBlockDTO, CreateBlockDTO
 from domain.enums import BetStatus
 from domain.enums.block_status import BlockStatus
+from domain.metaholder.requests.bet import PlaceBetRequest
 from domain.models.block import Block
 from domain.models.reward_model import Rewards
 from infrastructure.db.repositories.exceptions import NotFoundException as RepositoryNotFoundException
@@ -105,7 +106,6 @@ class BlockService(BlockServiceInterface):
         await self.block_repository.update(block_id, update_block)
 
     async def process_completed_block(self, block: Block, rewards: Rewards, new_block_id: UUID) -> None:
-        chain = await self.chain_repository.get(block.chain_id)
         rewards_by_user_id = {
             reward.user_id: reward.reward for reward in rewards.user_rewards
         }
@@ -118,19 +118,18 @@ class BlockService(BlockServiceInterface):
                 status=BetStatus.RESOLVED
             )
             await self.bet_repository.update(obj_id=bet.id, obj=update_dto)
+            # NEWBET
+            await self.user_repository.fund_user(user_id=bet.user_id, amount=bet.amount + rewards_by_user_id[bet.user_id])
 
             new_bet_amount = bet.amount + rewards_by_user_id[bet.user_id]
             if new_bet_amount > 0:
-                new_bet = CreateBetDTO(
-                    user_id=bet.user_id,
-                    pair_id=chain.pair_id,
+                new_bet = PlaceBetRequest(
+                    pair_id=bet.pair.id,
                     amount=new_bet_amount,
-                    block_id=new_block_id,
-                    vector=bet.vector,
-                    status=BetStatus.PENDING
+                    predicted_vector=bet.vector,
                 )
                 logger.info(f'Повторная ставка: {new_bet}')
-                await self.bet_repository.create(new_bet)
+                await self.bet_service.create_bet(create_dto=new_bet, user_id=bet.user_id)
             else:
                 logger.error(f"Somehow new_bet_amount <= 0 for {bet.id}")
 
