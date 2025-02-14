@@ -13,12 +13,12 @@ class ChainServiceInterface(ABC):
         """
         ...
 
-    @abstractmethod
-    async def get_current_block_state(self, pair_id: UUID) -> BlockStateResponse:
-        """
-        Возвращает текущее состояние текущего блока, включая таймер для фронта.
-        """
-        ...
+    # @abstractmethod
+    # async def get_current_block_state(self, pair_id: UUID) -> BlockStateResponse:
+    #     """
+    #     Возвращает текущее состояние текущего блока, включая таймер для фронта.
+    #     """
+    #     ...
 
     @abstractmethod
     async def stop_block_generation(self) -> None:
