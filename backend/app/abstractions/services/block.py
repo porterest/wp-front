@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from uuid import UUID
 
+from domain.metaholder.responses.block_state import BlockStateResponse
 from domain.models.block import Block
 from domain.models.reward_model import Rewards
 
@@ -65,3 +66,8 @@ class BlockServiceInterface(ABC):
         Обрабатывает последний блок, если он имеет статус `INTERRUPTED`.
         """
         ...
+
+    @abstractmethod
+    async def get_current_block_state(self, pair_id: UUID) -> BlockStateResponse:
+        ...
+

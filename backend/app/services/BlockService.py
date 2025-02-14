@@ -141,9 +141,9 @@ class BlockService(BlockServiceInterface):
             raise NotFoundException(f"Block with ID {block_id} not found")
         return block
 
-    async def get_current_block_state(self) -> BlockStateResponse:
+    async def get_current_block_state(self, pair_id: UUID) -> BlockStateResponse:
         try:
-            block = await self.block_repository.get_current_block_state()
+            block = await self.block_repository.get_current_block_state(pair_id)
         except RepositoryNotFoundException:
             raise NotFoundException(f"Current block not found")
         return block
