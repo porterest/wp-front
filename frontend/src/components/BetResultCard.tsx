@@ -88,12 +88,16 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
                 <strong>Date:</strong>{" "}
                 {new Date(betResult.created_at).toLocaleString()}
               </p>
-              <p>
-                <strong>Accuracy:</strong> {betResult.accuracy}
-              </p>
-              <p>
-                <strong>Reward:</strong> {betResult.reward}
-              </p>
+              {betResult.accuracy !== null && betResult.accuracy !== undefined && (
+                <p>
+                  <strong>Accuracy:</strong> {betResult.accuracy}
+                </p>
+              )}
+              {betResult.reward !== null && betResult.reward !== undefined && (
+                <p>
+                  <strong>Reward:</strong> {betResult.reward}
+                </p>
+              )}
             </div>
           )}
         </div>
