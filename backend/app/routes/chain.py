@@ -4,7 +4,6 @@ from fastapi import APIRouter, HTTPException
 
 from dependencies.repositories.chain import get_chain_repository
 from dependencies.services.block import get_block_service
-from dependencies.services.chain import get_chain_service
 from domain.metaholder.responses.block_state import BlockStateResponse
 from services.exceptions import NotFoundException
 

@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+from fastapi import HTTPException
+
 from abstractions.repositories.bet import BetRepositoryInterface
 from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.repositories.chain import ChainRepositoryInterface
@@ -20,7 +22,7 @@ from domain.metaholder.responses.block_state import BlockStateResponse
 from domain.models.block import Block
 from domain.models.reward_model import Rewards
 from infrastructure.db.repositories.exceptions import NotFoundException as RepositoryNotFoundException
-from services.exceptions import NotFoundException
+from services.exceptions import NotFoundException, NotEnoughMoney
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +132,13 @@ class BlockService(BlockServiceInterface):
                     predicted_vector=bet.vector,
                 )
                 logger.info(f'Повторная ставка: {new_bet}')
-                await self.bet_service.create_bet(create_dto=new_bet, user_id=bet.user_id)
+                try:
+                    await self.bet_service.create_bet(create_dto=new_bet, user_id=bet.user_id)
+                except NotEnoughMoney:
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"No money bro",
+                    )
             else:
                 logger.error(f"Somehow new_bet_amount <= 0 for {bet.id}")
 

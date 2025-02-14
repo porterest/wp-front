@@ -20,3 +20,6 @@ class NoBlocksFoundException(Exception):
 
 class StopPairProcessingException(Exception):
     ...
+
+class NotEnoughMoney(Exception):
+    ...

@@ -12,6 +12,7 @@ from domain.dto.user import UpdateUserDTO
 from domain.enums import BetStatus
 from domain.metaholder.requests.bet import PlaceBetRequest
 from infrastructure.db.entities import Bet
+from services.exceptions import NotEnoughMoney
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,9 @@ class BetService(BetServiceInterface):
         bet_amount = deposit * trend_attack
         logger.info("bet_amount")
         logger.info(bet_amount)
+        if deposit < bet_amount:
+            raise NotEnoughMoney
+
         dto = CreateBetDTO(
             user_id=user_id,
             pair_id=create_dto.pair_id,
