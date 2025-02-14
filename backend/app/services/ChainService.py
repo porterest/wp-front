@@ -11,7 +11,6 @@ from pytoniq_core import Address
 from abstractions.repositories.chain import ChainRepositoryInterface
 from abstractions.repositories.pair import PairRepositoryInterface
 from abstractions.services.app_wallet import AppWalletServiceInterface
-from abstractions.services.bet import BetServiceInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.chain import ChainServiceInterface
 from abstractions.services.deposit import DepositServiceInterface
@@ -45,7 +44,6 @@ class ChainService(
     block_service: BlockServiceInterface
     chain_repository: ChainRepositoryInterface
     pair_repository: PairRepositoryInterface
-    bet_service: BetServiceInterface
     orchestrator_service: OrchestratorServiceInterface
     deposit_service: DepositServiceInterface
     liquidity_manager: LiquidityManagerInterface
