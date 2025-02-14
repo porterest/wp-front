@@ -19,6 +19,6 @@ services:
       - "8000:8080"
 
 
-include:
+#include:
 #  - ./database/db-compose.yaml
-  - ./vault/vault-compose.yaml
+#  - ./vault/vault-compose.yaml
