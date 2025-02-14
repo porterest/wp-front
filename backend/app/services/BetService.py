@@ -33,7 +33,7 @@ class BetService(BetServiceInterface):
         deposit = user.balance
         logger.info("deposit")
         logger.info(deposit)
-        trend_attack = abs(current_price - create_dto.predicted_vector[0]) / 100 #current_price *
+        trend_attack = abs(current_price - create_dto.predicted_vector[0]) / current_price
         logger.info("current_price")
         logger.info(current_price)
         logger.info("create_dto.predicted_vector[0]")
