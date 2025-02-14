@@ -4,6 +4,7 @@ from uuid import UUID
 
 from abstractions.repositories import CRUDRepositoryInterface
 from domain.dto.block import CreateBlockDTO, UpdateBlockDTO
+from domain.metaholder.responses.block_state import BlockStateResponse
 from domain.models.block import Block
 
 
@@ -40,3 +41,8 @@ class BlockRepositoryInterface(
     @abstractmethod
     async def get_last_block_by_contract_address(self, contract_address: str) -> Optional[Block]:
         ...
+
+    @abstractmethod
+    async def get_current_block_state(self, pair_id: UUID) -> BlockStateResponse:
+        ...
+

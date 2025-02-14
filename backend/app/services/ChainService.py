@@ -22,13 +22,12 @@ from abstractions.services.tonclient import TonClientInterface
 from domain.dto.chain import CreateChainDTO, UpdateChainDTO
 from domain.enums.chain_status import ChainStatus
 from domain.enums.liquidity_action import LiquidityActionType
-from domain.metaholder.responses.block_state import BlockStateResponse
 from domain.models.block import Block
 from domain.models.chain import Chain
 from domain.models.reward_model import Rewards
 from infrastructure.db.entities import BlockStatus
 from services import SingletonMeta
-from services.exceptions import NotFoundException, StopPairProcessingException
+from services.exceptions import StopPairProcessingException
 from services.ton.client.base import AbstractBaseTonClient
 from settings import InnerTokenSettings
 
@@ -204,24 +203,6 @@ class ChainService(
         current_block = await self.block_service.get_last_block(chain.id)
         await self.block_service.handle_interrupted_block(current_block.id)
 
-    async def get_current_block_state(self, pair_id: UUID) -> BlockStateResponse:
-        """
-        Возвращает текущее состояние блока, включая таймер для фронтенда.
-        """
-        try:
-            last_block = await self.block_service.get_last_block_by_pair_id(pair_id)
-            elapsed_time = (datetime.now() - last_block.created_at).total_seconds()
-            remaining_time = max(0.0, self.block_generation_interval.total_seconds() - elapsed_time)
-
-            return BlockStateResponse(
-                block_id=last_block.id,
-                server_time=str(datetime.now()),
-                current_block=last_block.block_number,
-                remaining_time_in_block=int(remaining_time),
-            )
-
-        except NotFoundException:
-            raise
 
     async def _connect_pool(self):  # disabled
         logger.info('hui')

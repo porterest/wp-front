@@ -11,11 +11,12 @@ from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.bet import BetServiceInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
-from domain.dto.bet import CreateBetDTO, UpdateBetDTO
+from domain.dto.bet import UpdateBetDTO
 from domain.dto.block import UpdateBlockDTO, CreateBlockDTO
 from domain.enums import BetStatus
 from domain.enums.block_status import BlockStatus
 from domain.metaholder.requests.bet import PlaceBetRequest
+from domain.metaholder.responses.block_state import BlockStateResponse
 from domain.models.block import Block
 from domain.models.reward_model import Rewards
 from infrastructure.db.repositories.exceptions import NotFoundException as RepositoryNotFoundException
@@ -139,3 +140,11 @@ class BlockService(BlockServiceInterface):
         except RepositoryNotFoundException:
             raise NotFoundException(f"Block with ID {block_id} not found")
         return block
+
+    async def get_current_block_state(self) -> BlockStateResponse:
+        try:
+            block = await self.block_repository.get_current_block_state()
+        except RepositoryNotFoundException:
+            raise NotFoundException(f"Current block not found")
+        return block
+

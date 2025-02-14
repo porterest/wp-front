@@ -7,7 +7,6 @@ from abstractions.repositories.bet import BetRepositoryInterface
 from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.bet import BetServiceInterface
-from abstractions.services.chain import ChainServiceInterface
 from domain.dto.bet import CreateBetDTO, UpdateBetDTO
 from domain.dto.user import UpdateUserDTO
 from domain.enums import BetStatus
@@ -21,14 +20,12 @@ logger = logging.getLogger(__name__)
 class BetService(BetServiceInterface):
     bet_repository: BetRepositoryInterface
     user_repository: UserRepositoryInterface
-    chain_service: ChainServiceInterface
     block_repository: BlockRepositoryInterface
 
     # NEWBET
     async def create_bet(self, create_dto: PlaceBetRequest, user_id: UUID) -> None:
-        chain = await self.chain_service.get_by_pair_id(create_dto.pair_id)
-        block = await self.block_repository.get_last_completed_block(chain.id)
-        current_block = await self.chain_service.get_current_block_state(pair_id=create_dto.pair_id)
+        block = await self.block_repository.get_last_completed_block_by_pair_id(pair_id=create_dto.pair_id)
+        current_block = await self.block_repository.get_current_block_state(pair_id=create_dto.pair_id)
         user = await self.user_repository.get(user_id)
 
         current_price = block.result_vector[0]
@@ -39,7 +36,7 @@ class BetService(BetServiceInterface):
 
         dto = CreateBetDTO(
             user_id=user_id,
-            pair_id=chain.pair_id,
+            pair_id=create_dto.pair_id,
             amount=bet_amount,
             block_id=current_block.block_id,
             vector=create_dto.predicted_vector,
