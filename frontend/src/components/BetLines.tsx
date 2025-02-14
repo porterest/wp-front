@@ -363,16 +363,14 @@ const BetLines: React.FC<BetLinesProps> = ({
       whiteConeRef.current.position.copy(betPosition);
       whiteConeRef.current.position.z = 1;
       {
+        // При создании белого конуса:
         const defaultDir = new THREE.Vector3(0, 1, 0);
-        let desiredDir: THREE.Vector3;
-        if (isUserBetZero) {
-          desiredDir = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1).normalize();
-        } else {
-          desiredDir = betPosition.clone().sub(aggregatorClipped).normalize();
-        }
+        const desiredDir = isUserBetZero
+          ? new THREE.Vector3(betPosition.x, betPosition.y, 1).normalize()
+          : betPosition.clone().sub(aggregatorClipped).normalize();
         if (desiredDir.length() > 0) {
           const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
-          whiteConeRef.current.setRotationFromQuaternion(quat);
+          whiteConeRef.current?.setRotationFromQuaternion(quat);
         }
       }
     }

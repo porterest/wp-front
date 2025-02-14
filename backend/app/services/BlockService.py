@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+from fastapi import HTTPException
+
 from abstractions.repositories.bet import BetRepositoryInterface
 from abstractions.repositories.block import BlockRepositoryInterface
 from abstractions.repositories.chain import ChainRepositoryInterface
@@ -11,14 +13,16 @@ from abstractions.repositories.user import UserRepositoryInterface
 from abstractions.services.bet import BetServiceInterface
 from abstractions.services.block import BlockServiceInterface
 from abstractions.services.math.aggregate_bets import AggregateBetsServiceInterface
-from domain.dto.bet import CreateBetDTO, UpdateBetDTO
+from domain.dto.bet import UpdateBetDTO
 from domain.dto.block import UpdateBlockDTO, CreateBlockDTO
 from domain.enums import BetStatus
 from domain.enums.block_status import BlockStatus
+from domain.metaholder.requests.bet import PlaceBetRequest
+from domain.metaholder.responses.block_state import BlockStateResponse
 from domain.models.block import Block
 from domain.models.reward_model import Rewards
 from infrastructure.db.repositories.exceptions import NotFoundException as RepositoryNotFoundException
-from services.exceptions import NotFoundException
+from services.exceptions import NotFoundException, NotEnoughMoney
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +109,6 @@ class BlockService(BlockServiceInterface):
         await self.block_repository.update(block_id, update_block)
 
     async def process_completed_block(self, block: Block, rewards: Rewards, new_block_id: UUID) -> None:
-        chain = await self.chain_repository.get(block.chain_id)
         rewards_by_user_id = {
             reward.user_id: reward.reward for reward in rewards.user_rewards
         }
@@ -118,19 +121,24 @@ class BlockService(BlockServiceInterface):
                 status=BetStatus.RESOLVED
             )
             await self.bet_repository.update(obj_id=bet.id, obj=update_dto)
+            # NEWBET
+            await self.user_repository.fund_user(user_id=bet.user_id, amount=bet.amount + rewards_by_user_id[bet.user_id])
 
             new_bet_amount = bet.amount + rewards_by_user_id[bet.user_id]
             if new_bet_amount > 0:
-                new_bet = CreateBetDTO(
-                    user_id=bet.user_id,
-                    pair_id=chain.pair_id,
+                new_bet = PlaceBetRequest(
+                    pair_id=bet.pair.id,
                     amount=new_bet_amount,
-                    block_id=new_block_id,
-                    vector=bet.vector,
-                    status=BetStatus.PENDING
+                    predicted_vector=bet.vector,
                 )
                 logger.info(f'Повторная ставка: {new_bet}')
-                await self.bet_repository.create(new_bet)
+                try:
+                    await self.bet_service.create_bet(create_dto=new_bet, user_id=bet.user_id)
+                except NotEnoughMoney:
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"No money bro",
+                    )
             else:
                 logger.error(f"Somehow new_bet_amount <= 0 for {bet.id}")
 
@@ -140,3 +148,11 @@ class BlockService(BlockServiceInterface):
         except RepositoryNotFoundException:
             raise NotFoundException(f"Block with ID {block_id} not found")
         return block
+
+    async def get_current_block_state(self, pair_id: UUID) -> BlockStateResponse:
+        try:
+            block = await self.block_repository.get_current_block_state(pair_id)
+        except RepositoryNotFoundException:
+            raise NotFoundException(f"Current block not found")
+        return block
+

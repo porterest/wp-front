@@ -42,6 +42,7 @@ pf:
 		echo "Pushing to HEAD $(HEAD_BRANCH)..."; \
 		git pull origin $(HEAD_BRANCH); \
 	fi
+
 p:
 	git add ./
 	git commit -m "meow (all)"
@@ -52,7 +53,6 @@ p:
 		echo "Pushing to HEAD $(HEAD_BRANCH)..."; \
 		git pull origin $(HEAD_BRANCH); \
 	fi
-	git push origin main
 
 pv:
 	git add backend/vault
@@ -68,7 +68,6 @@ deploy-b:
 		echo "Pulling current branch $(HEAD_BRANCH)..."; \
 		git pull origin $(HEAD_BRANCH); \
 	fi
-	git pull origin main
 	docker compose up --build -d app
 
 deploy-f:
@@ -80,7 +79,6 @@ deploy-f:
 		echo "Pulling current branch $(HEAD_BRANCH)..."; \
 		git pull origin $(HEAD_BRANCH); \
 	fi
-	git pull origin main
 	docker compose up --build -d frontend
 
 deploy-nginx:
@@ -93,6 +91,7 @@ deploy-nginx:
 		git pull origin $(HEAD_BRANCH); \
 	fi
 	docker compose up --build -d nginx
+
 deploy-v:
 	docker compose stop vault
 	git pull origin main

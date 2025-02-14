@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 
 from dependencies.repositories.chain import get_chain_repository
-from dependencies.services.chain import get_chain_service
+from dependencies.services.block import get_block_service
 from domain.metaholder.responses.block_state import BlockStateResponse
 from services.exceptions import NotFoundException
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 @router.get('/time')
 async def get_time(
 ) -> BlockStateResponse:
-    service = get_chain_service()
+    service = get_block_service()
     repository = get_chain_repository()
     # todo: может стоит сделать TimeResponse как часть метахолдера?
     #  ну хз как будто уже пиздец бойлерплейт,

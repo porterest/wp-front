@@ -1,18 +1,20 @@
 import logging
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select, desc, and_
-
 from abstractions.repositories.block import BlockRepositoryInterface
 from domain.dto.block import CreateBlockDTO, UpdateBlockDTO
 from domain.enums.block_status import BlockStatus
+from domain.metaholder.responses.block_state import BlockStateResponse
 from domain.models.bet import Bet as BetModel
 from domain.models.block import Block as BlockModel
 from domain.models.pair import Pair as PairModel
 from infrastructure.db.entities import Block, Pair, Chain
 from infrastructure.db.repositories.AbstractRepository import AbstractSQLAlchemyRepository
+from infrastructure.db.repositories.exceptions import NotFoundException
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,8 @@ class BlockRepository(
             'bets': ['pair']
         }
     )
+    block_generation_interval: timedelta = timedelta(minutes=10)
+
 
     async def get_last_block_by_contract_address(self, contract_address: str) -> Optional[Block]:
         async with self.session_maker() as session:
@@ -161,28 +165,23 @@ class BlockRepository(
                 .where(Pair.id == pair_id)
             )).scalars().one()
 
-            logger.info("ебаная пара")
-            logger.info(pair)
-
             chain = (await session.execute(
                 select(Chain)
                 .where(Chain.pair_id == pair.id)
             )).scalars().one()
 
-            logger.info("ебаный чейн")
-            logger.info(chain)
-
             res = await session.execute(
                 select(self.entity)
-                .where(self.entity.chain_id == chain.id, self.entity.status == 'COMPLETED')
+                .where(
+                    self.entity.chain_id == chain.id,
+                    self.entity.status == 'COMPLETED',
+                )
                 .order_by(desc(self.entity.created_at, ))
                 .limit(1)
                 .options(*self.options),
             )
 
             block = res.unique().scalars().one_or_none()
-            logger.info('ебаный блок')
-            logger.info(block)
 
         return self.entity_to_model(block) if block else None
 
@@ -226,3 +225,21 @@ class BlockRepository(
             completed_at=entity.completed_at,
             updated_at=entity.updated_at,
         )
+
+    async def get_current_block_state(self, pair_id: UUID) -> BlockStateResponse:
+        """
+        Возвращает текущее состояние блока, включая таймер для фронтенда.
+        """
+        last_block = await self.get_last_block_by_pair_id(pair_id)
+        if not last_block:
+            raise NotFoundException
+        elapsed_time = (datetime.now() - last_block.created_at).total_seconds()
+        remaining_time = max(0.0, self.block_generation_interval.total_seconds() - elapsed_time)
+
+        return BlockStateResponse(
+            block_id=last_block.id,
+            server_time=str(datetime.now()),
+            current_block=last_block.block_number,
+            remaining_time_in_block=int(remaining_time),
+        )
+

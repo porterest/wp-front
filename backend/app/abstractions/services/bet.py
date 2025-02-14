@@ -3,13 +3,14 @@ from typing import Optional
 from uuid import UUID
 
 from domain.dto.bet import CreateBetDTO
+from domain.metaholder.requests.bet import PlaceBetRequest
 from domain.metaholder.responses import BetResponse
 from infrastructure.db.entities import Bet
 
 
 class BetServiceInterface(ABC):
     @abstractmethod
-    async def create_bet(self, create_dto: CreateBetDTO) -> None:
+    async def create_bet(self, create_dto: PlaceBetRequest, user_id: UUID) -> None:  # NEWBET
         """
         Создаёт новую ставку.
         """
