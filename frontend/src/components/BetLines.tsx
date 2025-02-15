@@ -290,7 +290,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       new THREE.MeshStandardMaterial({ color: "white" })
     );
     {
-      const defaultDir = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1);
+      const defaultDir = new THREE.Vector3(0, 1, 0);
       let desiredDir: THREE.Vector3;
       if (isUserBetZero) {
         desiredDir = new THREE.Vector3(betPosition.x, betPosition.y, 1).normalize();
@@ -337,15 +337,14 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (!visible) return;
     if (yellowLineRef.current?.geometry) {
       const geom = yellowLineRef.current.geometry as LineGeometry;
-      geom.setPositions([
+      const positions = [
         0, 0, 0,
         aggregatorClipped.x,
         aggregatorClipped.y,
         1
-      ]);
-      geom.computeBoundingSphere?.();
-      console.log("Логируем координаты линии:");
-      console.log(geom.attributes.position.array);
+      ];
+      console.log("Задаваемые позиции:", positions);
+      geom.setPositions(positions);
 
     }
     if (yellowConeRef.current) {
