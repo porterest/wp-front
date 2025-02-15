@@ -460,7 +460,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       newPos = aggregatorClipped.clone().add(direction);
     }
 
-
     // Ограничиваем длину вектора, если он превышает maxWhiteLength
     const finalDir = newPos.clone().sub(aggregatorClipped);
     if (finalDir.length() > maxWhiteLength) {
@@ -485,8 +484,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     handleDrag,
     setBetAmount
   ]);
-
-
 
   const handlePointerUp = useCallback(() => {
     console.log("[BetLines] handlePointerUp");
