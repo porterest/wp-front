@@ -446,15 +446,20 @@ const BetLines: React.FC<BetLinesProps> = ({
     // Вычисляем новое положение: direction = intersect - aggregatorClipped
     const direction = intersect.clone().sub(aggregatorClipped);
     // Просто вычисляем новое положение: начало - aggregatorClipped, плюс направление
-    let newPos = betPosition ? betPosition.clone() : new THREE.Vector3();
 
+    let newPos = betPosition ? betPosition.clone() : aggregatorClipped.clone();
     if (axisMode === "X") {
-      newPos.x = aggregatorClipped.x + direction.x;
-    } else if (axisMode === "Y") {
+      // Фиксируем X, обновляем Y по указателю:
+      newPos.x = aggregatorClipped.x;
       newPos.y = aggregatorClipped.y + direction.y;
+    } else if (axisMode === "Y") {
+      // Фиксируем Y, обновляем X по указателю:
+      newPos.y = aggregatorClipped.y;
+      newPos.x = aggregatorClipped.x + direction.x;
     } else {
       newPos = aggregatorClipped.clone().add(direction);
     }
+
 
     // Ограничиваем длину вектора, если он превышает maxWhiteLength
     const finalDir = newPos.clone().sub(aggregatorClipped);
