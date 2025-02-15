@@ -195,8 +195,9 @@ const BetLines: React.FC<BetLinesProps> = ({
       aggregatorClipped.y,
       1
     ]);
-    console.log("aggregatorClipped.x,aggregatorClipped.y,1");
-    console.log(yGeom);
+    console.log("создание желтой линии");
+    console.log(yGeom.attributes.position.array);
+
     const yMat = new LineMaterial({
       color: "yellow",
       linewidth: 3,
@@ -343,8 +344,9 @@ const BetLines: React.FC<BetLinesProps> = ({
         1
       ]);
       geom.computeBoundingSphere?.();
-      console.log("обновление позиции");
-      console.log(geom);
+      console.log("Логируем координаты линии:");
+      console.log(geom.attributes.position.array);
+
     }
     if (yellowConeRef.current) {
       yellowConeRef.current.position.copy(aggregatorClipped);
