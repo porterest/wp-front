@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+from itertools import count
 from uuid import UUID
 
 from abstractions.repositories.block import BlockRepositoryInterface
@@ -38,7 +39,7 @@ class AggregateBetsService(AggregateBetsServiceInterface):
             logger.info(aggregate_y)
 
         if total_weight > 0:
-            aggregate_x /= total_weight
+            aggregate_x /= total_weight* count(block.bets)
             aggregate_y /= total_weight
             logger.info(aggregate_x)
             logger.info("aggregate_x")

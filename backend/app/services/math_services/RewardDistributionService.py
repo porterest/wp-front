@@ -1,5 +1,5 @@
+import logging
 from dataclasses import dataclass
-from uuid import UUID
 
 from abstractions.repositories.bet import BetRepositoryInterface
 from abstractions.services.math.reward_distribution import RewardDistributionServiceInterface
@@ -7,6 +7,8 @@ from domain.dto.bet import UpdateBetDTO
 from domain.models.prediction import Prediction
 from domain.models.reward_model import Rewards
 from domain.models.user_reward import UserReward
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -36,6 +38,7 @@ class RewardDistributionService(RewardDistributionServiceInterface):
         user_accuracies = {}
 
         for user_prediction in prediction.user_predictions:
+            logger.info(f"up: {user_prediction}")
             price_accuracy = self._calculate_accuracy_coefficient(
                 user_prediction.predicted_price_change, prediction.actual_price_change
             )
@@ -45,6 +48,7 @@ class RewardDistributionService(RewardDistributionServiceInterface):
             accuracy = (price_accuracy + tx_accuracy) / 2
             user_accuracies[user_prediction.user_id] = accuracy
             total_accuracy += accuracy * user_prediction.stake
+            logger.info(f"up stats: accuracy {accuracy} (price: {price_accuracy} tx: {tx_accuracy})")
 
         if total_accuracy == 0:
             return Rewards(
@@ -76,6 +80,3 @@ class RewardDistributionService(RewardDistributionServiceInterface):
                 accuracy=reward.accuracy
             )
             await self.bet_repository.update(obj_id=bet.id, obj=update_bet)
-
-
-
