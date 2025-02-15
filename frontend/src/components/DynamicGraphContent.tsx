@@ -17,6 +17,7 @@ interface DynamicGraphContentProps {
   ) => void;
   betAmount: number;
   setBetAmount: (newAmount: number) => void;
+  axisMode: "X" | "Y";
   betsFetched: boolean;
 }
 
@@ -29,6 +30,7 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
                                                                    onDragging,
                                                                    onShowConfirmButton,
                                                                    betAmount,
+                                                                   axisMode,
                                                                    setBetAmount,
                                                                    betsFetched,
                                                                  }) => {
@@ -50,6 +52,7 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
         onShowConfirmButton={onShowConfirmButton}
         betAmount={betAmount}
         setBetAmount={setBetAmount}
+        axisMode={axisMode}
         visitable={true}
       />
     );
@@ -68,6 +71,7 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
           onShowConfirmButton={onShowConfirmButton}
           betAmount={betAmount}
           setBetAmount={setBetAmount}
+          axisMode={axisMode}
           visitable={true}
         />
       </>

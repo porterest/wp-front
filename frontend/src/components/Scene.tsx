@@ -42,6 +42,7 @@ const Scene: React.FC<SceneProps> = ({
                                        onShowConfirmButton,
                                        currentMode,
                                        betsFetched,
+                                       axisMode,
                                        historicalVectors,
                                      }) => {
   console.log("Rendering Scene with historicalVectors:", historicalVectors);
@@ -66,6 +67,7 @@ const Scene: React.FC<SceneProps> = ({
           setUserPreviousBet={setUserPreviousBet}
           onDragging={onDragging}
           onShowConfirmButton={onShowConfirmButton}
+          axisMode={axisMode}
           betsFetched={betsFetched}
         />
         {historicalVectors && historicalVectors.length > 0 && (

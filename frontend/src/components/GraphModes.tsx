@@ -16,6 +16,7 @@ interface GraphModesProps {
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
+  axisMode: "X" | "Y";
   betsFetched: boolean;
 }
 
@@ -27,6 +28,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
                                                  setUserPreviousBet,
                                                  onDragging,
                                                  onShowConfirmButton,
+                                                 axisMode,
                                                  betsFetched,
                                                }) => {
   // State for bet amount preserved across mode switches
@@ -45,6 +47,7 @@ const GraphModes: React.FC<GraphModesProps> = ({
         onShowConfirmButton={onShowConfirmButton}
         betAmount={betAmount}
         setBetAmount={setBetAmount}
+        axisMode={axisMode}
         betsFetched={betsFetched}
       />
     </>

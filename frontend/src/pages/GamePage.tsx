@@ -310,6 +310,7 @@ const GamePage: React.FC = () => {
               console.log("onShowConfirmButton called with:", show, betData);
               handleShowConfirmButton(show, betData);
             }}
+            axisMode={axisMode}
             betsFetched={betsFetched}
           />
         </Scene>

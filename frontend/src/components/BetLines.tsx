@@ -24,6 +24,7 @@ interface BetLinesProps {
   maxWhiteLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
   setBetAmount: (newAmount: number) => void;
+  axisMode: "X" | "Y";
   visible: boolean;
 }
 
@@ -42,6 +43,7 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              maxWhiteLength,
                                              handleDrag,
                                              setBetAmount,
+                                             axisMode,
                                              visible,
                                            }) => {
   const { gl, camera } = useThree();
@@ -437,7 +439,15 @@ const BetLines: React.FC<BetLinesProps> = ({
     // Вычисляем новое положение: direction = intersect - aggregatorClipped
     const direction = intersect.clone().sub(aggregatorClipped);
     // Просто вычисляем новое положение: начало - aggregatorClipped, плюс направление
-    let newPos = aggregatorClipped.clone().add(direction);
+    let newPos = betPosition ? betPosition.clone() : new THREE.Vector3();
+
+    if (axisMode === "X") {
+      newPos.x = aggregatorClipped.x + direction.x;
+    } else if (axisMode === "Y") {
+      newPos.y = aggregatorClipped.y + direction.y;
+    } else {
+      newPos = aggregatorClipped.clone().add(direction);
+    }
 
     // Ограничиваем длину вектора, если он превышает maxWhiteLength
     const finalDir = newPos.clone().sub(aggregatorClipped);

@@ -16,6 +16,7 @@ interface BetArrowProps {
   betAmount: number;
   setBetAmount: (amount: number) => void;
   showArrows?: boolean;
+  axisMode: "X" | "Y";
   visitable?: boolean;
 }
 
@@ -28,6 +29,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
                                              betAmount,
                                              setBetAmount,
                                              showArrows = true, // по умолчанию стрелки отображаются
+                                             axisMode,
                                              visitable = false,
                                            }) => {
   // Если стрелки не нужно отображать, сразу возвращаем null.
@@ -100,6 +102,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         maxWhiteLength={maxArrowLength}
         handleDrag={handleDrag}
         setBetAmount={setBetAmount}
+        axisMode={axisMode}
         visible={visitable}
       />
 
