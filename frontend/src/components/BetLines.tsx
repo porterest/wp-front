@@ -429,13 +429,11 @@ const BetLines: React.FC<BetLinesProps> = ({
     );
     raycaster.current.setFromCamera(mouse, camera);
 
-    if (betPosition) {
-      // Обновляем плоскость, исходя из направления камеры
-      plane.current.setFromNormalAndCoplanarPoint(
-        camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
-        betPosition
-      );
-    }
+    // Обновляем плоскость на основе текущего направления камеры
+    plane.current.setFromNormalAndCoplanarPoint(
+      camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
+      aggregatorClipped
+    );
 
     const intersect = new THREE.Vector3();
     const intersectExists = raycaster.current.ray.intersectPlane(plane.current, intersect);
@@ -447,23 +445,17 @@ const BetLines: React.FC<BetLinesProps> = ({
 
     // Вычисляем новое положение: direction = intersect - aggregatorClipped
     const direction = intersect.clone().sub(aggregatorClipped);
-    // Просто вычисляем новое положение: начало - aggregatorClipped, плюс направление
+    let newPos = betPosition ? betPosition.clone() : new THREE.Vector3();
 
-    let newPos = betPosition ? betPosition.clone() : aggregatorClipped.clone();
     if (axisMode === "X") {
-      // Фиксируем X (оставляем прежнее значение) и обновляем только Y:
-      newPos.x = aggregatorClipped.x;
-      newPos.y = aggregatorClipped.y + direction.y;
-    } else if (axisMode === "Y") {
-      // Фиксируем Y (оставляем прежнее значение) и обновляем только X:
-      newPos.y = aggregatorClipped.y;
       newPos.x = aggregatorClipped.x + direction.x;
+    } else if (axisMode === "Y") {
+      newPos.y = aggregatorClipped.y + direction.y;
     } else {
       newPos = aggregatorClipped.clone().add(direction);
     }
 
-
-    // Ограничиваем длину вектора, если он превышает maxWhiteLength
+    // Ограничиваем длину вектора, если он больше maxWhiteLength
     const finalDir = newPos.clone().sub(aggregatorClipped);
     if (finalDir.length() > maxWhiteLength) {
       finalDir.setLength(maxWhiteLength);
@@ -479,9 +471,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     isDragging,
     aggregatorClipped,
     betPosition,
+    axisMode,
     camera,
     gl.domElement,
-    axisMode,
     maxWhiteLength,
     userBalance,
     handleDrag,
@@ -491,6 +483,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const handlePointerUp = useCallback(() => {
     console.log("[BetLines] handlePointerUp");
     if (!isDragging) return;
+    console.log("[BetLines] handlePointerUp");
     setIsDragging(false);
     onDragging(false);
 
