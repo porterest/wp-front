@@ -467,11 +467,14 @@ const BetLines: React.FC<BetLinesProps> = ({
     betPosition,
     camera,
     gl.domElement,
+    axisMode,
     maxWhiteLength,
     userBalance,
     handleDrag,
     setBetAmount
   ]);
+
+
 
   const handlePointerUp = useCallback(() => {
     console.log("[BetLines] handlePointerUp");
