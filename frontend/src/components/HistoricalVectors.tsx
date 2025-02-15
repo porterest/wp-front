@@ -41,16 +41,21 @@ interface ArrowProps {
 }
 
 const Arrow: React.FC<ArrowProps> = ({
-                                       start,
-                                       end,
-                                       direction,
-                                       color = "yellow",
-                                       coneScale = 1,
-                                     }) => {
+  start,
+  end,
+  direction,
+  color = "yellow",
+  coneScale = 1,
+}) => {
   // Создаем геометрию линии от "начала вектора" до "конца вектора"
   const lineGeometry = useMemo(() => {
     const geometry = new LineGeometry();
-    console.log("Координаты линии: начало вектора", start.toArray(), "конец вектора", end.toArray());
+    console.log(
+      "Координаты линии: начало вектора",
+      start.toArray(),
+      "конец вектора",
+      end.toArray(),
+    );
     geometry.setPositions([start.x, start.y, start.z, end.x, end.y, end.z]);
     return geometry;
   }, [start, end]);
@@ -67,7 +72,6 @@ const Arrow: React.FC<ArrowProps> = ({
     });
   }, [color]);
 
-
   const coneQuaternion = useMemo(() => {
     const defaultDir = new THREE.Vector3(0, 1, 0); // по умолчанию конус смотрит вверх
     console.log("Направление стрелки:", direction.toArray());
@@ -81,28 +85,29 @@ const Arrow: React.FC<ArrowProps> = ({
       <mesh position={end} quaternion={coneQuaternion}>
         <coneGeometry args={[0.1 * coneScale, 0.3 * coneScale, 12]} />
 
-        <meshStandardMaterial color={color} />
+        <meshStandardMaterial color={color} transparent opacity={0.5} />
       </mesh>
     </group>
   );
 };
 
 const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
-                                                               vectors,
-                                                               start,
-                                                               totalTime = 5,
-                                                               color = "yellow",
-                                                             }) => {
+  vectors,
+  start,
+  totalTime = 5,
+  color = "yellow",
+}) => {
   console.log("vectors");
   console.log(vectors);
   const count = vectors.length;
   const delta = count > 1 ? totalTime / (count - 1) : 0;
-  const computedConeScale = count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
+  const computedConeScale =
+    count > 1 ? Math.max(0.3, Math.sqrt(5 / (count - 1))) : 1;
 
-  const minValueX = Math.min(...vectors.map(x => x[0]));
-  const maxValueX = Math.max(...vectors.map(x => x[0]));
-  const minValueY = Math.min(...vectors.map(x => x[1]));
-  const maxValueY = Math.max(...vectors.map(x => x[1]));
+  const minValueX = Math.min(...vectors.map((x) => x[0]));
+  const maxValueX = Math.max(...vectors.map((x) => x[0]));
+  const minValueY = Math.min(...vectors.map((x) => x[1]));
+  const maxValueY = Math.max(...vectors.map((x) => x[1]));
 
   const minX = 0;
   const maxX = 5;
@@ -121,7 +126,6 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
     return ((y - minValueY) / range) * (maxY - minY) + minY;
   };
 
-
   const normalizeArrow = (arrow: [number, number]) => {
     const newX = normalizeX(arrow[0]);
     const newY = normalizeY(arrow[1]);
@@ -129,24 +133,34 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
   };
 
   const arrowChain = useMemo(() => {
-    const chain: { start: THREE.Vector3; end: THREE.Vector3; direction: THREE.Vector3 }[] = [];
+    const chain: {
+      start: THREE.Vector3;
+      end: THREE.Vector3;
+      direction: THREE.Vector3;
+    }[] = [];
     let currentPoint = start ? start.clone() : new THREE.Vector3(0, 0, 1);
     console.log("Начало цепочки (начало вектора):", currentPoint.toArray());
-
 
     for (let i = 0; i < count; i++) {
       console.log(`Входной вектор ${i}: [${vectors[i][0]}, ${vectors[i][1]}]`);
       const newArrow = normalizeArrow(vectors[i]);
       const horizontal = new THREE.Vector2(newArrow[1], newArrow[0]);
-      const nextPoint = new THREE.Vector3(horizontal.x, horizontal.y, currentPoint.z + delta);
+      const nextPoint = new THREE.Vector3(
+        horizontal.x,
+        horizontal.y,
+        currentPoint.z + delta,
+      );
       const direction = nextPoint.clone().sub(currentPoint).normalize();
 
-
-
       console.log(
-        `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`
-    );
-      console.log("координаты вектора", currentPoint.toArray(), nextPoint.toArray(), direction.toArray());
+        `Вектор ${i}: начало: ${currentPoint.toArray()}, конец: ${nextPoint.toArray()}`,
+      );
+      console.log(
+        "координаты вектора",
+        currentPoint.toArray(),
+        nextPoint.toArray(),
+        direction.toArray(),
+      );
       chain.push({
         start: currentPoint.clone(),
         end: nextPoint.clone(),
@@ -167,7 +181,6 @@ const HistoricalVectors: React.FC<HistoricalVectorsProps> = ({
           direction={arrow.direction}
           color={color}
           coneScale={computedConeScale}
-   
         />
       ))}
     </group>
