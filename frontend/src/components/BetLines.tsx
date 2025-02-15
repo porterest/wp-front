@@ -429,11 +429,13 @@ const BetLines: React.FC<BetLinesProps> = ({
     );
     raycaster.current.setFromCamera(mouse, camera);
 
-    // Обновляем плоскость, исходя из направления камеры
-    plane.current.setFromNormalAndCoplanarPoint(
-      camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
-      aggregatorClipped
-    );
+    if (betPosition) {
+      // Обновляем плоскость, исходя из направления камеры
+      plane.current.setFromNormalAndCoplanarPoint(
+        camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
+        betPosition
+      );
+    }
 
     const intersect = new THREE.Vector3();
     const intersectExists = raycaster.current.ray.intersectPlane(plane.current, intersect);
@@ -447,18 +449,15 @@ const BetLines: React.FC<BetLinesProps> = ({
     const direction = intersect.clone().sub(aggregatorClipped);
     // Просто вычисляем новое положение: начало - aggregatorClipped, плюс направление
 
-    let newPos = betPosition ? betPosition.clone() : aggregatorClipped.clone();
+    let newPos = betPosition ? betPosition.clone() : new THREE.Vector3();
     if (axisMode === "X") {
-      // Фиксируем X, обновляем Y по указателю:
-      newPos.x = aggregatorClipped.x;
-      newPos.y = aggregatorClipped.y + direction.y;
-    } else if (axisMode === "Y") {
-      // Фиксируем Y, обновляем X по указателю:
-      newPos.y = aggregatorClipped.y;
       newPos.x = aggregatorClipped.x + direction.x;
+    } else if (axisMode === "Y") {
+      newPos.y = aggregatorClipped.y + direction.y;
     } else {
       newPos = aggregatorClipped.clone().add(direction);
     }
+
 
     // Ограничиваем длину вектора, если он превышает maxWhiteLength
     const finalDir = newPos.clone().sub(aggregatorClipped);
