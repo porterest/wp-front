@@ -196,7 +196,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       1
     ]);
     console.log("aggregatorClipped.x,aggregatorClipped.y,1");
-    console.log(aggregatorClipped.x, aggregatorClipped.y,);
+    console.log(yGeom);
     const yMat = new LineMaterial({
       color: "yellow",
       linewidth: 3,
@@ -343,6 +343,8 @@ const BetLines: React.FC<BetLinesProps> = ({
         1
       ]);
       geom.computeBoundingSphere?.();
+      console.log("обновление позиции");
+      console.log(geom);
     }
     if (yellowConeRef.current) {
       yellowConeRef.current.position.copy(aggregatorClipped);
