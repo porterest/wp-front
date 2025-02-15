@@ -146,7 +146,6 @@ const BetLines: React.FC<BetLinesProps> = ({
   });
 
 
-  // Обновление betPosition при изменении userPreviousBet
 // Обновление betPosition при изменении userPreviousBet
   useEffect(() => {
     console.log("[BetLines] userPreviousBet изменился:", userPreviousBet.toArray());
@@ -155,12 +154,20 @@ const BetLines: React.FC<BetLinesProps> = ({
       console.log("[BetLines] LS присутствует – не обновляем betPosition");
       return;
     }
-    // Если ставки пользователя нет (нулевой вектор), устанавливаем betPosition как конец агрегатора + минимальное смещение
-    if (isUserBetZero) {
-      console.log("[BetLines] userPreviousBet равен нулевому вектору – устанавливаем betPosition как aggregatorClipped + смещение");
-      const minDelta = 0.0001;
-      const offset = aggregatorClipped.clone().normalize().multiplyScalar(minDelta);
-      setBetPosition(aggregatorClipped.clone().add(offset).setZ(1));
+    // Если ставки пользователя нет (определяем по тому, что вектор равен (0,0,1))
+    if (
+      userPreviousBet.x === 0 &&
+      userPreviousBet.y === 0 &&
+      userPreviousBet.z === 1
+    ) {
+      console.log("[BetLines] userPreviousBet равен (0,0,1) – устанавливаем betPosition как aggregatorClipped + смещение");
+      if (axisMode === "X") {
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0, 0)).setZ(1));
+      } else if (axisMode === "Y") {
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0, 0.001, 0)).setZ(1));
+      } else {
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0.001, 0)).setZ(1));
+      }
       return;
     }
     // Если ставка задана, вычисляем смещение относительно агрегатора
@@ -171,7 +178,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     console.log("[BetLines] Обновлён betPosition:", userPreviousBet.toArray());
     setBetPosition(userPreviousBet.clone());
-  }, [userPreviousBet, aggregatorClipped, maxWhiteLength, isDragging]);
+  }, [userPreviousBet, aggregatorClipped, maxWhiteLength, axisMode, isDragging]);
 
 
   // ===== Создание жёлтых объектов (линия и конус) =====
