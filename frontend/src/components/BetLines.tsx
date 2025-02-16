@@ -86,7 +86,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       xy.setLength(maxYellowLength);
     }
     // Создаем новый вектор с полученными xy и фиксированным z = 1
-    const position = new THREE.Vector3(xy.x, xy.y, 1);
+    const position = new THREE.Vector3(xy.x, xy.y, 2);
     setAggregatorClipped(position);
     console.log("aggregatorClipped:", position.x, position.y, position.z);
   }, [previousBetEnd, maxYellowLength]);
