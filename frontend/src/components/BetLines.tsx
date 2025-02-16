@@ -179,7 +179,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     yCone.position.copy(aggregatorClipped);
     yCone.position.z = 1;
     {
-      const desiredDir = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1).normalize();
+      const desiredDir = new THREE.Vector3(aggregatorClipped.y, aggregatorClipped.x, 1).normalize();
       const defaultDir = new THREE.Vector3(0, 0, 1);
       if (desiredDir.length() > 0) {
         const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
@@ -275,13 +275,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (!visible) return;
     // Обновляем жёлтую линию
     if (yellowLineRef.current && yellowLineRef.current.geometry instanceof THREE.BufferGeometry) {
-      // const positions = new Float32Array([
-      //   0, 0, 0,
-      //   aggregatorClipped.x, aggregatorClipped.y, 1
-      // ]);
       const positions = new Float32Array([
         0, 0, 0,
-        5, 1, 5
+        aggregatorClipped.y, aggregatorClipped.x, 1  //zyx
       ]);
       const attr = yellowLineRef.current.geometry.getAttribute("position") as THREE.BufferAttribute;
       attr.array.set(positions);
@@ -291,7 +287,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (yellowConeRef.current) {
       yellowConeRef.current.position.copy(aggregatorClipped);
       yellowConeRef.current.position.z = 1;
-      const desiredDir = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1).normalize();
+      const desiredDir = new THREE.Vector3(aggregatorClipped.y, aggregatorClipped.x, 1).normalize();
       const defaultDir = new THREE.Vector3(0, 1, 0);
       if (desiredDir.length() > 0) {
         const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
@@ -301,8 +297,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     // Обновляем белую линию
     if (whiteLineRef.current && whiteLineRef.current.geometry instanceof THREE.BufferGeometry && betPosition) {
       const positions = new Float32Array([
-        aggregatorClipped.x, aggregatorClipped.y, 1,
-        betPosition.x, betPosition.y, 1
+        aggregatorClipped.y, aggregatorClipped.x, 1,
+        betPosition.y, betPosition.x, 1
       ]);
       const attr = whiteLineRef.current.geometry.getAttribute("position") as THREE.BufferAttribute;
       attr.array.set(positions);
