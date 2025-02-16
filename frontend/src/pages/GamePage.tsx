@@ -68,7 +68,7 @@ const GamePage: React.FC = () => {
       const userVector = new THREE.Vector3(
         lastBet.vector[0],
         lastBet.vector[1],
-        0,
+        1,
       );
       console.log("userVector")
       console.log(userVector)
@@ -87,7 +87,7 @@ const GamePage: React.FC = () => {
           const resultVector = new THREE.Vector3(
             prevBetData[0],
             prevBetData[1],
-            0,
+            1,
           );
           console.log("resultVector")
           console.log(resultVector)
