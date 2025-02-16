@@ -190,28 +190,17 @@ const BetLines: React.FC<BetLinesProps> = ({
   useEffect(() => {
     if (!visible || isVectorZero(aggregatorClipped)) return;
     if (!groupRef.current) return;
-    // Желтая линия
-    const yGeom = new LineGeometry();
-    console.log("aggregatorClipped")
-    console.log(aggregatorClipped)
-    yGeom.setPositions([
-      0, 0, 1,
-      aggregatorClipped.x,
-      aggregatorClipped.y,
-      1
+    // Желтая линия с использованием BufferGeometry и LineBasicMaterial
+    const yellowGeometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 1),
+      aggregatorClipped
     ]);
-    console.log("создание желтой линии");
-    console.log(yGeom.attributes.position.array);
-
-    const yMat = new LineMaterial({
-      color: "yellow",
-      linewidth: 3,
-      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
-    });
-    const yLine = new Line(yGeom, yMat);
+    const yellowMaterial = new THREE.LineBasicMaterial({ color: "yellow", linewidth: 3 });
+    const yLine = new THREE.Line(yellowGeometry, yellowMaterial);
     yellowLineRef.current = yLine;
     groupRef.current.add(yLine);
-    console.log(yLine);
+    console.log("Yellow Line:", yLine);
+
 
     // Желтый конус
     const yCone = new THREE.Mesh(
@@ -262,30 +251,12 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
 
     // Белая линия
-    const wGeom = new LineGeometry();
-    wGeom.setPositions([
-      aggregatorClipped.x,
-      aggregatorClipped.y,
-      1,
-      betPosition.x,
-      betPosition.y,
-      1
+    const whiteGeometry = new THREE.BufferGeometry().setFromPoints([
+      aggregatorClipped,
+      betPosition
     ]);
-    console.log('белая линия')
-    console.log([
-      aggregatorClipped.x,
-      aggregatorClipped.y,
-      1,
-      betPosition.x,
-      betPosition.y,
-      1
-    ])
-    const wMat = new LineMaterial({
-      color: "white",
-      linewidth: 3,
-      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
-    });
-    const wLine = new Line(wGeom, wMat);
+    const whiteMaterial = new THREE.LineBasicMaterial({ color: "white", linewidth: 3 });
+    const wLine = new THREE.Line(whiteGeometry, whiteMaterial);
     whiteLineRef.current = wLine;
     groupRef.current.add(wLine);
 
@@ -340,17 +311,14 @@ const BetLines: React.FC<BetLinesProps> = ({
   // ===== Обновление геометрии/позиции объектов =====
   useEffect(() => {
     if (!visible) return;
-    if (yellowLineRef.current?.geometry) {
-      const geom = yellowLineRef.current.geometry as LineGeometry;
-      const positions = [
-        0, 0, 0,
-        aggregatorClipped.x,
-        aggregatorClipped.y,
-        1
-      ];
-      console.log("Задаваемые позиции:", positions);
-      geom.setPositions(positions);
-
+    // Обновляем жёлтую линию, чтобы обе точки имели z = 1
+    if (yellowLineRef.current && yellowLineRef.current.geometry instanceof THREE.BufferGeometry) {
+      const positions = new Float32Array([
+        0, 0, 1,
+        aggregatorClipped.x, aggregatorClipped.y, 1
+      ]);
+      yellowLineRef.current.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      yellowLineRef.current.geometry.attributes.position.needsUpdate = true;
     }
     if (yellowConeRef.current) {
       yellowConeRef.current.position.copy(aggregatorClipped);
@@ -364,30 +332,26 @@ const BetLines: React.FC<BetLinesProps> = ({
         }
       }
     }
-    if (whiteLineRef.current?.geometry && betPosition) {
-      const geom = whiteLineRef.current.geometry as LineGeometry;
-      geom.setPositions([
-        aggregatorClipped.x,
-        aggregatorClipped.y,
-        1,
-        betPosition.x,
-        betPosition.y,
-        1
+    // Обновляем белую линию
+    if (whiteLineRef.current && whiteLineRef.current.geometry instanceof THREE.BufferGeometry && betPosition) {
+      const positions = new Float32Array([
+        aggregatorClipped.x, aggregatorClipped.y, 1,
+        betPosition.x, betPosition.y, 1
       ]);
-      geom.computeBoundingSphere?.();
+      whiteLineRef.current.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      whiteLineRef.current.geometry.attributes.position.needsUpdate = true;
     }
     if (whiteConeRef.current && betPosition) {
       whiteConeRef.current.position.copy(betPosition);
       whiteConeRef.current.position.z = 1;
       {
-        // При создании белого конуса:
         const defaultDir = new THREE.Vector3(0, 1, 0);
         const desiredDir = isUserBetZero
           ? new THREE.Vector3(betPosition.x, betPosition.y, 1).normalize()
           : betPosition.clone().sub(aggregatorClipped).normalize();
         if (desiredDir.length() > 0) {
           const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
-          whiteConeRef.current?.setRotationFromQuaternion(quat);
+          whiteConeRef.current.setRotationFromQuaternion(quat);
         }
       }
     }
@@ -396,6 +360,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       sphereRef.current.position.z = 1;
     }
   }, [aggregatorClipped, betPosition, isUserBetZero, visible]);
+
 
   // ===== Настройка фиксированной плоскости (z = 1) =====
   useEffect(() => {
