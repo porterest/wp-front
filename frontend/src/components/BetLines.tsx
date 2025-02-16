@@ -281,7 +281,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       // ]);
       const positions = new Float32Array([
         0, 0, 0,
-        1, 3, 5
+        5, 1, 5
       ]);
       const attr = yellowLineRef.current.geometry.getAttribute("position") as THREE.BufferAttribute;
       attr.array.set(positions);
