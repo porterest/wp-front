@@ -28,10 +28,10 @@ const GamePage: React.FC = () => {
   const [currentMode, setCurrentMode] = useState(1);
   const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
   const [previousBetEnd, setPreviousBetEnd] = useState<THREE.Vector3>(
-    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 1),
   );
   const [userPreviousBet, setUserPreviousBet] = useState<THREE.Vector3>(
-    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 1),
   );
   const [scaleFunctions, setScaleFunctions] = useState<ScaleFunctions | null>(
     null,
