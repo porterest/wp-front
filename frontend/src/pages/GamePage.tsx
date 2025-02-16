@@ -193,7 +193,7 @@ const GamePage: React.FC = () => {
       localStorage.setItem("userBetVector", JSON.stringify([
         currentBet.predicted_vector[0],
         currentBet.predicted_vector[1],
-        0 // Z-координата, если она всегда 0
+        1
       ]));
 
       console.log("АААААААААААААААААААААААААААААААА")

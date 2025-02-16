@@ -180,7 +180,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     yCone.position.z = 1;
     {
       const desiredDir = new THREE.Vector3(aggregatorClipped.x, aggregatorClipped.y, 1).normalize();
-      const defaultDir = new THREE.Vector3(0, 1, 0);
+      const defaultDir = new THREE.Vector3(0, 0, 1);
       if (desiredDir.length() > 0) {
         const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
         yCone.setRotationFromQuaternion(quat);
@@ -275,9 +275,13 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (!visible) return;
     // Обновляем жёлтую линию
     if (yellowLineRef.current && yellowLineRef.current.geometry instanceof THREE.BufferGeometry) {
+      // const positions = new Float32Array([
+      //   0, 0, 0,
+      //   aggregatorClipped.x, aggregatorClipped.y, 1
+      // ]);
       const positions = new Float32Array([
-        0, 0, 1,
-        aggregatorClipped.x, aggregatorClipped.y, 1
+        0, 0, 0,
+        1, 3, 5
       ]);
       const attr = yellowLineRef.current.geometry.getAttribute("position") as THREE.BufferAttribute;
       attr.array.set(positions);
