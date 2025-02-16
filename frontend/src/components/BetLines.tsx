@@ -81,16 +81,19 @@ const BetLines: React.FC<BetLinesProps> = ({
     console.log("previousBetEnd изменился:");
     console.log(previousBetEnd);
 
-    const agg = previousBetEnd.clone();
-    console.log("до сокращения")
-    console.log(previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
-    if (agg.length() > maxYellowLength) {
-      agg.setLength(maxYellowLength);
+    // Создаем вектор только для координат x и y
+    const xy = new THREE.Vector2(previousBetEnd.x, previousBetEnd.y);
+    console.log("до сокращения (xy):", xy.x, xy.y);
+    if (xy.length() > maxYellowLength) {
+      xy.setLength(maxYellowLength);
     }
-    setAggregatorClipped(agg);
-    console.log("agg.x, agg.y");
-    console.log(agg.x, agg.y, agg.z);
+    // Создаем новый вектор с полученными xy и фиксированным z = 1
+    const position = new THREE.Vector3(xy.x, xy.y, 1);
+    setAggregatorClipped(position);
+    console.log("aggregatorClipped:", position.x, position.y, position.z);
   }, [previousBetEnd, maxYellowLength]);
+
+
   // Флаг, равен ли userPreviousBet (0,0,0)
   const isUserBetZero = useMemo(
     () =>
