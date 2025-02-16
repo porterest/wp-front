@@ -11,6 +11,7 @@ import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { fetchUserBalances } from "../services/api";
+import { Line } from "three";
 
 interface BetLinesProps {
   previousBetEnd: THREE.Vector3;   // Жёлтая стрелка (агрегатор) – данные с бэка
@@ -53,9 +54,9 @@ const BetLines: React.FC<BetLinesProps> = ({
   const plane = useRef(new THREE.Plane());
 
   // Ссылки на созданные объекты
-  const yellowLineRef = useRef<Line2 | null>(null);
+  const yellowLineRef = useRef<Line | null>(null);
   const yellowConeRef = useRef<THREE.Mesh | null>(null);
-  const whiteLineRef = useRef<Line2 | null>(null);
+  const whiteLineRef = useRef<Line | null>(null);
   const whiteConeRef = useRef<THREE.Mesh | null>(null);
   const sphereRef = useRef<THREE.Mesh | null>(null);
   const [aggregatorClipped, setAggregatorClipped] = useState<THREE.Vector3>(new THREE.Vector3());
@@ -208,7 +209,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       linewidth: 3,
       resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
     });
-    const yLine = new Line2(yGeom, yMat);
+    const yLine = new Line(yGeom, yMat);
     yellowLineRef.current = yLine;
     groupRef.current.add(yLine);
     console.log(yLine);
@@ -285,7 +286,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       linewidth: 3,
       resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
     });
-    const wLine = new Line2(wGeom, wMat);
+    const wLine = new Line(wGeom, wMat);
     whiteLineRef.current = wLine;
     groupRef.current.add(wLine);
 
