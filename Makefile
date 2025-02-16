@@ -28,9 +28,8 @@ pb:
 		git push origin $(b); \
 	else \
 		echo "Pushing to HEAD $(HEAD_BRANCH)..."; \
-		git pull origin $(HEAD_BRANCH); \
+		git push origin $(HEAD_BRANCH); \
 	fi
-	git push origin main
 
 pf:
 	git add frontend/
@@ -40,7 +39,7 @@ pf:
 		git push origin $(b); \
 	else \
 		echo "Pushing to HEAD $(HEAD_BRANCH)..."; \
-		git pull origin $(HEAD_BRANCH); \
+		git push origin $(HEAD_BRANCH); \
 	fi
 
 p:
@@ -51,7 +50,7 @@ p:
 		git push origin $(b); \
 	else \
 		echo "Pushing to HEAD $(HEAD_BRANCH)..."; \
-		git pull origin $(HEAD_BRANCH); \
+		git push origin $(HEAD_BRANCH); \
 	fi
 
 pv:
