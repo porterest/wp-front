@@ -190,7 +190,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     console.log("aggregatorClipped")
     console.log(aggregatorClipped)
     yGeom.setPositions([
-      0, 0, 0,
+      0, 0, 1,
       aggregatorClipped.x,
       aggregatorClipped.y,
       1
