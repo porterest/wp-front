@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 from uuid import UUID
 
-from domain.metaholder.responses import BetResponse
 from domain.metaholder.responses.user import UserBetsResponse, UserHistoryResponse
 from domain.models import User
 
