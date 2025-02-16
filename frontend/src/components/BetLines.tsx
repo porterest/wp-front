@@ -77,7 +77,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   // Нормализуем вектор агрегатора
   useEffect(() => {
     console.log("previousBetEnd изменился:", previousBetEnd);
-    const xy = new THREE.Vector2(previousBetEnd.x, previousBetEnd.y);
+    const xy = new THREE.Vector2(previousBetEnd.y, previousBetEnd.x);
     if (xy.length() > maxYellowLength) {
       xy.setLength(maxYellowLength);
     }
@@ -163,7 +163,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (!groupRef.current) return;
     // Создаем жёлтую линию через BufferGeometry
     const yellowGeometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 1),
+      new THREE.Vector3(aggregatorClipped.y, aggregatorClipped.x, 1),
       aggregatorClipped
     ]);
     const yellowMaterial = new THREE.LineBasicMaterial({ color: "yellow", linewidth: 3 });
