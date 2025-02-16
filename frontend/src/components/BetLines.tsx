@@ -79,9 +79,10 @@ const BetLines: React.FC<BetLinesProps> = ({
     console.log("previousBetEnd изменился:", previousBetEnd);
     const xy = new THREE.Vector2(previousBetEnd.x, previousBetEnd.y);
     if (xy.length() > maxYellowLength) {
+    if (xy.length() > maxYellowLength) {
       xy.setLength(maxYellowLength);
     }
-    const position = new THREE.Vector3(xy.x, xy.y, 1);
+    const position = new THREE.Vector3(xy.x, xy.y, previousBetEnd.z);
     setAggregatorClipped(position);
     console.log("aggregatorClipped:", position.toArray());
   }, [previousBetEnd, maxYellowLength]);
@@ -120,7 +121,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         direction.set(1, 0, 0);
       }
       const offset = direction.multiplyScalar(minDelta);
-      return baseVector.add(offset).setZ(1);
+      return baseVector.add(offset);
     }
     const dir = userPreviousBet.clone().sub(aggregatorClipped);
     if (dir.length() > maxWhiteLength) {
@@ -141,11 +142,11 @@ const BetLines: React.FC<BetLinesProps> = ({
       userPreviousBet.z === 1
     ) {
       if (axisMode === "X") {
-        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0, 0)).setZ(1));
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0, 0)));
       } else if (axisMode === "Y") {
-        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0, 0.001, 0)).setZ(1));
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0, 0.001, 0)));
       } else {
-        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0.001, 0)).setZ(1));
+        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0.001, 0)));
       }
       return;
     }
@@ -163,7 +164,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (!groupRef.current) return;
     // Создаем жёлтую линию через BufferGeometry
     const yellowGeometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 1),
+      new THREE.Vector3(0, 0, 0),
       aggregatorClipped
     ]);
     const yellowMaterial = new THREE.LineBasicMaterial({ color: "yellow", linewidth: 3 });
