@@ -7,8 +7,6 @@ import React, {
 } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
-import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { fetchUserBalances } from "../services/api";
 import { Line } from "three";
 
