@@ -48,6 +48,20 @@ export const ScaleProvider: React.FC<{
       const graphHeight = 5;
       const margin = 0.5; // Минимальный отступ сверху и снизу
       const priceRange = maxPrice - minPrice || 1; // Чтобы не делить на 0
+      console.log("priceRange")
+      console.log(maxPrice - minPrice)
+      console.log("value")
+      console.log(value)
+      console.log("(value - minPrice) / priceRange")
+      console.log((value - minPrice) / priceRange)
+      console.log("graphHeight");
+      console.log(graphHeight);
+      console.log("graphHeight - 2 * margin")
+      console.log(graphHeight - 2 * margin)
+      console.log("margin")
+      console.log(margin)
+      console.log("margin + ((value - minPrice) / priceRange) * (graphHeight - 2 * margin)")
+      console.log(margin + ((value - minPrice) / priceRange) * (graphHeight - 2 * margin))
       return margin + ((value - minPrice) / priceRange) * (graphHeight - 2 * margin);
     },
     [minPrice, maxPrice]
@@ -69,6 +83,10 @@ export const ScaleProvider: React.FC<{
    */
   const normalizeX = useCallback(
     (index: number, length: number) => {
+      console.log("index, length");
+      console.log(index, length);
+      console.log("index / (length - 1)*5");
+      console.log(index / (length - 1)*5);
       return length > 1 ? (index / (length - 1)) * 5 : 0; // Если 1 свеча — ставим 0
     },
     []
