@@ -33,6 +33,8 @@ export const ScaleProvider: React.FC<{
     console.log("Viewport changed:", viewport);
   }, [viewport]);
 
+  console.log("data:", data);
+
   // Вычисляем минимальную и максимальную цену
   const minPrice = useMemo(() => Math.min(...data.map((d) => d.low)), [data]);
   const maxPrice = useMemo(() => Math.max(...data.map((d) => d.high)), [data]);
