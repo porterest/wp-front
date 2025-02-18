@@ -254,6 +254,9 @@ const BetLines: React.FC<BetLinesProps> = ({
       normalizedAggregator,
       normalizedBetPosition
     ]);
+    console.log("whiteGeometry", whiteGeometry);
+    console.log("normalizedAggregator", normalizedAggregator);
+    console.log("normalizedBetPosition", normalizedBetPosition)
     const whiteMaterial = new THREE.LineBasicMaterial({ color: "white", linewidth: 3 });
     const wLine = new THREE.Line(whiteGeometry, whiteMaterial);
     whiteLineRef.current = wLine;
@@ -319,6 +322,8 @@ const BetLines: React.FC<BetLinesProps> = ({
       normalizeY(betPosition.y),
       normalizeZ(betPosition.z)
     ) : null;
+    console.log("normalizedAggregator", normalizedAggregator);
+    console.log("normalizedBetPosition", normalizedBetPosition);
 
     if (yellowLineRef.current && yellowLineRef.current.geometry instanceof THREE.BufferGeometry) {
       const positions = new Float32Array([
