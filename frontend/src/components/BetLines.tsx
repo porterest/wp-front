@@ -111,9 +111,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (!visible || isVectorZero(aggregator)) return;
     if (!groupRef.current) return;
     const normalizedAggregator = new THREE.Vector3(
-      normX(aggregator.x),
+      normalizeZ(aggregator.x),
       normalizeY(aggregator.y),
-      normalizeZ(aggregator.z)
+      (aggregator.z)
     );
     console.log("[BetLines] normalizedAggregator:", normalizedAggregator.toArray());
     const yellowGeometry = new THREE.BufferGeometry().setFromPoints([
@@ -164,16 +164,16 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     console.log("Ненормализованный агрегатор (желтый):", aggregator.toArray());
     const normalizedAggregator = new THREE.Vector3(
-      normX(aggregator.x),
+      normalizeZ(aggregator.x),
       normalizeY(aggregator.y),
-      normalizeZ(aggregator.z)
+      (aggregator.z)
     );
     console.log("Нормализованный агрегатор (желтый):", normalizedAggregator.toArray());
     console.log("Ненормализованный белый:", betPosition.toArray());
     const normalizedBetPosition = new THREE.Vector3(
-      normX(betPosition.x),
+      normalizeZ(betPosition.x),
       normalizeY(betPosition.y),
-      normalizeZ(betPosition.z)
+      (betPosition.z)
     );
     console.log("Нормализованный белый:", normalizedBetPosition.toArray());
     const whiteGeometry = new THREE.BufferGeometry().setFromPoints([
@@ -231,14 +231,14 @@ const BetLines: React.FC<BetLinesProps> = ({
   useEffect(() => {
     if (!visible) return;
     const normalizedAggregator = new THREE.Vector3(
-      normX(aggregator.x),
+      normalizeZ(aggregator.x),
       normalizeY(aggregator.y),
-      normalizeZ(aggregator.z)
+      (aggregator.z)
     );
     const normalizedBetPosition = betPosition ? new THREE.Vector3(
-      normX(betPosition.x),
+      normalizeZ(betPosition.x),
       normalizeY(betPosition.y),
-      normalizeZ(betPosition.z)
+      (betPosition.z)
     ) : null;
     console.log("normalizedAggregator", normalizedAggregator.toArray());
     console.log("normalizedBetPosition", normalizedBetPosition?.toArray());
