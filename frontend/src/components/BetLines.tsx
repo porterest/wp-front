@@ -63,7 +63,7 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Для демонстрации задаём константы — в реальном коде их можно получать из данных
   const totalCandles = 144;      // Например, общее число свечей
-  const maxVolumeValue = 1000;   // Максимальный объём
+    // Максимальный объём
 
   // Здесь мы делаем своп значений X и Y для агрегатора
   const [aggregatorClipped, setAggregatorClipped] = useState<THREE.Vector3>(new THREE.Vector3());
@@ -221,7 +221,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         groupRef.current.remove(yellowConeRef.current);
       }
     };
-  }, [aggregatorClipped, visible, normalizeX, normalizeY, normalizeZ, totalCandles, maxVolumeValue]);
+  }, [aggregatorClipped, visible, normalizeX, normalizeY, normalizeZ, totalCandles]);
 
   // === Отрисовка БЕЛОЙ стрелки (ставки юзера) с нормализацией ===
   useEffect(() => {
@@ -316,7 +316,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         groupRef.current.remove(sphereRef.current);
       }
     };
-  }, [aggregatorClipped, betPosition, visible, isUserBetZero, normalizeX, normalizeY, normalizeZ, totalCandles, maxVolumeValue]);
+  }, [aggregatorClipped, betPosition, visible, isUserBetZero, normalizeX, normalizeY, normalizeZ, totalCandles]);
 
   // Обновляем геометрию/позиции объектов при изменениях (также с нормализацией)
   useEffect(() => {
@@ -377,7 +377,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (sphereRef.current && normalizedBetPosition) {
       sphereRef.current.position.copy(normalizedBetPosition);
     }
-  }, [aggregatorClipped, betPosition, isUserBetZero, visible, normalizeX, normalizeY, normalizeZ, totalCandles, maxVolumeValue]);
+  }, [aggregatorClipped, betPosition, isUserBetZero, visible, normalizeX, normalizeY, normalizeZ, totalCandles]);
 
   // Настройка фиксированной плоскости
   useEffect(() => {
