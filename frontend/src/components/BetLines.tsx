@@ -183,6 +183,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       normalizeY(aggregatorClipped.y),
       normalizeZ(aggregatorClipped.z, ) //maxVolumeValue
     );
+    console.log("[BetLines] normalizedAggregator:", normalizedAggregator);
 
     // Создаём жёлтую линию от начала координат до нормализованного агрегатора
     const yellowGeometry = new THREE.BufferGeometry().setFromPoints([
@@ -236,6 +237,8 @@ const BetLines: React.FC<BetLinesProps> = ({
       sphereRef.current = null;
       return;
     }
+    console.log("ненормализованный желтый");
+    console.log(aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z)
 
     // Нормализуем оба вектора
     const normalizedAggregator = new THREE.Vector3(
@@ -243,12 +246,18 @@ const BetLines: React.FC<BetLinesProps> = ({
       normalizeY(aggregatorClipped.y),
       normalizeZ(aggregatorClipped.z)
     );
+    console.log("нормализованный желтый")
+    console.log(normalizedAggregator.x, normalizedAggregator.y, normalizedAggregator.z);
+    console.log("ненормализованный белый")
+    console.log(betPosition.x, betPosition.y, betPosition.z);
+
     const normalizedBetPosition = new THREE.Vector3(
       normalizeX(betPosition.x, totalCandles),
       normalizeY(betPosition.y),
       normalizeZ(betPosition.z)
     );
-
+    console.log("нормализованный белый")
+    console.log(normalizedBetPosition.x, normalizedBetPosition.y, normalizedBetPosition.z);
     // Белая линия от агрегатора до ставки
     const whiteGeometry = new THREE.BufferGeometry().setFromPoints([
       normalizedAggregator,
