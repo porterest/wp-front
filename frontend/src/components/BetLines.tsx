@@ -12,15 +12,15 @@ import { Line } from "three";
 import { useScale } from "../context/ScaleContext";
 
 interface BetLinesProps {
-  previousBetEnd: THREE.Vector3;   // Желтая стрелка (агрегатор) с бекенда (ожидается формат: {x: price, y: candleIndex, z: volume})
-  userPreviousBet: THREE.Vector3;    // Белая стрелка (предыдущая ставка юзера); если (0,0,0) – пара не выбрана
+  previousBetEnd: THREE.Vector3;   // Желтая стрелка (агрегатор) с бекенда
+                                   // (ожидается формат: {x: price, y: candleIndex, z: volume})
+  userPreviousBet: THREE.Vector3;    // Белая стрелка (предыдущая ставка юзера);
+  // если (0,0,0) – пара не выбрана
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
-  maxYellowLength: number; // Максимальная длина агрегатора (например, 2.5)
-  maxWhiteLength: number;  // Максимальное смещение белой стрелки от агрегатора
   handleDrag: (newPosition: THREE.Vector3) => void;
   setBetAmount: (newAmount: number) => void;
   axisMode: "X" | "Y";
@@ -29,7 +29,7 @@ interface BetLinesProps {
 
 const LOCAL_KEY = "userBetVector";
 
-// Функция для проверки нулевого вектора (с эпсилон)
+// Проверка нулевого вектора (с эпсилон)
 const isVectorZero = (vec: THREE.Vector3, eps = 0.000001): boolean =>
   Math.abs(vec.x) < eps && Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
 
@@ -42,8 +42,6 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              userPreviousBet,
                                              onDragging,
                                              onShowConfirmButton,
-                                             maxYellowLength,
-                                             maxWhiteLength,
                                              handleDrag,
                                              setBetAmount,
                                              axisMode,
@@ -54,7 +52,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const raycaster = useRef(new THREE.Raycaster());
   const plane = useRef(new THREE.Plane());
 
-  // Ссылки на созданные объекты
+  // Ссылки на объекты сцены
   const yellowLineRef = useRef<Line | null>(null);
   const yellowConeRef = useRef<THREE.Mesh | null>(null);
   const whiteLineRef = useRef<Line | null>(null);
@@ -70,7 +68,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const [aggregatorClipped, setAggregatorClipped] = useState<THREE.Vector3>(new THREE.Vector3());
   const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(null);
 
-  // Получаем баланс пользователя
+  // Получение баланса пользователя
   useEffect(() => {
     (async () => {
       try {
@@ -83,25 +81,17 @@ const BetLines: React.FC<BetLinesProps> = ({
     })();
   }, []);
 
-  // Если предыдущий агрегированный вектор ещё не пришёл (нулевой), не запускаем расчёты
+  // Приведение входного агрегатора к нужной системе координат (swap)
   useEffect(() => {
     if (isVectorZero(previousBetEnd)) return;
-
     console.log("previousBetEnd changed:", previousBetEnd);
-    // Приводим данные в общую систему: swap – чтобы:
-    //   aggregator.x = candleIndex, aggregator.y = price, aggregator.z = volume
     const swapped = swapXY(previousBetEnd);
-    // Берём только компоненту x и y, и если длина (вектор [x,y]) больше maxYellowLength, обрезаем её:
-    const xy = new THREE.Vector2(swapped.x, swapped.y);
-    if (xy.length() > maxYellowLength) {
-      xy.setLength(maxYellowLength);
-    }
-    const position = new THREE.Vector3(xy.x, xy.y, previousBetEnd.z);
+    const position = new THREE.Vector3(swapped.x, swapped.y, previousBetEnd.z);
     setAggregatorClipped(position);
     console.log("aggregatorClipped:", position.toArray());
-  }, [previousBetEnd, maxYellowLength]);
+  }, [previousBetEnd]);
 
-  // Для ставки пользователя – если данные не пришли (или равны нулю), рассчитываем на основе агрегатора
+  // Проверка, равна ли ставка нулевому вектору
   const isUserBetZero = useMemo(
     () =>
       isVectorZero(userPreviousBet) ||
@@ -109,11 +99,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     [userPreviousBet]
   );
 
-  // Инициализация betPosition с применением swap для userPreviousBet
+  // Инициализация вектора ставки с применением swap для userPreviousBet
   useEffect(() => {
     if (isVectorZero(previousBetEnd)) return; // ждём, пока придут данные
-
-    // Сначала пытаемся получить сохранённое значение из localStorage
     try {
       const stored = localStorage.getItem(LOCAL_KEY);
       if (stored) {
@@ -127,16 +115,13 @@ const BetLines: React.FC<BetLinesProps> = ({
     } catch (err) {
       console.error("[BetLines] Error parsing LS:", err);
     }
-
-    // Приводим userPreviousBet к той же системе (swap)
     const swappedUserBet = swapXY(userPreviousBet);
     let newBet: THREE.Vector3;
     if (isVectorZero(swappedUserBet)) {
-      // Если нет ставки, устанавливаем её чуть смещённой от агрегатора
       const minDelta = 0.0001;
       let baseVector = aggregatorClipped.clone();
       if (isVectorZero(baseVector)) {
-        baseVector = new THREE.Vector3(maxYellowLength * 0.8, maxYellowLength * 0.8, 1);
+        baseVector = new THREE.Vector3(1, 1, 1);
       }
       const direction = baseVector.clone().normalize();
       if (direction.length() === 0) {
@@ -146,29 +131,20 @@ const BetLines: React.FC<BetLinesProps> = ({
       newBet = baseVector.add(offset).setZ(aggregatorClipped.z);
     } else {
       newBet = swappedUserBet.clone();
-      const dir = newBet.clone().sub(aggregatorClipped);
-      if (dir.length() > maxWhiteLength) {
-        dir.setLength(maxWhiteLength);
-        newBet = aggregatorClipped.clone().add(dir);
-      }
     }
     setBetPosition(newBet);
-  }, [userPreviousBet, previousBetEnd, aggregatorClipped, maxWhiteLength]);
+  }, [userPreviousBet, previousBetEnd, aggregatorClipped]);
 
-  // === Отрисовка агрегатора (желтой стрелки) ===
+  // Отрисовка агрегатора (желтая стрелка)
   useEffect(() => {
     if (!visible || isVectorZero(aggregatorClipped)) return;
     if (!groupRef.current) return;
-
-    // Используем maxYellowLength как максимум для оси X
     const normalizedAggregator = new THREE.Vector3(
-      normalizeX(aggregatorClipped.x, maxYellowLength), // теперь если aggregatorClipped.x === maxYellowLength → 5
+      normalizeX(aggregatorClipped.x, 1),
       normalizeY(aggregatorClipped.y),
       normalizeZ(aggregatorClipped.z)
     );
     console.log("[BetLines] normalizedAggregator:", normalizedAggregator);
-
-    // Создаем желтую линию от начала координат до агрегатора
     const yellowGeometry = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(0, 0, normalizedAggregator.z),
       normalizedAggregator
@@ -177,8 +153,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     const yLine = new THREE.Line(yellowGeometry, yellowMaterial);
     yellowLineRef.current = yLine;
     groupRef.current.add(yLine);
-
-    // Жёлтый конус в конце линии
     const yCone = new THREE.Mesh(
       new THREE.ConeGeometry(0.1, 0.3, 12),
       new THREE.MeshStandardMaterial({ color: "yellow" })
@@ -194,7 +168,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     yellowConeRef.current = yCone;
     groupRef.current.add(yCone);
-
     return () => {
       if (groupRef.current && yellowLineRef.current) {
         groupRef.current.remove(yellowLineRef.current);
@@ -203,14 +176,13 @@ const BetLines: React.FC<BetLinesProps> = ({
         groupRef.current.remove(yellowConeRef.current);
       }
     };
-  }, [aggregatorClipped, visible, normalizeX, normalizeY, normalizeZ, maxYellowLength]);
+  }, [aggregatorClipped, visible, normalizeX, normalizeY, normalizeZ]);
 
-  // === Отрисовка ставки (белой стрелки) ===
+  // Отрисовка ставки (белая стрелка)
   useEffect(() => {
     if (!visible) return;
     if (!groupRef.current) return;
     if (!betPosition) {
-      // Удаляем объекты, если позиции нет
       if (groupRef.current && whiteLineRef.current) groupRef.current.remove(whiteLineRef.current);
       if (groupRef.current && whiteConeRef.current) groupRef.current.remove(whiteConeRef.current);
       if (groupRef.current && sphereRef.current) groupRef.current.remove(sphereRef.current);
@@ -219,26 +191,20 @@ const BetLines: React.FC<BetLinesProps> = ({
       sphereRef.current = null;
       return;
     }
-
     console.log("Ненормализованный агрегатор (желтый):", aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z);
-
-    // Нормализуем оба вектора – для оси X используем maxYellowLength
     const normalizedAggregator = new THREE.Vector3(
-      normalizeX(aggregatorClipped.x, maxYellowLength),
+      normalizeX(aggregatorClipped.x, 1),
       normalizeY(aggregatorClipped.y),
       normalizeZ(aggregatorClipped.z)
     );
     console.log("Нормализованный агрегатор (желтый):", normalizedAggregator.x, normalizedAggregator.y, normalizedAggregator.z);
     console.log("Ненормализованный белый:", betPosition.x, betPosition.y, betPosition.z);
-
     const normalizedBetPosition = new THREE.Vector3(
-      normalizeX(betPosition.x, maxYellowLength),
+      normalizeX(betPosition.x, 1),
       normalizeY(betPosition.y),
       normalizeZ(betPosition.z)
     );
     console.log("Нормализованный белый:", normalizedBetPosition.x, normalizedBetPosition.y, normalizedBetPosition.z);
-
-    // Белая линия от агрегатора до ставки
     const whiteGeometry = new THREE.BufferGeometry().setFromPoints([
       normalizedAggregator,
       normalizedBetPosition
@@ -247,8 +213,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     const wLine = new THREE.Line(whiteGeometry, whiteMaterial);
     whiteLineRef.current = wLine;
     groupRef.current.add(wLine);
-
-    // Белый конус в конце линии
     const wCone = new THREE.Mesh(
       new THREE.ConeGeometry(0.1, 0.3, 12),
       new THREE.MeshStandardMaterial({ color: "white" })
@@ -268,8 +232,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     whiteConeRef.current = wCone;
     groupRef.current.add(wCone);
-
-    // Сфера в позиции ставки
     const sph = new THREE.Mesh(
       new THREE.SphereGeometry(0.5, 16, 16),
       new THREE.MeshStandardMaterial({
@@ -281,7 +243,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     sph.position.copy(normalizedBetPosition);
     groupRef.current.add(sph);
     sphereRef.current = sph;
-
     return () => {
       if (groupRef.current && whiteLineRef.current) {
         groupRef.current.remove(whiteLineRef.current);
@@ -293,24 +254,23 @@ const BetLines: React.FC<BetLinesProps> = ({
         groupRef.current.remove(sphereRef.current);
       }
     };
-  }, [aggregatorClipped, betPosition, visible, isUserBetZero, normalizeX, normalizeY, normalizeZ, maxYellowLength]);
+  }, [aggregatorClipped, betPosition, visible, isUserBetZero, normalizeX, normalizeY, normalizeZ]);
 
   // Обновление позиций объектов при изменениях
   useEffect(() => {
     if (!visible) return;
     const normalizedAggregator = new THREE.Vector3(
-      normalizeX(aggregatorClipped.x, maxYellowLength),
+      normalizeX(aggregatorClipped.x, 1),
       normalizeY(aggregatorClipped.y),
       normalizeZ(aggregatorClipped.z)
     );
     const normalizedBetPosition = betPosition ? new THREE.Vector3(
-      normalizeX(betPosition.x, maxYellowLength),
+      normalizeX(betPosition.x, 1),
       normalizeY(betPosition.y),
       normalizeZ(betPosition.z)
     ) : null;
     console.log("normalizedAggregator", normalizedAggregator);
     console.log("normalizedBetPosition", normalizedBetPosition);
-
     if (yellowLineRef.current && yellowLineRef.current.geometry instanceof THREE.BufferGeometry) {
       const positions = new Float32Array([
         0, 0, normalizedAggregator.z,
@@ -354,7 +314,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (sphereRef.current && normalizedBetPosition) {
       sphereRef.current.position.copy(normalizedBetPosition);
     }
-  }, [aggregatorClipped, betPosition, isUserBetZero, visible, normalizeX, normalizeY, normalizeZ, maxYellowLength]);
+  }, [aggregatorClipped, betPosition, isUserBetZero, visible, normalizeX, normalizeY, normalizeZ]);
 
   // Фиксированная плоскость для перетаскивания
   useEffect(() => {
@@ -362,7 +322,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     console.log("[BetLines] Fixed plane: z = 1");
   }, []);
 
-  // ===== Логика перетаскивания =====
+  // Логика перетаскивания
   const isClickOnSphere = useCallback((evt: PointerEvent) => {
     console.log("[BetLines] isClickOnSphere: pointer event", evt.clientX, evt.clientY);
     if (!sphereRef.current) return false;
@@ -409,6 +369,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       return;
     }
 
+    // Просто прибавляем разницу к агрегатору – без обрезки
     const direction = intersect.clone().sub(aggregatorClipped);
     let newPos = betPosition ? betPosition.clone() : new THREE.Vector3();
 
@@ -420,15 +381,10 @@ const BetLines: React.FC<BetLinesProps> = ({
       newPos = aggregatorClipped.clone().add(direction);
     }
 
-    const finalDir = newPos.clone().sub(aggregatorClipped);
-    if (finalDir.length() > maxWhiteLength) {
-      finalDir.setLength(maxWhiteLength);
-      newPos = aggregatorClipped.clone().add(finalDir);
-    }
-
     console.log("[BetLines] New bet position:", newPos.toArray());
     setBetPosition(newPos);
-    const fraction = finalDir.length() / maxWhiteLength;
+    // Используем длину вектора direction как норму (без maxWhiteLength)
+    const fraction = direction.length() / 1;
     setBetAmount(userBalance * fraction);
     handleDrag(newPos);
   }, [
@@ -438,7 +394,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     axisMode,
     camera,
     gl.domElement,
-    maxWhiteLength,
     userBalance,
     handleDrag,
     setBetAmount
@@ -451,11 +406,10 @@ const BetLines: React.FC<BetLinesProps> = ({
     onDragging(false);
 
     const finalDir = betPosition ? betPosition.clone().sub(aggregatorClipped) : new THREE.Vector3();
-    const fraction = Math.min(finalDir.length() / maxWhiteLength, 1);
+    const fraction = Math.min(finalDir.length() / 1, 1);
     const betAmt = fraction * userBalance;
     setBetAmount(betAmt);
 
-    // При отправке обратно на сервер преобразуем вектор обратно (swap, если нужно)
     const predictedVector = betPosition ? swapXY(betPosition).toArray() : [0, 0, 0];
 
     onShowConfirmButton(true, {
@@ -466,7 +420,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     isDragging,
     aggregatorClipped,
     betPosition,
-    maxWhiteLength,
     userBalance,
     onDragging,
     onShowConfirmButton,
