@@ -37,6 +37,8 @@ export const ScaleProvider: React.FC<{
   const minPrice = useMemo(() => Math.min(...data.map((d) => d.low)), [data]);
   const maxPrice = useMemo(() => Math.max(...data.map((d) => d.high)), [data]);
 
+  console.log("Min price:", minPrice, "Max price:", maxPrice, "Price range:");
+
   /**
    * Нормализация по оси Y (цены)
    * Отображает диапазон [minPrice, maxPrice] → [0.5, 4.5] (с запасом сверху и снизу).
