@@ -26,6 +26,9 @@ export const ScaleProvider: React.FC<{
     viewport
   );
 
+  const maxVolume = Math.max(...data.map(candle => candle.volume));
+
+
   useEffect(() => {
     console.log("Viewport changed:", viewport);
   }, [viewport]);
@@ -77,11 +80,11 @@ export const ScaleProvider: React.FC<{
    * Нормализация по оси Z (объём)
    * Значения [0, maxVolume] → [0, 5]
    */
-  const normalizeZ = useCallback((volume: number, maxVolume: number) => {
+  const normalizeZ = useCallback((volume: number) => {
     return maxVolume > 0 ? (volume / maxVolume) * 5 : 0; // Чтобы не делить на 0
   }, []);
 
-  const denormalizeZ = useCallback((sceneValue: number, maxVolume: number) => {
+  const denormalizeZ = useCallback((sceneValue: number) => {
     return maxVolume > 0 ? (sceneValue / 5) * maxVolume : 0;
   }, []);
 

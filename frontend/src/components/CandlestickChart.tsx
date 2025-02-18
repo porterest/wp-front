@@ -14,7 +14,6 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(
     if (!data || data.length === 0) return null;
 
     // Максимальный объём для нормализации оси Z
-    const maxVolume = Math.max(...data.map(candle => candle.volume));
 
     // Границы графика по оси Y (как заданы в normalizeY)
     const graphMinY = 0.1;
@@ -77,7 +76,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = memo(
           const wickY = normLow + wickHeight / 2;
 
           // По оси X для объёма и оси Z для времени используем функции нормализации
-          const posX = normalizeZ(candle.volume, maxVolume);
+          const posX = normalizeZ(candle.volume);
           const posZ = normalizeX(index, slicedData.length);
 
           // Расстояние между свечами по оси Z
