@@ -112,6 +112,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (stored) {
         const arr = JSON.parse(stored);
         if (Array.isArray(arr) && arr.length >= 3) {
+          console.log("[BetLines] storage:", arr);
           return new THREE.Vector3(arr[0], arr[1], arr[2]);
         }
       }
