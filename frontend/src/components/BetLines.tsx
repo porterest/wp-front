@@ -290,7 +290,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       new THREE.MeshStandardMaterial({ color: "white" })
     );
     wCone.position.copy(whiteFinal);
-    wCone.position.z = 1;
+    wCone.position.z = 2;
     {
       const defaultDir = new THREE.Vector3(0, 1, 0);
       let desiredDir: THREE.Vector3;
