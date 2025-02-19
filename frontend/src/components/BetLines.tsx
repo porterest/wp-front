@@ -82,16 +82,15 @@ const BetLines: React.FC<BetLinesProps> = ({
   // Мы хотим, чтобы жёлтый вектор всегда начинался в (0,0,0) и имел длину maxYellowLength,
   // а его z фиксировано равнялось 1.
   const aggregatorClipped = useMemo(() => {
-    console.log("Вычисляем aggregatorClipped:", previousBetEnd.toArray());
-    const xy = new THREE.Vector2(previousBetEnd.x, previousBetEnd.y);
-    if (xy.length() > maxYellowLength) {
-      xy.setLength(maxYellowLength);
-    }
-    return new THREE.Vector3(xy.x, xy.y, 1);
-  }, [previousBetEnd, maxYellowLength]);
-
-
-  // const [aggregatorClipped, setAggregatorClipped] = useState<THREE.Vector3>(new THREE.Vector3());
+    // Сначала нормализуем каждую координату
+    const normX = normalizeZ(previousBetEnd.x);
+    const normY = normalizeY(previousBetEnd.y);
+    // Собираем 2D-вектор и ограничиваем его длину
+    const vec2 = new THREE.Vector2(normX, normY);
+    vec2.clampLength(0, maxYellowLength);
+    // Возвращаем итоговый 3D-вектор с фиксированным z = 1
+    return new THREE.Vector3(vec2.x, vec2.y, 1);
+  }, [previousBetEnd, maxYellowLength, normalizeZ, normalizeY]);
 
   // Флаг, равен ли userPreviousBet (0,0,0)
   const isUserBetZero = useMemo(
