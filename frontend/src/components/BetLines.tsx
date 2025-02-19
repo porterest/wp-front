@@ -208,100 +208,74 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [aggregatorClipped, visible, scaledAggregator]);
 
   // ----- Отрисовка белой стрелки (ставки) -----
+// ----- Обновление геометрии/позиций объектов -----
   useEffect(() => {
     if (!visible) return;
-    if (!groupRef.current) return;
-    if (!betPosition || !scaledBet) {
-      console.log("[BetLines] Нет betPosition – удаляем белые объекты");
-      if (groupRef.current && whiteLineRef.current)
-        groupRef.current.remove(whiteLineRef.current);
-      if (groupRef.current && whiteConeRef.current)
-        groupRef.current.remove(whiteConeRef.current);
-      if (groupRef.current && sphereRef.current)
-        groupRef.current.remove(sphereRef.current);
-      whiteLineRef.current = null;
-      whiteConeRef.current = null;
-      sphereRef.current = null;
-      return;
-    } else {
-      console.log(
-        "[BetLines] Есть и агрегатор, и betPosition:",
-        betPosition.toArray(),
-      );
+    const updatedAgg = getRawVector(aggregatorClipped)
+      .clone()
+      .multiplyScalar(scaleFactor);
+    updatedAgg.z = 1;
+    if (betPosition) {
+      const updatedBet = getRawVector(betPosition)
+        .clone()
+        .multiplyScalar(scaleFactor);
+      updatedBet.z = 2;
+
+      if (
+        whiteLineRef.current &&
+        whiteLineRef.current.geometry instanceof LineGeometry
+      ) {
+        const positions = [
+          updatedAgg.x,
+          updatedAgg.y,
+          updatedAgg.z,
+          updatedBet.x,
+          updatedBet.y,
+          updatedBet.z,
+        ];
+        whiteLineRef.current.geometry.setPositions(positions);
+      }
+      if (whiteConeRef.current) {
+        whiteConeRef.current.position.copy(updatedBet);
+        whiteConeRef.current.position.z = updatedBet.z;
+        const defaultDir = new THREE.Vector3(0, 1, 0);
+        const desiredDir = updatedBet.clone().sub(updatedAgg).normalize();
+        if (desiredDir.length() > 0) {
+          const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
+          whiteConeRef.current.setRotationFromQuaternion(quat);
+        }
+      }
+      if (sphereRef.current) {
+        sphereRef.current.position.copy(updatedBet);
+        sphereRef.current.position.z = updatedBet.z;
+      }
     }
-    console.log("[BetLines] whiteFinal:", scaledBet.toArray());
-    const wGeom = new LineGeometry();
-    wGeom.setPositions([
-      scaledAggregator.x,
-      scaledAggregator.y,
-      scaledAggregator.z,
-      scaledBet.x,
-      scaledBet.y,
-      scaledBet.z,
-    ]);
-    const wMat = new LineMaterial({
-      color: "white",
-      linewidth: 3,
-      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-    });
-    const wLine = new Line2(wGeom, wMat);
-    whiteLineRef.current = wLine;
-    groupRef.current.add(wLine);
-    const wCone = new THREE.Mesh(
-      new THREE.ConeGeometry(0.1, 0.3, 12),
-      new THREE.MeshStandardMaterial({ color: "white" }),
-    );
-    wCone.position.copy(scaledBet);
-    wCone.position.z = 2;
-    {
+    if (
+      yellowLineRef.current &&
+      yellowLineRef.current.geometry instanceof LineGeometry
+    ) {
+      const positions = [0, 0, 0, updatedAgg.x, updatedAgg.y, updatedAgg.z];
+      yellowLineRef.current.geometry.setPositions(positions);
+    }
+    if (yellowConeRef.current) {
+      yellowConeRef.current.position.copy(updatedAgg);
+      yellowConeRef.current.position.z = updatedAgg.z;
       const defaultDir = new THREE.Vector3(0, 1, 0);
-      let desiredDir: THREE.Vector3;
-      if (isVectorZero(userPreviousBet)) {
-        desiredDir = new THREE.Vector3(
-          betPosition!.x,
-          betPosition!.y,
-          2,
-        ).normalize();
-      } else {
-        desiredDir = betPosition!.clone().sub(aggregatorClipped).normalize();
-      }
+      const desiredDir = updatedAgg.clone().normalize();
       if (desiredDir.length() > 0) {
-        const quat = new THREE.Quaternion().setFromUnitVectors(
-          defaultDir,
-          desiredDir,
-        );
-        wCone.setRotationFromQuaternion(quat);
+        const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
+        yellowConeRef.current.setRotationFromQuaternion(quat);
       }
     }
-    whiteConeRef.current = wCone;
-    groupRef.current.add(wCone);
-    const sph = new THREE.Mesh(
-      new THREE.SphereGeometry(0.5, 16, 16),
-      new THREE.MeshStandardMaterial({
-        color: "blue",
-        opacity: 0.5,
-        transparent: true,
-      }),
-    );
-    sph.position.copy(scaledBet);
-    groupRef.current.add(sph);
-    sphereRef.current = sph;
-    return () => {
-      if (groupRef.current && whiteLineRef.current)
-        groupRef.current.remove(whiteLineRef.current);
-      if (groupRef.current && whiteConeRef.current)
-        groupRef.current.remove(whiteConeRef.current);
-      if (groupRef.current && sphereRef.current)
-        groupRef.current.remove(sphereRef.current);
-    };
-  }, [
-    aggregatorClipped,
-    betPosition,
-    visible,
-    scaledBet,
-    isVectorZero,
-    userPreviousBet,
-  ]);
+    if (
+      whiteLineRef.current &&
+      whiteLineRef.current.geometry &&
+      whiteLineRef.current.geometry.attributes.position
+    ) {
+      whiteLineRef.current.geometry.attributes.position.needsUpdate = true;
+    }
+  }, [aggregatorClipped, betPosition, visible, scaleFactor, userPreviousBet]);
+
 
   // ----- Обновление геометрии/позиций объектов -----
   useEffect(() => {
