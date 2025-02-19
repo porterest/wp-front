@@ -60,7 +60,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const whiteConeRef = useRef<THREE.Mesh | null>(null);
   const sphereRef = useRef<THREE.Mesh | null>(null);
 
-  const { normalizeY, normalizeZ } = useScale();
+  const { normalizeY, normalizeZ, denormalizeY, denormalizeZ } = useScale();
 
   const [isDragging, setIsDragging] = useState(false);
   const [userBalance, setUserBalance] = useState(0);
@@ -438,22 +438,38 @@ const BetLines: React.FC<BetLinesProps> = ({
       );
       raycaster.current.setFromCamera(mouse, camera);
 
-      // Используем агрегатор из оригинальной системы координат в качестве опорной точки
-      plane.current.setFromNormalAndCoplanarPoint(
-        camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
-        aggregatorClipped, // используем оригинальные координаты агрегатора
+      // 1. Вычисляем мировую точку агрегатора (все расчёты нормализованы по логике ScaleContext)
+      const worldAggregator = new THREE.Vector3(
+        denormalizeZ(aggregatorClipped.x),
+        denormalizeY(aggregatorClipped.y),
+        1
       );
 
-      const intersect = new THREE.Vector3();
-      const intersectExists = raycaster.current.ray.intersectPlane(plane.current, intersect);
+      // 2. Строим плоскость через мировую точку агрегатора
+      plane.current.setFromNormalAndCoplanarPoint(
+        camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
+        worldAggregator
+      );
+
+      // 3. Получаем точку пересечения луча с плоскостью (в мировых координатах)
+      const intersectWorld = new THREE.Vector3();
+      const intersectExists = raycaster.current.ray.intersectPlane(plane.current, intersectWorld);
       if (!intersectExists) {
         console.log("[BetLines] Нет пересечения с плоскостью");
         return;
       }
 
-      // Вычисляем новое положение в оригинальной системе координат относительно агрегатора
-      const direction = intersect.clone().sub(aggregatorClipped);
+      // 4. Преобразуем мировую точку пересечения в нормализованное пространство
+      const normalizedIntersect = new THREE.Vector3(
+        normalizeZ(intersectWorld.x),
+        normalizeY(intersectWorld.y),
+        1
+      );
+
+      // 5. Вычисляем смещение (в нормализованном пространстве) относительно aggregatorClipped
       let newPos = aggregatorClipped.clone();
+      const direction = normalizedIntersect.clone().sub(aggregatorClipped);
+
       if (axisMode === "X") {
         newPos.x += direction.x;
       } else if (axisMode === "Y") {
@@ -462,18 +478,17 @@ const BetLines: React.FC<BetLinesProps> = ({
         newPos.add(direction);
       }
 
-      // Ограничиваем смещение белой стрелки в оригинальных координатах
-      const maxWhiteLengthOriginal = maxWhiteLength; // maxWhiteLength уже в оригинальной системе
+      // Ограничиваем смещение
       const delta = newPos.clone().sub(aggregatorClipped);
-      if (delta.length() > maxWhiteLengthOriginal) {
-        delta.setLength(maxWhiteLengthOriginal);
+      if (delta.length() > maxWhiteLength) {
+        delta.setLength(maxWhiteLength);
         newPos = aggregatorClipped.clone().add(delta);
       }
 
-      console.log("[BetLines] Новая позиция для ставки (original):", newPos.toArray());
+      console.log("[BetLines] Новая позиция для ставки (normalized):", newPos.toArray());
 
       setBetPosition(newPos);
-      const fraction = delta.length() / maxWhiteLengthOriginal;
+      const fraction = delta.length() / maxWhiteLength;
       setBetAmount(userBalance * fraction);
       handleDrag(newPos);
     },
@@ -487,8 +502,13 @@ const BetLines: React.FC<BetLinesProps> = ({
       userBalance,
       handleDrag,
       setBetAmount,
+      normalizeY,
+      normalizeZ,
+      denormalizeY,
+      denormalizeZ,
     ],
   );
+
 
 
   const handlePointerUp = useCallback(() => {
