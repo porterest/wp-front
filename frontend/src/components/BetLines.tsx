@@ -132,7 +132,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(computedBetPosition);
 
   useEffect(() => {
-    if (isDragging) return;
+    // if (isDragging) return;
     setBetPosition(computedBetPosition);
   }, [computedBetPosition, isDragging]);
 
