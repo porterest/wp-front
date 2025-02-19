@@ -39,9 +39,10 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   const { userData } = useUserBalance();
   const userDeposit = userData?.balance || 0;
-  const maxArrowLength = 2.5;
+  const maxYellowLength = 2.5;
+  const maxWhiteLength = 2;
 
-  // Здесь можно добавить синхронизацию позиции, если необходимо
+  // Можно добавить синхронизацию позиции, если необходимо
   useEffect(() => {
     // Например, можно выполнить дополнительную настройку
   }, [userPreviousBet]);
@@ -51,18 +52,17 @@ const BetArrow: React.FC<BetArrowProps> = ({
     if (!userPreviousBet.equals(newPosition)) {
       setUserPreviousBet(new THREE.Vector3(newPosition.x, newPosition.y, newPosition.z));
     }
+    // Используем агрегатор как предыдущую позицию
     const aggregatorClipped = previousBetEnd.clone();
-    if (aggregatorClipped.length() > maxArrowLength) {
-      aggregatorClipped.setLength(maxArrowLength);
-    }
     const distance = new THREE.Vector3()
       .subVectors(newPosition, aggregatorClipped)
       .length();
-    const percentage = Math.min(distance / maxArrowLength, 1);
+    const percentage = Math.min(distance / maxYellowLength, 1);
     const bet = Math.min(percentage * userDeposit, userDeposit);
     setBetAmount(bet);
   };
 
+  // Форматирование числа для отображения (добавляем суффиксы)
   const formatNumber = (num: number) => {
     if (isNaN(num)) return "Invalid Number";
 
@@ -92,21 +92,21 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   return (
     <>
-      {/* Отрисовка компонента, который добавляет линии и конусы в сцену */}
+      {/* Компонент, добавляющий линии и конусы (стрелки) в сцену */}
       <BetLines
         previousBetEnd={previousBetEnd}
         userPreviousBet={userPreviousBet}
         onDragging={onDragging}
         onShowConfirmButton={onShowConfirmButton}
-        // maxYellowLength={maxArrowLength}
-        // maxWhiteLength={maxArrowLength}
+        maxYellowLength={maxYellowLength}
+        maxWhiteLength={maxWhiteLength}
         handleDrag={handleDrag}
         setBetAmount={setBetAmount}
         axisMode={axisMode}
         visible={visitable}
       />
 
-      {/* Отрисовка текста с депозитом */}
+      {/* Текст с депозитом */}
       <Text
         position={[1, 5.3, 0]}
         fontSize={0.3}
@@ -117,9 +117,13 @@ const BetArrow: React.FC<BetArrowProps> = ({
         {`Deposit: ${formatNumber(userDeposit)} DD`}
       </Text>
 
-      {/* Отрисовка текста со ставкой */}
+      {/* Текст со ставкой */}
       <Text
-        position={[userPreviousBet.x + 0.5, userPreviousBet.y + 1, previousBetEnd.z + 0.5]}
+        position={[
+          userPreviousBet.x + 0.5,
+          userPreviousBet.y + 1,
+          previousBetEnd.z + 0.5,
+        ]}
         fontSize={0.3}
         color="white"
         anchorX="center"
