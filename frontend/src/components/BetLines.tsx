@@ -1,4 +1,3 @@
-// Импорт необходимых модулей и хуков
 import React, {
   useCallback,
   useEffect,
@@ -138,6 +137,10 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Функция для получения "сырых" нормализованных координат (без масштабирования)
   const getRawVector = (vec: THREE.Vector3): THREE.Vector3 => {
+    console.log("vec.x, vec.y, vec.z");
+    console.log(vec.x, vec.y, vec.z);
+    console.log("normalizeZ(vec.x), normalizeY(vec.y), vec.z");
+    console.log(normalizeZ(vec.x), normalizeY(vec.y), vec.z);
     return new THREE.Vector3(
       normalizeZ(vec.x),
       normalizeY(vec.y),
