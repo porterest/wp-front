@@ -23,6 +23,7 @@ async def get_candles(pair_id: str, n: int) -> Optional[list[Candle]]:
     candles = []
     prev_block: Optional[Block] = None
     for block in blocks:
+        logger.info(f"Block ID: {block.id}")
         volume = sum([bet.amount for bet in block.bets])
         logger.info("[bet.amount for bet in block.bets]")
         logger.info([bet.amount for bet in block.bets])
