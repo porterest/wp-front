@@ -328,6 +328,10 @@ const BetLines: React.FC<BetLinesProps> = ({
       sphereRef.current.position.copy(updatedBet);
       sphereRef.current.position.z = updatedBet.z;
     }
+    if (whiteLineRef.current && whiteLineRef.current.geometry && whiteLineRef.current.geometry.attributes.position) {
+      whiteLineRef.current.geometry.attributes.position.needsUpdate = true;
+    }
+
   }, [aggregatorClipped, betPosition, visible, scaleFactor, userPreviousBet]);
 
   // ----- Логика перетаскивания -----
