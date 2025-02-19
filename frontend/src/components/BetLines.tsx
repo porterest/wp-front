@@ -331,102 +331,107 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [aggregatorClipped, betPosition, visible, scaleFactor, userPreviousBet]);
 
   // ----- Логика перетаскивания -----
-  const isClickOnSphere = useCallback(
-    (evt: PointerEvent) => {
-      console.log("[BetLines] isClickOnSphere: pointer event", evt.clientX, evt.clientY);
-      if (!sphereRef.current) return false;
-      const rect = gl.domElement.getBoundingClientRect();
-      const mouse = new THREE.Vector2(
-        ((evt.clientX - rect.left) / rect.width) * 2 - 1,
-        -((evt.clientY - rect.top) / rect.height) * 2 + 1
-      );
-      raycaster.current.setFromCamera(mouse, camera);
-      const hits = raycaster.current.intersectObject(sphereRef.current);
-      console.log("[BetLines] isClickOnSphere: hits", hits);
-      return hits.length > 0;
-    },
-    [camera, gl.domElement]
-  );
 
-  const handlePointerDown = useCallback(
-    (evt: PointerEvent) => {
-      evt.stopPropagation();
-      console.log("[BetLines] handlePointerDown", evt.clientX, evt.clientY);
-      if (isClickOnSphere(evt)) {
-        console.log("[BetLines] Нажатие на сферу");
-        setIsDragging(true);
-        onDragging(true);
-      }
-    },
-    [isClickOnSphere, onDragging]
-  );
+  // ===== Drag-логика =====
+  const isClickOnSphere = useCallback((evt: PointerEvent) => {
+    console.log("[BetLines] isClickOnSphere: pointer event", evt.clientX, evt.clientY);
+    if (!sphereRef.current) return false;
+    const rect = gl.domElement.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+      ((evt.clientX - rect.left) / rect.width) * 2 - 1,
+      -((evt.clientY - rect.top) / rect.height) * 2 + 1
+    );
+    raycaster.current.setFromCamera(mouse, camera);
+    const hits = raycaster.current.intersectObject(sphereRef.current);
+    console.log("[BetLines] isClickOnSphere: hits", hits);
+    return hits.length > 0;
+  }, [camera, gl.domElement]);
 
-  const handlePointerMove = useCallback(
-    (evt: PointerEvent) => {
-      if (!isDragging) return;
-      const rect = gl.domElement.getBoundingClientRect();
-      const mouse = new THREE.Vector2(
-        ((evt.clientX - rect.left) / rect.width) * 2 - 1,
-        -((evt.clientY - rect.top) / rect.height) * 2 + 1
-      );
-      raycaster.current.setFromCamera(mouse, camera);
-      plane.current.setFromNormalAndCoplanarPoint(
-        camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
-        aggregatorClipped
-      );
-      const intersect = new THREE.Vector3();
-      const intersectExists = raycaster.current.ray.intersectPlane(plane.current, intersect);
-      console.log("[BetLines] intersect", intersectExists, intersect.toArray());
-      if (!intersectExists) {
-        console.log("[BetLines] Нет пересечения с плоскостью");
-        return;
-      }
-      const direction = intersect.clone().sub(aggregatorClipped);
-      let newPos = betPosition ? betPosition.clone() : new THREE.Vector3();
-      if (axisMode === "X") {
-        newPos.x = aggregatorClipped.x + direction.x;
-      } else if (axisMode === "Y") {
-        newPos.y = aggregatorClipped.y + direction.y;
-      } else {
-        newPos = aggregatorClipped.clone().add(direction);
-      }
-      const finalDir = newPos.clone().sub(aggregatorClipped);
-      if (finalDir.length() > maxWhiteLength) {
-        finalDir.setLength(maxWhiteLength);
-        newPos = aggregatorClipped.clone().add(finalDir);
-      }
-      console.log("[BetLines] Новая позиция для ставки:", newPos.toArray());
-      setBetPosition(newPos);
-      const fraction = finalDir.length() / maxWhiteLength;
-      setBetAmount(userBalance * fraction);
-      handleDrag(newPos);
-    },
-    [
-      isDragging,
-      aggregatorClipped,
-      betPosition,
-      axisMode,
-      camera,
-      gl.domElement,
-      maxWhiteLength,
-      userBalance,
-      handleDrag,
-      setBetAmount,
-    ]
-  );
+  const handlePointerDown = useCallback((evt: PointerEvent) => {
+    evt.stopPropagation();
+    console.log("[BetLines] handlePointerDown", evt.clientX, evt.clientY);
+    if (isClickOnSphere(evt)) {
+      console.log("[BetLines] Нажатие на сферу");
+      setIsDragging(true);
+      onDragging(true);
+    }
+  }, [isClickOnSphere, onDragging]);
+
+  const handlePointerMove = useCallback((evt: PointerEvent) => {
+    if (!isDragging) return;
+    const rect = gl.domElement.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+      ((evt.clientX - rect.left) / rect.width) * 2 - 1,
+      -((evt.clientY - rect.top) / rect.height) * 2 + 1
+    );
+    raycaster.current.setFromCamera(mouse, camera);
+
+    // Обновляем плоскость на основе текущего направления камеры
+    plane.current.setFromNormalAndCoplanarPoint(
+      camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
+      aggregatorClipped
+    );
+
+    const intersect = new THREE.Vector3();
+    const intersectExists = raycaster.current.ray.intersectPlane(plane.current, intersect);
+    console.log("[BetLines] intersect", intersectExists, intersect.toArray());
+    if (!intersectExists) {
+      console.log("[BetLines] Нет пересечения с плоскостью");
+      return;
+    }
+
+    // Вычисляем новое положение: direction = intersect - aggregatorClipped
+    const direction = intersect.clone().sub(aggregatorClipped);
+    let newPos = betPosition ? betPosition.clone() : new THREE.Vector3();
+
+    if (axisMode === "X") {
+      newPos.x = aggregatorClipped.x + direction.x;
+    } else if (axisMode === "Y") {
+      newPos.y = aggregatorClipped.y + direction.y;
+    } else {
+      newPos = aggregatorClipped.clone().add(direction);
+    }
+
+    // Ограничиваем длину вектора, если он больше maxWhiteLength
+    const finalDir = newPos.clone().sub(aggregatorClipped);
+    if (finalDir.length() > maxWhiteLength) {
+      finalDir.setLength(maxWhiteLength);
+      newPos = aggregatorClipped.clone().add(finalDir);
+    }
+
+    console.log("[BetLines] Новая позиция для ставки:", newPos.toArray());
+    setBetPosition(newPos);
+    const fraction = finalDir.length() / maxWhiteLength;
+    setBetAmount(userBalance * fraction);
+    handleDrag(newPos);
+  }, [
+    isDragging,
+    aggregatorClipped,
+    betPosition,
+    axisMode,
+    camera,
+    gl.domElement,
+    maxWhiteLength,
+    userBalance,
+    handleDrag,
+    setBetAmount
+  ]);
 
   const handlePointerUp = useCallback(() => {
     console.log("[BetLines] handlePointerUp");
     if (!isDragging) return;
+    console.log("[BetLines] handlePointerUp");
     setIsDragging(false);
     onDragging(false);
+
     const finalDir = betPosition ? betPosition.clone().sub(aggregatorClipped) : new THREE.Vector3();
     const fraction = Math.min(finalDir.length() / maxWhiteLength, 1);
     const betAmt = fraction * userBalance;
     setBetAmount(betAmt);
+
     onShowConfirmButton(true, {
       amount: betAmt,
-      predicted_vector: betPosition ? [betPosition.x, betPosition.y, betPosition.z] : [0, 0, 0],
+      predicted_vector: betPosition ? [betPosition.x, betPosition.y, betPosition.z] : [0, 0, 0]
     });
   }, [
     isDragging,
@@ -436,7 +441,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     userBalance,
     onDragging,
     onShowConfirmButton,
-    setBetAmount,
+    setBetAmount
   ]);
 
   useEffect(() => {
