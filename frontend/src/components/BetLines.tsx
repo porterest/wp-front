@@ -203,7 +203,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     console.log("[BetLines] yellowFinal:", yellowFinal.toArray());
     const yGeom = new LineGeometry();
     yGeom.setPositions([
-      0, 0, 1,
+      0, 0, 0,
       yellowFinal.x,
       yellowFinal.y,
       yellowFinal.z
@@ -289,6 +289,8 @@ const BetLines: React.FC<BetLinesProps> = ({
       new THREE.ConeGeometry(0.1, 0.3, 12),
       new THREE.MeshStandardMaterial({ color: "white" })
     );
+    wCone.position.copy(whiteFinal);
+    wCone.position.z = 1;
     {
       const defaultDir = new THREE.Vector3(0, 1, 0);
       let desiredDir: THREE.Vector3;
