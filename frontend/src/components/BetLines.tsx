@@ -374,10 +374,22 @@ const BetLines: React.FC<BetLinesProps> = ({
         -((evt.clientY - rect.top) / rect.height) * 2 + 1
       );
       raycaster.current.setFromCamera(mouse, camera);
+
+      // Используем позицию сферы как копланарную точку.
+      // Поскольку sphereRef.current.position находится в масштабированных координатах,
+      // делим её на scaleFactor, чтобы получить исходные координаты.
+      let coplanarPoint: THREE.Vector3;
+      if (sphereRef.current) {
+        coplanarPoint = sphereRef.current.position.clone().divideScalar(scaleFactor);
+      } else {
+        coplanarPoint = aggregatorClipped.clone();
+      }
+
       plane.current.setFromNormalAndCoplanarPoint(
         camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
-        aggregatorClipped
+        coplanarPoint
       );
+
       const intersect = new THREE.Vector3();
       const intersectExists = raycaster.current.ray.intersectPlane(plane.current, intersect);
       console.log("[BetLines] intersect", intersectExists, intersect.toArray());
@@ -385,6 +397,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         console.log("[BetLines] Нет пересечения с плоскостью");
         return;
       }
+      // Рассчитываем новую позицию как смещение от aggregatorClipped
       const direction = intersect.clone().sub(aggregatorClipped);
       let newPos = betPosition ? betPosition.clone() : new THREE.Vector3();
       if (axisMode === "X") {
@@ -416,6 +429,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       userBalance,
       handleDrag,
       setBetAmount,
+      scaleFactor,
     ]
   );
 
