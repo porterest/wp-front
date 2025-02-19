@@ -39,7 +39,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   const { userData } = useUserBalance();
   const userDeposit = userData?.balance || 0;
-  const maxYellowLength = 2.5;
+  const maxYellowLength = 2;
   const maxWhiteLength = 2;
 
   // Можно добавить синхронизацию позиции, если необходимо
