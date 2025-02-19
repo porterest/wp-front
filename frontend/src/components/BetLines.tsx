@@ -187,8 +187,10 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // При изменении computedBetPosition обновляем состояние betPosition
   useEffect(() => {
+    if (isDragging) return; // не обновляем, если сейчас происходит перетаскивание
     setBetPosition(computedBetPosition);
-  }, [computedBetPosition]);
+  }, [computedBetPosition, isDragging]);
+
 
   // Этот useEffect обновляет betPosition, если изменяется userPreviousBet (и LS не используется)
   // useEffect(() => {
