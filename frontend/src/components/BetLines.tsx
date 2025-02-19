@@ -103,22 +103,22 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // --- Инициализация белого вектора (betPosition) ---
   // Для белого вектора фиксируем z = 2 (его начало – конец жёлтого, конец – (белый вектор)).
-  const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(() => {
+  // Новый расчёт белого вектора (betPosition)
+  const computedBetPosition = useMemo(() => {
     try {
       const stored = localStorage.getItem(LOCAL_KEY);
-      console.log("[BetLines] Проверяем localStorage, содержимое:", stored);
       if (stored) {
         const arr = JSON.parse(stored);
         if (Array.isArray(arr) && arr.length >= 3) {
-          console.log("[BetLines] Белый вектор из LS:", arr);
           return new THREE.Vector3(arr[0], arr[1], 2);
         }
       }
     } catch (err) {
       console.error("[BetLines] Ошибка парсинга LS:", err);
     }
+
+    // Если нет пользовательского вектора, используем минимальное смещение от агрегатора
     if (isUserBetZero) {
-      console.log("[BetLines] Нет userPreviousBet. Используем конец агрегатора с минимальным смещением.");
       const minDelta = 0.0001;
       let baseVector = aggregatorClipped.clone();
       if (isVectorZero(baseVector)) {
@@ -131,13 +131,28 @@ const BetLines: React.FC<BetLinesProps> = ({
       const offset = direction.multiplyScalar(minDelta);
       return baseVector.add(offset).setZ(2);
     }
-    const dir = userPreviousBet.clone().sub(aggregatorClipped);
-    if (dir.length() > maxWhiteLength) {
-      dir.setLength(maxWhiteLength);
-      userPreviousBet.copy(aggregatorClipped).add(dir);
-    }
-    return userPreviousBet.clone().setZ(2);
-  });
+
+    // Вычисляем дельту от агрегатора до пользовательского вектора
+    // Сначала нормализуем разницу по отдельным осям:
+    const deltaX = normalizeZ(userPreviousBet.x - aggregatorClipped.x);
+    const deltaY = normalizeY(userPreviousBet.y - aggregatorClipped.y);
+    const deltaZ = userPreviousBet.z - aggregatorClipped.z; // z оставляем как есть
+    const delta = new THREE.Vector3(deltaX, deltaY, deltaZ);
+
+    // Ограничиваем длину дельты, чтобы она не превышала maxWhiteLength
+    delta.clampLength(0, maxWhiteLength);
+
+    // Итоговая позиция – это агрегатор + ограниченная дельта; фиксируем z = 2
+    return aggregatorClipped.clone().add(delta).setZ(2);
+  }, [aggregatorClipped, userPreviousBet, isUserBetZero, maxWhiteLength, normalizeZ, normalizeY]);
+
+// Инициализируем состояние betPosition с вычисленным значением
+  const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(computedBetPosition);
+
+// При изменении computedBetPosition обновляем betPosition
+  useEffect(() => {
+    setBetPosition(computedBetPosition);
+  }, [computedBetPosition]);
 
   // Обновление betPosition при изменении userPreviousBet
   useEffect(() => {
