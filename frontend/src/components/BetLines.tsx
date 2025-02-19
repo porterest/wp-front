@@ -438,82 +438,58 @@ const BetLines: React.FC<BetLinesProps> = ({
       );
       raycaster.current.setFromCamera(mouse, camera);
 
-      // Используем позицию сферы в масштабированной системе как копланарную точку
-      const coplanarPointScaled = sphereRef.current
-        ? sphereRef.current.position.clone() // уже масштабирована
-        : scaledAggregator.clone();
-
-      // Вычисляем плоскость в масштабированных координатах
+      // Используем агрегатор из оригинальной системы координат в качестве опорной точки
       plane.current.setFromNormalAndCoplanarPoint(
         camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
-        coplanarPointScaled,
+        aggregatorClipped, // используем оригинальные координаты агрегатора
       );
 
-      const intersectScaled = new THREE.Vector3();
-      const intersectExists = raycaster.current.ray.intersectPlane(
-        plane.current,
-        intersectScaled,
-      );
-      console.log(
-        "[BetLines] intersect (scaled):",
-        intersectExists,
-        intersectScaled.toArray(),
-      );
+      const intersect = new THREE.Vector3();
+      const intersectExists = raycaster.current.ray.intersectPlane(plane.current, intersect);
       if (!intersectExists) {
         console.log("[BetLines] Нет пересечения с плоскостью");
         return;
       }
 
-      // Рассчитываем новое положение в масштабированной системе:
-      // Начинаем с масштабированного агрегатора и прибавляем смещение (direction)
-      const directionScaled = intersectScaled.clone().sub(scaledAggregator);
-      let newPosScaled = new THREE.Vector3();
+      // Вычисляем новое положение в оригинальной системе координат относительно агрегатора
+      const direction = intersect.clone().sub(aggregatorClipped);
+      let newPos = aggregatorClipped.clone();
       if (axisMode === "X") {
-        newPosScaled.x = scaledAggregator.x + directionScaled.x;
-        newPosScaled.y = scaledBet ? scaledBet.y : scaledAggregator.y; // сохраняем старое y
-        newPosScaled.z = scaledAggregator.z;
+        newPos.x += direction.x;
       } else if (axisMode === "Y") {
-        newPosScaled.y = scaledAggregator.y + directionScaled.y;
-        newPosScaled.x = scaledBet ? scaledBet.x : scaledAggregator.x;
-        newPosScaled.z = scaledAggregator.z;
+        newPos.y += direction.y;
       } else {
-        newPosScaled = scaledAggregator.clone().add(directionScaled);
+        newPos.add(direction);
       }
 
-      // Ограничиваем длину векторного смещения (в масштабированных координатах)
-      const maxWhiteLengthScaled = maxWhiteLength * scaleFactor;
-      const finalDirScaled = newPosScaled.clone().sub(scaledAggregator);
-      if (finalDirScaled.length() > maxWhiteLengthScaled) {
-        finalDirScaled.setLength(maxWhiteLengthScaled);
-        newPosScaled = scaledAggregator.clone().add(finalDirScaled);
+      // Ограничиваем смещение белой стрелки в оригинальных координатах
+      const maxWhiteLengthOriginal = maxWhiteLength; // maxWhiteLength уже в оригинальной системе
+      const delta = newPos.clone().sub(aggregatorClipped);
+      if (delta.length() > maxWhiteLengthOriginal) {
+        delta.setLength(maxWhiteLengthOriginal);
+        newPos = aggregatorClipped.clone().add(delta);
       }
 
-      // Преобразуем новое положение обратно в исходную систему координат
-      const newPos = newPosScaled.clone().divideScalar(scaleFactor);
-      console.log(
-        "[BetLines] Новая позиция для ставки (original):",
-        newPos.toArray(),
-      );
+      console.log("[BetLines] Новая позиция для ставки (original):", newPos.toArray());
 
       setBetPosition(newPos);
-      const fraction = finalDirScaled.length() / maxWhiteLengthScaled;
+      const fraction = delta.length() / maxWhiteLengthOriginal;
       setBetAmount(userBalance * fraction);
       handleDrag(newPos);
     },
     [
       isDragging,
-      scaledAggregator,
-      scaledBet,
-      axisMode,
       camera,
       gl.domElement,
+      aggregatorClipped,
+      axisMode,
       maxWhiteLength,
       userBalance,
       handleDrag,
       setBetAmount,
-      scaleFactor,
     ],
   );
+
 
   const handlePointerUp = useCallback(() => {
     console.log("[BetLines] handlePointerUp");
