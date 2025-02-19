@@ -191,39 +191,39 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [computedBetPosition]);
 
   // Этот useEffect обновляет betPosition, если изменяется userPreviousBet (и LS не используется)
-  useEffect(() => {
-    console.log("[BetLines] userPreviousBet изменился:", userPreviousBet.toArray());
-    const stored = localStorage.getItem(LOCAL_KEY);
-    if (stored) {
-      console.log("[BetLines] LS присутствует – не обновляем betPosition");
-      return;
-    }
-    // Если userPreviousBet равен (0,0,1), устанавливаем betPosition как агрегатор со смещением
-    if (
-      userPreviousBet.x === 0 &&
-      userPreviousBet.y === 0 &&
-      userPreviousBet.z === 1
-    ) {
-      console.log("[BetLines] userPreviousBet равен (0,0,1) – устанавливаем betPosition как aggregatorClipped + смещение");
-      if (axisMode === "X") {
-        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0, 0)).setZ(2));
-      } else if (axisMode === "Y") {
-        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0, 0.001, 0)).setZ(2));
-      } else {
-        setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0.001, 0)).setZ(2));
-      }
-      return;
-    }
-    // Вычисляем смещение от userPreviousBet до агрегатора
-    const offset = userPreviousBet.clone().sub(aggregatorClipped);
-    // Если смещение больше maxWhiteLength, ограничиваем его
-    if (offset.length() > maxWhiteLength) {
-      offset.setLength(maxWhiteLength);
-      userPreviousBet.copy(aggregatorClipped).add(offset);
-    }
-    // Устанавливаем обновлённый белый вектор, фиксируя z = 2
-    setBetPosition(userPreviousBet.clone().setZ(2));
-  }, [userPreviousBet, aggregatorClipped, maxWhiteLength, axisMode, isDragging]);
+  // useEffect(() => {
+  //   console.log("[BetLines] userPreviousBet изменился:", userPreviousBet.toArray());
+  //   const stored = localStorage.getItem(LOCAL_KEY);
+  //   if (stored) {
+  //     console.log("[BetLines] LS присутствует – не обновляем betPosition");
+  //     return;
+  //   }
+  //   // Если userPreviousBet равен (0,0,1), устанавливаем betPosition как агрегатор со смещением
+  //   if (
+  //     userPreviousBet.x === 0 &&
+  //     userPreviousBet.y === 0 &&
+  //     userPreviousBet.z === 1
+  //   ) {
+  //     console.log("[BetLines] userPreviousBet равен (0,0,1) – устанавливаем betPosition как aggregatorClipped + смещение");
+  //     if (axisMode === "X") {
+  //       setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0, 0)).setZ(2));
+  //     } else if (axisMode === "Y") {
+  //       setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0, 0.001, 0)).setZ(2));
+  //     } else {
+  //       setBetPosition(aggregatorClipped.clone().add(new THREE.Vector3(0.001, 0.001, 0)).setZ(2));
+  //     }
+  //     return;
+  //   }
+  //   // Вычисляем смещение от userPreviousBet до агрегатора
+  //   const offset = userPreviousBet.clone().sub(aggregatorClipped);
+  //   // Если смещение больше maxWhiteLength, ограничиваем его
+  //   if (offset.length() > maxWhiteLength) {
+  //     offset.setLength(maxWhiteLength);
+  //     userPreviousBet.copy(aggregatorClipped).add(offset);
+  //   }
+  //   // Устанавливаем обновлённый белый вектор, фиксируя z = 2
+  //   setBetPosition(userPreviousBet.clone().setZ(2));
+  // }, [userPreviousBet, aggregatorClipped, maxWhiteLength, axisMode, isDragging]);
 
   // --- Функция для получения "сырых" нормализованных координат ---
   // Функция getRawVector принимает вектор и возвращает новый вектор, где:
