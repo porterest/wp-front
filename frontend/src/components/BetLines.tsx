@@ -398,18 +398,18 @@ const BetLines: React.FC<BetLinesProps> = ({
     [camera, gl.domElement],
   );
 
-  const pointerStart = useRef<{ x: number; y: number } | null>(null);
-  const initialBetPosition = useRef<THREE.Vector3 | null>(null);
-
-  const handlePointerDown = useCallback((evt: PointerEvent) => {
-    evt.stopPropagation();
-    if (isClickOnSphere(evt)) {
-      setIsDragging(true);
-      onDragging(true);
-      pointerStart.current = { x: evt.clientX, y: evt.clientY };
-      initialBetPosition.current = betPosition ? betPosition.clone() : aggregatorClipped.clone();
-    }
-  }, [isClickOnSphere, onDragging, betPosition, aggregatorClipped]);
+  const handlePointerDown = useCallback(
+    (evt: PointerEvent) => {
+      evt.stopPropagation();
+      console.log("[BetLines] handlePointerDown", evt.clientX, evt.clientY);
+      if (isClickOnSphere(evt)) {
+        console.log("[BetLines] Нажатие на сферу");
+        setIsDragging(true);
+        onDragging(true);
+      }
+    },
+    [isClickOnSphere, onDragging],
+  );
 
   const handlePointerMove = useCallback(
     (evt: PointerEvent) => {
@@ -421,14 +421,14 @@ const BetLines: React.FC<BetLinesProps> = ({
       );
       raycaster.current.setFromCamera(mouse, camera);
 
-      // 1. Получаем мировую точку агрегатора (для неподвижной оси)
+      // 1. Вычисляем мировую точку агрегатора
       const worldAggregator = new THREE.Vector3(
         denormalizeZ(aggregatorClipped.x),
         denormalizeY(aggregatorClipped.y),
-        1, // фиксированное время для агрегатора
+        1,
       );
 
-      // 2. Строим плоскость через эту точку
+      // 2. Строим плоскость через мировую точку агрегатора
       plane.current.setFromNormalAndCoplanarPoint(
         camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
         worldAggregator,
@@ -445,36 +445,40 @@ const BetLines: React.FC<BetLinesProps> = ({
         return;
       }
 
-      // 4. Сначала сформируем новую мировую позицию
-      const worldNewPos = intersectWorld.clone();
+      // 4. Вычисляем новую позицию с учетом осевого режима
+      let newPos: THREE.Vector3;
       if (axisMode === "X") {
-        // по оси X движемся свободно, по Y берем мировое значение агрегатора
-        worldNewPos.y = denormalizeY(aggregatorClipped.y);
+        newPos = new THREE.Vector3(
+          normalizeZ(intersectWorld.x),
+          aggregatorClipped.y,
+          2,
+        );
       } else if (axisMode === "Y") {
-        // по оси Y движемся свободно, по X фиксируем мировое значение агрегатора
-        worldNewPos.x = denormalizeZ(aggregatorClipped.x);
+        newPos = new THREE.Vector3(
+          aggregatorClipped.x,
+          normalizeY(intersectWorld.y),
+          2,
+        );
+      } else {
+        newPos = new THREE.Vector3(
+          normalizeZ(intersectWorld.x),
+          normalizeY(intersectWorld.y),
+          2,
+        );
       }
-      // z фиксировано (например, 2)
-      worldNewPos.z = 2;
-
-      // 5. Преобразуем мировую точку в нормализованное пространство
-      const normalizedNewPos = new THREE.Vector3(
-        normalizeZ(worldNewPos.x),
-        normalizeY(worldNewPos.y),
-        worldNewPos.z, // оставляем фиксированным
-      );
 
       console.log(
-        "[BetLines] Новая позиция для ставки (нормализованная):",
-        normalizedNewPos.toArray(),
+        "[BetLines] Новая позиция для ставки (normalized):",
+        newPos.toArray(),
       );
 
-      setBetPosition(normalizedNewPos);
+      // Обновляем позицию без интерполяции (или с плавным переходом, если необходимо)
+      setBetPosition(prev => prev ? prev.lerp(newPos, 0.2) : newPos);
 
-      const delta = normalizedNewPos.clone().sub(aggregatorClipped);
+      const delta = newPos.clone().sub(aggregatorClipped);
       const fraction = delta.length() / maxWhiteLength;
       setBetAmount(userBalance * fraction);
-      handleDrag(normalizedNewPos);
+      handleDrag(newPos);
     },
     [
       isDragging,
@@ -492,7 +496,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       denormalizeZ,
     ],
   );
-
 
   const handlePointerUp = useCallback(() => {
     console.log("[BetLines] handlePointerUp");
