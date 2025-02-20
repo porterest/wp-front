@@ -398,7 +398,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     [camera, gl.domElement],
   );
 
-  // Объявляем ссылки для сохранения начальных координат
+
+
+// Сохраняем начальные координаты курсора и положения стрелки
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
   const initialBetPosition = useRef<THREE.Vector3 | null>(null);
 
@@ -407,8 +409,9 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (isClickOnSphere(evt)) {
       setIsDragging(true);
       onDragging(true);
-      // Сохраняем начальное положение курсора и исходное положение белой стрелки
+      // Сохраняем начальное положение курсора
       pointerStart.current = { x: evt.clientX, y: evt.clientY };
+      // Сохраняем исходное положение стрелки: если уже установлено – берем его, иначе базируем на агрегаторе
       initialBetPosition.current = betPosition
         ? betPosition.clone()
         : aggregatorClipped.clone();
@@ -418,39 +421,38 @@ const BetLines: React.FC<BetLinesProps> = ({
   const handlePointerMove = useCallback((evt: PointerEvent) => {
     if (!isDragging) return;
 
-    // Если выбран осевой режим, вычисляем смещение от начальной точки
     if (axisMode === "X" || axisMode === "Y") {
+      // Если осевой режим – используем сохранённое начальное положение
       if (!pointerStart.current || !initialBetPosition.current) return;
+      // Вычисляем разницу в пикселях по выбранной оси
+      const deltaPx =
+        axisMode === "X"
+          ? evt.clientX - pointerStart.current.x
+          : evt.clientY - pointerStart.current.y;
 
-      // Разница в пикселях вдоль выбранной оси
-      const deltaPx = axisMode === "X"
-        ? evt.clientX - pointerStart.current.x
-        : evt.clientY - pointerStart.current.y;
+      // Коэффициент преобразования пикселей в мировые единицы (подберите по необходимости)
+      const conversionFactor = 0.01;
 
-      // Коэффициент перевода пиксельного смещения в мировые единицы.
-      // Его можно подобрать эмпирически или вычислить через параметры камеры.
-      const conversionFactor = 0.01; // настройте под ваши нужды
-
-      // Вычисляем новую позицию, добавляя смещение к исходной позиции
+      // Вычисляем новую позицию, прибавляя смещение к сохранённому начальному положению
       const newPos = initialBetPosition.current.clone();
       if (axisMode === "X") {
         newPos.x += deltaPx * conversionFactor;
       } else {
         newPos.y += deltaPx * conversionFactor;
       }
-      // Сохраняем нужное значение по оси времени (если оно должно оставаться неизменным, например, 2)
+      // Фиксированная координата по оси Z для белой стрелки
       newPos.z = 2;
 
-      // Можно добавить интерполяцию для плавного движения:
-      setBetPosition(prev => prev ? prev.lerp(newPos, 0.2) : newPos);
+      // Плавное движение через интерполяцию
+      setBetPosition((prev) => (prev ? prev.lerp(newPos, 0.2) : newPos));
 
-      // Обновляем ставку и вызываем handleDrag
+      // Вычисляем ставку – смещение теперь считается от агрегатора, если требуется
       const delta = newPos.clone().sub(aggregatorClipped);
       const fraction = delta.length() / maxWhiteLength;
       setBetAmount(userBalance * fraction);
       handleDrag(newPos);
     } else {
-      // Если осевой режим не выбран – можно оставить логику через raycaster (как раньше)
+      // Если осевой режим не включён – оставляем прежнюю логику через луч (raycasting)
       const rect = gl.domElement.getBoundingClientRect();
       const mouse = new THREE.Vector2(
         ((evt.clientX - rect.left) / rect.width) * 2 - 1,
@@ -468,23 +470,18 @@ const BetLines: React.FC<BetLinesProps> = ({
         worldAggregator,
       );
       const intersectWorld = new THREE.Vector3();
-      const intersectExists = raycaster.current.ray.intersectPlane(
-        plane.current,
-        intersectWorld,
-      );
-      if (!intersectExists) return;
-
-      // При свободном перемещении обновляем позицию по обоим осям
-      const newPos = new THREE.Vector3(
-        normalizeZ(intersectWorld.x),
-        normalizeY(intersectWorld.y),
-        2,
-      );
-      setBetPosition(newPos);
-      const delta = newPos.clone().sub(aggregatorClipped);
-      const fraction = delta.length() / maxWhiteLength;
-      setBetAmount(userBalance * fraction);
-      handleDrag(newPos);
+      if (raycaster.current.ray.intersectPlane(plane.current, intersectWorld)) {
+        const newPos = new THREE.Vector3(
+          normalizeZ(intersectWorld.x),
+          normalizeY(intersectWorld.y),
+          2,
+        );
+        setBetPosition(newPos);
+        const delta = newPos.clone().sub(aggregatorClipped);
+        const fraction = delta.length() / maxWhiteLength;
+        setBetAmount(userBalance * fraction);
+        handleDrag(newPos);
+      }
     }
   }, [
     isDragging,
@@ -515,7 +512,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         ? [betPosition.x, betPosition.y, betPosition.z]
         : [0, 0, 0],
     });
-    // Очищаем сохранённые координаты
+    // Сбрасываем сохранённые начальные координаты
     pointerStart.current = null;
     initialBetPosition.current = null;
   }, [
@@ -528,6 +525,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     onShowConfirmButton,
     setBetAmount,
   ]);
+
 
   useEffect(() => {
     const c = gl.domElement;
