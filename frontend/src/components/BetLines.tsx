@@ -152,8 +152,11 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // --- Единое масштабирование для отрисовки ---
   const scaleFactor = 0.4;
+  console.log("[BetLines] aggregatorClipped:", aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z);
   const rawAggregator = getRawVector(aggregatorClipped);
+  console.log("rawAggregator", rawAggregator.x, rawAggregator.y, rawAggregator.z);
   const scaledAggregator = rawAggregator.clone().multiplyScalar(scaleFactor);
+  console.log("scaledAggregator", scaledAggregator.x, scaledAggregator.y, scaledAggregator.z);
   scaledAggregator.z = 1; // фиксируем z для желтого вектора
   const rawBet = betPosition ? getRawVector(betPosition) : null;
   const scaledBet = rawBet ? rawBet.clone().multiplyScalar(scaleFactor) : null;
