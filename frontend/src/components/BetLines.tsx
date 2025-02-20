@@ -80,8 +80,8 @@ const BetLines: React.FC<BetLinesProps> = ({
   // Вычисляем агрегатор (желтый вектор) на основе previousBetEnd
   const aggregatorClipped = useMemo(() => {
     console.log("[BetLines] previousBetEnd", previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
-    const normX = normalizeZ(previousBetEnd.x);
-    const normY = normalizeY(previousBetEnd.y);
+    const normX = normalizeY(previousBetEnd.x);
+    const normY = normalizeZ(previousBetEnd.y);
     const vec2 = new THREE.Vector2(normX, normY);
     vec2.clampLength(0, maxYellowLength);
     console.log("[BetLines] vec2", vec2.x, vec2.y);
@@ -122,8 +122,8 @@ const BetLines: React.FC<BetLinesProps> = ({
       const offset = direction.multiplyScalar(minDelta);
       return baseVector.add(offset).setZ(2);
     }
-    const deltaX = normalizeZ(userPreviousBet.x - aggregatorClipped.x);
-    const deltaY = normalizeY(userPreviousBet.y - aggregatorClipped.y);
+    const deltaX = normalizeY(userPreviousBet.x - aggregatorClipped.x);
+    const deltaY = normalizeZ(userPreviousBet.y - aggregatorClipped.y);
     const deltaZ = userPreviousBet.z - aggregatorClipped.z;
     const delta = new THREE.Vector3(deltaX, deltaY, deltaZ);
     delta.clampLength(0, maxWhiteLength);
@@ -428,8 +428,8 @@ const BetLines: React.FC<BetLinesProps> = ({
 
       // 1. Вычисляем мировую точку агрегатора
       const worldAggregator = new THREE.Vector3(
-        denormalizeZ(aggregatorClipped.x),
-        denormalizeY(aggregatorClipped.y),
+        denormalizeY(aggregatorClipped.x),
+        denormalizeZ(aggregatorClipped.y),
         1,
       );
 
@@ -461,13 +461,13 @@ const BetLines: React.FC<BetLinesProps> = ({
       } else if (axisMode === "Y") {
         newPos = new THREE.Vector3(
           aggregatorClipped.x,
-          normalizeY(intersectWorld.y),
+          normalizeZ(intersectWorld.y),
           2,
         );
       } else {
         newPos = new THREE.Vector3(
-          normalizeZ(intersectWorld.x),
-          normalizeY(intersectWorld.y),
+          normalizeY(intersectWorld.x),
+          normalizeZ(intersectWorld.y),
           2,
         );
       }
