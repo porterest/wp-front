@@ -52,7 +52,6 @@ const BetLines: React.FC<BetLinesProps> = ({
   const { gl, camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
   const raycaster = useRef(new THREE.Raycaster());
-  // const plane = useRef(new THREE.Plane());
 
   const yellowLineRef = useRef<Line2 | null>(null);
   const yellowConeRef = useRef<THREE.Mesh | null>(null);
@@ -456,8 +455,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     // Строим плоскость для перетаскивания
     // Здесь можно использовать фиксированное мировое значение для неподвижной оси
     const worldAggregator = new THREE.Vector3(
-      denormalizeZ(aggregatorClipped.x),
-      denormalizeY(aggregatorClipped.y),
+      denormalizeY(aggregatorClipped.x),
+      denormalizeZ(aggregatorClipped.y),
       1,
     );
     plane.current.setFromNormalAndCoplanarPoint(
@@ -476,18 +475,18 @@ const BetLines: React.FC<BetLinesProps> = ({
     // Если у нас осевой режим, фиксируем неподвижную координату
     if (axisMode === "X") {
       // Для оси X движемся свободно, но y берем из мировых координат агрегатора
-      intersectWorld.y = denormalizeY(aggregatorClipped.y);
+      intersectWorld.y = denormalizeZ(aggregatorClipped.y);
     } else if (axisMode === "Y") {
       // Для оси Y движемся свободно, но x берем из мировых координат агрегатора
-      intersectWorld.x = denormalizeZ(aggregatorClipped.x);
+      intersectWorld.x = denormalizeY(aggregatorClipped.x);
     }
     // Фиксируем z как 2
     intersectWorld.z = 2;
 
     // Преобразуем мировую точку в нормализованное пространство
     const newPos = new THREE.Vector3(
-      normalizeZ(intersectWorld.x),
-      normalizeY(intersectWorld.y),
+      normalizeY(intersectWorld.x),
+      normalizeZ(intersectWorld.y),
       2
     );
 
