@@ -37,22 +37,22 @@ const isVectorZero = (vec: THREE.Vector3, eps = 0.000001): boolean =>
   Math.abs(vec.x) < eps && Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
 
 const BetLines: React.FC<BetLinesProps> = ({
-  previousBetEnd,
-  userPreviousBet,
-  onDragging,
-  onShowConfirmButton,
-  maxYellowLength,
-  maxWhiteLength,
-  handleDrag,
-  setBetAmount,
-  axisMode,
-  visible,
-}) => {
+                                             previousBetEnd,
+                                             userPreviousBet,
+                                             onDragging,
+                                             onShowConfirmButton,
+                                             maxYellowLength,
+                                             maxWhiteLength,
+                                             handleDrag,
+                                             setBetAmount,
+                                             axisMode,
+                                             visible,
+                                           }) => {
   // Получаем объекты Three.js
   const { gl, camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
   const raycaster = useRef(new THREE.Raycaster());
-  // const plane = useRef(new THREE.Plane());
+  const plane = useRef(new THREE.Plane());
 
   const yellowLineRef = useRef<Line2 | null>(null);
   const yellowConeRef = useRef<THREE.Mesh | null>(null);
@@ -60,7 +60,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const whiteConeRef = useRef<THREE.Mesh | null>(null);
   const sphereRef = useRef<THREE.Mesh | null>(null);
 
-  const { normalizeY, normalizeZ } = useScale();
+  const { normalizeY, normalizeZ, denormalizeY, denormalizeZ } = useScale();
 
   const [isDragging, setIsDragging] = useState(false);
   const [userBalance, setUserBalance] = useState(0);
@@ -83,10 +83,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     const normY = normalizeY(previousBetEnd.y);
     const vec2 = new THREE.Vector2(normX, normY);
     vec2.clampLength(0, maxYellowLength);
-    // Берем z из предыдущей координаты (или вычисляем, если нужно)
-    return new THREE.Vector3(vec2.x, vec2.y, previousBetEnd.z);
+    return new THREE.Vector3(vec2.x, vec2.y, 1);
   }, [previousBetEnd, maxYellowLength, normalizeZ, normalizeY]);
-
 
   const isUserBetZero = useMemo(
     () =>
@@ -156,7 +154,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const scaleFactor = 0.4;
   const rawAggregator = getRawVector(aggregatorClipped);
   const scaledAggregator = rawAggregator.clone().multiplyScalar(scaleFactor);
-  scaledAggregator.z = rawAggregator.z;
+  scaledAggregator.z = 1; // фиксируем z для желтого вектора
   const rawBet = betPosition ? getRawVector(betPosition) : null;
   const scaledBet = rawBet ? rawBet.clone().multiplyScalar(scaleFactor) : null;
   if (scaledBet) scaledBet.z = 2; // фиксируем z для белого вектора
@@ -413,56 +411,116 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
   }, [isClickOnSphere, onDragging, betPosition, aggregatorClipped]);
 
-  const handlePointerMove = useCallback((evt: PointerEvent) => {
-    if (!isDragging) return;
-    if (axisMode === "X" || axisMode === "Y") {
-      if (!pointerStart.current || !initialBetPosition.current) return;
-      // Разница в пикселях по выбранной оси
-      const deltaPx = axisMode === "X"
-        ? evt.clientX - pointerStart.current.x
-        : evt.clientY - pointerStart.current.y;
+  const handlePointerMove = useCallback(
+    (evt: PointerEvent) => {
+      if (!isDragging) return;
+      const rect = gl.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        ((evt.clientX - rect.left) / rect.width) * 2 - 1,
+        -((evt.clientY - rect.top) / rect.height) * 2 + 1,
+      );
+      raycaster.current.setFromCamera(mouse, camera);
 
-      // Коэффициент преобразования экранных пикселей в единицы мира.
-      // Его подбираете эмпирически или вычисляете через параметры камеры.
-      const conversionFactor = 0.01; // настройте по необходимости
+      // 1. Получаем мировую точку агрегатора (для неподвижной оси)
+      const worldAggregator = new THREE.Vector3(
+        denormalizeZ(aggregatorClipped.x),
+        denormalizeY(aggregatorClipped.y),
+        1, // фиксированное время для агрегатора
+      );
 
-      const newPos = initialBetPosition.current.clone();
-      if (axisMode === "X") {
-        newPos.x += deltaPx * conversionFactor;
-      } else {
-        newPos.y += deltaPx * conversionFactor;
+      // 2. Строим плоскость через эту точку
+      plane.current.setFromNormalAndCoplanarPoint(
+        camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
+        worldAggregator,
+      );
+
+      // 3. Получаем точку пересечения луча с плоскостью (в мировых координатах)
+      const intersectWorld = new THREE.Vector3();
+      const intersectExists = raycaster.current.ray.intersectPlane(
+        plane.current,
+        intersectWorld,
+      );
+      if (!intersectExists) {
+        console.log("[BetLines] Нет пересечения с плоскостью");
+        return;
       }
-      newPos.z = 2;
-      setBetPosition(prev => prev ? prev.lerp(newPos, 0.2) : newPos);
 
-      const delta = newPos.clone().sub(aggregatorClipped);
+      // 4. Сначала сформируем новую мировую позицию
+      const worldNewPos = intersectWorld.clone();
+      if (axisMode === "X") {
+        // по оси X движемся свободно, по Y берем мировое значение агрегатора
+        worldNewPos.y = denormalizeY(aggregatorClipped.y);
+      } else if (axisMode === "Y") {
+        // по оси Y движемся свободно, по X фиксируем мировое значение агрегатора
+        worldNewPos.x = denormalizeZ(aggregatorClipped.x);
+      }
+      // z фиксировано (например, 2)
+      worldNewPos.z = 2;
+
+      // 5. Преобразуем мировую точку в нормализованное пространство
+      const normalizedNewPos = new THREE.Vector3(
+        normalizeZ(worldNewPos.x),
+        normalizeY(worldNewPos.y),
+        worldNewPos.z, // оставляем фиксированным
+      );
+
+      console.log(
+        "[BetLines] Новая позиция для ставки (нормализованная):",
+        normalizedNewPos.toArray(),
+      );
+
+      setBetPosition(normalizedNewPos);
+
+      const delta = normalizedNewPos.clone().sub(aggregatorClipped);
       const fraction = delta.length() / maxWhiteLength;
       setBetAmount(userBalance * fraction);
-      handleDrag(newPos);
-    } else {
-      // Если нет осевого режима – можно оставить логику через лучи (raycasting)
-      // … (ваша существующая логика для свободного перемещения)
-    }
-  }, [axisMode, isDragging, aggregatorClipped, maxWhiteLength, userBalance, handleDrag]);
+      handleDrag(normalizedNewPos);
+    },
+    [
+      isDragging,
+      camera,
+      gl.domElement,
+      aggregatorClipped,
+      axisMode,
+      maxWhiteLength,
+      userBalance,
+      handleDrag,
+      setBetAmount,
+      normalizeY,
+      normalizeZ,
+      denormalizeY,
+      denormalizeZ,
+    ],
+  );
 
 
   const handlePointerUp = useCallback(() => {
+    console.log("[BetLines] handlePointerUp");
     if (!isDragging) return;
     setIsDragging(false);
     onDragging(false);
-    // финальные вычисления, если нужны
-    const finalDir = betPosition ? betPosition.clone().sub(aggregatorClipped) : new THREE.Vector3();
+    const finalDir = betPosition
+      ? betPosition.clone().sub(aggregatorClipped)
+      : new THREE.Vector3();
     const fraction = Math.min(finalDir.length() / maxWhiteLength, 1);
     const betAmt = fraction * userBalance;
     setBetAmount(betAmt);
     onShowConfirmButton(true, {
       amount: betAmt,
-      predicted_vector: betPosition ? [betPosition.x, betPosition.y, betPosition.z] : [0, 0, 0],
+      predicted_vector: betPosition
+        ? [betPosition.x, betPosition.y, betPosition.z]
+        : [0, 0, 0],
     });
-    pointerStart.current = null;
-    initialBetPosition.current = null;
-  }, [isDragging, aggregatorClipped, betPosition, maxWhiteLength, userBalance, onDragging, onShowConfirmButton, setBetAmount]);
-
+  }, [
+    isDragging,
+    aggregatorClipped,
+    betPosition,
+    maxWhiteLength,
+    userBalance,
+    onDragging,
+    onShowConfirmButton,
+    setBetAmount,
+  ]);
 
   useEffect(() => {
     const c = gl.domElement;
