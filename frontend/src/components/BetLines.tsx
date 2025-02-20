@@ -12,8 +12,8 @@ import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { useScale } from "../context/ScaleContext";
+import WhileLine from "./WhiteLine";
 
-// Интерфейс пропсов
 interface BetLinesProps {
   previousBetEnd: THREE.Vector3;
   userPreviousBet: THREE.Vector3;
@@ -29,7 +29,6 @@ interface BetLinesProps {
   axisMode: "X" | "Y";
   visible: boolean;
   updateBetPosition: (position: THREE.Vector3) => void;
-
 }
 
 const LOCAL_KEY = "userBetVector";
@@ -49,19 +48,19 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              setBetAmount,
                                              axisMode,
                                              visible,
-                                             updateBetPosition
+                                             updateBetPosition,
                                            }) => {
   // Получаем объекты Three.js
   const { gl, camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
   const raycaster = useRef(new THREE.Raycaster());
-  // const plane = useRef(new THREE.Plane());
 
+  // Для жёлтого вектора оставляем свои рефы
   const yellowLineRef = useRef<Line2 | null>(null);
   const yellowConeRef = useRef<THREE.Mesh | null>(null);
-  const whiteLineRef = useRef<Line2 | null>(null);
-  const whiteConeRef = useRef<THREE.Mesh | null>(null);
-  const sphereRef = useRef<THREE.Mesh | null>(null);
+
+  // Этот ref будет передан в WhileLine для получения ссылки на сферу белой стрелки (для hit-тестинга)
+  const whiteSphereRef = useRef<THREE.Mesh | null>(null);
 
   const { normalizeY, normalizeZ } = useScale();
 
@@ -80,7 +79,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     })();
   }, []);
 
-  // Вычисляем агрегатор (желтый вектор) на основе previousBetEnd
+  // Вычисляем агрегатор (жёлтый вектор) на основе previousBetEnd
   const aggregatorClipped = useMemo(() => {
     console.log(
       "[BetLines] previousBetEnd",
@@ -155,18 +154,10 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
   }, [betPosition, updateBetPosition]);
 
-  // useEffect(() => {
-  //   if (!betPosition) {
-  //     setBetPosition(computedBetPosition);
-  //   }
-  // }, [computedBetPosition, betPosition]);
+  // Функция для получения "сырых" координат
+  const getRawVector = (vec: THREE.Vector3): THREE.Vector3 => vec.clone();
 
-  // Функция для получения "сырых" координат – без нормализации
-  const getRawVector = (vec: THREE.Vector3): THREE.Vector3 => {
-    return vec.clone();
-  };
-
-  // --- Единое масштабирование для отрисовки ---
+  // Единое масштабирование для отрисовки
   const scaleFactor = 0.4;
   console.log(
     "[BetLines] aggregatorClipped:",
@@ -188,12 +179,12 @@ const BetLines: React.FC<BetLinesProps> = ({
     scaledAggregator.y,
     scaledAggregator.z,
   );
-  scaledAggregator.z = 1; // фиксируем z для желтого вектора
+  scaledAggregator.z = 1; // фиксируем z для жёлтого вектора
   const rawBet = betPosition ? getRawVector(betPosition) : null;
   const scaledBet = rawBet ? rawBet.clone().multiplyScalar(scaleFactor) : null;
   if (scaledBet) scaledBet.z = 2; // фиксируем z для белого вектора
 
-  // ----- Отрисовка желтого вектора (агрегатора) -----
+  // Отрисовка жёлтого вектора (агрегатора)
   useEffect(() => {
     if (!visible || isVectorZero(aggregatorClipped)) return;
     if (!groupRef.current) return;
@@ -242,114 +233,13 @@ const BetLines: React.FC<BetLinesProps> = ({
     };
   }, [aggregatorClipped, visible, scaledAggregator]);
 
-  // ----- Отрисовка белой стрелки (ставки) -----
-  useEffect(() => {
-    if (!visible) return;
-    if (!groupRef.current) return;
-    if (!betPosition || !scaledBet) {
-      console.log("[BetLines] Нет betPosition – удаляем белые объекты");
-      if (groupRef.current && whiteLineRef.current)
-        groupRef.current.remove(whiteLineRef.current);
-      if (groupRef.current && whiteConeRef.current)
-        groupRef.current.remove(whiteConeRef.current);
-      if (groupRef.current && sphereRef.current)
-        groupRef.current.remove(sphereRef.current);
-      whiteLineRef.current = null;
-      whiteConeRef.current = null;
-      sphereRef.current = null;
-      return;
-    } else {
-      console.log(
-        "[BetLines] Есть и агрегатор, и betPosition:",
-        betPosition.toArray(),
-      );
-    }
-    console.log("[BetLines] whiteFinal:", scaledBet.toArray());
-    const wGeom = new LineGeometry();
-    wGeom.setPositions([
-      scaledAggregator.x,
-      scaledAggregator.y,
-      scaledAggregator.z,
-      scaledBet.x,
-      scaledBet.y,
-      scaledBet.z,
-    ]);
-    const wMat = new LineMaterial({
-      color: "white",
-      linewidth: 3,
-      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-    });
-    const wLine = new Line2(wGeom, wMat);
-    whiteLineRef.current = wLine;
-    groupRef.current.add(wLine);
-    const wCone = new THREE.Mesh(
-      new THREE.ConeGeometry(0.1, 0.3, 12),
-      new THREE.MeshStandardMaterial({ color: "white" }),
-    );
-    wCone.position.copy(scaledBet);
-    wCone.position.z = 2;
-    {
-      const defaultDir = new THREE.Vector3(0, 1, 0);
-      let desiredDir: THREE.Vector3;
-      if (isVectorZero(userPreviousBet)) {
-        desiredDir = new THREE.Vector3(
-          betPosition!.x,
-          betPosition!.y,
-          2,
-        ).normalize();
-      } else {
-        desiredDir = betPosition!.clone().sub(aggregatorClipped).normalize();
-      }
-      if (desiredDir.length() > 0) {
-        const quat = new THREE.Quaternion().setFromUnitVectors(
-          defaultDir,
-          desiredDir,
-        );
-        wCone.setRotationFromQuaternion(quat);
-      }
-    }
-    whiteConeRef.current = wCone;
-    groupRef.current.add(wCone);
-    const sph = new THREE.Mesh(
-      new THREE.SphereGeometry(0.5, 16, 16),
-      new THREE.MeshStandardMaterial({
-        color: "blue",
-        opacity: 0.5,
-        transparent: true,
-      }),
-    );
-    sph.position.copy(scaledBet);
-    groupRef.current.add(sph);
-    sphereRef.current = sph;
-    return () => {
-      if (groupRef.current && whiteLineRef.current)
-        groupRef.current.remove(whiteLineRef.current);
-      if (groupRef.current && whiteConeRef.current)
-        groupRef.current.remove(whiteConeRef.current);
-      if (groupRef.current && sphereRef.current)
-        groupRef.current.remove(sphereRef.current);
-    };
-  }, [
-    aggregatorClipped,
-    betPosition,
-    visible,
-    scaledBet,
-    isVectorZero,
-    userPreviousBet,
-  ]);
-
-  // ----- Обновление геометрии/позиций объектов -----
+  // Обновление позиций жёлтого вектора
   useEffect(() => {
     if (!visible) return;
     const updatedAgg = getRawVector(aggregatorClipped)
       .clone()
       .multiplyScalar(scaleFactor);
     updatedAgg.z = 1;
-    if (!betPosition) return;
-    const updatedBet = getRawVector(betPosition)
-      .clone()
-      .multiplyScalar(scaleFactor);
-    updatedBet.z = 2;
     if (
       yellowLineRef.current &&
       yellowLineRef.current.geometry instanceof LineGeometry
@@ -370,47 +260,10 @@ const BetLines: React.FC<BetLinesProps> = ({
         yellowConeRef.current.setRotationFromQuaternion(quat);
       }
     }
-    if (
-      whiteLineRef.current &&
-      whiteLineRef.current.geometry instanceof LineGeometry
-    ) {
-      const positions = [
-        updatedAgg.x,
-        updatedAgg.y,
-        updatedAgg.z,
-        updatedBet.x,
-        updatedBet.y,
-        updatedBet.z,
-      ];
-      whiteLineRef.current.geometry.setPositions(positions);
-    }
-    if (whiteConeRef.current) {
-      whiteConeRef.current.position.copy(updatedBet);
-      whiteConeRef.current.position.z = updatedBet.z;
-      const defaultDir = new THREE.Vector3(0, 1, 0);
-      const desiredDir = updatedBet.clone().sub(updatedAgg).normalize();
-      if (desiredDir.length() > 0) {
-        const quat = new THREE.Quaternion().setFromUnitVectors(
-          defaultDir,
-          desiredDir,
-        );
-        whiteConeRef.current.setRotationFromQuaternion(quat);
-      }
-    }
-    if (sphereRef.current) {
-      sphereRef.current.position.copy(updatedBet);
-      sphereRef.current.position.z = updatedBet.z;
-    }
-    if (
-      whiteLineRef.current &&
-      whiteLineRef.current.geometry &&
-      whiteLineRef.current.geometry.attributes.position
-    ) {
-      whiteLineRef.current.geometry.attributes.position.needsUpdate = true;
-    }
-  }, [aggregatorClipped, betPosition, visible, scaleFactor, userPreviousBet]);
+  }, [aggregatorClipped, visible]);
 
   // ----- Логика перетаскивания -----
+  // Используем whiteSphereRef (который передаём в WhileLine) для определения попадания курсора
   const isClickOnSphere = useCallback(
     (evt: PointerEvent) => {
       console.log(
@@ -418,14 +271,14 @@ const BetLines: React.FC<BetLinesProps> = ({
         evt.clientX,
         evt.clientY,
       );
-      if (!sphereRef.current) return false;
+      if (!whiteSphereRef.current) return false;
       const rect = gl.domElement.getBoundingClientRect();
       const mouse = new THREE.Vector2(
         ((evt.clientX - rect.left) / rect.width) * 2 - 1,
         -((evt.clientY - rect.top) / rect.height) * 2 + 1,
       );
       raycaster.current.setFromCamera(mouse, camera);
-      const hits = raycaster.current.intersectObject(sphereRef.current);
+      const hits = raycaster.current.intersectObject(whiteSphereRef.current);
       console.log("[BetLines] isClickOnSphere: hits", hits);
       return hits.length > 0;
     },
@@ -450,55 +303,61 @@ const BetLines: React.FC<BetLinesProps> = ({
     [isClickOnSphere, onDragging, betPosition, aggregatorClipped],
   );
 
-  const handlePointerMove = useCallback((evt: PointerEvent) => {
-    if (!isDragging) return;
-    if (axisMode === "X" || axisMode === "Y") {
-      if (!pointerStart.current || !initialBetPosition.current) return;
-      // Разница в пикселях по выбранной оси
-      const deltaPx = axisMode === "X"
-        ? evt.clientX - pointerStart.current.x
-        : evt.clientY - pointerStart.current.y;
-
-      // Коэффициент преобразования экранных пикселей в единицы мира.
-      // Его подбираете эмпирически или вычисляете через параметры камеры.
-      const conversionFactor = 0.01; // настройте по необходимости
-
-      const newPos = initialBetPosition.current.clone();
-      if (axisMode === "X") {
-        newPos.x += deltaPx * conversionFactor;
-      } else {
-        newPos.y -= deltaPx * conversionFactor;
+  const handlePointerMove = useCallback(
+    (evt: PointerEvent) => {
+      if (!isDragging) return;
+      if (axisMode === "X" || axisMode === "Y") {
+        if (!pointerStart.current || !initialBetPosition.current) return;
+        const deltaPx =
+          axisMode === "X"
+            ? evt.clientX - pointerStart.current.x
+            : evt.clientY - pointerStart.current.y;
+        const conversionFactor = 0.01;
+        const newPos = initialBetPosition.current.clone();
+        if (axisMode === "X") {
+          newPos.x += deltaPx * conversionFactor;
+        } else {
+          newPos.y -= deltaPx * conversionFactor;
+        }
+        newPos.z = 2;
+        setBetPosition(newPos);
+        const delta = newPos.clone().sub(aggregatorClipped);
+        const fraction = delta.length() / maxWhiteLength;
+        setBetAmount(userBalance * fraction);
+        handleDrag(newPos);
       }
-      newPos.z = 2;
-      setBetPosition(newPos);
-
-      const delta = newPos.clone().sub(aggregatorClipped);
-      const fraction = delta.length() / maxWhiteLength;
-      setBetAmount(userBalance * fraction);
-      handleDrag(newPos);
-    } else {
-      // Если нет осевого режима – можно оставить логику через лучи (raycasting)
-      // … (ваша существующая логика для свободного перемещения)
-    }
-  }, [axisMode, isDragging, aggregatorClipped, maxWhiteLength, userBalance, handleDrag]);
+    },
+    [axisMode, isDragging, aggregatorClipped, maxWhiteLength, userBalance, handleDrag],
+  );
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging) return;
     setIsDragging(false);
     onDragging(false);
-    // финальные вычисления, если нужны
-    const finalDir = betPosition ? betPosition.clone().sub(aggregatorClipped) : new THREE.Vector3();
+    const finalDir = betPosition
+      ? betPosition.clone().sub(aggregatorClipped)
+      : new THREE.Vector3();
     const fraction = Math.min(finalDir.length() / maxWhiteLength, 1);
     const betAmt = fraction * userBalance;
     setBetAmount(betAmt);
     onShowConfirmButton(true, {
       amount: betAmt,
-      predicted_vector: betPosition ? [betPosition.x, betPosition.y, betPosition.z] : [0, 0, 0],
+      predicted_vector: betPosition
+        ? [betPosition.x, betPosition.y, betPosition.z]
+        : [0, 0, 0],
     });
     pointerStart.current = null;
     initialBetPosition.current = null;
-  }, [isDragging, aggregatorClipped, betPosition, maxWhiteLength, userBalance, onDragging, onShowConfirmButton, setBetAmount]);
-
+  }, [
+    isDragging,
+    aggregatorClipped,
+    betPosition,
+    maxWhiteLength,
+    userBalance,
+    onDragging,
+    onShowConfirmButton,
+    setBetAmount,
+  ]);
 
   useEffect(() => {
     const c = gl.domElement;
@@ -513,7 +372,19 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, [gl.domElement, handlePointerDown, handlePointerMove, handlePointerUp]);
 
   if (!visible) return null;
-  return <group ref={groupRef} />;
+  return (
+    <group ref={groupRef}>
+      {/* Отрисовка жёлтого вектора (агрегатора) происходит здесь */}
+      {/* Белая стрелка (ставка) теперь отрисовывается в отдельном компоненте WhileLine */}
+      <WhileLine
+        aggregator={aggregatorClipped}
+        betPosition={betPosition}
+        userPreviousBet={userPreviousBet}
+        visible={visible}
+        sphereRef={whiteSphereRef}
+      />
+    </group>
+  );
 };
 
 export default BetLines;
