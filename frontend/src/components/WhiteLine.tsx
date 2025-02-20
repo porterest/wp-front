@@ -6,18 +6,26 @@ import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 
+// Интерфейс пропсов компонента WhileLine
+// aggregator – вектор, полученный как "желтый агрегатор" (напр. предыдущая ставка)
+// betPosition – текущая позиция ставки, которую устанавливает пользователь
+// userPreviousBet – предыдущая ставка пользователя (используется для расчёта направления)
+// visible – флаг видимости компонента
+// sphereRef – ссылка на сферу, которая используется для hit-тестинга (определения наведения курсора)
 interface WhileLineProps {
-  aggregator: THREE.Vector3;         // Желтый агрегатор (например, aggregatorClipped из BetLines)
-  betPosition: THREE.Vector3 | null; // Позиция ставки, как установил пользователь
-  userPreviousBet: THREE.Vector3;    // Предыдущая ставка (для расчёта направления)
+  aggregator: THREE.Vector3;
+  betPosition: THREE.Vector3 | null;
+  userPreviousBet: THREE.Vector3;
   visible: boolean;
   sphereRef: React.MutableRefObject<THREE.Mesh | null>;
 }
 
+// Масштабный коэффициент для преобразования координат (чтобы привести их к нужной визуальной области)
 const scaleFactor = 0.4;
-// Порог для определения, что разница по оси цены незначительна (ставка совпадает с агрегатором)
+// Порог разницы по оси цены (x), ниже которого считаем, что ставка совпадает с агрегатором (риск = 0)
 const PRICE_DIFF_THRESHOLD = 0.001;
 
+// Функция для проверки, является ли вектор нулевым (с учётом эпсилон)
 const isVectorZero = (vec: THREE.Vector3, eps = 0.000001): boolean =>
   Math.abs(vec.x) < eps && Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
 
@@ -28,21 +36,25 @@ const WhileLine: React.FC<WhileLineProps> = ({
                                                visible,
                                                sphereRef,
                                              }) => {
+  // Ссылка на группу (объект Three.js, содержащий все наши элементы)
   const groupRef = useRef<THREE.Group>(null);
+  // Ссылки на линию и конус, которые будут отрисованы для ставки
   const whiteLineRef = useRef<Line2 | null>(null);
   const whiteConeRef = useRef<THREE.Mesh | null>(null);
+  // Локальные состояния для определения, наведён ли курсор на элемент, и для отображения текста риска
   const [hovered, setHovered] = useState(false);
   const [riskText, setRiskText] = useState("");
 
-  // Масштабированный агрегатор: z фиксирован на 1.
-  // Этот вектор определяет "текущую цену"
+  // Мемоизированный вектор агрегатора, масштабированный и с фиксированным z = 1.
+  // Этот вектор служит текущей "ценой", по которой будем сравнивать ставку.
   const scaledAggregator = useMemo(() => {
     const scaled = aggregator.clone().multiplyScalar(scaleFactor);
     scaled.z = 1;
     return scaled;
   }, [aggregator]);
 
-  // Масштабированная ставка: z фиксирован на 2.
+  // Мемоизированная позиция ставки, масштабированная и с фиксированным z = 2.
+  // Это позиция, установленная пользователем.
   const scaledBet = useMemo(() => {
     if (!betPosition) return null;
     const scaled = betPosition.clone().multiplyScalar(scaleFactor);
@@ -50,10 +62,13 @@ const WhileLine: React.FC<WhileLineProps> = ({
     return scaled;
   }, [betPosition]);
 
-  // Первичная отрисовка стрелки (линия, наконечник, сфера для hit-тестинга/tooltip)
+  // useEffect для первоначальной отрисовки элементов (линия, конус, сфера)
   useEffect(() => {
+    // Если компонент не видим или группа не создана, ничего не делаем
     if (!visible) return;
     if (!groupRef.current) return;
+
+    // Если нет позиции ставки или масштабированной ставки, удаляем все дочерние элементы группы
     if (!betPosition || !scaledBet) {
       groupRef.current.children.forEach((child) => groupRef.current?.remove(child));
       whiteLineRef.current = null;
@@ -61,8 +76,9 @@ const WhileLine: React.FC<WhileLineProps> = ({
       return;
     }
 
-    // Линия от агрегатора к ставке
+    // Создание линии между агрегатором и ставкой
     const wGeom = new LineGeometry();
+    // Устанавливаем позиции линии: от scaledAggregator до scaledBet
     wGeom.setPositions([
       scaledAggregator.x,
       scaledAggregator.y,
@@ -72,29 +88,33 @@ const WhileLine: React.FC<WhileLineProps> = ({
       scaledBet.z,
     ]);
     const wMat = new LineMaterial({
-      color: "white",
+      color: "white", // Изначально цвет линии – белый
       linewidth: 3,
       resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
     });
     const wLine = new Line2(wGeom, wMat);
     whiteLineRef.current = wLine;
-    groupRef.current.add(wLine);
+    groupRef.current.add(wLine); // Добавляем линию в группу
 
-    // Наконечник (конус)
+    // Создание наконечника стрелки в виде конуса
     const wCone = new THREE.Mesh(
       new THREE.ConeGeometry(0.1, 0.3, 12),
-      new THREE.MeshStandardMaterial({ color: "white" })
+      new THREE.MeshStandardMaterial({ color: "white" }) // Изначально цвет конуса – белый
     );
+    // Располагаем конус в конце линии (в точке ставки)
     wCone.position.copy(scaledBet);
     wCone.position.z = 2;
+    // Определяем направление конуса: по умолчанию оно – вдоль оси Y (0,1,0)
     const defaultDir = new THREE.Vector3(0, 1, 0);
-    // Направление рассчитывается по разности ставки и агрегатора.
     let desiredDir: THREE.Vector3;
+    // Если предыдущая ставка пользователя – нулевая, направление берём из позиции ставки
     if (isVectorZero(userPreviousBet)) {
       desiredDir = new THREE.Vector3(betPosition.x, betPosition.y, 2).normalize();
     } else {
+      // Иначе, направление рассчитывается как разность между позицией ставки и агрегатором
       desiredDir = betPosition.clone().sub(aggregator).normalize();
     }
+    // Если полученное направление не нулевое, вычисляем кватернион для поворота конуса
     if (desiredDir.length() > 0) {
       const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
       wCone.setRotationFromQuaternion(quat);
@@ -102,7 +122,7 @@ const WhileLine: React.FC<WhileLineProps> = ({
     whiteConeRef.current = wCone;
     groupRef.current.add(wCone);
 
-    // Сфера для hit-тестинга и tooltip
+    // Создание сферы для hit-тестинга и отображения tooltip при наведении курсора
     const sph = new THREE.Mesh(
       new THREE.SphereGeometry(0.5, 16, 16),
       new THREE.MeshStandardMaterial({
@@ -115,14 +135,18 @@ const WhileLine: React.FC<WhileLineProps> = ({
     groupRef.current.add(sph);
     sphereRef.current = sph;
 
-    // Используем свойства onPointerOver / onPointerOut (react‑three‑fiber поддерживает их)
+    // Привязываем обработчики событий через свойства onPointerOver и onPointerOut
+    // Эти свойства поддерживаются react‑three‑fiber для JSX-элементов
     const pointerProps = sph as unknown as {
       onPointerOver?: () => void;
       onPointerOut?: () => void;
     };
+    // При наведении курсора устанавливаем hovered в true
     pointerProps.onPointerOver = () => setHovered(true);
+    // При уходе курсора – в false
     pointerProps.onPointerOut = () => setHovered(false);
 
+    // Функция очистки: удаляем все добавленные элементы и обнуляем обработчики
     return () => {
       groupRef.current?.remove(wLine);
       groupRef.current?.remove(wCone);
@@ -132,14 +156,17 @@ const WhileLine: React.FC<WhileLineProps> = ({
     };
   }, [aggregator, betPosition, scaledBet, userPreviousBet, visible, sphereRef, scaledAggregator]);
 
-  // Обновление позиций объектов при изменениях
+  // useEffect для обновления позиций объектов при изменениях входных данных
   useEffect(() => {
     if (!visible) return;
+    // Пересчитываем агрегатор
     const updatedAgg = aggregator.clone().multiplyScalar(scaleFactor);
     updatedAgg.z = 1;
     if (!betPosition) return;
+    // Пересчитываем позицию ставки
     const updatedBet = betPosition.clone().multiplyScalar(scaleFactor);
     updatedBet.z = 2;
+    // Обновляем позицию линии, если она существует
     if (whiteLineRef.current && whiteLineRef.current.geometry instanceof LineGeometry) {
       whiteLineRef.current.geometry.setPositions([
         updatedAgg.x,
@@ -150,6 +177,7 @@ const WhileLine: React.FC<WhileLineProps> = ({
         updatedBet.z,
       ]);
     }
+    // Обновляем позицию конуса и его поворот
     if (whiteConeRef.current) {
       whiteConeRef.current.position.copy(updatedBet);
       whiteConeRef.current.position.z = updatedBet.z;
@@ -160,10 +188,12 @@ const WhileLine: React.FC<WhileLineProps> = ({
         whiteConeRef.current.setRotationFromQuaternion(quat);
       }
     }
+    // Обновляем позицию сферы
     if (sphereRef.current) {
       sphereRef.current.position.copy(updatedBet);
       sphereRef.current.position.z = updatedBet.z;
     }
+    // Если у линии есть атрибуты позиции, помечаем их как нуждающиеся в обновлении
     if (
       whiteLineRef.current &&
       whiteLineRef.current.geometry &&
@@ -173,35 +203,46 @@ const WhileLine: React.FC<WhileLineProps> = ({
     }
   }, [aggregator, betPosition, visible, sphereRef]);
 
-  // Динамическое обновление цвета, анимации наконечника и tooltip
+  // useFrame: обновление цвета стрелки, анимации наконечника и текста tooltip в каждом кадре
   useFrame((state) => {
     if (!betPosition || !scaledBet) return;
-    // Вычисляем риск только по оси цены (x)
+    // Вычисляем разницу по оси цены (x) между агрегатором и ставкой
+    console.log("scaledAggregator.x, scaledBet.x, scaledAggregator.x - scaledBet.x")
+    console.log(scaledAggregator.x, scaledBet.x, scaledAggregator.x - scaledBet.x)
+    console.log(scaledAggregator.y, scaledBet.y, scaledAggregator.y - scaledBet.y)
+
     const priceDiff = Math.abs(scaledAggregator.x - scaledBet.x);
+    // Текущая цена определяется как x агрегатора
     const currentPrice = scaledAggregator.x;
-    // Если разница меньше порога, считаем риск равным 0 → белый
+    // Если разница меньше порога, риск равен 0, иначе рискFraction = разница / текущая цена
     const riskFraction = priceDiff < PRICE_DIFF_THRESHOLD ? 0 : priceDiff / currentPrice;
 
+    // Изначально всегда устанавливаем белый цвет
     let newColorStr = "white";
     let newRiskText = "";
+    // Если риск не нулевой, изменяем цвет в зависимости от уровня риска:
     if (riskFraction === 0) {
       newColorStr = "white";
       newRiskText = "";
     } else if (riskFraction < 0.05) {
-      newColorStr = "green";
+      newColorStr = "green"; // низкий риск
       newRiskText = "Низкий риск";
     } else if (riskFraction < 0.15) {
-      newColorStr = "orange";
+      newColorStr = "orange"; // средний риск
       newRiskText = "Средний риск";
     } else {
-      newColorStr = "red";
+      newColorStr = "red"; // высокий риск
       newRiskText = riskFraction < 0.30 ? "Высокий риск – опасно" : "Критический риск";
     }
+
+    // Обновляем цвет линии
     if (whiteLineRef.current) {
       (whiteLineRef.current.material as LineMaterial).color.set(newColorStr);
     }
+    // Обновляем цвет и анимацию наконечника (конуса)
     if (whiteConeRef.current) {
       (whiteConeRef.current.material as THREE.MeshStandardMaterial).color.set(newColorStr);
+      // Если риск критический (≥30%), применяем пульсацию
       if (riskFraction >= 0.30) {
         const pulse = 1 + 0.1 * Math.sin(state.clock.elapsedTime * 10);
         whiteConeRef.current.scale.set(pulse, pulse, pulse);
@@ -209,13 +250,16 @@ const WhileLine: React.FC<WhileLineProps> = ({
         whiteConeRef.current.scale.set(1, 1, 1);
       }
     }
+    // Если курсор наведён, обновляем текст tooltip
     if (hovered && newRiskText !== riskText) {
       setRiskText(newRiskText);
     }
   });
 
   return (
+    // Группа, содержащая все объекты стрелки
     <group ref={groupRef}>
+      {/* Если курсор наведён, отображаем tooltip с текстом риска */}
       {hovered && scaledBet && (
         <Html position={[scaledBet.x, scaledBet.y, scaledBet.z + 0.5]} distanceFactor={10}>
           <div
