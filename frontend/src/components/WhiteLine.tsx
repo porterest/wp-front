@@ -48,8 +48,10 @@ const WhileLine: React.FC<WhileLineProps> = ({
   // Мемоизированный вектор агрегатора, масштабированный и с фиксированным z = 1.
   // Этот вектор служит текущей "ценой", по которой будем сравнивать ставку.
   const scaledAggregator = useMemo(() => {
-    const scaled = aggregator.clone().multiplyScalar(scaleFactor);
+    console.log("aggregator", aggregator)
+    const scaled = aggregator.clone().multiplyScalar(scaleFactor); //(00)
     scaled.z = 1;
+    console.log("scaled aggregator", scaled);
     return scaled;
   }, [aggregator]);
 
