@@ -83,8 +83,10 @@ const BetLines: React.FC<BetLinesProps> = ({
     const normY = normalizeY(previousBetEnd.y);
     const vec2 = new THREE.Vector2(normX, normY);
     vec2.clampLength(0, maxYellowLength);
-    return new THREE.Vector3(vec2.x, vec2.y, 1);
+    // Берем z из предыдущей координаты (или вычисляем, если нужно)
+    return new THREE.Vector3(vec2.x, vec2.y, previousBetEnd.z);
   }, [previousBetEnd, maxYellowLength, normalizeZ, normalizeY]);
+
 
   const isUserBetZero = useMemo(
     () =>
@@ -154,7 +156,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const scaleFactor = 0.4;
   const rawAggregator = getRawVector(aggregatorClipped);
   const scaledAggregator = rawAggregator.clone().multiplyScalar(scaleFactor);
-  scaledAggregator.z = 1; // фиксируем z для желтого вектора
+  scaledAggregator.z = rawAggregator.z;
   const rawBet = betPosition ? getRawVector(betPosition) : null;
   const scaledBet = rawBet ? rawBet.clone().multiplyScalar(scaleFactor) : null;
   if (scaledBet) scaledBet.z = 2; // фиксируем z для белого вектора
