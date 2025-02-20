@@ -52,7 +52,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const { gl, camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
   const raycaster = useRef(new THREE.Raycaster());
-  const plane = useRef(new THREE.Plane());
+  // const plane = useRef(new THREE.Plane());
 
   const yellowLineRef = useRef<Line2 | null>(null);
   const yellowConeRef = useRef<THREE.Mesh | null>(null);
@@ -60,7 +60,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const whiteConeRef = useRef<THREE.Mesh | null>(null);
   const sphereRef = useRef<THREE.Mesh | null>(null);
 
-  const { normalizeY, normalizeZ, denormalizeY, denormalizeZ } = useScale();
+  const { normalizeY, normalizeZ } = useScale();
 
   const [isDragging, setIsDragging] = useState(false);
   const [userBalance, setUserBalance] = useState(0);
