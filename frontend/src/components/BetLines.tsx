@@ -445,7 +445,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     if (!isDragging) return;
 
     // Задаём горизонтальную плоскость, параллельную XY, на z = 2
-    plane.current.set(new THREE.Plane(new THREE.Vector3(0, 0, 1), -2));
+// Задаём горизонтальную плоскость на z = 2
+    plane.current.set(new THREE.Vector3(0, 0, 1), -2);
 
     // Получаем экранные координаты курсора
     const rect = gl.domElement.getBoundingClientRect();
