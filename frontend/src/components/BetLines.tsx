@@ -140,9 +140,11 @@ const BetLines: React.FC<BetLinesProps> = ({
   );
 
   useEffect(() => {
-    // Если не перетаскиваем, обновляем позицию
-    setBetPosition(computedBetPosition);
+    if (!isDragging) {
+      setBetPosition(computedBetPosition);
+    }
   }, [computedBetPosition, isDragging]);
+
 
   // Функция для получения "сырых" координат – без нормализации
   const getRawVector = (vec: THREE.Vector3): THREE.Vector3 => {
@@ -452,21 +454,18 @@ const BetLines: React.FC<BetLinesProps> = ({
       );
 
       // 5. Вычисляем смещение (в нормализованном пространстве) относительно aggregatorClipped с учетом axisMode
-      const newPos = aggregatorClipped.clone();
-      const direction = normalizedIntersect.clone().sub(aggregatorClipped);
-      if (axisMode === "X") {
-        newPos.x += direction.x;
-      } else if (axisMode === "Y") {
-        newPos.y += direction.y;
-      } else {
-        newPos.add(direction);
-      }
+      const newPos = normalizedIntersect.clone();
+      newPos.z = 1; // или установить z по необходимости
 
       console.log(
         "[BetLines] Новая позиция для ставки (normalized):",
         newPos.toArray(),
       );
-      setBetPosition(newPos);
+      setBetPosition((prev) => {
+        if (!prev) return newPos;
+        // Интерполяция с коэффициентом 0.2 (настраиваемым)
+        return prev.lerp(newPos, 0.2);
+      });
       const delta = newPos.clone().sub(aggregatorClipped);
       const fraction = delta.length() / maxWhiteLength;
       setBetAmount(userBalance * fraction);
