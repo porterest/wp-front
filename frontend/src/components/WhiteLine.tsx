@@ -1,13 +1,21 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 
+// Расширяем тип событий, добавляя pointerover и pointerout
+interface ExtendedEventMap extends THREE.Object3DEventMap {
+  pointerover: { type: "pointerover"; target: THREE.Object3D };
+  pointerout: { type: "pointerout"; target: THREE.Object3D };
+}
+
 interface WhileLineProps {
-  aggregator: THREE.Vector3; // исходный агрегатор (например, aggregatorClipped из BetLines)
-  betPosition: THREE.Vector3 | null; // исходная позиция ставки
-  userPreviousBet: THREE.Vector3; // предыдущая ставка пользователя
+  aggregator: THREE.Vector3;         // Желтый агрегатор (например, aggregatorClipped из BetLines)
+  betPosition: THREE.Vector3 | null; // Позиция ставки, как установил пользователь
+  userPreviousBet: THREE.Vector3;    // Предыдущая ставка (для расчёта направления)
   visible: boolean;
   sphereRef: React.MutableRefObject<THREE.Mesh | null>;
 }
@@ -27,14 +35,17 @@ const WhileLine: React.FC<WhileLineProps> = ({
   const groupRef = useRef<THREE.Group>(null);
   const whiteLineRef = useRef<Line2 | null>(null);
   const whiteConeRef = useRef<THREE.Mesh | null>(null);
+  const [hovered, setHovered] = useState(false);
+  const [riskText, setRiskText] = useState("");
 
-  // Вычисляем масштабированные версии агрегатора и ставки
+  // Масштабированный агрегатор: z фиксирован на 1
   const scaledAggregator = useMemo(() => {
     const scaled = aggregator.clone().multiplyScalar(scaleFactor);
     scaled.z = 1;
     return scaled;
   }, [aggregator]);
 
+  // Масштабированная ставка: z фиксирован на 2
   const scaledBet = useMemo(() => {
     if (!betPosition) return null;
     const scaled = betPosition.clone().multiplyScalar(scaleFactor);
@@ -42,20 +53,18 @@ const WhileLine: React.FC<WhileLineProps> = ({
     return scaled;
   }, [betPosition]);
 
-  // Отрисовка белой стрелки (ставки)
+  // Первичная отрисовка стрелки: линия, конус и сфера для hit-тестинга/tooltip
   useEffect(() => {
     if (!visible) return;
     if (!groupRef.current) return;
 
     if (!betPosition || !scaledBet) {
-      // Если нет позиции ставки, удаляем объекты, если они есть
       if (groupRef.current && whiteLineRef.current) {
         groupRef.current.remove(whiteLineRef.current);
       }
       if (groupRef.current && whiteConeRef.current) {
         groupRef.current.remove(whiteConeRef.current);
       }
-      // Также очищаем переданный ref сферы
       if (groupRef.current && sphereRef.current) {
         groupRef.current.remove(sphereRef.current);
       }
@@ -64,7 +73,7 @@ const WhileLine: React.FC<WhileLineProps> = ({
       return;
     }
 
-    // Создаём линию между агрегатором и позицией ставки
+    // Создаём линию между агрегатором и ставкой
     const wGeom = new LineGeometry();
     wGeom.setPositions([
       scaledAggregator.x,
@@ -83,7 +92,7 @@ const WhileLine: React.FC<WhileLineProps> = ({
     whiteLineRef.current = wLine;
     groupRef.current.add(wLine);
 
-    // Создаём конус, обозначающий наконечник стрелки
+    // Наконечник (конус)
     const wCone = new THREE.Mesh(
       new THREE.ConeGeometry(0.1, 0.3, 12),
       new THREE.MeshStandardMaterial({ color: "white" })
@@ -104,7 +113,7 @@ const WhileLine: React.FC<WhileLineProps> = ({
     whiteConeRef.current = wCone;
     groupRef.current.add(wCone);
 
-    // Создаём сферу для наглядности (например, с эффектом прозрачности)
+    // Создаём сферу для hit-тестинга и tooltip
     const sph = new THREE.Mesh(
       new THREE.SphereGeometry(0.5, 16, 16),
       new THREE.MeshStandardMaterial({
@@ -115,20 +124,31 @@ const WhileLine: React.FC<WhileLineProps> = ({
     );
     sph.position.copy(scaledBet);
     groupRef.current.add(sph);
-    // Передаём ссылку на созданную сферу через переданный ref
     sphereRef.current = sph;
 
+    // Приводим объект сферы к типу EventDispatcher с расширённым набором событий
+    const dispatcher = sph as unknown as THREE.EventDispatcher<ExtendedEventMap>;
+    const onPointerOver = () => setHovered(true);
+    const onPointerOut = () => setHovered(false);
+    dispatcher.addEventListener("pointerover", onPointerOver);
+    dispatcher.addEventListener("pointerout", onPointerOut);
+
     return () => {
-      if (groupRef.current && whiteLineRef.current)
+      if (groupRef.current && whiteLineRef.current) {
         groupRef.current.remove(whiteLineRef.current);
-      if (groupRef.current && whiteConeRef.current)
+      }
+      if (groupRef.current && whiteConeRef.current) {
         groupRef.current.remove(whiteConeRef.current);
-      if (groupRef.current && sphereRef.current)
+      }
+      if (groupRef.current && sphereRef.current) {
         groupRef.current.remove(sphereRef.current);
+      }
+      dispatcher.removeEventListener("pointerover", onPointerOver);
+      dispatcher.removeEventListener("pointerout", onPointerOut);
     };
   }, [aggregator, betPosition, scaledBet, userPreviousBet, visible, sphereRef]);
 
-  // Обновление геометрии и позиций объектов при изменениях
+  // Обновляем позиции объектов, если изменяются данные
   useEffect(() => {
     if (!visible) return;
     const updatedAgg = aggregator.clone().multiplyScalar(scaleFactor);
@@ -136,7 +156,6 @@ const WhileLine: React.FC<WhileLineProps> = ({
     if (!betPosition) return;
     const updatedBet = betPosition.clone().multiplyScalar(scaleFactor);
     updatedBet.z = 2;
-
     if (whiteLineRef.current && whiteLineRef.current.geometry instanceof LineGeometry) {
       const positions = [
         updatedAgg.x,
@@ -169,10 +188,62 @@ const WhileLine: React.FC<WhileLineProps> = ({
     ) {
       whiteLineRef.current.geometry.attributes.position.needsUpdate = true;
     }
-  }, [aggregator, betPosition, visible]);
+  }, [aggregator, betPosition, visible, sphereRef]);
 
-  if (!visible) return null;
-  return <group ref={groupRef} />;
+  // useFrame: динамическое обновление цвета, анимации наконечника и tooltip
+  useFrame((state) => {
+    if (!betPosition || !scaledBet) return;
+    const currentPrice = scaledAggregator.x;
+    const betPrice = scaledBet.x;
+    const riskFraction = Math.abs(currentPrice - betPrice) / currentPrice;
+    let newColorStr = "white";
+    let newRiskText = "";
+    if (riskFraction < 0.05) {
+      newColorStr = "green";
+      newRiskText = "Низкий риск";
+    } else if (riskFraction < 0.15) {
+      newColorStr = "orange";
+      newRiskText = "Средний риск";
+    } else {
+      newColorStr = "red";
+      newRiskText = riskFraction < 0.30 ? "Высокий риск – опасно" : "Критический риск";
+    }
+    if (whiteLineRef.current) {
+      (whiteLineRef.current.material as LineMaterial).color.set(newColorStr);
+    }
+    if (whiteConeRef.current) {
+      (whiteConeRef.current.material as THREE.MeshStandardMaterial).color.set(newColorStr);
+      if (riskFraction >= 0.30) {
+        const pulse = 1 + 0.1 * Math.sin(state.clock.elapsedTime * 10);
+        whiteConeRef.current.scale.set(pulse, pulse, pulse);
+      } else {
+        whiteConeRef.current.scale.set(1, 1, 1);
+      }
+    }
+    if (hovered && newRiskText !== riskText) {
+      setRiskText(newRiskText);
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      {hovered && scaledBet && (
+        <Html position={[scaledBet.x, scaledBet.y, scaledBet.z + 0.5]} distanceFactor={10}>
+          <div
+            style={{
+              background: "rgba(255,255,255,0.8)",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              color: "#000",
+            }}
+          >
+            {riskText}
+          </div>
+        </Html>
+      )}
+    </group>
+  );
 };
 
 export default WhileLine;
