@@ -444,18 +444,18 @@ const BetLines: React.FC<BetLinesProps> = ({
   const handlePointerMove = useCallback((evt: PointerEvent) => {
     if (!isDragging) return;
 
-    // Задаём горизонтальную плоскость на z = 2
-    plane.current.set(new THREE.Vector3(0, 0, 1), -2);
+    // Задаём горизонтальную плоскость, параллельную XY, на z = 2
+    plane.current.set(new THREE.Plane(new THREE.Vector3(0, 0, 1), -2));
 
     // Получаем экранные координаты курсора
     const rect = gl.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(
       ((evt.clientX - rect.left) / rect.width) * 2 - 1,
-      -((evt.clientY - rect.top) / rect.height) * 2 + 1,
+      -((evt.clientY - rect.top) / rect.height) * 2 + 1
     );
     raycaster.current.setFromCamera(mouse, camera);
 
-    // Находим точку пересечения луча с плоскостью (в мировых координатах)
+    // Получаем мировую точку пересечения луча с плоскостью
     const intersectWorld = new THREE.Vector3();
     const intersectExists = raycaster.current.ray.intersectPlane(plane.current, intersectWorld);
     if (!intersectExists) {
@@ -463,32 +463,34 @@ const BetLines: React.FC<BetLinesProps> = ({
       return;
     }
 
-    // Получаем мировые координаты фиксированной оси агрегатора:
-    const worldAggregatorX = denormalizeY(aggregatorClipped.x);
-    const worldAggregatorY = denormalizeZ(aggregatorClipped.y);
+    // Получаем фиксированные мировые координаты агрегатора
+    // (Преобразуем нормализованные координаты агрегатора в мировые)
+    const aggregatorWorld = new THREE.Vector3(
+      denormalizeY(aggregatorClipped.x),
+      denormalizeZ(aggregatorClipped.y),
+      1 // Здесь не важен z, он уже используется для построения плоскости
+    );
 
-    // Начинаем с найденного пересечения:
+    // Копируем найденную мировую точку
     const newWorld = intersectWorld.clone();
-
     if (axisMode === "X") {
-      // Движение по X свободное, а y фиксируем по агрегатору
-      newWorld.y = worldAggregatorY;
+      // При движении по X свободно, но по Y фиксируем мировое значение агрегатора
+      newWorld.y = aggregatorWorld.y;
     } else if (axisMode === "Y") {
-      // Движение по Y свободное, а x фиксируем по агрегатору
-      newWorld.x = worldAggregatorX;
-      // Инвертируем смещение по Y относительно агрегатора:
-      newWorld.y = worldAggregatorY - (intersectWorld.y - worldAggregatorY);
+      // При движении по Y свободно, но по X фиксируем мировое значение агрегатора
+      newWorld.x = aggregatorWorld.x;
     }
-    // Фиксируем z
+    // Фиксируем z как 2
     newWorld.z = 2;
 
-    // Преобразуем мировую точку в нормализованное пространство
+    // Преобразуем мировую точку обратно в нормализованное пространство
     const newPos = new THREE.Vector3(
       normalizeY(newWorld.x),
       normalizeZ(newWorld.y),
-      2 // z фиксировано
+      2
     );
 
+    // Обновляем позицию и связанные параметры
     setBetPosition(newPos);
     const delta = newPos.clone().sub(aggregatorClipped);
     const fraction = delta.length() / maxWhiteLength;
@@ -509,6 +511,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     denormalizeY,
     denormalizeZ,
   ]);
+
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging) return;
