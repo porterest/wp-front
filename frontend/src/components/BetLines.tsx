@@ -37,17 +37,17 @@ const isVectorZero = (vec: THREE.Vector3, eps = 0.000001): boolean =>
   Math.abs(vec.x) < eps && Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
 
 const BetLines: React.FC<BetLinesProps> = ({
-                                             previousBetEnd,
-                                             userPreviousBet,
-                                             onDragging,
-                                             onShowConfirmButton,
-                                             maxYellowLength,
-                                             maxWhiteLength,
-                                             handleDrag,
-                                             setBetAmount,
-                                             axisMode,
-                                             visible,
-                                           }) => {
+  previousBetEnd,
+  userPreviousBet,
+  onDragging,
+  onShowConfirmButton,
+  maxYellowLength,
+  maxWhiteLength,
+  handleDrag,
+  setBetAmount,
+  axisMode,
+  visible,
+}) => {
   // Получаем объекты Three.js
   const { gl, camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
@@ -79,7 +79,12 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Вычисляем агрегатор (желтый вектор) на основе previousBetEnd
   const aggregatorClipped = useMemo(() => {
-    console.log("[BetLines] previousBetEnd", previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
+    console.log(
+      "[BetLines] previousBetEnd",
+      previousBetEnd.x,
+      previousBetEnd.y,
+      previousBetEnd.z,
+    );
     const normX = normalizeY(previousBetEnd.x);
     const normY = normalizeZ(previousBetEnd.y);
     const vec2 = new THREE.Vector2(normX, normY);
@@ -154,11 +159,26 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // --- Единое масштабирование для отрисовки ---
   const scaleFactor = 0.4;
-  console.log("[BetLines] aggregatorClipped:", aggregatorClipped.x, aggregatorClipped.y, aggregatorClipped.z);
+  console.log(
+    "[BetLines] aggregatorClipped:",
+    aggregatorClipped.x,
+    aggregatorClipped.y,
+    aggregatorClipped.z,
+  );
   const rawAggregator = getRawVector(aggregatorClipped);
-  console.log("rawAggregator", rawAggregator.x, rawAggregator.y, rawAggregator.z);
+  console.log(
+    "rawAggregator",
+    rawAggregator.x,
+    rawAggregator.y,
+    rawAggregator.z,
+  );
   const scaledAggregator = rawAggregator.clone().multiplyScalar(scaleFactor);
-  console.log("scaledAggregator", scaledAggregator.x, scaledAggregator.y, scaledAggregator.z);
+  console.log(
+    "scaledAggregator",
+    scaledAggregator.x,
+    scaledAggregator.y,
+    scaledAggregator.z,
+  );
   scaledAggregator.z = 1; // фиксируем z для желтого вектора
   const rawBet = betPosition ? getRawVector(betPosition) : null;
   const scaledBet = rawBet ? rawBet.clone().multiplyScalar(scaleFactor) : null;
@@ -403,110 +423,72 @@ const BetLines: React.FC<BetLinesProps> = ({
     [camera, gl.domElement],
   );
 
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+  const initialBetPosition = useRef<THREE.Vector3 | null>(null);
+
   const handlePointerDown = useCallback(
     (evt: PointerEvent) => {
       evt.stopPropagation();
-      console.log("[BetLines] handlePointerDown", evt.clientX, evt.clientY);
       if (isClickOnSphere(evt)) {
-        console.log("[BetLines] Нажатие на сферу");
         setIsDragging(true);
         onDragging(true);
+        pointerStart.current = { x: evt.clientX, y: evt.clientY };
+        initialBetPosition.current = betPosition
+          ? betPosition.clone()
+          : aggregatorClipped.clone();
       }
     },
-    [isClickOnSphere, onDragging],
+    [isClickOnSphere, onDragging, betPosition, aggregatorClipped],
   );
 
   const handlePointerMove = useCallback(
     (evt: PointerEvent) => {
       if (!isDragging) return;
-      const rect = gl.domElement.getBoundingClientRect();
-      const mouse = new THREE.Vector2(
-        ((evt.clientX - rect.left) / rect.width) * 2 - 1,
-        -((evt.clientY - rect.top) / rect.height) * 2 + 1,
-      );
-      raycaster.current.setFromCamera(mouse, camera);
+      if (axisMode === "X" || axisMode === "Y") {
+        if (!pointerStart.current || !initialBetPosition.current) return;
+        // Разница в пикселях по выбранной оси
+        const deltaPx =
+          axisMode === "X"
+            ? evt.clientX - pointerStart.current.x
+            : evt.clientY - pointerStart.current.y;
 
-      // 1. Вычисляем мировую точку агрегатора
-      const worldAggregator = new THREE.Vector3(
-        denormalizeY(aggregatorClipped.x),
-        denormalizeZ(aggregatorClipped.y),
-        1,
-      );
+        // Коэффициент преобразования экранных пикселей в единицы мира.
+        // Его подбираете эмпирически или вычисляете через параметры камеры.
+        const conversionFactor = 0.01; // настройте по необходимости
 
-      // 2. Строим плоскость через мировую точку агрегатора
-      plane.current.setFromNormalAndCoplanarPoint(
-        camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
-        worldAggregator,
-      );
+        const newPos = initialBetPosition.current.clone();
+        if (axisMode === "X") {
+          newPos.x += deltaPx * conversionFactor;
+        } else {
+          newPos.y += deltaPx * conversionFactor;
+        }
+        newPos.z = 2;
+        setBetPosition(newPos);
 
-      // 3. Получаем точку пересечения луча с плоскостью (в мировых координатах)
-      const intersectWorld = new THREE.Vector3();
-      const intersectExists = raycaster.current.ray.intersectPlane(
-        plane.current,
-        intersectWorld,
-      );
-      if (!intersectExists) {
-        console.log("[BetLines] Нет пересечения с плоскостью");
-        return;
-      }
-
-      // 4. Вычисляем новую позицию с учетом осевого режима
-      let newPos: THREE.Vector3;
-      if (axisMode === "X") {
-        newPos = new THREE.Vector3(
-          normalizeZ(intersectWorld.x),
-          aggregatorClipped.y,
-          2,
-        );
-      } else if (axisMode === "Y") {
-        newPos = new THREE.Vector3(
-          aggregatorClipped.x,
-          normalizeZ(intersectWorld.y),
-          2,
-        );
+        const delta = newPos.clone().sub(aggregatorClipped);
+        const fraction = delta.length() / maxWhiteLength;
+        setBetAmount(userBalance * fraction);
+        handleDrag(newPos);
       } else {
-        newPos = new THREE.Vector3(
-          normalizeY(intersectWorld.x),
-          normalizeZ(intersectWorld.y),
-          2,
-        );
+        // Если нет осевого режима – можно оставить логику через лучи (raycasting)
+        // … (ваша существующая логика для свободного перемещения)
       }
-
-      console.log(
-        "[BetLines] Новая позиция для ставки (normalized):",
-        newPos.toArray(),
-      );
-
-      // Обновляем позицию без интерполяции (или с плавным переходом, если необходимо)
-      setBetPosition(newPos); // либо: prev => prev.lerp(newPos, 0.2)
-
-      const delta = newPos.clone().sub(aggregatorClipped);
-      const fraction = delta.length() / maxWhiteLength;
-      setBetAmount(userBalance * fraction);
-      handleDrag(newPos);
     },
     [
-      isDragging,
-      camera,
-      gl.domElement,
-      aggregatorClipped,
       axisMode,
+      isDragging,
+      aggregatorClipped,
       maxWhiteLength,
       userBalance,
       handleDrag,
-      setBetAmount,
-      normalizeY,
-      normalizeZ,
-      denormalizeY,
-      denormalizeZ,
     ],
   );
 
   const handlePointerUp = useCallback(() => {
-    console.log("[BetLines] handlePointerUp");
     if (!isDragging) return;
     setIsDragging(false);
     onDragging(false);
+    // финальные вычисления, если нужны
     const finalDir = betPosition
       ? betPosition.clone().sub(aggregatorClipped)
       : new THREE.Vector3();
@@ -519,6 +501,8 @@ const BetLines: React.FC<BetLinesProps> = ({
         ? [betPosition.x, betPosition.y, betPosition.z]
         : [0, 0, 0],
     });
+    pointerStart.current = null;
+    initialBetPosition.current = null;
   }, [
     isDragging,
     aggregatorClipped,
