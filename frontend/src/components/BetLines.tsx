@@ -79,10 +79,12 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   // Вычисляем агрегатор (желтый вектор) на основе previousBetEnd
   const aggregatorClipped = useMemo(() => {
+    console.log("[BetLines] previousBetEnd", previousBetEnd.x, previousBetEnd.y, previousBetEnd.z);
     const normX = normalizeZ(previousBetEnd.x);
     const normY = normalizeY(previousBetEnd.y);
     const vec2 = new THREE.Vector2(normX, normY);
     vec2.clampLength(0, maxYellowLength);
+    console.log("[BetLines] vec2", vec2.x, vec2.y);
     return new THREE.Vector3(vec2.x, vec2.y, 1);
   }, [previousBetEnd, maxYellowLength, normalizeZ, normalizeY]);
 
