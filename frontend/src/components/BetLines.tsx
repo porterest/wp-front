@@ -60,10 +60,11 @@ const BetLines: React.FC<BetLinesProps> = ({
   const whiteConeRef = useRef<THREE.Mesh | null>(null);
   const sphereRef = useRef<THREE.Mesh | null>(null);
 
-  const { normalizeY, normalizeZ } = useScale();
+  const { normalizeY, normalizeZ, denormalizeY, denormalizeZ } = useScale();
 
   const [isDragging, setIsDragging] = useState(false);
   const [userBalance, setUserBalance] = useState(0);
+  const plane = useRef(new THREE.Plane());
 
   useEffect(() => {
     (async () => {
@@ -443,35 +444,74 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   const handlePointerMove = useCallback((evt: PointerEvent) => {
     if (!isDragging) return;
-    if (axisMode === "X" || axisMode === "Y") {
-      if (!pointerStart.current || !initialBetPosition.current) return;
-      // Разница в пикселях по выбранной оси
-      const deltaPx = axisMode === "X"
-        ? evt.clientX - pointerStart.current.x
-        : evt.clientY - pointerStart.current.y;
 
-      // Коэффициент преобразования экранных пикселей в единицы мира.
-      // Его подбираете эмпирически или вычисляете через параметры камеры.
-      const conversionFactor = 0.01; // настройте по необходимости
+    // Получаем экранные координаты курсора
+    const rect = gl.domElement.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+      ((evt.clientX - rect.left) / rect.width) * 2 - 1,
+      -((evt.clientY - rect.top) / rect.height) * 2 + 1,
+    );
+    raycaster.current.setFromCamera(mouse, camera);
 
-      const newPos = initialBetPosition.current.clone();
-      if (axisMode === "X") {
-        newPos.x += deltaPx * conversionFactor;
-      } else {
-        newPos.y += deltaPx * conversionFactor;
-      }
-      newPos.z = 2;
-      setBetPosition(newPos);
+    // Строим плоскость для перетаскивания
+    // Здесь можно использовать фиксированное мировое значение для неподвижной оси
+    const worldAggregator = new THREE.Vector3(
+      denormalizeZ(aggregatorClipped.x),
+      denormalizeY(aggregatorClipped.y),
+      1,
+    );
+    plane.current.setFromNormalAndCoplanarPoint(
+      camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
+      worldAggregator,
+    );
 
-      const delta = newPos.clone().sub(aggregatorClipped);
-      const fraction = delta.length() / maxWhiteLength;
-      setBetAmount(userBalance * fraction);
-      handleDrag(newPos);
-    } else {
-      // Если нет осевого режима – можно оставить логику через лучи (raycasting)
-      // … (ваша существующая логика для свободного перемещения)
+    // Получаем точку пересечения луча с плоскостью
+    const intersectWorld = new THREE.Vector3();
+    const intersectExists = raycaster.current.ray.intersectPlane(plane.current, intersectWorld);
+    if (!intersectExists) {
+      console.log("[BetLines] Нет пересечения с плоскостью");
+      return;
     }
-  }, [axisMode, isDragging, aggregatorClipped, maxWhiteLength, userBalance, handleDrag]);
+
+    // Если у нас осевой режим, фиксируем неподвижную координату
+    if (axisMode === "X") {
+      // Для оси X движемся свободно, но y берем из мировых координат агрегатора
+      intersectWorld.y = denormalizeY(aggregatorClipped.y);
+    } else if (axisMode === "Y") {
+      // Для оси Y движемся свободно, но x берем из мировых координат агрегатора
+      intersectWorld.x = denormalizeZ(aggregatorClipped.x);
+    }
+    // Фиксируем z как 2
+    intersectWorld.z = 2;
+
+    // Преобразуем мировую точку в нормализованное пространство
+    const newPos = new THREE.Vector3(
+      normalizeZ(intersectWorld.x),
+      normalizeY(intersectWorld.y),
+      2
+    );
+
+    setBetPosition(newPos);
+
+    const delta = newPos.clone().sub(aggregatorClipped);
+    const fraction = delta.length() / maxWhiteLength;
+    setBetAmount(userBalance * fraction);
+    handleDrag(newPos);
+  }, [
+    isDragging,
+    camera,
+    gl.domElement,
+    aggregatorClipped,
+    axisMode,
+    maxWhiteLength,
+    userBalance,
+    handleDrag,
+    setBetAmount,
+    normalizeY,
+    normalizeZ,
+    denormalizeY,
+    denormalizeZ,
+  ]);
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging) return;
