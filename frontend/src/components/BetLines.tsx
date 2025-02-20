@@ -28,6 +28,8 @@ interface BetLinesProps {
   setBetAmount: (newAmount: number) => void;
   axisMode: "X" | "Y";
   visible: boolean;
+  updateBetPosition: (position: THREE.Vector3) => void;
+
 }
 
 const LOCAL_KEY = "userBetVector";
@@ -37,21 +39,23 @@ const isVectorZero = (vec: THREE.Vector3, eps = 0.000001): boolean =>
   Math.abs(vec.x) < eps && Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
 
 const BetLines: React.FC<BetLinesProps> = ({
-  previousBetEnd,
-  userPreviousBet,
-  onDragging,
-  onShowConfirmButton,
-  maxYellowLength,
-  maxWhiteLength,
-  handleDrag,
-  setBetAmount,
-  axisMode,
-  visible,
-}) => {
+                                             previousBetEnd,
+                                             userPreviousBet,
+                                             onDragging,
+                                             onShowConfirmButton,
+                                             maxYellowLength,
+                                             maxWhiteLength,
+                                             handleDrag,
+                                             setBetAmount,
+                                             axisMode,
+                                             visible,
+                                             updateBetPosition
+                                           }) => {
   // Получаем объекты Three.js
   const { gl, camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
   const raycaster = useRef(new THREE.Raycaster());
+  // const plane = useRef(new THREE.Plane());
 
   const yellowLineRef = useRef<Line2 | null>(null);
   const yellowConeRef = useRef<THREE.Mesh | null>(null);
@@ -59,11 +63,10 @@ const BetLines: React.FC<BetLinesProps> = ({
   const whiteConeRef = useRef<THREE.Mesh | null>(null);
   const sphereRef = useRef<THREE.Mesh | null>(null);
 
-  const { normalizeY, normalizeZ, denormalizeY, denormalizeZ } = useScale();
+  const { normalizeY, normalizeZ } = useScale();
 
   const [isDragging, setIsDragging] = useState(false);
   const [userBalance, setUserBalance] = useState(0);
-  const plane = useRef(new THREE.Plane());
 
   useEffect(() => {
     (async () => {
@@ -145,6 +148,12 @@ const BetLines: React.FC<BetLinesProps> = ({
   const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(
     computedBetPosition,
   );
+
+  useEffect(() => {
+    if (betPosition) {
+      updateBetPosition(betPosition);
+    }
+  }, [betPosition, updateBetPosition]);
 
   // useEffect(() => {
   //   if (!betPosition) {
@@ -443,76 +452,35 @@ const BetLines: React.FC<BetLinesProps> = ({
 
   const handlePointerMove = useCallback((evt: PointerEvent) => {
     if (!isDragging) return;
+    if (axisMode === "X" || axisMode === "Y") {
+      if (!pointerStart.current || !initialBetPosition.current) return;
+      // Разница в пикселях по выбранной оси
+      const deltaPx = axisMode === "X"
+        ? evt.clientX - pointerStart.current.x
+        : evt.clientY - pointerStart.current.y;
 
-    // Задаём горизонтальную плоскость, параллельную XY, на z = 2
-// Задаём горизонтальную плоскость на z = 2
-    plane.current.set(new THREE.Vector3(0, 0, 1), -2);
+      // Коэффициент преобразования экранных пикселей в единицы мира.
+      // Его подбираете эмпирически или вычисляете через параметры камеры.
+      const conversionFactor = 0.01; // настройте по необходимости
 
-    // Получаем экранные координаты курсора
-    const rect = gl.domElement.getBoundingClientRect();
-    const mouse = new THREE.Vector2(
-      ((evt.clientX - rect.left) / rect.width) * 2 - 1,
-      -((evt.clientY - rect.top) / rect.height) * 2 + 1
-    );
-    raycaster.current.setFromCamera(mouse, camera);
+      const newPos = initialBetPosition.current.clone();
+      if (axisMode === "X") {
+        newPos.x += deltaPx * conversionFactor;
+      } else {
+        newPos.y -= deltaPx * conversionFactor;
+      }
+      newPos.z = 2;
+      setBetPosition(newPos);
 
-    // Получаем мировую точку пересечения луча с плоскостью
-    const intersectWorld = new THREE.Vector3();
-    const intersectExists = raycaster.current.ray.intersectPlane(plane.current, intersectWorld);
-    if (!intersectExists) {
-      console.log("[BetLines] Нет пересечения с плоскостью");
-      return;
+      const delta = newPos.clone().sub(aggregatorClipped);
+      const fraction = delta.length() / maxWhiteLength;
+      setBetAmount(userBalance * fraction);
+      handleDrag(newPos);
+    } else {
+      // Если нет осевого режима – можно оставить логику через лучи (raycasting)
+      // … (ваша существующая логика для свободного перемещения)
     }
-
-    // Получаем фиксированные мировые координаты агрегатора
-    // (Преобразуем нормализованные координаты агрегатора в мировые)
-    const aggregatorWorld = new THREE.Vector3(
-      denormalizeY(aggregatorClipped.x),
-      denormalizeZ(aggregatorClipped.y),
-      1 // Здесь не важен z, он уже используется для построения плоскости
-    );
-
-    // Копируем найденную мировую точку
-    const newWorld = intersectWorld.clone();
-    if (axisMode === "X") {
-      // При движении по X свободно, но по Y фиксируем мировое значение агрегатора
-      newWorld.y = aggregatorWorld.y;
-    } else if (axisMode === "Y") {
-      // При движении по Y свободно, но по X фиксируем мировое значение агрегатора
-      newWorld.x = aggregatorWorld.x;
-    }
-    // Фиксируем z как 2
-    newWorld.z = 2;
-
-    // Преобразуем мировую точку обратно в нормализованное пространство
-    const newPos = new THREE.Vector3(
-      normalizeY(newWorld.x),
-      normalizeZ(newWorld.y),
-      2
-    );
-
-    // Обновляем позицию и связанные параметры
-    setBetPosition(newPos);
-    const delta = newPos.clone().sub(aggregatorClipped);
-    const fraction = delta.length() / maxWhiteLength;
-    setBetAmount(userBalance * fraction);
-    handleDrag(newPos);
-  }, [
-    isDragging,
-    gl.domElement,
-    camera,
-    aggregatorClipped,
-    axisMode,
-    maxWhiteLength,
-    userBalance,
-    handleDrag,
-    setBetAmount,
-    normalizeY,
-    normalizeZ,
-    denormalizeY,
-    denormalizeZ,
-  ]);
-
+  }, [axisMode, isDragging, aggregatorClipped, maxWhiteLength, userBalance, handleDrag]);
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging) return;

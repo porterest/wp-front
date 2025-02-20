@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Text } from "@react-three/drei";
 import BetLines from "./BetLines";
 import * as THREE from "three";
@@ -41,6 +41,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
   const userDeposit = userData?.balance || 0;
   const maxYellowLength = 2;
   const maxWhiteLength = 2;
+  const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(null);
 
   // Можно добавить синхронизацию позиции, если необходимо
   useEffect(() => {
@@ -104,6 +105,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         setBetAmount={setBetAmount}
         axisMode={axisMode}
         visible={visitable}
+        updateBetPosition={setBetPosition}
       />
 
       {/* Текст с депозитом */}
@@ -120,9 +122,9 @@ const BetArrow: React.FC<BetArrowProps> = ({
       {/* Текст со ставкой */}
       <Text
         position={[
-          userPreviousBet.x + 0.5,
-          userPreviousBet.y + 1,
-          previousBetEnd.z + 0.5,
+          (betPosition ? betPosition.x : userPreviousBet.x) + 0.5,
+          (betPosition ? betPosition.y : userPreviousBet.y) + 1,
+          (betPosition ? betPosition.z : previousBetEnd.z) + 0.5,
         ]}
         fontSize={0.3}
         color="white"
