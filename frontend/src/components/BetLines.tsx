@@ -20,7 +20,7 @@ interface BetLinesProps {
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
-    betData?: { amount: number; predicted_vector: number[] }
+    betData?: { amount: number; predicted_vector: number[] },
   ) => void;
   maxYellowLength: number;
   maxWhiteLength: number;
@@ -37,17 +37,17 @@ const isVectorZero = (vec: THREE.Vector3, eps = 0.000001): boolean =>
   Math.abs(vec.x) < eps && Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
 
 const BetLines: React.FC<BetLinesProps> = ({
-                                             previousBetEnd,
-                                             userPreviousBet,
-                                             onDragging,
-                                             onShowConfirmButton,
-                                             maxYellowLength,
-                                             maxWhiteLength,
-                                             handleDrag,
-                                             setBetAmount,
-                                             axisMode,
-                                             visible,
-                                           }) => {
+  previousBetEnd,
+  userPreviousBet,
+  onDragging,
+  onShowConfirmButton,
+  maxYellowLength,
+  maxWhiteLength,
+  handleDrag,
+  setBetAmount,
+  axisMode,
+  visible,
+}) => {
   // Получаем объекты Three.js
   const { gl, camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
@@ -140,11 +140,10 @@ const BetLines: React.FC<BetLinesProps> = ({
   );
 
   useEffect(() => {
-    if (!isDragging) {
+    if (!betPosition) {
       setBetPosition(computedBetPosition);
     }
-  }, [computedBetPosition, isDragging]);
-
+  }, [computedBetPosition, betPosition]);
 
   // Функция для получения "сырых" координат – без нормализации
   const getRawVector = (vec: THREE.Vector3): THREE.Vector3 => {
@@ -396,7 +395,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       console.log("[BetLines] isClickOnSphere: hits", hits);
       return hits.length > 0;
     },
-    [camera, gl.domElement]
+    [camera, gl.domElement],
   );
 
   const handlePointerDown = useCallback(
@@ -409,7 +408,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         onDragging(true);
       }
     },
-    [isClickOnSphere, onDragging]
+    [isClickOnSphere, onDragging],
   );
 
   const handlePointerMove = useCallback(
@@ -446,26 +445,36 @@ const BetLines: React.FC<BetLinesProps> = ({
         return;
       }
 
-      // 4. Преобразуем мировую точку пересечения в нормализованное пространство
-      const normalizedIntersect = new THREE.Vector3(
-        normalizeZ(intersectWorld.x),
-        normalizeY(intersectWorld.y),
-        1,
-      );
-
-      // 5. Вычисляем смещение (в нормализованном пространстве) относительно aggregatorClipped с учетом axisMode
-      const newPos = normalizedIntersect.clone();
-      newPos.z = 1; // или установить z по необходимости
+      // 4. Вычисляем новую позицию с учетом осевого режима
+      let newPos: THREE.Vector3;
+      if (axisMode === "X") {
+        newPos = new THREE.Vector3(
+          normalizeZ(intersectWorld.x),
+          aggregatorClipped.y,
+          2,
+        );
+      } else if (axisMode === "Y") {
+        newPos = new THREE.Vector3(
+          aggregatorClipped.x,
+          normalizeY(intersectWorld.y),
+          2,
+        );
+      } else {
+        newPos = new THREE.Vector3(
+          normalizeZ(intersectWorld.x),
+          normalizeY(intersectWorld.y),
+          2,
+        );
+      }
 
       console.log(
         "[BetLines] Новая позиция для ставки (normalized):",
         newPos.toArray(),
       );
-      setBetPosition((prev) => {
-        if (!prev) return newPos;
-        // Интерполяция с коэффициентом 0.2 (настраиваемым)
-        return prev.lerp(newPos, 0.2);
-      });
+
+      // Обновляем позицию без интерполяции (или с плавным переходом, если необходимо)
+      setBetPosition(newPos); // либо: prev => prev.lerp(newPos, 0.2)
+
       const delta = newPos.clone().sub(aggregatorClipped);
       const fraction = delta.length() / maxWhiteLength;
       setBetAmount(userBalance * fraction);
@@ -485,35 +494,36 @@ const BetLines: React.FC<BetLinesProps> = ({
       normalizeZ,
       denormalizeY,
       denormalizeZ,
-    ]
+    ],
   );
 
-  const handlePointerUp = useCallback(
-    () => {
-      console.log("[BetLines] handlePointerUp");
-      if (!isDragging) return;
-      setIsDragging(false);
-      onDragging(false);
-      const finalDir = betPosition ? betPosition.clone().sub(aggregatorClipped) : new THREE.Vector3();
-      const fraction = Math.min(finalDir.length() / maxWhiteLength, 1);
-      const betAmt = fraction * userBalance;
-      setBetAmount(betAmt);
-      onShowConfirmButton(true, {
-        amount: betAmt,
-        predicted_vector: betPosition ? [betPosition.x, betPosition.y, betPosition.z] : [0, 0, 0],
-      });
-    },
-    [
-      isDragging,
-      aggregatorClipped,
-      betPosition,
-      maxWhiteLength,
-      userBalance,
-      onDragging,
-      onShowConfirmButton,
-      setBetAmount,
-    ]
-  );
+  const handlePointerUp = useCallback(() => {
+    console.log("[BetLines] handlePointerUp");
+    if (!isDragging) return;
+    setIsDragging(false);
+    onDragging(false);
+    const finalDir = betPosition
+      ? betPosition.clone().sub(aggregatorClipped)
+      : new THREE.Vector3();
+    const fraction = Math.min(finalDir.length() / maxWhiteLength, 1);
+    const betAmt = fraction * userBalance;
+    setBetAmount(betAmt);
+    onShowConfirmButton(true, {
+      amount: betAmt,
+      predicted_vector: betPosition
+        ? [betPosition.x, betPosition.y, betPosition.z]
+        : [0, 0, 0],
+    });
+  }, [
+    isDragging,
+    aggregatorClipped,
+    betPosition,
+    maxWhiteLength,
+    userBalance,
+    onDragging,
+    onShowConfirmButton,
+    setBetAmount,
+  ]);
 
   useEffect(() => {
     const c = gl.domElement;
