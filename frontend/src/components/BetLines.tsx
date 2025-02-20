@@ -139,11 +139,11 @@ const BetLines: React.FC<BetLinesProps> = ({
     computedBetPosition,
   );
 
-  useEffect(() => {
-    if (!betPosition) {
-      setBetPosition(computedBetPosition);
-    }
-  }, [computedBetPosition, betPosition]);
+  // useEffect(() => {
+  //   if (!betPosition) {
+  //     setBetPosition(computedBetPosition);
+  //   }
+  // }, [computedBetPosition, betPosition]);
 
   // Функция для получения "сырых" координат – без нормализации
   const getRawVector = (vec: THREE.Vector3): THREE.Vector3 => {
