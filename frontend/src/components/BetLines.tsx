@@ -398,22 +398,59 @@ const BetLines: React.FC<BetLinesProps> = ({
     [camera, gl.domElement],
   );
 
-  const handlePointerDown = useCallback(
-    (evt: PointerEvent) => {
-      evt.stopPropagation();
-      console.log("[BetLines] handlePointerDown", evt.clientX, evt.clientY);
-      if (isClickOnSphere(evt)) {
-        console.log("[BetLines] Нажатие на сферу");
-        setIsDragging(true);
-        onDragging(true);
-      }
-    },
-    [isClickOnSphere, onDragging],
-  );
+  // Объявляем ссылки для сохранения начальных координат
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+  const initialBetPosition = useRef<THREE.Vector3 | null>(null);
 
-  const handlePointerMove = useCallback(
-    (evt: PointerEvent) => {
-      if (!isDragging) return;
+  const handlePointerDown = useCallback((evt: PointerEvent) => {
+    evt.stopPropagation();
+    if (isClickOnSphere(evt)) {
+      setIsDragging(true);
+      onDragging(true);
+      // Сохраняем начальное положение курсора и исходное положение белой стрелки
+      pointerStart.current = { x: evt.clientX, y: evt.clientY };
+      initialBetPosition.current = betPosition
+        ? betPosition.clone()
+        : aggregatorClipped.clone();
+    }
+  }, [isClickOnSphere, onDragging, betPosition, aggregatorClipped]);
+
+  const handlePointerMove = useCallback((evt: PointerEvent) => {
+    if (!isDragging) return;
+
+    // Если выбран осевой режим, вычисляем смещение от начальной точки
+    if (axisMode === "X" || axisMode === "Y") {
+      if (!pointerStart.current || !initialBetPosition.current) return;
+
+      // Разница в пикселях вдоль выбранной оси
+      const deltaPx = axisMode === "X"
+        ? evt.clientX - pointerStart.current.x
+        : evt.clientY - pointerStart.current.y;
+
+      // Коэффициент перевода пиксельного смещения в мировые единицы.
+      // Его можно подобрать эмпирически или вычислить через параметры камеры.
+      const conversionFactor = 0.01; // настройте под ваши нужды
+
+      // Вычисляем новую позицию, добавляя смещение к исходной позиции
+      const newPos = initialBetPosition.current.clone();
+      if (axisMode === "X") {
+        newPos.x += deltaPx * conversionFactor;
+      } else {
+        newPos.y += deltaPx * conversionFactor;
+      }
+      // Сохраняем нужное значение по оси времени (если оно должно оставаться неизменным, например, 2)
+      newPos.z = 2;
+
+      // Можно добавить интерполяцию для плавного движения:
+      setBetPosition(prev => prev ? prev.lerp(newPos, 0.2) : newPos);
+
+      // Обновляем ставку и вызываем handleDrag
+      const delta = newPos.clone().sub(aggregatorClipped);
+      const fraction = delta.length() / maxWhiteLength;
+      setBetAmount(userBalance * fraction);
+      handleDrag(newPos);
+    } else {
+      // Если осевой режим не выбран – можно оставить логику через raycaster (как раньше)
       const rect = gl.domElement.getBoundingClientRect();
       const mouse = new THREE.Vector2(
         ((evt.clientX - rect.left) / rect.width) * 2 - 1,
@@ -421,84 +458,48 @@ const BetLines: React.FC<BetLinesProps> = ({
       );
       raycaster.current.setFromCamera(mouse, camera);
 
-      // 1. Вычисляем мировую точку агрегатора
       const worldAggregator = new THREE.Vector3(
         denormalizeZ(aggregatorClipped.x),
         denormalizeY(aggregatorClipped.y),
         1,
       );
-
-      // 2. Строим плоскость через мировую точку агрегатора
       plane.current.setFromNormalAndCoplanarPoint(
         camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
         worldAggregator,
       );
-
-      // 3. Получаем точку пересечения луча с плоскостью (в мировых координатах)
       const intersectWorld = new THREE.Vector3();
       const intersectExists = raycaster.current.ray.intersectPlane(
         plane.current,
         intersectWorld,
       );
-      if (!intersectExists) {
-        console.log("[BetLines] Нет пересечения с плоскостью");
-        return;
-      }
+      if (!intersectExists) return;
 
-      // 4. Вычисляем новую позицию с учетом осевого режима
-      let newPos: THREE.Vector3;
-      if (axisMode === "X") {
-        newPos = new THREE.Vector3(
-          normalizeZ(intersectWorld.x),
-          aggregatorClipped.y,
-          2,
-        );
-      } else if (axisMode === "Y") {
-        newPos = new THREE.Vector3(
-          aggregatorClipped.x,
-          normalizeY(intersectWorld.y),
-          2,
-        );
-      } else {
-        newPos = new THREE.Vector3(
-          normalizeZ(intersectWorld.x),
-          normalizeY(intersectWorld.y),
-          2,
-        );
-      }
-
-      console.log(
-        "[BetLines] Новая позиция для ставки (normalized):",
-        newPos.toArray(),
+      // При свободном перемещении обновляем позицию по обоим осям
+      const newPos = new THREE.Vector3(
+        normalizeZ(intersectWorld.x),
+        normalizeY(intersectWorld.y),
+        2,
       );
-
-      // Обновляем позицию без интерполяции (или с плавным переходом, если необходимо)
-      setBetPosition(prev => prev ? prev.lerp(newPos, 0.2) : newPos);
-
+      setBetPosition(newPos);
       const delta = newPos.clone().sub(aggregatorClipped);
       const fraction = delta.length() / maxWhiteLength;
       setBetAmount(userBalance * fraction);
       handleDrag(newPos);
-    },
-    [
-      isDragging,
-      camera,
-      gl.domElement,
-      aggregatorClipped,
-      axisMode,
-      maxWhiteLength,
-      userBalance,
-      handleDrag,
-      setBetAmount,
-      normalizeY,
-      normalizeZ,
-      denormalizeY,
-      denormalizeZ,
-    ],
-  );
+    }
+  }, [
+    isDragging,
+    axisMode,
+    gl.domElement,
+    camera,
+    denormalizeY,
+    denormalizeZ,
+    aggregatorClipped,
+    maxWhiteLength,
+    userBalance,
+    handleDrag,
+  ]);
 
   const handlePointerUp = useCallback(() => {
-    console.log("[BetLines] handlePointerUp");
     if (!isDragging) return;
     setIsDragging(false);
     onDragging(false);
@@ -514,6 +515,9 @@ const BetLines: React.FC<BetLinesProps> = ({
         ? [betPosition.x, betPosition.y, betPosition.z]
         : [0, 0, 0],
     });
+    // Очищаем сохранённые координаты
+    pointerStart.current = null;
+    initialBetPosition.current = null;
   }, [
     isDragging,
     aggregatorClipped,
