@@ -441,78 +441,55 @@ const BetLines: React.FC<BetLinesProps> = ({
     [isClickOnSphere, onDragging, betPosition, aggregatorClipped],
   );
 
-  const handlePointerMove = useCallback(
-    (evt: PointerEvent) => {
-      if (!isDragging) return;
-      if (axisMode === "X" || axisMode === "Y") {
-        if (!pointerStart.current || !initialBetPosition.current) return;
-        // Разница в пикселях по выбранной оси
-        const deltaPx =
-          axisMode === "X"
-            ? evt.clientX - pointerStart.current.x
-            : evt.clientY - pointerStart.current.y;
+  const handlePointerMove = useCallback((evt: PointerEvent) => {
+    if (!isDragging) return;
+    if (axisMode === "X" || axisMode === "Y") {
+      if (!pointerStart.current || !initialBetPosition.current) return;
+      // Разница в пикселях по выбранной оси
+      const deltaPx = axisMode === "X"
+        ? evt.clientX - pointerStart.current.x
+        : evt.clientY - pointerStart.current.y;
 
-        // Коэффициент преобразования экранных пикселей в единицы мира.
-        // Его подбираете эмпирически или вычисляете через параметры камеры.
-        const conversionFactor = 0.01; // настройте по необходимости
+      // Коэффициент преобразования экранных пикселей в единицы мира.
+      // Его подбираете эмпирически или вычисляете через параметры камеры.
+      const conversionFactor = 0.01; // настройте по необходимости
 
-        const newPos = initialBetPosition.current.clone();
-        if (axisMode === "X") {
-          newPos.x += deltaPx * conversionFactor;
-        } else {
-          newPos.y += deltaPx * conversionFactor;
-        }
-        newPos.z = 2;
-        setBetPosition(newPos);
-
-        const delta = newPos.clone().sub(aggregatorClipped);
-        const fraction = delta.length() / maxWhiteLength;
-        setBetAmount(userBalance * fraction);
-        handleDrag(newPos);
+      const newPos = initialBetPosition.current.clone();
+      if (axisMode === "X") {
+        newPos.x += deltaPx * conversionFactor;
       } else {
-        // Если нет осевого режима – можно оставить логику через лучи (raycasting)
-        // … (ваша существующая логика для свободного перемещения)
+        newPos.y += deltaPx * conversionFactor;
       }
-    },
-    [
-      axisMode,
-      isDragging,
-      aggregatorClipped,
-      maxWhiteLength,
-      userBalance,
-      handleDrag,
-    ],
-  );
+      newPos.z = 2;
+      setBetPosition(newPos);
+
+      const delta = newPos.clone().sub(aggregatorClipped);
+      const fraction = delta.length() / maxWhiteLength;
+      setBetAmount(userBalance * fraction);
+      handleDrag(newPos);
+    } else {
+      // Если нет осевого режима – можно оставить логику через лучи (raycasting)
+      // … (ваша существующая логика для свободного перемещения)
+    }
+  }, [axisMode, isDragging, aggregatorClipped, maxWhiteLength, userBalance, handleDrag]);
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging) return;
     setIsDragging(false);
     onDragging(false);
     // финальные вычисления, если нужны
-    const finalDir = betPosition
-      ? betPosition.clone().sub(aggregatorClipped)
-      : new THREE.Vector3();
+    const finalDir = betPosition ? betPosition.clone().sub(aggregatorClipped) : new THREE.Vector3();
     const fraction = Math.min(finalDir.length() / maxWhiteLength, 1);
     const betAmt = fraction * userBalance;
     setBetAmount(betAmt);
     onShowConfirmButton(true, {
       amount: betAmt,
-      predicted_vector: betPosition
-        ? [betPosition.x, betPosition.y, betPosition.z]
-        : [0, 0, 0],
+      predicted_vector: betPosition ? [betPosition.x, betPosition.y, betPosition.z] : [0, 0, 0],
     });
     pointerStart.current = null;
     initialBetPosition.current = null;
-  }, [
-    isDragging,
-    aggregatorClipped,
-    betPosition,
-    maxWhiteLength,
-    userBalance,
-    onDragging,
-    onShowConfirmButton,
-    setBetAmount,
-  ]);
+  }, [isDragging, aggregatorClipped, betPosition, maxWhiteLength, userBalance, onDragging, onShowConfirmButton, setBetAmount]);
+
 
   useEffect(() => {
     const c = gl.domElement;
