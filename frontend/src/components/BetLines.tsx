@@ -329,6 +329,8 @@ const BetLines: React.FC<BetLinesProps> = ({
 
         newPos.x = 2; // время фиксировано
         setBetPosition(newPos);
+        console.log("New position (mode Z):", newPos);
+
         handleDrag(newPos);
       }
     },
