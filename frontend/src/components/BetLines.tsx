@@ -85,12 +85,12 @@ const BetLines: React.FC<BetLinesProps> = ({
       previousBetEnd.y,
       previousBetEnd.z,
     );
-    const normX = normalizeY(previousBetEnd.x);
-    const normY = normalizeZ(previousBetEnd.y);
-    const vec2 = new THREE.Vector2(normX, normY);
+    const normY = normalizeY(previousBetEnd.y);
+    const normZ = normalizeZ(previousBetEnd.z);
+    const vec2 = new THREE.Vector2(normY, normZ);
     vec2.clampLength(0, maxYellowLength);
     console.log("[BetLines] vec2", vec2.x, vec2.y);
-    return new THREE.Vector3(vec2.x, vec2.y, 1);
+    return new THREE.Vector3(1, vec2.x, vec2.y);
   }, [previousBetEnd, maxYellowLength, normalizeZ, normalizeY]);
 
   const isUserBetZero = useMemo(
@@ -108,7 +108,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (stored) {
         const arr = JSON.parse(stored);
         if (Array.isArray(arr) && arr.length >= 3) {
-          return new THREE.Vector3(arr[0], arr[1], 2);
+          return new THREE.Vector3(2, arr[0], arr[1]);
         }
       }
     } catch (err) {
@@ -125,14 +125,14 @@ const BetLines: React.FC<BetLinesProps> = ({
         direction.set(1, 0, 0);
       }
       const offset = direction.multiplyScalar(minDelta);
-      return baseVector.add(offset).setZ(2);
+      return baseVector.add(offset).setX(2);
     }
-    const deltaX = normalizeY(userPreviousBet.x - aggregatorClipped.x);
-    const deltaY = normalizeZ(userPreviousBet.y - aggregatorClipped.y);
-    const deltaZ = userPreviousBet.z - aggregatorClipped.z;
+    const deltaX = userPreviousBet.x - aggregatorClipped.x;
+    const deltaY = normalizeY(userPreviousBet.y - aggregatorClipped.y);
+    const deltaZ = normalizeZ(userPreviousBet.z - aggregatorClipped.z);
     const delta = new THREE.Vector3(deltaX, deltaY, deltaZ);
     delta.clampLength(0, maxWhiteLength);
-    return aggregatorClipped.clone().add(delta).setZ(2);
+    return aggregatorClipped.clone().add(delta).setX(2);
   }, [
     aggregatorClipped,
     userPreviousBet,
@@ -177,10 +177,10 @@ const BetLines: React.FC<BetLinesProps> = ({
     scaledAggregator.y,
     scaledAggregator.z,
   );
-  scaledAggregator.z = 1; // фиксируем z для жёлтого вектора
+  scaledAggregator.x = 1; // фиксируем z для жёлтого вектора
   const rawBet = betPosition ? getRawVector(betPosition) : null;
   const scaledBet = rawBet ? rawBet.clone().multiplyScalar(scaleFactor) : null;
-  if (scaledBet) scaledBet.z = 2; // фиксируем z для белого вектора
+  if (scaledBet) scaledBet.x = 2; // фиксируем z для белого вектора
 
   // Отрисовка жёлтого вектора (агрегатора)
   useEffect(() => {
@@ -209,7 +209,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       new THREE.MeshStandardMaterial({ color: "yellow" }),
     );
     yCone.position.copy(scaledAggregator);
-    yCone.position.z = 1;
+    yCone.position.x = 1;
     {
       const desiredDir = scaledAggregator.clone().normalize();
       const defaultDir = new THREE.Vector3(0, 1, 0);
@@ -237,7 +237,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     const updatedAgg = getRawVector(aggregatorClipped)
       .clone()
       .multiplyScalar(scaleFactor);
-    updatedAgg.z = 1;
+    updatedAgg.x = 1;
     if (
       yellowLineRef.current &&
       yellowLineRef.current.geometry instanceof LineGeometry
@@ -247,7 +247,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
     if (yellowConeRef.current) {
       yellowConeRef.current.position.copy(updatedAgg);
-      yellowConeRef.current.position.z = updatedAgg.z;
+      yellowConeRef.current.position.x = updatedAgg.x;
       const defaultDir = new THREE.Vector3(0, 1, 0);
       const desiredDir = updatedAgg.clone().normalize();
       if (desiredDir.length() > 0) {
@@ -313,11 +313,11 @@ const BetLines: React.FC<BetLinesProps> = ({
         const conversionFactor = 0.01;
         const newPos = initialBetPosition.current.clone();
         if (axisMode === "X") {
-          newPos.x += deltaPx * conversionFactor;
+          newPos.y += deltaPx * conversionFactor;
         } else {
-          newPos.y -= deltaPx * conversionFactor;
+          newPos.z -= deltaPx * conversionFactor;
         }
-        newPos.z = 2;
+        newPos.x = 2;
         setBetPosition(newPos);
         handleDrag(newPos);
       }

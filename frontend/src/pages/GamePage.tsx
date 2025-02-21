@@ -11,7 +11,7 @@ import Scene from "../components/Scene";
 import { ScaleFunctions } from "../types/scale";
 import { PairOption } from "../types/pair";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
-import { CandleData } from "../types/candles";
+// import { CandleData } from "../types/candles";
 import GraphModes from "../components/GraphModes";
 import BetResultCard from "../components/BetResultCard";
 
@@ -66,9 +66,9 @@ const GamePage: React.FC = () => {
     try {
       const lastBet = await getLastUserBet(pair.value);
       const userVector = new THREE.Vector3(
+        1,
         lastBet.vector[0],
         lastBet.vector[1],
-        1,
       );
       console.log("userVector")
       console.log(userVector)
@@ -85,9 +85,9 @@ const GamePage: React.FC = () => {
         try {
           const prevBetData = await fetchPreviousBetEnd(selectedPair.value);
           const resultVector = new THREE.Vector3(
+            1,
             prevBetData[0],
             prevBetData[1],
-            1,
           );
           console.log("resultVector")
           console.log(resultVector)
@@ -168,16 +168,16 @@ const GamePage: React.FC = () => {
         return;
       }
 
-      const { denormalizeX, denormalizeY } = scaleFunctions;
-      const [sceneX, sceneY] = currentBet.predicted_vector;
+      const { denormalizeZ, denormalizeY } = scaleFunctions;
+      const [sceneY, sceneZ] = currentBet.predicted_vector;
 
-      let maxVolume = 0;
+      // let maxVolume = 0;
+      //
+      // if (data.candles != undefined) {
+      //   maxVolume = Math.max(...data.candles.map((x: CandleData) => x.volume));
+      // }
 
-      if (data.candles != undefined) {
-        maxVolume = Math.max(...data.candles.map((x: CandleData) => x.volume));
-      }
-
-      const absoluteVolumeChange = denormalizeX(sceneX, maxVolume);
+      const absoluteVolumeChange = denormalizeZ(sceneZ);
       const absolutePriceChange = denormalizeY(sceneY);
 
       console.log("absoluteVolumeChange", absoluteVolumeChange);
@@ -191,9 +191,9 @@ const GamePage: React.FC = () => {
       console.log("Отправляем ставку:", betRequest);
       const response = await placeBet(betRequest);
       localStorage.setItem("userBetVector", JSON.stringify([
+        1,
         currentBet.predicted_vector[0],
-        currentBet.predicted_vector[1],
-        1
+        currentBet.predicted_vector[1]
       ]));
 
       console.log("АААААААААААААААААААААААААААААААА")

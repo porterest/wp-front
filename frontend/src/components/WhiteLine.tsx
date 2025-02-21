@@ -59,7 +59,7 @@ const WhileLine: React.FC<WhileLineProps> = ({
   // Мемоизированный вектор агрегатора, масштабированный с фиксированным z = 1
   const scaledAggregator = useMemo(() => {
     const scaled = aggregator.clone().multiplyScalar(scaleFactor);
-    scaled.z = 1;
+    scaled.x = 1;
     return scaled;
   }, [aggregator]);
 
@@ -67,7 +67,7 @@ const WhileLine: React.FC<WhileLineProps> = ({
   const scaledBet = useMemo(() => {
     if (!betPosition) return null;
     const scaled = betPosition.clone().multiplyScalar(scaleFactor);
-    scaled.z = 2;
+    scaled.x = 2;
     return scaled;
   }, [betPosition]);
 
@@ -107,11 +107,11 @@ const WhileLine: React.FC<WhileLineProps> = ({
       new THREE.MeshStandardMaterial({ color: "white" })
     );
     wCone.position.copy(scaledBet);
-    wCone.position.z = 2;
+    wCone.position.x = 2;
     const defaultDir = new THREE.Vector3(0, 1, 0);
     let desiredDir: THREE.Vector3;
     if (isVectorZero(userPreviousBet)) {
-      desiredDir = new THREE.Vector3(betPosition.x, betPosition.y, 2).normalize();
+      desiredDir = new THREE.Vector3(2, betPosition.y, betPosition.z).normalize();
     } else {
       desiredDir = betPosition.clone().sub(aggregator).normalize();
     }
@@ -155,9 +155,9 @@ const WhileLine: React.FC<WhileLineProps> = ({
   useEffect(() => {
     if (!visible || !betPosition) return;
     const updatedAgg = aggregator.clone().multiplyScalar(scaleFactor);
-    updatedAgg.z = 1;
+    updatedAgg.x = 1;
     const updatedBet = betPosition.clone().multiplyScalar(scaleFactor);
-    updatedBet.z = 2;
+    updatedBet.x = 2;
     if (whiteLineRef.current && whiteLineRef.current.geometry instanceof LineGeometry) {
       whiteLineRef.current.geometry.setPositions([
         updatedAgg.x,
@@ -170,7 +170,7 @@ const WhileLine: React.FC<WhileLineProps> = ({
     }
     if (whiteConeRef.current) {
       whiteConeRef.current.position.copy(updatedBet);
-      whiteConeRef.current.position.z = updatedBet.z;
+      whiteConeRef.current.position.x = updatedBet.x;
       const defaultDir = new THREE.Vector3(0, 1, 0);
       const desiredDir = updatedBet.clone().sub(updatedAgg).normalize();
       if (desiredDir.length() > 0) {
@@ -180,7 +180,7 @@ const WhileLine: React.FC<WhileLineProps> = ({
     }
     if (sphereRef.current) {
       sphereRef.current.position.copy(updatedBet);
-      sphereRef.current.position.z = updatedBet.z;
+      sphereRef.current.position.x = updatedBet.x;
     }
     if (
       whiteLineRef.current &&
