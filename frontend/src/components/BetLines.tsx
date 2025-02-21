@@ -158,7 +158,7 @@ const BetLines: React.FC<BetLinesProps> = ({
   const getRawVector = (vec: THREE.Vector3): THREE.Vector3 => vec.clone();
 
   // Единое масштабирование для отрисовки
-  const scaleFactor = 0.4;
+  const scaleFactor = 2;
   console.log(
     "[BetLines] aggregatorClipped:",
     aggregatorClipped.x,
