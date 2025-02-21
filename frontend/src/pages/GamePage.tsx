@@ -26,7 +26,7 @@ const GamePage: React.FC = () => {
 
   const [orbitControlsEnabled, setOrbitControlsEnabled] = useState(true);
   const [currentMode, setCurrentMode] = useState(1);
-  const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
+  const [axisMode, setAxisMode] = useState<"Y" | "Z">("Y");
   const [previousBetEnd, setPreviousBetEnd] = useState<THREE.Vector3>(
     new THREE.Vector3(0, 0, 1),
   );
@@ -269,7 +269,7 @@ const GamePage: React.FC = () => {
               }
               setCurrentMode(modeToSet);
             }}
-            onAxisModeChange={(axis: "X" | "Y") => {
+            onAxisModeChange={(axis: "Y" | "Z") => {
               console.log("AxisModeChange:", axis);
               setAxisMode(axis);
             }}
