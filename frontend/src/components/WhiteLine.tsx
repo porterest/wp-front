@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
+import { useUserBalance } from "../pages/BalancePage";
 
 // Интерфейс пропсов компонента WhileLine
 // aggregator – вектор, полученный как "желтый агрегатор" (напр. предыдущая ставка)
@@ -48,12 +49,15 @@ const WhileLine: React.FC<WhileLineProps> = ({
   // Локальные состояния для определения, наведён ли курсор на элемент, и для отображения текста риска
   const [hovered, setHovered] = useState(false);
   const [riskText, setRiskText] = useState("");
+  const [displayBet, setDisplayBet] = useState(0);
+  const { userData } = useUserBalance();
+  const deposit = userData?.balance || 0;
 
   // Мемоизированный вектор агрегатора, масштабированный и с фиксированным z = 1.
   // Этот вектор служит текущей "ценой", по которой будем сравнивать ставку.
   const scaledAggregator = useMemo(() => {
-    console.log("мяу aggregator", aggregator)
-    const scaled = aggregator.clone().multiplyScalar(scaleFactor); //(00)
+    console.log("мяу aggregator", aggregator) //{x: 1.1776786463746987, y: 1.6165002337992584, z: 1}
+    const scaled = aggregator.clone().multiplyScalar(scaleFactor); //(00) {x: 2.3553572927493973, y: 3.233000467598517, z: 1}
     scaled.z = 1;
     console.log("scaled aggregator", scaled);
     return scaled;
@@ -212,43 +216,46 @@ const WhileLine: React.FC<WhileLineProps> = ({
   // useFrame: обновление цвета стрелки, анимации наконечника и текста tooltip в каждом кадре
   useFrame((state) => {
     if (!betPosition || !scaledBet) return;
-    // Вычисляем разницу по оси цены (x) между агрегатором и ставкой
-    // console.log("йоу scaledAggregator.x, scaledBet.x, scaledAggregator.x - scaledBet.x")
-    // console.log(scaledAggregator.x, scaledBet.x, scaledAggregator.x - scaledBet.x) //(04 -4)
-    // console.log(scaledAggregator.y, scaledBet.y, scaledAggregator.y - scaledBet.y) //(03 -3)
 
+    // Вычисляем разницу по оси цены (используем ось Y, например)
     const priceDiff = Math.abs(scaledAggregator.y - scaledBet.y);
-    // Текущая цена определяется как x агрегатора
     const currentPrice = scaledAggregator.y;
-    // Если разница меньше порога, риск равен 0, иначе рискFraction = разница / текущая цена
-    const riskFraction = priceDiff < PRICE_DIFF_THRESHOLD ? 0 : priceDiff / currentPrice;
+    // Если разница меньше порога, риск (trend_attack) равен 0
+    const riskFraction =
+      priceDiff < PRICE_DIFF_THRESHOLD ? 0 : priceDiff / currentPrice;
 
-    // Изначально всегда устанавливаем белый цвет
+    // Рассчитываем новую ставку по формуле:
+    // trend_attack = |current_price - predicted_price| / current_price
+    // bet_amount = deposit * trend_attack
+    const newBetAmount = deposit * riskFraction;
+    // Обновляем локальное состояние, чтобы отобразить рассчитанную ставку
+    setDisplayBet(newBetAmount);
+
+    // Определяем цвет и текст риска на основе riskFraction
     let newColorStr = "white";
     let newRiskText = "";
-    // Если риск не нулевой, изменяем цвет в зависимости от уровня риска:
     if (riskFraction === 0) {
       newColorStr = "white";
       newRiskText = "";
     } else if (riskFraction < 0.05) {
-      newColorStr = "green"; // низкий риск
+      newColorStr = "green";
       newRiskText = "Низкий риск";
     } else if (riskFraction < 0.15) {
-      newColorStr = "orange"; // средний риск
+      newColorStr = "orange";
       newRiskText = "Средний риск";
     } else {
-      newColorStr = "red"; // высокий риск
-      newRiskText = riskFraction < 0.30 ? "Высокий риск – опасно" : "Критический риск";
+      newColorStr = "red";
+      newRiskText =
+        riskFraction < 0.30 ? "Высокий риск – опасно" : "Критический риск";
     }
 
-    // Обновляем цвет линии
     if (whiteLineRef.current) {
       (whiteLineRef.current.material as LineMaterial).color.set(newColorStr);
     }
-    // Обновляем цвет и анимацию наконечника (конуса)
     if (whiteConeRef.current) {
-      (whiteConeRef.current.material as THREE.MeshStandardMaterial).color.set(newColorStr);
-      // Если риск критический (≥30%), применяем пульсацию
+      (whiteConeRef.current.material as THREE.MeshStandardMaterial).color.set(
+        newColorStr
+      );
       if (riskFraction >= 0.30) {
         const pulse = 1 + 0.1 * Math.sin(state.clock.elapsedTime * 10);
         whiteConeRef.current.scale.set(pulse, pulse, pulse);
@@ -256,11 +263,16 @@ const WhileLine: React.FC<WhileLineProps> = ({
         whiteConeRef.current.scale.set(1, 1, 1);
       }
     }
-    // Если курсор наведён, обновляем текст tooltip
     if (hovered && newRiskText !== riskText) {
       setRiskText(newRiskText);
     }
   });
+
+  const formatNumber = (num: number) =>
+    num.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   return (
     // Группа, содержащая все объекты стрелки
@@ -278,6 +290,24 @@ const WhileLine: React.FC<WhileLineProps> = ({
             }}
           >
             {riskText}
+          </div>
+        </Html>
+      )}
+      {scaledBet && (
+        <Html
+          position={[scaledBet.x, scaledBet.y - 0.5, scaledBet.z + 0.5]}
+          distanceFactor={10}
+        >
+          <div
+            style={{
+              background: "rgba(0,0,0,0.7)",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              color: "lightgreen",
+            }}
+          >
+            {`Bet: ${formatNumber(displayBet)} DD`}
           </div>
         </Html>
       )}

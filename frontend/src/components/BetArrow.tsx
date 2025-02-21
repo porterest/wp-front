@@ -53,14 +53,6 @@ const BetArrow: React.FC<BetArrowProps> = ({
     if (!userPreviousBet.equals(newPosition)) {
       setUserPreviousBet(new THREE.Vector3(newPosition.x, newPosition.y, newPosition.z));
     }
-    // Используем агрегатор как предыдущую позицию
-    const aggregatorClipped = previousBetEnd.clone();
-    const distance = new THREE.Vector3()
-      .subVectors(newPosition, aggregatorClipped)
-      .length();
-    const percentage = Math.min(distance / maxYellowLength, 1);
-    const bet = Math.min(percentage * userDeposit, userDeposit);
-    setBetAmount(bet);
   };
 
   // Форматирование числа для отображения (добавляем суффиксы)
@@ -119,21 +111,6 @@ const BetArrow: React.FC<BetArrowProps> = ({
         {`Deposit: ${formatNumber(userDeposit)} DD`}
       </Text>
 
-      {/* Текст со ставкой */}
-      <Text
-        position={[
-          (betPosition ? betPosition.x : userPreviousBet.x) + 0.5,
-          (betPosition ? betPosition.y : userPreviousBet.y) + 1,
-          (betPosition ? betPosition.z : previousBetEnd.z) + 0.5,
-        ]}
-        fontSize={0.3}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-        depthOffset={-1}
-      >
-        {`Bet: ${formatNumber(betAmount)} DD`}
-      </Text>
     </>
   );
 };
