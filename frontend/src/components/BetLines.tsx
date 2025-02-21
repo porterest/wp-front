@@ -297,6 +297,8 @@ const BetLines: React.FC<BetLinesProps> = ({
           ? betPosition.clone()
           : aggregatorClipped.clone();
       }
+      console.log("initialBetPosition (mode Z):", initialBetPosition.current);
+
     },
     [isClickOnSphere, onDragging, betPosition, aggregatorClipped]
   );
