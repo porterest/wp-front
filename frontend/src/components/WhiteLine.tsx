@@ -37,9 +37,9 @@ const WhileLine: React.FC<WhileLineProps> = ({
                                                sphereRef,
                                              }) => {
 
-  console.log("aggregator", aggregator);
-  console.log("betPosition", betPosition);
-  console.log("userPreviousBet", userPreviousBet);
+  console.log("aggregator", aggregator); //{x: 1.1776786463746987, y: 1.6165002337992584, z: 1}
+  console.log("betPosition", betPosition); //{x: 2.0221739297110446, y: 1.810893122476757, z: 2}
+  console.log("userPreviousBet", userPreviousBet); //{x: 0.025269769384266567, y: 491867.58187563525, z: 1}
   // Ссылка на группу (объект Three.js, содержащий все наши элементы)
   const groupRef = useRef<THREE.Group>(null);
   // Ссылки на линию и конус, которые будут отрисованы для ставки
@@ -213,13 +213,13 @@ const WhileLine: React.FC<WhileLineProps> = ({
   useFrame((state) => {
     if (!betPosition || !scaledBet) return;
     // Вычисляем разницу по оси цены (x) между агрегатором и ставкой
-    // console.log("scaledAggregator.x, scaledBet.x, scaledAggregator.x - scaledBet.x")
-    // console.log(scaledAggregator.x, scaledBet.x, scaledAggregator.x - scaledBet.x)
-    // console.log(scaledAggregator.y, scaledBet.y, scaledAggregator.y - scaledBet.y)
+    console.log("йоу scaledAggregator.x, scaledBet.x, scaledAggregator.x - scaledBet.x")
+    console.log(scaledAggregator.x, scaledBet.x, scaledAggregator.x - scaledBet.x)
+    console.log(scaledAggregator.y, scaledBet.y, scaledAggregator.y - scaledBet.y)
 
-    const priceDiff = Math.abs(scaledAggregator.x - scaledBet.x);
+    const priceDiff = Math.abs(scaledAggregator.y - scaledBet.y);
     // Текущая цена определяется как x агрегатора
-    const currentPrice = scaledAggregator.x;
+    const currentPrice = scaledAggregator.y;
     // Если разница меньше порога, риск равен 0, иначе рискFraction = разница / текущая цена
     const riskFraction = priceDiff < PRICE_DIFF_THRESHOLD ? 0 : priceDiff / currentPrice;
 
