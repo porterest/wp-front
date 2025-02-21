@@ -284,7 +284,7 @@ const GamePage: React.FC = () => {
           data={data.candles || []}
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
-          setUserPreviousBet={setUserPreviousBet}
+          setUserPreviousBet={ setUserPreviousBet}
           axisMode={axisMode}
           onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
           onShowConfirmButton={(show, betData) => handleShowConfirmButton(show, betData)}

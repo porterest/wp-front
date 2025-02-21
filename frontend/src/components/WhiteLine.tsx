@@ -194,6 +194,8 @@ const WhileLine: React.FC<WhileLineProps> = ({
   // useFrame: обновление цвета стрелки, анимации наконечника и расчёт ставки/риск-уровня
   useFrame((state) => {
     if (!betPosition || !scaledBet) return;
+    console.log("scaledAggregator, scaledBet");
+    console.log(scaledAggregator, scaledBet);
     const priceDiff = Math.abs(scaledAggregator.y - scaledBet.y);
     const currentPrice = scaledAggregator.y;
     const riskFraction = priceDiff < PRICE_DIFF_THRESHOLD ? 0 : priceDiff / currentPrice;
@@ -256,7 +258,7 @@ const WhileLine: React.FC<WhileLineProps> = ({
               style={{
                 background: "rgba(0,0,0,0.7)",
                 padding: "4px 8px",
-                width: "100px",
+                width: "110px",
                 textAlign: "center",
                 borderRadius: "4px",
                 fontSize: "12px",
