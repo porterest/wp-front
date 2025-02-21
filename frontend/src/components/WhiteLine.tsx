@@ -302,6 +302,8 @@ const WhileLine: React.FC<WhileLineProps> = ({
             style={{
               background: "rgba(0,0,0,0.7)",
               padding: "4px 8px",
+              width: "150px",
+              textAlign: "center",
               borderRadius: "4px",
               fontSize: "12px",
               color: "lightgreen",
