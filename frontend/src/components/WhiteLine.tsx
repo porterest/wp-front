@@ -260,25 +260,10 @@ const WhileLine: React.FC<WhileLineProps> = ({
                 textAlign: "center",
                 borderRadius: "4px",
                 fontSize: "12px",
-                color: "lightgreen",
-              }}
-            >
-              {`Bet: ${formatNumber(displayBet)} DD`}
-            </div>
-          </Html>
-          <Html position={[scaledBet.x, scaledBet.y - 1.1, scaledBet.z + 0.5]} distanceFactor={10}>
-            <div
-              style={{
-                background: "rgba(255,255,255,0.8)",
-                padding: "4px 8px",
-                width: "100px",
-                textAlign: "center",
-                borderRadius: "4px",
-                fontSize: "12px",
                 color: riskColor,
               }}
             >
-              {riskText}
+              {`Bet: ${formatNumber(displayBet)} DD ${riskText}`}
             </div>
           </Html>
         </>
