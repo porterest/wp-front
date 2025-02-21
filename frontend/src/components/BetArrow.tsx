@@ -53,10 +53,15 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   // Обработчик перетаскивания: обновляет позицию и вычисляет ставку
   const handleDrag = (newPosition: THREE.Vector3) => {
+    if (axisMode === "Z") {
+      // Сохраняем y из текущей ставки (или из другого источника, например, aggregatorClipped.y)
+      newPosition.y = userPreviousBet.y;
+    }
     if (!userPreviousBet.equals(newPosition)) {
       setUserPreviousBet(new THREE.Vector3(newPosition.x, newPosition.y, newPosition.z));
     }
   };
+
 
   // Форматирование числа для отображения (добавляем суффиксы)
   const formatNumber = (num: number) => {
