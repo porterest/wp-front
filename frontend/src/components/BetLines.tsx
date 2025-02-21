@@ -25,7 +25,7 @@ interface BetLinesProps {
   maxYellowLength: number;
   maxWhiteLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
-  axisMode: "X" | "Y";
+  axisMode: "Y" | "Z";
   visible: boolean;
   updateBetPosition: (position: THREE.Vector3) => void;
 }
@@ -298,31 +298,32 @@ const BetLines: React.FC<BetLinesProps> = ({
           : aggregatorClipped.clone();
       }
     },
-    [isClickOnSphere, onDragging, betPosition, aggregatorClipped],
+    [isClickOnSphere, onDragging, betPosition, aggregatorClipped]
   );
 
   const handlePointerMove = useCallback(
     (evt: PointerEvent) => {
       if (!isDragging) return;
-      if (axisMode === "X" || axisMode === "Y") {
+      if (axisMode === "Y" || axisMode === "Z") {
         if (!pointerStart.current || !initialBetPosition.current) return;
+        // При оси "Y" используем горизонтальное перемещение, при "Z" – вертикальное
         const deltaPx =
-          axisMode === "X"
+          axisMode === "Y"
             ? evt.clientX - pointerStart.current.x
             : evt.clientY - pointerStart.current.y;
         const conversionFactor = 0.01;
         const newPos = initialBetPosition.current.clone();
-        if (axisMode === "X") {
+        if (axisMode === "Y") {
           newPos.y += deltaPx * conversionFactor;
-        } else {
-          newPos.z -= deltaPx * conversionFactor;
+        } else if (axisMode === "Z") {
+          newPos.z += deltaPx * conversionFactor;
         }
-        newPos.x = 2;
+        newPos.x = 2; // фиксированное время
         setBetPosition(newPos);
         handleDrag(newPos);
       }
     },
-    [axisMode, isDragging, aggregatorClipped, maxWhiteLength, userBalance, handleDrag],
+    [axisMode, isDragging, handleDrag]
   );
 
   const handlePointerUp = useCallback(() => {

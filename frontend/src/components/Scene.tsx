@@ -19,7 +19,7 @@ interface SceneProps {
   previousBetEnd: THREE.Vector3;
   userPreviousBet: THREE.Vector3;
   setUserPreviousBet: (value: THREE.Vector3) => void;
-  axisMode: "X" | "Y";
+  axisMode: "Y" | "Z";
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,

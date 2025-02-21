@@ -17,7 +17,7 @@ interface DynamicGraphContentProps {
   ) => void;
   betAmount: number;
   setBetAmount: (newAmount: number) => void;
-  axisMode: "X" | "Y";
+  axisMode: "Y" | "Z";
   betsFetched: boolean;
 }
 

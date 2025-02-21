@@ -16,7 +16,7 @@ interface GraphModesProps {
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
-  axisMode: "X" | "Y";
+  axisMode: "Y" | "Z";
   betsFetched: boolean;
 }
 

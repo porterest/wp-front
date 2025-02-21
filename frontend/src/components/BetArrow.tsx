@@ -14,7 +14,7 @@ interface BetArrowProps {
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
   showArrows?: boolean;
-  axisMode: "X" | "Y";
+  axisMode: "Y" | "Z";
   visitable?: boolean;
 }
 
