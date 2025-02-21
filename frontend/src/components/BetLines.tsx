@@ -37,17 +37,17 @@ const isVectorZero = (vec: THREE.Vector3, eps = 0.000001): boolean =>
   Math.abs(vec.x) < eps && Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
 
 const BetLines: React.FC<BetLinesProps> = ({
-  previousBetEnd,
-  userPreviousBet,
-  onDragging,
-  onShowConfirmButton,
-  maxYellowLength,
-  maxWhiteLength,
-  handleDrag,
-  axisMode,
-  visible,
-  updateBetPosition,
-}) => {
+                                             previousBetEnd,
+                                             userPreviousBet,
+                                             onDragging,
+                                             onShowConfirmButton,
+                                             maxYellowLength,
+                                             maxWhiteLength,
+                                             handleDrag,
+                                             axisMode,
+                                             visible,
+                                             updateBetPosition,
+                                           }) => {
   // Получаем объекты Three.js
   const { gl, camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
@@ -298,8 +298,9 @@ const BetLines: React.FC<BetLinesProps> = ({
           : aggregatorClipped.clone();
       }
       console.log("initialBetPosition (mode Z):", initialBetPosition.current);
+
     },
-    [isClickOnSphere, onDragging, betPosition, aggregatorClipped],
+    [isClickOnSphere, onDragging, betPosition, aggregatorClipped]
   );
 
   const handlePointerMove = useCallback(
@@ -319,7 +320,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         } else if (axisMode === "Z") {
           // Режим Z: теперь используем вертикальное движение, а не горизонтальное
           const deltaY = evt.clientY - pointerStart.current.y;
-          newPos.x += deltaY * conversionFactor;
+          newPos.z += deltaY * conversionFactor;
           // Зафиксировать ось Y из начальной позиции
           newPos.y = initialBetPosition.current.y;
         }
@@ -329,8 +330,11 @@ const BetLines: React.FC<BetLinesProps> = ({
         handleDrag(newPos);
       }
     },
-    [axisMode, isDragging, handleDrag],
+    [axisMode, isDragging, handleDrag]
   );
+
+
+
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging) return;
