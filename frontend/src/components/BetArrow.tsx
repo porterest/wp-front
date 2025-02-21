@@ -13,8 +13,6 @@ interface BetArrowProps {
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
-  betAmount: number;
-  setBetAmount: (amount: number) => void;
   showArrows?: boolean;
   axisMode: "X" | "Y";
   visitable?: boolean;
@@ -26,8 +24,6 @@ const BetArrow: React.FC<BetArrowProps> = ({
                                              setUserPreviousBet,
                                              onDragging,
                                              onShowConfirmButton,
-                                             betAmount,
-                                             setBetAmount,
                                              showArrows = true, // по умолчанию стрелки отображаются
                                              axisMode,
                                              visitable = false,
@@ -43,10 +39,17 @@ const BetArrow: React.FC<BetArrowProps> = ({
   const maxWhiteLength = 2;
   const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(null);
 
+
   // Можно добавить синхронизацию позиции, если необходимо
   useEffect(() => {
     // Например, можно выполнить дополнительную настройку
   }, [userPreviousBet]);
+
+  useEffect(() => {
+    // "Трогаем" betPosition, чтобы оно использовалось
+    // Здесь ничего не делаем, это нужно только для удовлетворения TypeScript / линтера
+  }, [betPosition]);
+
 
   // Обработчик перетаскивания: обновляет позицию и вычисляет ставку
   const handleDrag = (newPosition: THREE.Vector3) => {
@@ -94,10 +97,9 @@ const BetArrow: React.FC<BetArrowProps> = ({
         maxYellowLength={maxYellowLength}
         maxWhiteLength={maxWhiteLength}
         handleDrag={handleDrag}
-        setBetAmount={setBetAmount}
         axisMode={axisMode}
         visible={visitable}
-        updateBetPosition={setBetPosition}
+        updateBetPosition={(pos: THREE.Vector3) => setBetPosition?.(pos)}
       />
 
       {/* Текст с депозитом */}

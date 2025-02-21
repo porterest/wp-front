@@ -25,7 +25,6 @@ interface BetLinesProps {
   maxYellowLength: number;
   maxWhiteLength: number;
   handleDrag: (newPosition: THREE.Vector3) => void;
-  setBetAmount: (newAmount: number) => void;
   axisMode: "X" | "Y";
   visible: boolean;
   updateBetPosition: (position: THREE.Vector3) => void;
@@ -45,7 +44,6 @@ const BetLines: React.FC<BetLinesProps> = ({
                                              maxYellowLength,
                                              maxWhiteLength,
                                              handleDrag,
-                                             setBetAmount,
                                              axisMode,
                                              visible,
                                              updateBetPosition,
@@ -321,9 +319,6 @@ const BetLines: React.FC<BetLinesProps> = ({
         }
         newPos.z = 2;
         setBetPosition(newPos);
-        const delta = newPos.clone().sub(aggregatorClipped);
-        const fraction = delta.length() / maxWhiteLength;
-        setBetAmount(userBalance * fraction);
         handleDrag(newPos);
       }
     },
@@ -339,7 +334,6 @@ const BetLines: React.FC<BetLinesProps> = ({
       : new THREE.Vector3();
     const fraction = Math.min(finalDir.length() / maxWhiteLength, 1);
     const betAmt = fraction * userBalance;
-    setBetAmount(betAmt);
     onShowConfirmButton(true, {
       amount: betAmt,
       predicted_vector: betPosition
@@ -356,7 +350,6 @@ const BetLines: React.FC<BetLinesProps> = ({
     userBalance,
     onDragging,
     onShowConfirmButton,
-    setBetAmount,
   ]);
 
   useEffect(() => {
