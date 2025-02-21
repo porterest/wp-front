@@ -306,11 +306,11 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (!isDragging) return;
       if (axisMode === "Y" || axisMode === "Z") {
         if (!pointerStart.current || !initialBetPosition.current) return;
-        // При оси "Y" используем горизонтальное перемещение, при "Z" – вертикальное
+        // Если ось Y – вертикальное движение, если ось Z – горизонтальное
         const deltaPx =
           axisMode === "Y"
-            ? evt.clientX - pointerStart.current.x
-            : evt.clientY - pointerStart.current.y;
+            ? evt.clientY - pointerStart.current.y
+            : evt.clientX - pointerStart.current.x;
         const conversionFactor = 0.01;
         const newPos = initialBetPosition.current.clone();
         if (axisMode === "Y") {
@@ -318,13 +318,14 @@ const BetLines: React.FC<BetLinesProps> = ({
         } else if (axisMode === "Z") {
           newPos.z += deltaPx * conversionFactor;
         }
-        newPos.x = 2; // фиксированное время
+        newPos.x = 2; // время фиксированное
         setBetPosition(newPos);
         handleDrag(newPos);
       }
     },
     [axisMode, isDragging, handleDrag]
   );
+
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging) return;

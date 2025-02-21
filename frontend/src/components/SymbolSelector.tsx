@@ -176,7 +176,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
               : "bg-[rgba(0,255,255,0.2)] text-white"
           }`}
         >
-          Z-axis
+          Y-axis
         </button>
         <button
           onClick={() => handleAxisModeChange("Z")}
@@ -186,7 +186,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
               : "bg-[rgba(0,255,255,0.2)] text-white"
           }`}
         >
-          Y-axis
+          Z-axis
         </button>
       </div>
 
@@ -204,7 +204,9 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
           }}
           className="px-2 py-1 w-full bg-cyan-400 text-white font-bold text-sm rounded-md shadow-lg hover:bg-cyan-500 transition"
         >
-          {showHistoricalInput ? "Hide Historical Data" : "Show Historical Data"}
+          {showHistoricalInput
+            ? "Hide Historical Data"
+            : "Show Historical Data"}
         </button>
         {showHistoricalInput && (
           <div className="mt-2">
