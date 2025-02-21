@@ -213,9 +213,9 @@ const WhileLine: React.FC<WhileLineProps> = ({
   useFrame((state) => {
     if (!betPosition || !scaledBet) return;
     // Вычисляем разницу по оси цены (x) между агрегатором и ставкой
-    console.log("йоу scaledAggregator.x, scaledBet.x, scaledAggregator.x - scaledBet.x")
-    console.log(scaledAggregator.x, scaledBet.x, scaledAggregator.x - scaledBet.x)
-    console.log(scaledAggregator.y, scaledBet.y, scaledAggregator.y - scaledBet.y)
+    // console.log("йоу scaledAggregator.x, scaledBet.x, scaledAggregator.x - scaledBet.x")
+    // console.log(scaledAggregator.x, scaledBet.x, scaledAggregator.x - scaledBet.x) //(04 -4)
+    // console.log(scaledAggregator.y, scaledBet.y, scaledAggregator.y - scaledBet.y) //(03 -3)
 
     const priceDiff = Math.abs(scaledAggregator.y - scaledBet.y);
     // Текущая цена определяется как x агрегатора
