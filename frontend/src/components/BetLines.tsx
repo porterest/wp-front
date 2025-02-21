@@ -306,25 +306,33 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (!isDragging) return;
       if (axisMode === "Y" || axisMode === "Z") {
         if (!pointerStart.current || !initialBetPosition.current) return;
-        // Если ось Y – вертикальное движение, если ось Z – горизонтальное
-        const deltaPx =
-          axisMode === "Y"
-            ? evt.clientY - pointerStart.current.y
-            : evt.clientX - pointerStart.current.x;
         const conversionFactor = 0.01;
+        // Начинаем с клона начальной позиции
         const newPos = initialBetPosition.current.clone();
+
         if (axisMode === "Y") {
-          newPos.y += deltaPx * conversionFactor;
+          // Для оси Y используем вертикальное движение, инвертируя знак:
+          // если клиент двигается вверх (clientY уменьшается), то цена (y) должна расти
+          const deltaY = evt.clientY - pointerStart.current.y;
+          newPos.y -= deltaY * conversionFactor;
+          // Зафиксировать z (транзакции) по начальному значению
+          newPos.z = initialBetPosition.current.z;
         } else if (axisMode === "Z") {
-          newPos.z += deltaPx * conversionFactor;
+          // Для оси Z используем горизонтальное движение:
+          const deltaX = evt.clientX - pointerStart.current.x;
+          newPos.z += deltaX * conversionFactor;
+          // Зафиксировать y (цену) по начальному значению, чтобы не получалась диагональ
+          newPos.y = initialBetPosition.current.y;
         }
-        newPos.x = 2; // время фиксированное
+
+        newPos.x = 2; // время фиксировано
         setBetPosition(newPos);
         handleDrag(newPos);
       }
     },
     [axisMode, isDragging, handleDrag]
   );
+
 
 
   const handlePointerUp = useCallback(() => {
