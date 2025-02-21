@@ -309,33 +309,30 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (axisMode === "Y" || axisMode === "Z") {
         if (!pointerStart.current || !initialBetPosition.current) return;
         const conversionFactor = 0.01;
-        // Начинаем с клона начальной позиции
         const newPos = initialBetPosition.current.clone();
 
         if (axisMode === "Y") {
-          // Для оси Y используем вертикальное движение, инвертируя знак:
-          // если клиент двигается вверх (clientY уменьшается), то цена (y) должна расти
+          // Режим Y: вертикальное движение, инвертируем знак (при движении вверх цена растёт)
           const deltaY = evt.clientY - pointerStart.current.y;
           newPos.y -= deltaY * conversionFactor;
-          // Зафиксировать z (транзакции) по начальному значению
+          // Зафиксировать ось Z из начальной позиции
           newPos.z = initialBetPosition.current.z;
         } else if (axisMode === "Z") {
-          // Для оси Z используем горизонтальное движение:
-          const deltaX = evt.clientX - pointerStart.current.x;
-          newPos.z += deltaX * conversionFactor;
-          // Зафиксировать y (цену) по начальному значению, чтобы не получалась диагональ
+          // Режим Z: теперь используем вертикальное движение, а не горизонтальное
+          const deltaY = evt.clientY - pointerStart.current.y;
+          newPos.z += deltaY * conversionFactor;
+          // Зафиксировать ось Y из начальной позиции
           newPos.y = initialBetPosition.current.y;
         }
 
         newPos.x = 2; // время фиксировано
         setBetPosition(newPos);
-        console.log("New position (mode Z):", newPos);
-
         handleDrag(newPos);
       }
     },
     [axisMode, isDragging, handleDrag]
   );
+
 
 
 
