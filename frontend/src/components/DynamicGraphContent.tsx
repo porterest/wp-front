@@ -29,9 +29,7 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
                                                                    setUserPreviousBet,
                                                                    onDragging,
                                                                    onShowConfirmButton,
-                                                                   betAmount,
                                                                    axisMode,
-                                                                   setBetAmount,
                                                                    betsFetched,
                                                                  }) => {
   if (!betsFetched) return null;
@@ -50,8 +48,6 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
         setUserPreviousBet={setUserPreviousBet}
         onDragging={onDragging}
         onShowConfirmButton={onShowConfirmButton}
-        betAmount={betAmount}
-        setBetAmount={setBetAmount}
         axisMode={axisMode}
         visitable={true}
       />
@@ -69,8 +65,6 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
           setUserPreviousBet={setUserPreviousBet}
           onDragging={onDragging}
           onShowConfirmButton={onShowConfirmButton}
-          betAmount={betAmount}
-          setBetAmount={setBetAmount}
           axisMode={axisMode}
           visitable={true}
         />
