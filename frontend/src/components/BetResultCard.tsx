@@ -30,7 +30,8 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
       style={{
         position: "fixed",
         top: "100px", // Точное позиционирование по вертикали
-        left: "16px",
+        left: "57%",
+        transform: "translateX(-50%)",
         zIndex: 50,
       }}
       className={className}
