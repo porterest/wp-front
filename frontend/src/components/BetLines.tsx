@@ -307,8 +307,7 @@ const BetLines: React.FC<BetLinesProps> = ({
           newPos.z += deltaY * conversionFactor;
           console.log("initialBetPosition.current.x, initialBetPosition.current.y, initialBetPosition.current.z")
           console.log(initialBetPosition.current.x, initialBetPosition.current.y, initialBetPosition.current.z)
-          newPos.y = initialBetPosition.current.y;
-        }
+          newPos.y = betPosition ? betPosition.y : initialBetPosition.current.y;        }
         newPos.x = 2; // Фиксированное значение для оси X
         setBetPosition(newPos);
         handleDrag(newPos);
