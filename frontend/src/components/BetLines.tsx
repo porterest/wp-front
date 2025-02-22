@@ -305,6 +305,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         } else if (axisMode === "Z") {
           const deltaY = evt.clientY - pointerStart.current.y;
           newPos.z += deltaY * conversionFactor;
+          console.log("initialBetPosition.current.x, initialBetPosition.current.y, initialBetPosition.current.z")
           console.log(initialBetPosition.current.x, initialBetPosition.current.y, initialBetPosition.current.z)
           newPos.y = initialBetPosition.current.y;
         }
