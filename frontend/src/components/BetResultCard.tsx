@@ -41,7 +41,7 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
           width: "140px",
           padding: "8px",
           left: "57%",
-          marginLeft: "-100px",
+          marginLeft: "-30px",
           backgroundColor: "rgba(34, 211, 238)", // Соответствует bg-cyan-400 с прозрачностью
           color: "#fff",
           border: "none",
