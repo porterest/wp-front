@@ -43,7 +43,7 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
         style={{
           width: "140px",
           // padding: "8px",
-          // left: "30%",
+          left: "20%",
           // marginLeft: "-30px",
           backgroundColor: "rgba(34, 211, 238)", // Соответствует bg-cyan-400 с прозрачностью
           color: "#fff",
@@ -53,7 +53,6 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
           backdropFilter: "blur(5px)",
           cursor: "pointer",
           gap: "0.375rem",
-          display: "inline-block",
         }}
         onClick={() => setIsOpen(!isOpen)}
       >
