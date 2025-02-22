@@ -58,12 +58,12 @@ const WhileLine: React.FC<WhileLineProps> = ({
 
   // Мемоизированный вектор агрегатора, масштабированный с фиксированным z = 1
   const scaledAggregator = useMemo(() => {
-    console.log("aggregator");
-    console.log(aggregator);
+    if (isVectorZero(aggregator)) return null; // или возвращать исходный агрегатор, или другой дефолт
     const scaled = aggregator.clone().multiplyScalar(scaleFactor);
     scaled.x = 1;
     return scaled;
   }, [aggregator]);
+
 
   // Мемоизированная позиция ставки, масштабированная с фиксированным z = 2
   const scaledBet = useMemo(() => {
@@ -76,6 +76,8 @@ const WhileLine: React.FC<WhileLineProps> = ({
   // Первоначальная отрисовка линии, конуса и сферы
   useEffect(() => {
     if (!visible || !groupRef.current) return;
+    if (!scaledAggregator || isVectorZero(aggregator)) return;
+
 
     if (!betPosition || !scaledBet) {
       groupRef.current.children.forEach((child) => groupRef.current?.remove(child));
@@ -86,14 +88,16 @@ const WhileLine: React.FC<WhileLineProps> = ({
 
     // Создание линии между агрегатором и ставкой
     const wGeom = new LineGeometry();
-    wGeom.setPositions([
-      scaledAggregator.x,
-      scaledAggregator.y,
-      scaledAggregator.z,
-      scaledBet.x,
-      scaledBet.y,
-      scaledBet.z,
-    ]);
+    if (aggregator) {
+      wGeom.setPositions([
+        scaledAggregator.x,
+        scaledAggregator.y,
+        scaledAggregator.z,
+        scaledBet.x,
+        scaledBet.y,
+        scaledBet.z,
+      ]);
+    }
     const wMat = new LineMaterial({
       color: "white",
       linewidth: 3,
@@ -195,7 +199,7 @@ const WhileLine: React.FC<WhileLineProps> = ({
 
   // useFrame: обновление цвета стрелки, анимации наконечника и расчёт ставки/риск-уровня
   useFrame((state) => {
-    if (!betPosition || !scaledBet) return;
+    if (!betPosition || !scaledBet || !scaledAggregator || isVectorZero(aggregator)) return;
     console.log("scaledAggregator, scaledBet");
     console.log(scaledAggregator, scaledBet);
     const priceDiff = Math.abs(scaledAggregator.y - scaledBet.y);
