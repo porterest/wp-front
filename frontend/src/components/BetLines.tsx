@@ -37,17 +37,17 @@ const isVectorZero = (vec: THREE.Vector3, eps = 0.000001): boolean =>
   Math.abs(vec.x) < eps && Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
 
 const BetLines: React.FC<BetLinesProps> = ({
-                                             previousBetEnd,
-                                             userPreviousBet,
-                                             onDragging,
-                                             onShowConfirmButton,
-                                             maxYellowLength,
-                                             maxWhiteLength,
-                                             handleDrag,
-                                             axisMode,
-                                             visible,
-                                             updateBetPosition,
-                                           }) => {
+  previousBetEnd,
+  userPreviousBet,
+  onDragging,
+  onShowConfirmButton,
+  maxYellowLength,
+  maxWhiteLength,
+  handleDrag,
+  axisMode,
+  visible,
+  updateBetPosition,
+}) => {
   // Получаем объекты Three.js
   const { gl, camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
@@ -108,7 +108,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       if (stored) {
         const arr = JSON.parse(stored);
         if (Array.isArray(arr) && arr.length >= 3) {
-          return new THREE.Vector3(2, arr[0], arr[1]);
+          return new THREE.Vector3(2, arr[1], arr[2]);
         }
       }
     } catch (err) {
@@ -298,9 +298,8 @@ const BetLines: React.FC<BetLinesProps> = ({
           : aggregatorClipped.clone();
       }
       console.log("initialBetPosition (mode Z):", initialBetPosition.current);
-
     },
-    [isClickOnSphere, onDragging, betPosition, aggregatorClipped]
+    [isClickOnSphere, onDragging, betPosition, aggregatorClipped],
   );
 
   const handlePointerMove = useCallback(
@@ -330,11 +329,8 @@ const BetLines: React.FC<BetLinesProps> = ({
         handleDrag(newPos);
       }
     },
-    [axisMode, isDragging, handleDrag]
+    [axisMode, isDragging, handleDrag],
   );
-
-
-
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging) return;
