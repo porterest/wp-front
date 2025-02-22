@@ -36,19 +36,18 @@ const LOCAL_KEY = "userBetVector";
 const isVectorZero = (vec: THREE.Vector3, eps = 0.000001): boolean =>
   Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
 
-
 const BetLines: React.FC<BetLinesProps> = ({
-                                             previousBetEnd,
-                                             userPreviousBet,
-                                             onDragging,
-                                             onShowConfirmButton,
-                                             maxYellowLength,
-                                             maxWhiteLength,
-                                             handleDrag,
-                                             axisMode,
-                                             visible,
-                                             updateBetPosition,
-                                           }) => {
+  previousBetEnd,
+  userPreviousBet,
+  onDragging,
+  onShowConfirmButton,
+  maxYellowLength,
+  maxWhiteLength,
+  handleDrag,
+  axisMode,
+  visible,
+  updateBetPosition,
+}) => {
   const { gl, camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
   const raycaster = useRef(new THREE.Raycaster());
@@ -107,7 +106,11 @@ const BetLines: React.FC<BetLinesProps> = ({
       console.error("[BetLines] Ошибка парсинга LS:", err);
     }
     // Если предыдущая ставка пользователя равна нулевому вектору
-    if (userPreviousBet.x === 0 && userPreviousBet.y === 0 && userPreviousBet.z === 0) {
+    if (
+      userPreviousBet.x === 0 &&
+      userPreviousBet.y === 0 &&
+      userPreviousBet.z === 0
+    ) {
       const minDelta = 0.0001;
       let baseVector = aggregatorClipped.clone();
       if (isVectorZero(baseVector)) {
@@ -127,7 +130,13 @@ const BetLines: React.FC<BetLinesProps> = ({
     const delta = new THREE.Vector3(deltaX, deltaY, deltaZ);
     delta.clampLength(0, maxWhiteLength);
     return aggregatorClipped.clone().add(delta).setX(2);
-  }, [aggregatorClipped, userPreviousBet, maxWhiteLength, normalizeZ, normalizeY]);
+  }, [
+    aggregatorClipped,
+    userPreviousBet,
+    maxWhiteLength,
+    normalizeZ,
+    normalizeY,
+  ]);
 
   // Если данные с бэка ещё не пришли или computedBetPosition не вычислился, не рендерим компонент
   if (!visible || !aggregatorClipped || !computedBetPosition) {
@@ -208,7 +217,10 @@ const BetLines: React.FC<BetLinesProps> = ({
       const desiredDir = scaledAggregator.clone().normalize();
       const defaultDir = new THREE.Vector3(0, 1, 0);
       if (desiredDir.length() > 0) {
-        const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
+        const quat = new THREE.Quaternion().setFromUnitVectors(
+          defaultDir,
+          desiredDir,
+        );
         yCone.setRotationFromQuaternion(quat);
       }
     }
@@ -242,7 +254,10 @@ const BetLines: React.FC<BetLinesProps> = ({
       const defaultDir = new THREE.Vector3(0, 1, 0);
       const desiredDir = updatedAgg.clone().normalize();
       if (desiredDir.length() > 0) {
-        const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
+        const quat = new THREE.Quaternion().setFromUnitVectors(
+          defaultDir,
+          desiredDir,
+        );
         yellowConeRef.current.setRotationFromQuaternion(quat);
       }
     }
@@ -280,12 +295,12 @@ const BetLines: React.FC<BetLinesProps> = ({
         setIsDragging(true);
         onDragging(true);
         pointerStart.current = { x: evt.clientX, y: evt.clientY };
-        // Здесь aggregatorClipped гарантированно не равен null (проверено выше)
+        // Используем текущую позицию ставки, если она есть, иначе агрегатор
         initialBetPosition.current = betPosition
           ? betPosition.clone()
           : aggregatorClipped.clone();
       }
-      console.log("initialBetPosition (mode Z):", initialBetPosition.current);
+      console.log("initialBetPosition:", initialBetPosition.current);
     },
     [isClickOnSphere, onDragging, betPosition, aggregatorClipped],
   );
@@ -318,9 +333,8 @@ const BetLines: React.FC<BetLinesProps> = ({
       setBetPosition(newPos);
       handleDrag(newPos);
     },
-    [axisMode, isDragging, betPosition, handleDrag]
+    [axisMode, isDragging, betPosition, handleDrag],
   );
-
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging) return;
