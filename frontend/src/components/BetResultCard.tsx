@@ -30,7 +30,7 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
       style={{
         position: "absolute",
         top: "100px", // Точное позиционирование по вертикали
-        left: "0px",
+        left: "16px",
         // transform: "translateX(-50%)",
         zIndex: 50,
         display: "flex",
@@ -52,7 +52,7 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
           boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
           backdropFilter: "blur(5px)",
           cursor: "pointer",
-          gap: "0.375rem",
+          // gap: "0.375rem",
         }}
         onClick={() => setIsOpen(!isOpen)}
       >
