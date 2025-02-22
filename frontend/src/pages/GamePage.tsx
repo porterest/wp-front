@@ -209,9 +209,9 @@ const GamePage: React.FC = () => {
 
 
   const legendItems = [
-    { color: "#5e00f5", label: "X: Time Progress" },
+    { color: "#5e00f5", label: "X: Number of Transactions" },
     { color: "blue", label: "Y: Ton Price" },
-    { color: "cyan", label: "Z: Number of Transactions" },
+    { color: "cyan", label: "Z: Time Progress" },
   ];
 
   useEffect(() => {
