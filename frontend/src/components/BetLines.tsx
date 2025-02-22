@@ -313,7 +313,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         setBetPosition(newPos);
       }
     },
-    [axisMode, isDragging, handleDrag],
+    [axisMode, isDragging],
   );
 
   const handlePointerUp = useCallback(() => {
