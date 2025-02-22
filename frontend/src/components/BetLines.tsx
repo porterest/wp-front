@@ -293,27 +293,34 @@ const BetLines: React.FC<BetLinesProps> = ({
   const handlePointerMove = useCallback(
     (evt: PointerEvent) => {
       if (!isDragging) return;
-      if (axisMode === "Y" || axisMode === "Z") {
-        if (!pointerStart.current || !initialBetPosition.current) return;
-        const conversionFactor = 0.01;
-        const newPos = initialBetPosition.current.clone();
-
-        if (axisMode === "Y") {
-          const deltaY = evt.clientY - pointerStart.current.y;
-          newPos.y -= deltaY * conversionFactor;
-          newPos.z = initialBetPosition.current.z;
-        } else if (axisMode === "Z") {
-          const deltaY = evt.clientY - pointerStart.current.y;
-          newPos.z += deltaY * conversionFactor;
-          // newPos.y = initialBetPosition.current.y;
-        }
-        newPos.x = 2; // Фиксированное значение для оси X
-        setBetPosition(newPos);
-        handleDrag(newPos);
+      if (!pointerStart.current) return;
+      const conversionFactor = 0.01;
+      const deltaY = evt.clientY - pointerStart.current.y;
+      let newPos: THREE.Vector3;
+      // Если betPosition уже установлен, используем его как базу,
+      // иначе - начальное положение из pointerDown
+      if (betPosition) {
+        newPos = betPosition.clone();
+      } else if (initialBetPosition.current) {
+        newPos = initialBetPosition.current.clone();
+      } else {
+        return;
       }
+
+      if (axisMode === "Y") {
+        // Обновляем только ось Y относительно исходной позиции
+        newPos.y -= deltaY * conversionFactor;
+      } else if (axisMode === "Z") {
+        // Обновляем только ось Z, оставляем Y без изменений
+        newPos.z += deltaY * conversionFactor;
+      }
+      newPos.x = 2; // фиксированное значение для оси X
+      setBetPosition(newPos);
+      handleDrag(newPos);
     },
-    [axisMode, isDragging, handleDrag],
+    [axisMode, isDragging, betPosition, handleDrag]
   );
+
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging) return;
