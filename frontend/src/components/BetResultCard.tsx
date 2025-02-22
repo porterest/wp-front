@@ -28,13 +28,10 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
   return (
     <div
       style={{
-        position: "absolute",
+        position: "fixed",
         top: "100px", // Точное позиционирование по вертикали
         left: "16px",
-        // transform: "translateX(-50%)",
         zIndex: 50,
-        display: "flex",
-        width: "100%",
       }}
       className={className}
     >
@@ -42,9 +39,9 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
       <button
         style={{
           width: "140px",
-          // padding: "8px",
-          left: "20%",
-          // marginLeft: "-30px",
+          padding: "8px",
+          left: "57%",
+          marginLeft: "-30px",
           backgroundColor: "rgba(34, 211, 238)", // Соответствует bg-cyan-400 с прозрачностью
           color: "#fff",
           border: "none",
@@ -52,7 +49,6 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
           boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
           backdropFilter: "blur(5px)",
           cursor: "pointer",
-          // gap: "0.375rem",
         }}
         onClick={() => setIsOpen(!isOpen)}
       >
