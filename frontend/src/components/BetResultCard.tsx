@@ -30,7 +30,7 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
       style={{
         position: "fixed",
         top: "100px", // Точное позиционирование по вертикали
-        left: "16px",
+        left: "50px",
         zIndex: 50,
       }}
       className={className}
@@ -40,6 +40,8 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
         style={{
           width: "140px",
           padding: "8px",
+          left: "57%",
+          marginLeft: "-30px",
           backgroundColor: "rgba(34, 211, 238)", // Соответствует bg-cyan-400 с прозрачностью
           color: "#fff",
           border: "none",

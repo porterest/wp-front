@@ -6,7 +6,7 @@ import { fetchLastVectors } from "../services/api"; // Импорт функци
 
 interface SymbolSelectorProps {
   onSwitchMode: (mode: "Candles" | "Axes" | "Both") => void;
-  onAxisModeChange: (axis: "X" | "Y") => void;
+  onAxisModeChange: (axis: "Y" | "Z") => void;
   onSymbolChange: (pair: PairOption) => void;
   onHistoricalFetched: (vectors: Array<[number, number]>) => void;
 }
@@ -20,7 +20,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   const { data, setData } = useDataPrefetch();
   const pairs = data.pairs || []; // Пары из контекста
   const [globalMode, setGlobalMode] = useState<"Candles" | "Axes" | "Both">("Axes");
-  const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
+  const [axisMode, setAxisMode] = useState<"Y" | "Z">("Y");
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
 
   // --- Состояния для работы с историческими векторами ---
@@ -90,7 +90,7 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
 
   // Обработчик изменения оси
   const handleAxisModeChange = useCallback(
-    (mode: "X" | "Y") => {
+    (mode: "Y" | "Z") => {
       setAxisMode(mode);
       onAxisModeChange(mode);
     },
@@ -169,16 +169,6 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
       {/* Кнопки переключения осей */}
       <div className="mt-2 flex justify-between">
         <button
-          onClick={() => handleAxisModeChange("X")}
-          className={`px-3 py-2 w-[48%] rounded-md text-sm font-bold ${
-            axisMode === "X"
-              ? "bg-cyan-400 text-white"
-              : "bg-[rgba(0,255,255,0.2)] text-white"
-          }`}
-        >
-          Z-axis
-        </button>
-        <button
           onClick={() => handleAxisModeChange("Y")}
           className={`px-3 py-2 w-[48%] rounded-md text-sm font-bold ${
             axisMode === "Y"
@@ -187,6 +177,16 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
           }`}
         >
           Y-axis
+        </button>
+        <button
+          onClick={() => handleAxisModeChange("Z")}
+          className={`px-3 py-2 w-[48%] rounded-md text-sm font-bold ${
+            axisMode === "Z"
+              ? "bg-cyan-400 text-white"
+              : "bg-[rgba(0,255,255,0.2)] text-white"
+          }`}
+        >
+          Z-axis
         </button>
       </div>
 
@@ -204,7 +204,9 @@ const SymbolSelector: React.FC<SymbolSelectorProps> = ({
           }}
           className="px-2 py-1 w-full bg-cyan-400 text-white font-bold text-sm rounded-md shadow-lg hover:bg-cyan-500 transition"
         >
-          {showHistoricalInput ? "Hide Historical Data" : "Show Historical Data"}
+          {showHistoricalInput
+            ? "Hide Historical Data"
+            : "Show Historical Data"}
         </button>
         {showHistoricalInput && (
           <div className="mt-2">

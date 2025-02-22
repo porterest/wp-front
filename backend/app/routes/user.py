@@ -11,8 +11,8 @@ from domain.enums import BetStatus
 from domain.metaholder.requests.pair import GetUserLastBetRequest
 from domain.metaholder.requests.wallet import WithdrawToExternalWalletRequest
 from domain.metaholder.responses import BetResponse
-from domain.metaholder.responses.user import UserHistoryResponse, UserBetsResponse, UserInfoResponse
 from domain.metaholder.responses.bet_result import BetResult
+from domain.metaholder.responses.user import UserHistoryResponse, UserBetsResponse, UserInfoResponse
 from routes.helpers import get_user_id_from_request
 from services.exceptions import NotFoundException
 
@@ -94,6 +94,7 @@ async def get_last_user_bet(
             detail=f"No user with ID {user_id}",
         )
 
+
 @router.get('/result_bet')
 async def get_user_bet_result(
         request: Request,
@@ -121,7 +122,6 @@ async def get_user_bet_result(
             status_code=404,
             detail=f"No bet with user_id {user_id}",
         )
-
 
 
 @router.get('/history')

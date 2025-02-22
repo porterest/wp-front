@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Text } from "@react-three/drei";
 import BetLines from "./BetLines";
 import * as THREE from "three";
@@ -7,27 +7,23 @@ import { useUserBalance } from "../pages/BalancePage";
 interface BetArrowProps {
   previousBetEnd: THREE.Vector3; // Конец агрегированной (желтой) линии
   userPreviousBet: THREE.Vector3; // Текущая позиция пользовательской ставки
-  setUserPreviousBet: (value: THREE.Vector3) => void;
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
     betData?: { amount: number; predicted_vector: number[] }
   ) => void;
-  betAmount: number;
-  setBetAmount: (amount: number) => void;
   showArrows?: boolean;
+  axisMode: "Y" | "Z";
   visitable?: boolean;
 }
 
 const BetArrow: React.FC<BetArrowProps> = ({
                                              previousBetEnd,
                                              userPreviousBet,
-                                             setUserPreviousBet,
                                              onDragging,
                                              onShowConfirmButton,
-                                             betAmount,
-                                             setBetAmount,
                                              showArrows = true, // по умолчанию стрелки отображаются
+                                             axisMode,
                                              visitable = false,
                                            }) => {
   // Если стрелки не нужно отображать, сразу возвращаем null.
@@ -37,30 +33,35 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   const { userData } = useUserBalance();
   const userDeposit = userData?.balance || 0;
-  const maxArrowLength = 2;
+  const maxYellowLength = 2;
+  const maxWhiteLength = 2;
+  const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(null);
 
-  // Здесь можно добавить синхронизацию позиции, если необходимо
+
+  // Можно добавить синхронизацию позиции, если необходимо
   useEffect(() => {
     // Например, можно выполнить дополнительную настройку
   }, [userPreviousBet]);
 
-  // Обработчик перетаскивания: обновляет позицию и вычисляет ставку
-  const handleDrag = (newPosition: THREE.Vector3) => {
-    if (!userPreviousBet.equals(newPosition)) {
-      setUserPreviousBet(new THREE.Vector3(newPosition.x, newPosition.y, newPosition.z));
-    }
-    const aggregatorClipped = previousBetEnd.clone();
-    if (aggregatorClipped.length() > maxArrowLength) {
-      aggregatorClipped.setLength(maxArrowLength);
-    }
-    const distance = new THREE.Vector3()
-      .subVectors(newPosition, aggregatorClipped)
-      .length();
-    const percentage = Math.min(distance / maxArrowLength, 1);
-    const bet = Math.min(percentage * userDeposit, userDeposit);
-    setBetAmount(bet);
-  };
+  useEffect(() => {
+    // "Трогаем" betPosition, чтобы оно использовалось
+    // Здесь ничего не делаем, это нужно только для удовлетворения TypeScript / линтера
+  }, [betPosition]);
 
+
+  // // Обработчик перетаскивания: обновляет позицию и вычисляет ставку
+  // const handleDrag = (newPosition: THREE.Vector3) => {
+  //   if (axisMode === "Z") {
+  //     // Сохраняем y из текущей ставки (или из другого источника, например, aggregatorClipped.y)
+  //     newPosition.y = userPreviousBet.y;
+  //   }
+  //   if (!userPreviousBet.equals(newPosition)) {
+  //     setUserPreviousBet(new THREE.Vector3(newPosition.x, newPosition.y, newPosition.z));
+  //   }
+  // };
+
+
+  // Форматирование числа для отображения (добавляем суффиксы)
   const formatNumber = (num: number) => {
     if (isNaN(num)) return "Invalid Number";
 
@@ -90,20 +91,21 @@ const BetArrow: React.FC<BetArrowProps> = ({
 
   return (
     <>
-      {/* Отрисовка компонента, который добавляет линии и конусы в сцену */}
+      {/* Компонент, добавляющий линии и конусы (стрелки) в сцену */}
       <BetLines
         previousBetEnd={previousBetEnd}
         userPreviousBet={userPreviousBet}
         onDragging={onDragging}
         onShowConfirmButton={onShowConfirmButton}
-        maxYellowLength={maxArrowLength}
-        maxWhiteLength={maxArrowLength}
-        handleDrag={handleDrag}
-        setBetAmount={setBetAmount}
+        maxYellowLength={maxYellowLength}
+        maxWhiteLength={maxWhiteLength}
+        // handleDrag={handleDrag}
+        axisMode={axisMode}
         visible={visitable}
+        updateBetPosition={(pos: THREE.Vector3) => setBetPosition?.(pos)}
       />
 
-      {/* Отрисовка текста с депозитом */}
+      {/* Текст с депозитом */}
       <Text
         position={[1, 5.3, 0]}
         fontSize={0.3}
@@ -114,17 +116,6 @@ const BetArrow: React.FC<BetArrowProps> = ({
         {`Deposit: ${formatNumber(userDeposit)} DD`}
       </Text>
 
-      {/* Отрисовка текста со ставкой */}
-      <Text
-        position={[userPreviousBet.x + 0.5, userPreviousBet.y + 1, previousBetEnd.z + 0.5]}
-        fontSize={0.3}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-        depthOffset={-1}
-      >
-        {`Bet: ${formatNumber(betAmount)} DD`}
-      </Text>
     </>
   );
 };

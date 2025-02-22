@@ -19,7 +19,7 @@ interface SceneProps {
   previousBetEnd: THREE.Vector3;
   userPreviousBet: THREE.Vector3;
   setUserPreviousBet: (value: THREE.Vector3) => void;
-  axisMode: "X" | "Y";
+  axisMode: "Y" | "Z";
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
@@ -37,11 +37,12 @@ const Scene: React.FC<SceneProps> = ({
                                        style,
                                        previousBetEnd,
                                        userPreviousBet,
-                                       setUserPreviousBet,
+                                       // setUserPreviousBet,
                                        onDragging,
                                        onShowConfirmButton,
                                        currentMode,
                                        betsFetched,
+                                       axisMode,
                                        historicalVectors,
                                      }) => {
   console.log("Rendering Scene with historicalVectors:", historicalVectors);
@@ -63,9 +64,10 @@ const Scene: React.FC<SceneProps> = ({
           data={data}
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
-          setUserPreviousBet={setUserPreviousBet}
+          // setUserPreviousBet={setUserPreviousBet}
           onDragging={onDragging}
           onShowConfirmButton={onShowConfirmButton}
+          axisMode={axisMode}
           betsFetched={betsFetched}
         />
         {historicalVectors && historicalVectors.length > 0 && (

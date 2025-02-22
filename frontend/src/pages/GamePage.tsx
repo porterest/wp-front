@@ -11,9 +11,10 @@ import Scene from "../components/Scene";
 import { ScaleFunctions } from "../types/scale";
 import { PairOption } from "../types/pair";
 import { useDataPrefetch } from "../context/DataPrefetchContext";
-import { CandleData } from "../types/candles";
+// import { CandleData } from "../types/candles";
 import GraphModes from "../components/GraphModes";
 import BetResultCard from "../components/BetResultCard";
+import { Vector3 } from "three";
 
 const GamePage: React.FC = () => {
   const context = useDataPrefetch();
@@ -26,16 +27,11 @@ const GamePage: React.FC = () => {
 
   const [orbitControlsEnabled, setOrbitControlsEnabled] = useState(true);
   const [currentMode, setCurrentMode] = useState(1);
-  const [axisMode, setAxisMode] = useState<"X" | "Y">("X");
-  const [previousBetEnd, setPreviousBetEnd] = useState<THREE.Vector3>(
-    new THREE.Vector3(0, 0, 0),
-  );
-  const [userPreviousBet, setUserPreviousBet] = useState<THREE.Vector3>(
-    new THREE.Vector3(0, 0, 0),
-  );
-  const [scaleFunctions, setScaleFunctions] = useState<ScaleFunctions | null>(
-    null,
-  );
+  const [axisMode, setAxisMode] = useState<"Y" | "Z">("Y");
+  const [previousBetEnd, setPreviousBetEnd] = useState<THREE.Vector3 | null>(null);
+  const [userPreviousBet, setUserPreviousBet] = useState<THREE.Vector3 | null>(null);
+
+  const [scaleFunctions, setScaleFunctions] = useState<ScaleFunctions | null>(null);
   const [showConfirmButton, setShowConfirmButton] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
@@ -66,9 +62,9 @@ const GamePage: React.FC = () => {
     try {
       const lastBet = await getLastUserBet(pair.value);
       const userVector = new THREE.Vector3(
+        1,
         lastBet.vector[0],
         lastBet.vector[1],
-        0,
       );
       console.log("userVector")
       console.log(userVector)
@@ -85,9 +81,9 @@ const GamePage: React.FC = () => {
         try {
           const prevBetData = await fetchPreviousBetEnd(selectedPair.value);
           const resultVector = new THREE.Vector3(
+            1,
             prevBetData[0],
             prevBetData[1],
-            0,
           );
           console.log("resultVector")
           console.log(resultVector)
@@ -168,16 +164,16 @@ const GamePage: React.FC = () => {
         return;
       }
 
-      const { denormalizeX, denormalizeY } = scaleFunctions;
-      const [sceneX, sceneY] = currentBet.predicted_vector;
+      const { denormalizeZ, denormalizeY } = scaleFunctions;
+      const [sceneY, sceneZ] = currentBet.predicted_vector;
 
-      let maxVolume = 0;
+      // let maxVolume = 0;
+      //
+      // if (data.candles != undefined) {
+      //   maxVolume = Math.max(...data.candles.map((x: CandleData) => x.volume));
+      // }
 
-      if (data.candles != undefined) {
-        maxVolume = Math.max(...data.candles.map((x: CandleData) => x.volume));
-      }
-
-      const absoluteVolumeChange = denormalizeX(sceneX, maxVolume);
+      const absoluteVolumeChange = denormalizeZ(sceneZ);
       const absolutePriceChange = denormalizeY(sceneY);
 
       console.log("absoluteVolumeChange", absoluteVolumeChange);
@@ -191,9 +187,9 @@ const GamePage: React.FC = () => {
       console.log("Отправляем ставку:", betRequest);
       const response = await placeBet(betRequest);
       localStorage.setItem("userBetVector", JSON.stringify([
+        1,
         currentBet.predicted_vector[0],
-        currentBet.predicted_vector[1],
-        0 // Z-координата, если она всегда 0
+        currentBet.predicted_vector[1]
       ]));
 
       console.log("АААААААААААААААААААААААААААААААА")
@@ -209,9 +205,9 @@ const GamePage: React.FC = () => {
 
 
   const legendItems = [
-    { color: "#5e00f5", label: "X: Time Progress" },
+    { color: "#5e00f5", label: "X: Number of Transactions" },
     { color: "blue", label: "Y: Ton Price" },
-    { color: "cyan", label: "Z: Number of Transactions" },
+    { color: "cyan", label: "Z: Time Progress" },
   ];
 
   useEffect(() => {
@@ -269,7 +265,7 @@ const GamePage: React.FC = () => {
               }
               setCurrentMode(modeToSet);
             }}
-            onAxisModeChange={(axis: "X" | "Y") => {
+            onAxisModeChange={(axis: "Y" | "Z") => {
               console.log("AxisModeChange:", axis);
               setAxisMode(axis);
             }}
@@ -282,9 +278,9 @@ const GamePage: React.FC = () => {
         </div>
         <Scene
           data={data.candles || []}
-          previousBetEnd={previousBetEnd}
-          userPreviousBet={userPreviousBet}
-          setUserPreviousBet={setUserPreviousBet}
+          previousBetEnd={previousBetEnd? previousBetEnd : new Vector3(0,0,0)}
+          userPreviousBet={userPreviousBet? userPreviousBet : new Vector3(0,0,0)}
+          setUserPreviousBet={ setUserPreviousBet}
           axisMode={axisMode}
           onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
           onShowConfirmButton={(show, betData) => handleShowConfirmButton(show, betData)}
@@ -301,15 +297,16 @@ const GamePage: React.FC = () => {
             currentMode={currentMode}
             // selectedPair={selectedPair}
             data={data.candles || []}
-            previousBetEnd={previousBetEnd}
-            userPreviousBet={userPreviousBet}
-            setUserPreviousBet={setUserPreviousBet}
+            previousBetEnd={previousBetEnd ? previousBetEnd:new Vector3(0,0,0)}
+            userPreviousBet={userPreviousBet ? userPreviousBet :new Vector3(0,0,0)}
+            // setUserPreviousBet={setUserPreviousBet}
             onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
 
             onShowConfirmButton={(show, betData) => {
               console.log("onShowConfirmButton called with:", show, betData);
               handleShowConfirmButton(show, betData);
             }}
+            axisMode={axisMode}
             betsFetched={betsFetched}
           />
         </Scene>

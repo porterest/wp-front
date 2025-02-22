@@ -38,7 +38,7 @@ class AggregateBetsService(AggregateBetsServiceInterface):
             logger.info(aggregate_y)
 
         if total_weight > 0:
-            aggregate_x /= total_weight
+            aggregate_x /= total_weight * len(block.bets)
             aggregate_y /= total_weight
             logger.info(aggregate_x)
             logger.info("aggregate_x")
@@ -48,7 +48,7 @@ class AggregateBetsService(AggregateBetsServiceInterface):
             aggregate_x = 0
             aggregate_y = 0
 
-        aggregated_quaternion = aggregate_x, aggregate_y #todo: aa
+        aggregated_quaternion = aggregate_x, aggregate_y  # todo: aa
 
         logger.info("aggregated_quaternion")
         logger.info(aggregated_quaternion)

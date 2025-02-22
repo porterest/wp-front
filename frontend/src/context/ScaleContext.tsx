@@ -26,64 +26,84 @@ export const ScaleProvider: React.FC<{
     viewport
   );
 
+  const maxVolume = Math.max(...data.map(candle => candle.volume));
+
   useEffect(() => {
     console.log("Viewport changed:", viewport);
   }, [viewport]);
 
-  // Вычисляем минимальную и максимальную цену
-  const minPrice = useMemo(() => Math.min(...data.map((d) => d.low)), [data]);
-  const maxPrice = useMemo(() => Math.max(...data.map((d) => d.high)), [data]);
+  console.log("data:", data);
+
+  // Вычисляем минимальную и максимальную цену из свечей
+  const minPrice = useMemo(() => Math.min(...data.map(d => d.low)), [data]);
+  const maxPrice = useMemo(() => Math.max(...data.map(d => d.high)), [data]);
+
+  console.log("Min price:", minPrice, "Max price:", maxPrice);
 
   /**
-   * Нормализация по оси Y (цены)
-   * Отображает диапазон [minPrice, maxPrice] → [0.5, 4.5] (с запасом сверху и снизу).
+   * Нормализация по оси Y (цены).
+   * Теперь мы вычисляем фракцию: (value - minPrice) / (maxPrice - minPrice),
+   * затем ограничиваем её до 1 и масштабируем в диапазон 0–5.
    */
   const normalizeY = useCallback(
     (value: number) => {
-      const graphHeight = 5;
-      const margin = 0.5; // Минимальный отступ сверху и снизу
-      const priceRange = maxPrice - minPrice || 1; // Чтобы не делить на 0
-      return margin + ((value - minPrice) / priceRange) * (graphHeight - 2 * margin);
+      const range = maxPrice - minPrice;
+      const fraction = range > 0 ? (value - minPrice) / range : 0;
+      const clampedFraction = Math.min(Math.max(fraction, 0), 1);
+      return clampedFraction * 5;
     },
     [minPrice, maxPrice]
   );
 
   const denormalizeY = useCallback(
     (sceneValue: number) => {
-      const graphHeight = 5;
-      const margin = 0.5;
-      const priceRange = maxPrice - minPrice || 1;
-      return ((sceneValue - margin) / (graphHeight - 2 * margin)) * priceRange + minPrice;
+      const range = maxPrice - minPrice;
+      return range > 0 ? (sceneValue / 5) * range + minPrice : minPrice;
     },
     [minPrice, maxPrice]
   );
 
   /**
-   * Нормализация по оси X (временная ось, индекс свечи)
-   * Индексы [0, length - 1] → [0, 5]
+   * Нормализация по оси X.
+   * Здесь предполагается, что value находится в диапазоне [0, maxIndex] – где maxIndex
+   * соответствует максимуму для этой оси. Мы вычисляем фракцию value / maxIndex, ограничиваем её до 1,
+   * и умножаем на 5.
    */
   const normalizeX = useCallback(
-    (index: number, length: number) => {
-      return length > 1 ? (index / (length - 1)) * 5 : 0; // Если 1 свеча — ставим 0
+    (value: number, maxIndex: number) => {
+      const fraction = maxIndex > 0 ? value / maxIndex : 0;
+      const clampedFraction = Math.min(Math.max(fraction, 0), 1);
+      return clampedFraction * 5;
     },
     []
   );
 
-  const denormalizeX = useCallback((sceneValue: number, length: number) => {
-    return length > 1 ? (sceneValue / 5) * (length - 1) : 0;
-  }, []);
+  const denormalizeX = useCallback(
+    (sceneValue: number, maxIndex: number) => {
+      return maxIndex > 0 ? (sceneValue / 5) * maxIndex : 0;
+    },
+    []
+  );
 
   /**
-   * Нормализация по оси Z (объём)
+   * Нормализация по оси Z (объём).
    * Значения [0, maxVolume] → [0, 5]
    */
-  const normalizeZ = useCallback((volume: number, maxVolume: number) => {
-    return maxVolume > 0 ? (volume / maxVolume) * 5 : 0; // Чтобы не делить на 0
-  }, []);
+  const normalizeZ = useCallback(
+    (volume: number) => {
+      const fraction = maxVolume > 0 ? volume / maxVolume : 0;
+      const clampedFraction = Math.min(Math.max(fraction, 0), 1);
+      return clampedFraction * 5;
+    },
+    [maxVolume]
+  );
 
-  const denormalizeZ = useCallback((sceneValue: number, maxVolume: number) => {
-    return maxVolume > 0 ? (sceneValue / 5) * maxVolume : 0;
-  }, []);
+  const denormalizeZ = useCallback(
+    (sceneValue: number) => {
+      return maxVolume > 0 ? (sceneValue / 5) * maxVolume : 0;
+    },
+    [maxVolume]
+  );
 
   const scaleFunctions = useMemo(
     () => ({

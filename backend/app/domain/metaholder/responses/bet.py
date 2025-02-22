@@ -15,5 +15,5 @@ class BetResponse(BaseModel):
     pair_name: str
     status: BetStatus
     created_at: datetime
-    accuracy: Optional[float]
-    reward: Optional[float]
+    accuracy: Optional[float] = None
+    reward: Optional[float] = None
