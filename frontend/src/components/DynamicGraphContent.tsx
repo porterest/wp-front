@@ -9,7 +9,7 @@ interface DynamicGraphContentProps {
   data: CandleData[] | null;
   previousBetEnd: THREE.Vector3;
   userPreviousBet: THREE.Vector3;
-  setUserPreviousBet: (value: THREE.Vector3) => void;
+  // setUserPreviousBet: (value: THREE.Vector3) => void;
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
@@ -26,7 +26,7 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
                                                                    data,
                                                                    previousBetEnd,
                                                                    userPreviousBet,
-                                                                   setUserPreviousBet,
+                                                                   // setUserPreviousBet,
                                                                    onDragging,
                                                                    onShowConfirmButton,
                                                                    axisMode,

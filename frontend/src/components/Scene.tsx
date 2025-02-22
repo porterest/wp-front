@@ -37,7 +37,7 @@ const Scene: React.FC<SceneProps> = ({
                                        style,
                                        previousBetEnd,
                                        userPreviousBet,
-                                       setUserPreviousBet,
+                                       // setUserPreviousBet,
                                        onDragging,
                                        onShowConfirmButton,
                                        currentMode,
@@ -64,7 +64,7 @@ const Scene: React.FC<SceneProps> = ({
           data={data}
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
-          setUserPreviousBet={setUserPreviousBet}
+          // setUserPreviousBet={setUserPreviousBet}
           onDragging={onDragging}
           onShowConfirmButton={onShowConfirmButton}
           axisMode={axisMode}
