@@ -9,6 +9,7 @@ import GraphModes from "./GraphModes";
 import CameraTrackballControl from "./CameraTrackballControl";
 import * as THREE from "three";
 import HistoricalVectors from "./HistoricalVectors";
+import Axes from "./Axes"; // Импортируем ваш компонент Axes
 
 interface SceneProps {
   children: React.ReactNode;
@@ -51,10 +52,13 @@ const Scene: React.FC<SceneProps> = ({
       camera={{ position: [10, 10, 10], fov: 60 }}
       style={{ width: "100vw", height: "100vh", ...style }}
     >
-
       <OrbitControls enableRotate={false} enablePan={false} enableZoom={false} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
+
+      {/* Добавляем Axes для отладки */}
+      <Axes />
+
       <ScaleProvider data={data}>
         <ScaleHandler onScaleReady={onScaleReady} />
         {children}
@@ -74,10 +78,8 @@ const Scene: React.FC<SceneProps> = ({
           <HistoricalVectors
             vectors={historicalVectors}
             start={new THREE.Vector3(0, 0, 0)}
-            // totalChainLength={5}
           />
         )}
-
       </ScaleProvider>
       <CameraTrackballControl />
     </Canvas>
@@ -91,7 +93,6 @@ const ScaleHandler: React.FC<{ onScaleReady: (scaleFunctions: ScaleFunctions) =>
   useEffect(() => {
     onScaleReady(scaleFunctions);
     console.log("Scale functions from Scene:", scaleFunctions);
-
   }, [onScaleReady, scaleFunctions]);
   return null;
 };
