@@ -28,13 +28,15 @@ const BetResultCloud: React.FC<BetResultCloudProps> = ({ className }) => {
   return (
     <div
       style={{
-        position: "fixed",
-        top: "100px", // Точное позиционирование по вертикали
-        left: "16px",
+        position: "relative", // заменили fixed на relative
+        top: "10px",
+        left: "57%",
+        transform: "translateX(-50%)",
         zIndex: 50,
       }}
       className={className}
     >
+
       {/* Кнопка */}
       <button
         style={{
