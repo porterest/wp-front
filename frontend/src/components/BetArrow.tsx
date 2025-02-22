@@ -7,7 +7,6 @@ import { useUserBalance } from "../pages/BalancePage";
 interface BetArrowProps {
   previousBetEnd: THREE.Vector3; // Конец агрегированной (желтой) линии
   userPreviousBet: THREE.Vector3; // Текущая позиция пользовательской ставки
-  setUserPreviousBet: (value: THREE.Vector3) => void;
   onDragging: (isDragging: boolean) => void;
   onShowConfirmButton: (
     show: boolean,
@@ -21,7 +20,6 @@ interface BetArrowProps {
 const BetArrow: React.FC<BetArrowProps> = ({
                                              previousBetEnd,
                                              userPreviousBet,
-                                             setUserPreviousBet,
                                              onDragging,
                                              onShowConfirmButton,
                                              showArrows = true, // по умолчанию стрелки отображаются

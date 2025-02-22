@@ -45,7 +45,7 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
       <BetArrow
         previousBetEnd={previousBetEnd}
         userPreviousBet={userPreviousBet}
-        setUserPreviousBet={setUserPreviousBet}
+        // setUserPreviousBet={setUserPreviousBet}
         onDragging={onDragging}
         onShowConfirmButton={onShowConfirmButton}
         axisMode={axisMode}
@@ -62,7 +62,7 @@ const DynamicGraphContent: React.FC<DynamicGraphContentProps> = ({
         <BetArrow
           previousBetEnd={previousBetEnd}
           userPreviousBet={userPreviousBet}
-          setUserPreviousBet={setUserPreviousBet}
+          // setUserPreviousBet={setUserPreviousBet}
           onDragging={onDragging}
           onShowConfirmButton={onShowConfirmButton}
           axisMode={axisMode}
