@@ -79,15 +79,20 @@ const BetLines: React.FC<BetLinesProps> = ({
   // Вычисляем агрегатор (жёлтый вектор) на основе previousBetEnd
   // Если данные с бэка отсутствуют (например, previousBetEnd.y и .z равны 0), возвращаем null
   const aggregatorClipped = useMemo(() => {
-    if (previousBetEnd.y === 0 && previousBetEnd.z === 0) {
-      return null;
-    }
+    if (!previousBetEnd) return null;
     const normY = normalizeY(previousBetEnd.y);
     const normZ = normalizeZ(previousBetEnd.z);
     const vec2 = new THREE.Vector2(normY, normZ);
     vec2.clampLength(0, maxYellowLength);
     return new THREE.Vector3(1, vec2.x, vec2.y);
   }, [previousBetEnd, maxYellowLength, normalizeZ, normalizeY]);
+
+
+// Если данных нет, не рендерим компонент:
+  if (!visible || !aggregatorClipped) {
+    return null;
+  }
+
 
   // Вычисляем белый вектор (ставку)
   const computedBetPosition = useMemo(() => {

@@ -14,6 +14,7 @@ import { useDataPrefetch } from "../context/DataPrefetchContext";
 // import { CandleData } from "../types/candles";
 import GraphModes from "../components/GraphModes";
 import BetResultCard from "../components/BetResultCard";
+import { Vector3 } from "three";
 
 const GamePage: React.FC = () => {
   const context = useDataPrefetch();
@@ -27,15 +28,10 @@ const GamePage: React.FC = () => {
   const [orbitControlsEnabled, setOrbitControlsEnabled] = useState(true);
   const [currentMode, setCurrentMode] = useState(1);
   const [axisMode, setAxisMode] = useState<"Y" | "Z">("Y");
-  const [previousBetEnd, setPreviousBetEnd] = useState<THREE.Vector3>(
-    new THREE.Vector3(1, 0, 0),
-  );
-  const [userPreviousBet, setUserPreviousBet] = useState<THREE.Vector3>(
-    new THREE.Vector3(1, 0, ),
-  );
-  const [scaleFunctions, setScaleFunctions] = useState<ScaleFunctions | null>(
-    null,
-  );
+  const [previousBetEnd, setPreviousBetEnd] = useState<THREE.Vector3 | null>(null);
+  const [userPreviousBet, setUserPreviousBet] = useState<THREE.Vector3 | null>(null);
+
+  const [scaleFunctions, setScaleFunctions] = useState<ScaleFunctions | null>(null);
   const [showConfirmButton, setShowConfirmButton] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [selectedPair, setSelectedPair] = useState<PairOption | null>(null);
@@ -282,8 +278,8 @@ const GamePage: React.FC = () => {
         </div>
         <Scene
           data={data.candles || []}
-          previousBetEnd={previousBetEnd}
-          userPreviousBet={userPreviousBet}
+          previousBetEnd={previousBetEnd? previousBetEnd : new Vector3(0,0,0)}
+          userPreviousBet={userPreviousBet? userPreviousBet : new Vector3(0,0,0)}
           setUserPreviousBet={ setUserPreviousBet}
           axisMode={axisMode}
           onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
@@ -301,8 +297,8 @@ const GamePage: React.FC = () => {
             currentMode={currentMode}
             // selectedPair={selectedPair}
             data={data.candles || []}
-            previousBetEnd={previousBetEnd}
-            userPreviousBet={userPreviousBet}
+            previousBetEnd={previousBetEnd ? previousBetEnd:new Vector3(0,0,0)}
+            userPreviousBet={userPreviousBet ? userPreviousBet :new Vector3(0,0,0)}
             // setUserPreviousBet={setUserPreviousBet}
             onDragging={(isDragging) => setOrbitControlsEnabled(!isDragging)}
 
