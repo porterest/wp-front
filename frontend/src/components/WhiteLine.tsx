@@ -58,6 +58,8 @@ const WhileLine: React.FC<WhileLineProps> = ({
 
   // Мемоизированный вектор агрегатора, масштабированный с фиксированным z = 1
   const scaledAggregator = useMemo(() => {
+    console.log("aggregator");
+    console.log(aggregator);
     const scaled = aggregator.clone().multiplyScalar(scaleFactor);
     scaled.x = 1;
     return scaled;
