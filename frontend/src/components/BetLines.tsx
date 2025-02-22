@@ -106,6 +106,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     try {
       const stored = localStorage.getItem(LOCAL_KEY);
       if (stored) {
+        console.log("[BetLines] stored betPosition:", stored);
         const arr = JSON.parse(stored);
         if (Array.isArray(arr) && arr.length >= 3) {
           return new THREE.Vector3(2, arr[1], arr[2]);
