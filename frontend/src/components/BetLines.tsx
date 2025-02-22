@@ -109,7 +109,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         console.log("[BetLines] stored betPosition:", stored);
         const arr = JSON.parse(stored);
         if (Array.isArray(arr) && arr.length >= 3) {
-          return new THREE.Vector3(2, arr[1], arr[2]);
+          return new THREE.Vector3(2, arr[0], arr[1]);
         }
       }
     } catch (err) {
