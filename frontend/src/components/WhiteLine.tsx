@@ -58,7 +58,7 @@ const WhileLine: React.FC<WhileLineProps> = ({
 
   // Мемоизированный вектор агрегатора, масштабированный с фиксированным z = 1
   const scaledAggregator = useMemo(() => {
-    if (isVectorZero(aggregator)) return null; // или возвращать исходный агрегатор, или другой дефолт
+    if (aggregator.y ==0 && aggregator.z == 0) return null; // или возвращать исходный агрегатор, или другой дефолт
     const scaled = aggregator.clone().multiplyScalar(scaleFactor);
     scaled.x = 1;
     return scaled;
@@ -76,8 +76,8 @@ const WhileLine: React.FC<WhileLineProps> = ({
   // Первоначальная отрисовка линии, конуса и сферы
   useEffect(() => {
     if (!visible || !groupRef.current) return;
-    if (!scaledAggregator || isVectorZero(aggregator)) return;
-
+    if (aggregator.y == 0 && aggregator.z == 0) return;
+    if (!scaledAggregator) return;
 
     if (!betPosition || !scaledBet) {
       groupRef.current.children.forEach((child) => groupRef.current?.remove(child));

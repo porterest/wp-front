@@ -34,34 +34,33 @@ const LOCAL_KEY = "userBetVector";
 
 // Проверка, является ли вектор нулевым (с эпсилоном)
 const isVectorZero = (vec: THREE.Vector3, eps = 0.000001): boolean =>
-  Math.abs(vec.x) < eps && Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
+  Math.abs(vec.y) < eps && Math.abs(vec.z) < eps;
+
 
 const BetLines: React.FC<BetLinesProps> = ({
-  previousBetEnd,
-  userPreviousBet,
-  onDragging,
-  onShowConfirmButton,
-  maxYellowLength,
-  maxWhiteLength,
-  handleDrag,
-  axisMode,
-  visible,
-  updateBetPosition,
-}) => {
-  // Получаем объекты Three.js
+                                             previousBetEnd,
+                                             userPreviousBet,
+                                             onDragging,
+                                             onShowConfirmButton,
+                                             maxYellowLength,
+                                             maxWhiteLength,
+                                             handleDrag,
+                                             axisMode,
+                                             visible,
+                                             updateBetPosition,
+                                           }) => {
   const { gl, camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
   const raycaster = useRef(new THREE.Raycaster());
 
-  // Для жёлтого вектора оставляем свои рефы
+  // Рефы для жёлтого вектора
   const yellowLineRef = useRef<Line2 | null>(null);
   const yellowConeRef = useRef<THREE.Mesh | null>(null);
 
-  // Этот ref будет передан в WhileLine для получения ссылки на сферу белой стрелки (для hit-тестинга)
+  // Реф для белой стрелки (сфера для hit-тестинга)
   const whiteSphereRef = useRef<THREE.Mesh | null>(null);
 
   const { normalizeY, normalizeZ } = useScale();
-
   const [isDragging, setIsDragging] = useState(false);
   const [userBalance, setUserBalance] = useState(0);
 
@@ -78,31 +77,23 @@ const BetLines: React.FC<BetLinesProps> = ({
   }, []);
 
   // Вычисляем агрегатор (жёлтый вектор) на основе previousBetEnd
+  // Если данные с бэка отсутствуют (например, previousBetEnd.y и .z равны 0), возвращаем null
   const aggregatorClipped = useMemo(() => {
-    console.log(
-      "[BetLines] previousBetEnd",
-      previousBetEnd.x,
-      previousBetEnd.y,
-      previousBetEnd.z,
-    );
+    if (previousBetEnd.y === 0 && previousBetEnd.z === 0) {
+      return null;
+    }
     const normY = normalizeY(previousBetEnd.y);
     const normZ = normalizeZ(previousBetEnd.z);
     const vec2 = new THREE.Vector2(normY, normZ);
     vec2.clampLength(0, maxYellowLength);
-    console.log("[BetLines] vec2", vec2.x, vec2.y);
     return new THREE.Vector3(1, vec2.x, vec2.y);
   }, [previousBetEnd, maxYellowLength, normalizeZ, normalizeY]);
 
-  const isUserBetZero = useMemo(
-    () =>
-      userPreviousBet.x === 0 &&
-      userPreviousBet.y === 0 &&
-      userPreviousBet.z === 0,
-    [userPreviousBet],
-  );
-
   // Вычисляем белый вектор (ставку)
   const computedBetPosition = useMemo(() => {
+    if (!aggregatorClipped) {
+      return null;
+    }
     try {
       const stored = localStorage.getItem(LOCAL_KEY);
       if (stored) {
@@ -115,7 +106,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     } catch (err) {
       console.error("[BetLines] Ошибка парсинга LS:", err);
     }
-    if (isUserBetZero) {
+    // Если предыдущая ставка пользователя равна нулевому вектору
+    if (userPreviousBet.x === 0 && userPreviousBet.y === 0 && userPreviousBet.z === 0) {
       const minDelta = 0.0001;
       let baseVector = aggregatorClipped.clone();
       if (isVectorZero(baseVector)) {
@@ -128,21 +120,21 @@ const BetLines: React.FC<BetLinesProps> = ({
       const offset = direction.multiplyScalar(minDelta);
       return baseVector.add(offset).setX(2);
     }
+    // Иначе вычисляем смещение
     const deltaX = userPreviousBet.x - aggregatorClipped.x;
     const deltaY = normalizeY(userPreviousBet.y - aggregatorClipped.y);
     const deltaZ = normalizeZ(userPreviousBet.z - aggregatorClipped.z);
     const delta = new THREE.Vector3(deltaX, deltaY, deltaZ);
     delta.clampLength(0, maxWhiteLength);
     return aggregatorClipped.clone().add(delta).setX(2);
-  }, [
-    aggregatorClipped,
-    userPreviousBet,
-    isUserBetZero,
-    maxWhiteLength,
-    normalizeZ,
-    normalizeY,
-  ]);
+  }, [aggregatorClipped, userPreviousBet, maxWhiteLength, normalizeZ, normalizeY]);
 
+  // Если данные с бэка ещё не пришли или computedBetPosition не вычислился, не рендерим компонент
+  if (!visible || !aggregatorClipped || !computedBetPosition) {
+    return null;
+  }
+
+  // Теперь можно безопасно использовать aggregatorClipped и computedBetPosition
   const [betPosition, setBetPosition] = useState<THREE.Vector3 | null>(
     computedBetPosition,
   );
@@ -153,17 +145,17 @@ const BetLines: React.FC<BetLinesProps> = ({
     }
   }, [betPosition, updateBetPosition]);
 
-  // Функция для получения "сырых" координат
+  // Функция для клонирования вектора
   const getRawVector = (vec: THREE.Vector3): THREE.Vector3 => vec.clone();
-
-  // Единое масштабирование для отрисовки
   const scaleFactor = 1;
+
   console.log(
     "[BetLines] aggregatorClipped:",
     aggregatorClipped.x,
     aggregatorClipped.y,
     aggregatorClipped.z,
   );
+
   const rawAggregator = getRawVector(aggregatorClipped);
   console.log(
     "rawAggregator",
@@ -178,10 +170,11 @@ const BetLines: React.FC<BetLinesProps> = ({
     scaledAggregator.y,
     scaledAggregator.z,
   );
-  scaledAggregator.x = 1; // фиксируем z для жёлтого вектора
+  scaledAggregator.x = 1; // Фиксируем ось X для жёлтого вектора
+
   const rawBet = betPosition ? getRawVector(betPosition) : null;
   const scaledBet = rawBet ? rawBet.clone().multiplyScalar(scaleFactor) : null;
-  if (scaledBet) scaledBet.x = 2; // фиксируем z для белого вектора
+  if (scaledBet) scaledBet.x = 2; // Фиксируем ось X для белого вектора
 
   // Отрисовка жёлтого вектора (агрегатора)
   useEffect(() => {
@@ -215,10 +208,7 @@ const BetLines: React.FC<BetLinesProps> = ({
       const desiredDir = scaledAggregator.clone().normalize();
       const defaultDir = new THREE.Vector3(0, 1, 0);
       if (desiredDir.length() > 0) {
-        const quat = new THREE.Quaternion().setFromUnitVectors(
-          defaultDir,
-          desiredDir,
-        );
+        const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
         yCone.setRotationFromQuaternion(quat);
       }
     }
@@ -232,7 +222,7 @@ const BetLines: React.FC<BetLinesProps> = ({
     };
   }, [aggregatorClipped, visible, scaledAggregator]);
 
-  // Обновление позиций жёлтого вектора
+  // Обновление позиции жёлтого вектора
   useEffect(() => {
     if (!visible) return;
     const updatedAgg = getRawVector(aggregatorClipped)
@@ -252,17 +242,13 @@ const BetLines: React.FC<BetLinesProps> = ({
       const defaultDir = new THREE.Vector3(0, 1, 0);
       const desiredDir = updatedAgg.clone().normalize();
       if (desiredDir.length() > 0) {
-        const quat = new THREE.Quaternion().setFromUnitVectors(
-          defaultDir,
-          desiredDir,
-        );
+        const quat = new THREE.Quaternion().setFromUnitVectors(defaultDir, desiredDir);
         yellowConeRef.current.setRotationFromQuaternion(quat);
       }
     }
   }, [aggregatorClipped, visible]);
 
-  // ----- Логика перетаскивания -----
-  // Используем whiteSphereRef (который передаём в WhileLine) для определения попадания курсора
+  // Логика перетаскивания с использованием whiteSphereRef для hit-тестинга
   const isClickOnSphere = useCallback(
     (evt: PointerEvent) => {
       console.log(
@@ -294,6 +280,7 @@ const BetLines: React.FC<BetLinesProps> = ({
         setIsDragging(true);
         onDragging(true);
         pointerStart.current = { x: evt.clientX, y: evt.clientY };
+        // Здесь aggregatorClipped гарантированно не равен null (проверено выше)
         initialBetPosition.current = betPosition
           ? betPosition.clone()
           : aggregatorClipped.clone();
@@ -312,20 +299,15 @@ const BetLines: React.FC<BetLinesProps> = ({
         const newPos = initialBetPosition.current.clone();
 
         if (axisMode === "Y") {
-          // Режим Y: вертикальное движение, инвертируем знак (при движении вверх цена растёт)
           const deltaY = evt.clientY - pointerStart.current.y;
           newPos.y -= deltaY * conversionFactor;
-          // Зафиксировать ось Z из начальной позиции
           newPos.z = initialBetPosition.current.z;
         } else if (axisMode === "Z") {
-          // Режим Z: теперь используем вертикальное движение, а не горизонтальное
           const deltaY = evt.clientY - pointerStart.current.y;
           newPos.z += deltaY * conversionFactor;
-          // Зафиксировать ось Y из начальной позиции
           newPos.y = initialBetPosition.current.y;
         }
-
-        newPos.x = 2; // время фиксировано
+        newPos.x = 2; // Фиксированное значение для оси X
         setBetPosition(newPos);
         handleDrag(newPos);
       }
@@ -372,11 +354,8 @@ const BetLines: React.FC<BetLinesProps> = ({
     };
   }, [gl.domElement, handlePointerDown, handlePointerMove, handlePointerUp]);
 
-  if (!visible) return null;
   return (
     <group ref={groupRef}>
-      {/* Отрисовка жёлтого вектора (агрегатора) происходит здесь */}
-      {/* Белая стрелка (ставка) теперь отрисовывается в отдельном компоненте WhileLine */}
       <WhileLine
         aggregator={aggregatorClipped}
         betPosition={betPosition}
