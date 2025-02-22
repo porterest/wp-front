@@ -101,7 +101,7 @@ const BetArrow: React.FC<BetArrowProps> = ({
         onShowConfirmButton={onShowConfirmButton}
         maxYellowLength={maxYellowLength}
         maxWhiteLength={maxWhiteLength}
-        handleDrag={handleDrag}
+        // handleDrag={handleDrag}
         axisMode={axisMode}
         visible={visitable}
         updateBetPosition={(pos: THREE.Vector3) => setBetPosition?.(pos)}
